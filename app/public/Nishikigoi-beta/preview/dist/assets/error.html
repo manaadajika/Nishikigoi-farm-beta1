@@ -1,0 +1,245 @@
+<!doctype html>
+<html lang="id">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="robots" content="noindex, nofollow" />
+    <meta name="color-scheme" content="light dark" />
+    <title>Terjadi kendala - Nishikigoi</title>
+    <!-- Halaman ini dipakai Apache (ErrorDocument), router Termux, dan service worker (sw.js) saat server tidak terjangkau.
+         Semua alamat memakai awalan "/" karena halaman ditampilkan di alamat apa pun yang gagal dimuat. -->
+    <link rel="icon" href="/api/favicon?v=2" />
+    <link href="/dist/css/tabler.css" rel="stylesheet" />
+    <link href="/dist/css/tabler-themes.css" rel="stylesheet" />
+    <script>
+      // Warna mengikuti pilihan akun yang terakhir masuk (Light/Dark/Auto), sama seperti halaman lain.
+      ;(function () {
+        var mode = 'auto'
+        try {
+          var raw = sessionStorage.getItem('koi-farm-auth-session') || localStorage.getItem('koi-farm-auth-session')
+          var user = (JSON.parse(raw || 'null') || {}).username
+          if (!user) {
+            var current = JSON.parse(localStorage.getItem('koi-farm-auth-current') || 'null')
+            user = current && current.username
+          }
+          if (user) mode = (JSON.parse(localStorage.getItem('koi-farm-theme-settings-' + user) || 'null') || {}).theme || 'auto'
+        } catch (error) {}
+        var dark = mode === 'dark' || (mode !== 'light' && window.matchMedia('(prefers-color-scheme: dark)').matches)
+        if (dark) document.documentElement.setAttribute('data-bs-theme', 'dark')
+      })()
+    </script>
+    <style>
+      html, body { min-height: 100%; }
+      body {
+        margin: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 24px 16px;
+        background: var(--tblr-body-bg);
+        color: var(--tblr-body-color);
+        font-family: var(--tblr-font-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif);
+      }
+      .err {
+        width: 100%;
+        max-width: 560px;
+        text-align: center;
+      }
+      .err-brand {
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+        margin-bottom: 28px;
+        font-weight: 700;
+        letter-spacing: .02em;
+        color: var(--tblr-body-color);
+        text-decoration: none;
+      }
+      .err-brand img { width: 36px; height: 36px; object-fit: contain; border-radius: 8px; }
+      .err-code {
+        font-size: clamp(72px, 22vw, 132px);
+        font-weight: 800;
+        line-height: 1;
+        letter-spacing: -.02em;
+        background: linear-gradient(135deg, var(--tblr-primary, #206bc4), #f76707);
+        -webkit-background-clip: text;
+        background-clip: text;
+        color: transparent;
+        user-select: all;
+      }
+      .err-title { margin: 12px 0 8px; font-size: 1.6rem; font-weight: 700; }
+      .err-text { color: var(--tblr-secondary, #667382); margin: 0 auto; max-width: 440px; }
+      .err-hint { margin: 12px auto 0; max-width: 440px; font-size: .875rem; color: var(--tblr-secondary, #667382); }
+      .err-path {
+        display: inline-block;
+        max-width: 100%;
+        margin-top: 16px;
+        padding: 4px 10px;
+        border: 1px solid var(--tblr-border-color);
+        border-radius: 999px;
+        font-size: .8rem;
+        font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+        color: var(--tblr-secondary, #667382);
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        vertical-align: bottom;
+      }
+      .err-actions { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; margin-top: 28px; }
+      .err-status { margin-top: 18px; min-height: 1.4em; font-size: .85rem; color: var(--tblr-secondary, #667382); }
+      .err-dot { display: inline-block; width: 8px; height: 8px; margin-right: 6px; border-radius: 50%; background: #f59f00; }
+      .err-dot.is-ok { background: #2fb344; }
+      .err-dot.is-bad { background: #d63939; }
+      .err-meta { margin-top: 28px; font-size: .75rem; color: var(--tblr-secondary, #667382); opacity: .8; }
+    </style>
+  </head>
+  <body>
+    <main class="err" id="err" role="alert">
+      <a class="err-brand" href="/farm.html" id="err-brand">
+        <img id="err-logo" alt="" hidden />
+        <span id="err-name">Nishikigoi</span>
+      </a>
+      <div class="err-code" id="err-code" aria-label="Kode kesalahan">404</div>
+      <h1 class="err-title" id="err-title">Halaman tidak ditemukan</h1>
+      <p class="err-text" id="err-text"></p>
+      <div class="err-hint" id="err-hint" hidden></div>
+      <div id="err-path-wrap" hidden><span class="err-path" id="err-path"></span></div>
+      <div class="err-actions">
+        <button class="btn btn-primary" type="button" id="err-primary">Ke Dashboard</button>
+        <button class="btn" type="button" id="err-back">Kembali</button>
+        <button class="btn" type="button" id="err-retry">Coba lagi</button>
+      </div>
+      <div class="err-status" id="err-status" hidden><span class="err-dot" id="err-dot"></span><span id="err-status-text"></span></div>
+      <div class="err-meta" id="err-meta"></div>
+    </main>
+
+    <script>
+      ;(function () {
+        // Teks dan tindakan tiap kode. "kind" menentukan tombol utama: home | login | retry.
+        var CODES = {
+          400: ['Permintaan tidak valid', 'Server tidak dapat memahami permintaan ini. Periksa alamat atau data yang dikirim, lalu coba lagi.', 'home'],
+          401: ['Sesi berakhir atau belum masuk', 'Halaman ini hanya bisa dibuka setelah masuk. Silakan masuk kembali dengan akun Anda.', 'login'],
+          403: ['Akses ditolak', 'Akun Anda tidak punya izin untuk membuka halaman atau data ini. Hubungi Admin bila Anda merasa seharusnya bisa.', 'home'],
+          404: ['Halaman tidak ditemukan', 'Alamat yang Anda buka tidak ada atau sudah dipindahkan. Periksa penulisan alamat, atau kembali ke Dashboard.', 'home'],
+          405: ['Metode tidak diizinkan', 'Server tidak menerima cara permintaan ini untuk alamat tersebut.', 'home'],
+          408: ['Waktu permintaan habis', 'Server menunggu terlalu lama. Biasanya karena sinyal lemah. Coba kirim ulang.', 'retry'],
+          413: ['Berkas terlalu besar', 'Ukuran berkas yang dikirim melebihi batas server. Perkecil ukurannya (video maksimal 40 MB) lalu coba lagi.', 'home'],
+          414: ['Alamat terlalu panjang', 'Alamat yang dikirim melebihi batas yang bisa diproses server.', 'home'],
+          429: ['Terlalu banyak permintaan', 'Server menerima terlalu banyak permintaan dalam waktu singkat. Tunggu sebentar lalu coba lagi.', 'retry'],
+          500: ['Kesalahan di server', 'Terjadi masalah di sisi server saat memproses permintaan Anda. Data Anda tidak berubah. Coba lagi sebentar lagi.', 'retry'],
+          502: ['Server tidak menjawab dengan benar', 'Server menerima jawaban yang tidak valid dari layanan di belakangnya. Biasanya sementara.', 'retry'],
+          503: ['Layanan sedang tidak tersedia', 'Server sedang sibuk atau dalam pemeliharaan. Coba lagi beberapa saat lagi.', 'retry'],
+          504: ['Server terlalu lama menjawab', 'Layanan di belakang server tidak menjawab tepat waktu. Coba lagi sebentar lagi.', 'retry'],
+          offline: ['Koneksi gagal', 'Perangkat ini tidak bisa menghubungi server Nishikigoi. Periksa jaringan, atau pastikan program di komputer/HP server masih menyala.', 'retry'],
+        }
+        var HINTS = {
+          offline: 'Halaman ini mencoba menyambung lagi otomatis dan akan membuka halaman Anda begitu server kembali.',
+          500: 'Bila terus berulang, hubungi Master Admin dan sebutkan jam kejadiannya.',
+          503: 'Bila terus berulang, hubungi Master Admin dan sebutkan jam kejadiannya.',
+        }
+
+        var params = new URLSearchParams(location.search)
+        var code = String(params.get('code') || '').toLowerCase()
+        if (!code) {
+          try {
+            var nav = performance.getEntriesByType('navigation')[0]
+            if (nav && nav.responseStatus >= 400) code = String(nav.responseStatus)
+          } catch (error) {}
+        }
+        if (!code && navigator.onLine === false) code = 'offline'
+        if (!code) code = '404'
+        var info = CODES[code]
+        if (!info) {
+          var n = Number(code)
+          info = n >= 500
+            ? ['Kesalahan di server', 'Terjadi masalah di sisi server. Coba lagi sebentar lagi.', 'retry']
+            : ['Permintaan tidak dapat diproses', 'Server menolak permintaan ini. Kembali ke Dashboard atau coba lagi.', 'home']
+        }
+
+        var $ = function (id) { return document.getElementById(id) }
+        var isOffline = code === 'offline'
+        $('err-code').textContent = isOffline ? '⚡' : code
+        if (isOffline) $('err-code').style.fontSize = 'clamp(64px, 18vw, 104px)'
+        $('err-title').textContent = info[0]
+        $('err-text').textContent = info[1]
+        document.title = (isOffline ? '' : code + ' - ') + info[0] + ' - Nishikigoi'
+        if (HINTS[code]) { $('err-hint').textContent = HINTS[code]; $('err-hint').hidden = false }
+
+        // Alamat yang gagal dibuka: dari service worker lewat ?from=, selain itu alamat halaman ini sendiri.
+        var from = params.get('from')
+        var target = from && from.charAt(0) === '/' && from.indexOf('//') !== 0 ? from : location.pathname + location.search
+        if (target.indexOf('/assets/error.html') === 0) target = '/farm.html'
+        if (!isOffline || from) { $('err-path').textContent = target; $('err-path-wrap').hidden = false }
+
+        // Tombol
+        var primary = $('err-primary')
+        var kind = info[2]
+        if (kind === 'login') {
+          primary.textContent = 'Masuk'
+          primary.onclick = function () { location.href = '/sign-in.html' }
+        } else if (kind === 'retry') {
+          primary.textContent = 'Coba lagi'
+          primary.onclick = function () { location.href = isOffline ? target : location.href }
+          $('err-retry').hidden = true
+        } else {
+          primary.onclick = function () { location.href = '/farm.html' }
+        }
+        if (kind !== 'home' && kind !== 'login') {
+          // tombol Dashboard tetap tersedia sebagai pilihan kedua
+          var home = $('err-back')
+          home.textContent = 'Ke Dashboard'
+          home.onclick = function () { location.href = '/farm.html' }
+          var back = $('err-retry')
+          back.textContent = 'Kembali'
+          back.hidden = false
+          back.onclick = function () { history.length > 1 ? history.back() : (location.href = '/farm.html') }
+        } else {
+          $('err-back').onclick = function () { history.length > 1 ? history.back() : (location.href = '/farm.html') }
+          $('err-retry').onclick = function () { location.href = target }
+        }
+
+        // Nama dan logo program (disimpan halaman lain di localStorage)
+        try {
+          var settings = JSON.parse(localStorage.getItem('nishikigoi-app-settings') || 'null') || {}
+          if (settings.brand_name) $('err-name').textContent = settings.brand_name; if (settings.brand_name) document.title = document.title.replace(/\s-\s*Nishikigoi\s*$/i, ' - ' + settings.brand_name)
+          var dark = document.documentElement.getAttribute('data-bs-theme') === 'dark'
+          var logo = dark
+            ? (settings.brand_logo_dark || settings.brand_icon || settings.brand_logo_light)
+            : (settings.brand_logo_light || settings.brand_icon || settings.brand_logo_dark)
+          if (logo) { $('err-logo').src = logo; $('err-logo').hidden = false }
+        } catch (error) {}
+
+        $('err-meta').textContent = (isOffline ? 'KONEKSI' : 'HTTP ' + code) + ' · ' + new Date().toLocaleString('id-ID')
+
+        // Koneksi gagal / server 5xx: tes server tiap beberapa detik, buka lagi halaman tujuan begitu hidup kembali.
+        var watch = isOffline || code === '502' || code === '503' || code === '504'
+        if (watch) {
+          var status = $('err-status')
+          var dot = $('err-dot')
+          var text = $('err-status-text')
+          status.hidden = false
+          var tries = 0
+          var check = function () {
+            tries += 1
+            text.textContent = 'Menyambung ke server... (percobaan ' + tries + ')'
+            dot.className = 'err-dot'
+            fetch('/api/health', { cache: 'no-store' }).then(function (response) {
+              if (response.ok) {
+                dot.className = 'err-dot is-ok'
+                text.textContent = 'Server tersambung. Membuka halaman...'
+                setTimeout(function () { location.href = isOffline ? target : (target.indexOf('/assets/error.html') === 0 ? '/farm.html' : target) }, 600)
+                return
+              }
+              throw new Error('not ok')
+            }).catch(function () {
+              dot.className = 'err-dot is-bad'
+              text.textContent = 'Server belum bisa dihubungi. Mencoba lagi...'
+              setTimeout(check, Math.min(15000, 3000 + tries * 1000))
+            })
+          }
+          setTimeout(check, 1500)
+        }
+      })()
+    </script>
+  </body>
+</html>

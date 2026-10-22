@@ -1,0 +1,3395 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <!-- BEGIN META -->
+    <meta charset="utf-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, viewport-fit=cover"
+    />
+    <meta name="color-scheme" content="light dark" />
+    <meta http-equiv="X-UA-Compatible" content="ie=edge" />
+
+    <title>Inventaris - Nishikigoi</title>
+
+    <link
+      rel="icon"
+      href="/api/favicon?v=2"
+      data-brand-favicon
+    />
+    <link
+      rel="shortcut icon"
+      href="/api/favicon?v=2"
+      data-brand-favicon
+    />
+    <script>
+      (() => {
+        try {
+          const settings =
+            JSON.parse(
+              localStorage.getItem("nishikigoi-app-settings") || "null",
+            ) || {};
+          const icon = String(settings.brand_favicon || settings.brand_icon || "").trim();
+          if (!icon) return;
+          document.querySelectorAll("[data-brand-favicon]").forEach((link) => {
+            link.href = icon;
+            link.type = icon.startsWith("data:image/png")
+              ? "image/png"
+              : icon.startsWith("data:image/svg")
+                ? "image/svg+xml"
+                : icon.startsWith("data:image/webp")
+                  ? "image/webp"
+                  : "image/x-icon";
+          });
+        } catch {}
+      })();
+    </script>
+    <!-- END META -->
+
+    <!-- BEGIN GLOBAL MANDATORY STYLES -->
+    <link href="./dist/css/tabler.css" rel="stylesheet" />
+    <!-- END GLOBAL MANDATORY STYLES -->
+
+    <!-- BEGIN PLUGINS STYLES -->
+    <link href="./dist/css/tabler-flags.css" rel="stylesheet" />
+    <link href="./dist/css/tabler-socials.css" rel="stylesheet" />
+    <link href="./dist/css/tabler-payments.css" rel="stylesheet" />
+    <link href="./dist/css/tabler-vendors.css" rel="stylesheet" />
+    <link href="./dist/css/tabler-marketing.css" rel="stylesheet" />
+    <link href="./dist/css/tabler-themes.css" rel="stylesheet" />
+    <!-- END PLUGINS STYLES -->
+
+    <!-- BEGIN DEMO STYLES -->
+    <link href="./preview/css/demo.css" rel="stylesheet" />
+    <!-- END DEMO STYLES -->
+
+    <!-- BEGIN CUSTOM FONT -->
+
+    <style>
+      @import url("https://rsms.me/inter/inter.css");
+    </style>
+    <!-- END CUSTOM FONT -->
+    <style>
+      .breeding-parent-preview {
+        min-height: 0;
+      }
+      .breeding-parent-photo {
+        aspect-ratio: 2/3;
+        border: 1px solid var(--tblr-border-color);
+        background: var(--tblr-bg-surface-secondary);
+        border-radius: 6px;
+        flex: none;
+        width: 72px;
+        overflow: hidden;
+      }
+      .breeding-parent-photo img {
+        object-fit: cover;
+        width: 100%;
+        height: 100%;
+      }
+      .breeding-parent-photo-button {
+        cursor: zoom-in;
+        background: 0 0;
+        border: 0;
+        padding: 0;
+      }
+      .breeding-parent-placeholder {
+        width: 100%;
+        height: 100%;
+        color: var(--tblr-secondary);
+        text-align: center;
+        padding: 0.35rem;
+        font-size: 0.68rem;
+        line-height: 1.15;
+      }
+      .breeding-parent-size {
+        width: 72px;
+        max-width: 100%;
+      }
+      .breeding-parent-size .form-label {
+        text-align: center;
+        display: block;
+      }
+      .breeding-parent-size .form-control {
+        text-align: center;
+        padding-left: 0.25rem;
+        padding-right: 0.25rem;
+      }
+      .breeding-parent-size .form-control::-webkit-outer-spin-button {
+        appearance: none;
+        margin: 0;
+      }
+      .breeding-parent-size .form-control::-webkit-inner-spin-button {
+        appearance: none;
+        margin: 0;
+      }
+      .breeding-parent-size .form-control[type="number"] {
+        appearance: textfield;
+      }
+      .breeding-parent-search-wrap {
+        position: relative;
+      }
+      .breeding-parent-suggestions {
+        z-index: 1080;
+        background: var(--tblr-bg-surface);
+        border: 1px solid var(--tblr-border-color);
+        max-height: 240px;
+        box-shadow: var(--tblr-box-shadow-dropdown);
+        border-radius: 6px;
+        position: absolute;
+        top: calc(100% + 4px);
+        left: 0;
+        right: 0;
+        overflow-y: auto;
+      }
+      .breeding-parent-suggestion {
+        border: 0;
+        border-bottom: 1px solid var(--tblr-border-color);
+        width: 100%;
+        color: inherit;
+        text-align: left;
+        background: 0 0;
+      }
+      .breeding-parent-suggestion:last-child {
+        border-bottom: 0;
+      }
+      .breeding-parent-suggestion:hover,
+      .breeding-parent-suggestion:focus {
+        background: var(--tblr-bg-surface-secondary);
+      }
+      [data-parent-entry="male"] {
+        border-top: 2px solid var(--tblr-border-color);
+        margin-top: 0.75rem;
+        padding-top: 1rem;
+      }
+      [data-parent-entry="male"]:first-child {
+        border-top: 0;
+        padding-top: 0;
+      }
+      [data-pond-entry] {
+        border-top: 2px solid var(--tblr-border-color);
+        margin-top: 0.85rem;
+        padding-top: 0.85rem;
+      }
+      [data-pond-entry]:first-child {
+        border-top: 0;
+        margin-top: 0;
+        padding-top: 0;
+      }
+      .breeding-mention-wrap {
+        position: relative;
+      }
+      .breeding-zoom {
+        z-index: 2000;
+        background: #0f172ad1;
+        justify-content: center;
+        align-items: center;
+        padding: 1rem;
+        display: flex;
+        position: fixed;
+        inset: 0;
+      }
+      .breeding-zoom img {
+        background: var(--tblr-bg-surface);
+        object-fit: contain;
+        border-radius: 8px;
+        max-width: min(92vw, 720px);
+        max-height: 86vh;
+      }
+      .breeding-zoom-close {
+        z-index: 2001;
+        position: fixed;
+        top: 1rem;
+        right: 1rem;
+      }
+
+    .breeding-card {
+      border: 1px solid var(--tblr-border-color);
+            transition: border-color .15s ease;
+    }
+
+    .breeding-card:hover {
+      border-color: var(--tblr-primary);
+    }
+
+    .breeding-card .card-body {
+      padding: .75rem;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .breeding-card-actions {
+      display: flex;
+      gap: .5rem;
+      margin-top: auto;
+      padding-top: .75rem;
+    }
+
+    .breeding-card-actions .btn {
+      flex: 1 1 0;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: .35rem;
+      min-width: 0;
+    }
+
+    .breeding-card-photo {
+      position: relative;
+      display: block;
+      width: 100%;
+      aspect-ratio: 2 / 3;
+      min-height: 220px;
+      border-radius: 0;
+      background: var(--tblr-bg-surface-secondary);
+      overflow: hidden;
+      cursor: pointer;
+    }
+
+    .breeding-zoom-btn {
+      position: absolute;
+      top: .5rem;
+      right: .5rem;
+      z-index: 1;
+      background: rgba(15, 23, 42, .62);
+      border: 0;
+      color: #fff;
+    }
+
+    .breeding-card .card-body[data-breeding-id],
+    .breeding-card-head[data-breeding-id] {
+      cursor: pointer;
+    }
+
+    /* kode, nama sesi, status, and tanggal sit above the photo of the female parent */
+    .breeding-card-head {
+      padding: var(--tblr-card-spacer-y, 1rem) var(--tblr-card-spacer-x, 1rem) .75rem;
+      border-radius: calc(var(--tblr-card-border-radius, 8px) - 1px) calc(var(--tblr-card-border-radius, 8px) - 1px) 0 0;
+    }
+
+    .breeding-card-photo img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .breeding-card-title,
+    .breeding-card-cell {
+      min-width: 0;
+    }
+
+    .breeding-code-copy {
+
+      display: block;
+
+      max-width: 100%;
+
+      border: 0;
+
+      background: transparent;
+
+      color: inherit;
+
+      font: inherit;
+
+      font-weight: 600;
+
+      padding: 0;
+
+      text-align: left;
+
+      cursor: pointer;
+
+      user-select: none;
+
+    }
+
+
+    .breeding-code-copy:hover {
+
+      color: var(--tblr-primary);
+
+    }
+
+
+    .breeding-code-copy.is-copied {
+
+      color: var(--tblr-success);
+
+    }
+
+
+    .breeding-code-copy.is-copy-failed {
+
+      color: var(--tblr-danger);
+
+    }
+
+
+    .breeding-ellipsis {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .breeding-male-thumbs {
+      display: flex;
+      justify-content: center;
+      gap: .35rem;
+      margin-top: .15rem;
+    }
+    .breeding-male-thumb {
+      position: relative;
+      width: 100%;
+      min-width: 0;
+      flex: 0 0 calc((100% - 3 * .35rem) / 4);
+
+      aspect-ratio: 2 / 3;
+      padding: 0;
+      border: 1px solid var(--tblr-border-color);
+      border-radius: 6px;
+      background: var(--tblr-bg-surface-secondary);
+      overflow: hidden;
+      cursor: zoom-in;
+    }
+
+
+    .breeding-male-thumb-wide {
+      width: 100%;
+      max-width: none;
+    }
+
+    .breeding-male-thumb img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .breeding-male-code {
+      display: block;
+      padding: .2rem;
+      font-size: .6rem;
+      line-height: 1.1;
+      color: var(--tblr-secondary);
+      word-break: break-all;
+    }
+
+    .breeding-male-more {
+      cursor: pointer;
+    }
+
+    .breeding-male-more img {
+      filter: brightness(.45);
+    }
+
+    .breeding-male-more-count {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #fff;
+      font-weight: 700;
+      font-size: .95rem;
+    }
+
+      .breeding-table-wrap {
+        overflow: visible;
+      }
+      .breeding-actions-menu {
+        z-index: 1085;
+      }
+      @media (width<=991.98px) {
+        .breeding-table-wrap {
+          padding-bottom: 4.5rem;
+          overflow: auto visible;
+        }
+        .breeding-actions-dropdown .dropdown-menu.show {
+          min-width: 150px;
+          position: fixed !important;
+          inset: auto 1rem 1rem auto !important;
+          transform: none !important;
+        }
+      }
+      .koi-print-root {
+        display: none;
+      }
+      @media print {
+        body.koi-printing {
+          background: #fff !important;
+        }
+        body.koi-printing > :not(.koi-print-root) {
+          display: none !important;
+        }
+        body.koi-printing .koi-print-root {
+          color: #172033 !important;
+          background: #fff !important;
+          width: 100% !important;
+          min-height: auto !important;
+          margin: 0 !important;
+          padding: 0 !important;
+          display: block !important;
+          position: static !important;
+        }
+      }
+      .nishikigoi-brand-link[data-astro-cid-flr2tpzy],
+      .nishikigoi-brand-link[data-astro-cid-flr2tpzy]:hover,
+      .nishikigoi-brand-link[data-astro-cid-flr2tpzy]:focus {
+        text-decoration: none;
+      }
+      .nishikigoi-brand-custom-icon[data-astro-cid-flr2tpzy] {
+        object-fit: contain;
+        border-radius: 8px;
+        width: 32px;
+        height: 32px;
+      }
+      @media (width<=767.98px) {
+        .nishikigoi-brand-link[data-astro-cid-flr2tpzy] .navbar-brand-text {
+          display: none;
+        }
+      }
+    </style>
+    <link rel="stylesheet" href="/_astro/DefaultLayout.d0930n1.css" />
+      <link rel="manifest" href="/api/manifest" />
+  <style>
+    .inv-card { overflow: hidden; }
+    .inv-card-top { display: flex; align-items: center; justify-content: space-between; gap: .5rem; padding: .6rem 1rem; border-bottom: 1px solid var(--tblr-border-color); cursor: pointer; }
+    .inv-card .card-body[data-inv-id] { cursor: pointer; }
+    .inv-thumb { width: 100%; aspect-ratio: 4 / 3; object-fit: cover; border-radius: 6px; border: 1px solid var(--tblr-border-color); background: var(--tblr-bg-surface-secondary); }
+    .inv-thumb-empty { display: flex; align-items: center; justify-content: center; color: var(--tblr-secondary); aspect-ratio: 16 / 7; }
+    .inv-thumb-empty svg { width: 40px; height: 40px; }
+    .inv-card .inv-thumb:not(.inv-thumb-empty) { max-height: 190px; }
+    .inv-ellipsis { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .inv-stock { font-size: 1.35rem; font-weight: 700; }
+    .inv-filter-chip { cursor: pointer; }
+    .inv-dropzone { border: 2px dashed var(--tblr-border-color); border-radius: 8px; padding: .75rem; text-align: center; transition: border-color .15s, background .15s; }
+    .inv-dropzone.is-over { border-color: var(--tblr-primary); background: rgba(var(--tblr-primary-rgb), .1); }
+    .inv-preview { width: 120px; aspect-ratio: 4 / 3; object-fit: cover; border-radius: 6px; border: 1px solid var(--tblr-border-color); }
+    .inv-history-type { white-space: nowrap; }
+  </style>
+  </head>
+
+  <body>
+    <a href="#content" class="visually-hidden-focusable skip-link"
+      >Skip to main content</a
+    >
+
+    <!-- BEGIN GLOBAL THEME SCRIPT -->
+    <script>
+      (function () {
+        var themeKeys = [
+          "theme",
+          "theme-base",
+          "theme-font",
+          "theme-primary",
+          "theme-radius",
+        ];
+        var session = JSON.parse(
+          sessionStorage.getItem("koi-farm-auth-session") || "null",
+        );
+        var username = session && session.username;
+        if (!username) return;
+
+        var accountThemeKey = "koi-farm-theme-settings-" + username;
+        var accountTheme =
+          JSON.parse(localStorage.getItem(accountThemeKey) || "null") || {};
+
+        themeKeys.forEach(function (key) {
+          var accountValue = accountTheme[key];
+          if (accountValue) {
+            localStorage.setItem("tabler-" + key, accountValue);
+          } else {
+            localStorage.removeItem("tabler-" + key);
+          }
+        });
+      })();
+    </script>
+    <script src="./assets/theme-auto.js?v=20261016a"></script>
+    <script src="./dist/js/tabler-theme.js"></script>
+    <!-- END GLOBAL THEME SCRIPT -->
+
+    <!-- BEGIN APP AUTH SCRIPT -->
+    <script src="./assets/auth.js?v=20261026a"></script>
+    <script src="./assets/drafts.js?v=20261024b"></script>
+    <script src="./assets/theme-sync.js?v=20261014b"></script>
+    <script src="./assets/print-kit.js?v=20261024a"></script>
+    <script src="./assets/action-dock.js?v=20261015f"></script>
+    <!-- END APP AUTH SCRIPT -->
+
+    <div class="page">
+      <!-- BEGIN NAVBAR  -->
+
+      <!-- BEGIN NAVBAR -->
+      <header
+        class="navbar navbar-expand-md d-print-none"
+        data-astro-cid-wfnge2tk
+      >
+        <div
+          class="container-xl nishikigoi-navbar-head"
+          data-astro-cid-wfnge2tk
+        >
+          <!-- BEGIN NAVBAR TOGGLER -->
+          <button
+            class="navbar-toggler navbar-toggler-tabler"
+            type="button"
+            data-bs-toggle="collapse"
+            data-bs-target="#navbar-menu"
+            aria-controls="navbar-menu"
+            aria-expanded="false"
+            aria-label="Toggle primary navigation"
+            data-astro-cid-eqcup72q
+          >
+            <!-- Download SVG icon from http://tabler.io/icons/icon/menu-2 -->
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="24"
+              height="24"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              aria-hidden="true"
+              focusable="false"
+              class="icon navbar-toggler-symbol navbar-toggler-symbol-menu"
+            >
+              <path d="M4 6l16 0" />
+              <path d="M4 12l16 0" />
+              <path d="M4 18l16 0" />
+            </svg>
+            <!-- Download SVG icon from http://tabler.io/icons/icon/x -->
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="24"
+              height="24"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              aria-hidden="true"
+              focusable="false"
+              class="icon navbar-toggler-symbol navbar-toggler-symbol-close"
+            >
+              <path d="M18 6l-12 12" />
+              <path d="M6 6l12 12" />
+            </svg>
+          </button>
+          <!-- END NAVBAR TOGGLER -->
+
+          <!-- BEGIN NAVBAR LOGO -->
+          <div
+            class="navbar-brand navbar-brand-autodark nishikigoi-brand-link d-none-navbar-horizontal pe-0 pe-md-2 flex-shrink-0"
+            data-astro-cid-flr2tpzy
+          >
+            <a
+              href="./farm.html"
+              aria-label="Nishikigoi"
+              class="nishikigoi-brand-link"
+              data-astro-cid-flr2tpzy
+            >
+              <span
+                class="nishikigoi-brand-default-icon"
+                data-brand-default-icon
+                hidden
+                data-astro-cid-flr2tpzy
+                ><svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  viewBox="0 0 68 68"
+                  width="32"
+                  height="32"
+                  aria-hidden="true"
+                  focusable="false"
+                  class="navbar-brand-image"
+                >
+                  <path
+                    d="M64.6 16.2C63 9.9 58.1 5 51.8 3.4 40 1.5 28 1.5 16.2 3.4 9.9 5 5 9.9 3.4 16.2 1.5 28 1.5 40 3.4 51.8 5 58.1 9.9 63 16.2 64.6c11.8 1.9 23.8 1.9 35.6 0C58.1 63 63 58.1 64.6 51.8c1.9-11.8 1.9-23.8 0-35.6zM33.3 36.3c-2.8 4.4-6.6 8.2-11.1 11-1.5.9-3.3.9-4.8.1s-2.4-2.3-2.5-4c0-1.7.9-3.3 2.4-4.1 2.3-1.4 4.4-3.2 6.1-5.3-1.8-2.1-3.8-3.8-6.1-5.3-2.3-1.3-3-4.2-1.7-6.4s4.3-2.9 6.5-1.6c4.5 2.8 8.2 6.5 11.1 10.9 1 1.4 1 3.3.1 4.7zM49.2 46H37.8c-2.1 0-3.8-1-3.8-3s1.7-3 3.8-3h11.4c2.1 0 3.8 1 3.8 3s-1.7 3-3.8 3z"
+                    fill="#066fd1"
+                    style="
+                      fill: var(
+                        --tblr-navbar-logo-color,
+                        var(--tblr-primary, #066fd1)
+                      );
+                    "
+                  /></svg></span
+              ><img
+                class="nishikigoi-brand-custom-icon"
+                data-brand-icon
+                hidden
+                alt=""
+                data-astro-cid-flr2tpzy
+              />
+              <span
+                class="navbar-brand-text fw-bold ms-2"
+                data-brand-name
+                data-astro-cid-flr2tpzy
+                >Nishikigoi</span
+              >
+            </a>
+          </div>
+          <!-- END NAVBAR LOGO -->
+
+          <!-- BEGIN NAVBAR SEARCH -->
+          <div
+            class="navbar-global-search nishikigoi-navbar-search order-1 order-md-0"
+            data-astro-cid-x2cvvrkm
+          >
+            <div class="input-icon">
+              <span class="input-icon-addon"
+                ><!-- Download SVG icon from http://tabler.io/icons/icon/search -->
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="24"
+                  height="24"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  aria-hidden="true"
+                  focusable="false"
+                  class="icon"
+                >
+                  <path d="M3 10a7 7 0 1 0 14 0a7 7 0 1 0 -14 0" />
+                  <path d="M21 21l-6 -6" /></svg
+              ></span>
+              <input
+                type="text"
+                id="navbar-global-search"
+                name="global_search"
+                value
+                class="form-control navbar-global-search-input"
+                placeholder="Cari data..."
+                aria-label="Cari data"
+                autocomplete="off"
+              />
+            </div>
+            <button
+              type="button"
+              class="navbar-global-search-clear"
+              data-navbar-search-clear
+              aria-label="Hapus pencarian"
+              title="Hapus pencarian"
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="24"
+                height="24"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                class="icon"
+              >
+                <path d="M18 6l-12 12" />
+                <path d="M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
+          <!-- END NAVBAR SEARCH -->
+
+          <script>
+            (() => {
+              const normalize = (value) =>
+                String(value || "")
+                  .toLowerCase()
+                  .trim();
+
+              const pageSearchSelector = [
+                "[data-koi-search]",
+                "[data-pond-search]",
+                "[data-gallery-search]",
+                "[data-report-search]",
+                "[data-breeding-search]",
+                "[data-log-search]",
+                "[data-sell-search]",
+                "[data-invoice-search]",
+                "[data-inventory-search]",
+              ].join(", ");
+
+              const getPageSearch = () => {
+                const candidates = Array.from(
+                  document.querySelectorAll(pageSearchSelector),
+                ).filter(
+                  (input) =>
+                    !input.closest(
+                      ".modal, .dropdown-menu, #offcanvas-settings",
+                    ),
+                );
+
+                return (
+                  candidates.find((input) =>
+                    input.matches(
+                      "[data-breeding-search], [data-report-search], [data-gallery-search], [data-koi-search], [data-pond-search], [data-log-search], [data-sell-search], [data-invoice-search], [data-inventory-search]",
+                    ),
+                  ) || null
+                );
+              };
+
+              const getSearchTargets = () => {
+                const tableRows = Array.from(
+                  document.querySelectorAll("tbody tr"),
+                ).filter((row) => row.children.length);
+                const cards = Array.from(
+                  document.querySelectorAll(".card"),
+                ).filter((card) => {
+                  if (
+                    card.closest(".modal, .dropdown-menu, #offcanvas-settings")
+                  )
+                    return false;
+                  return !card.querySelector("table");
+                });
+                return tableRows;
+              };
+
+              const applyGlobalSearch = (query) => {
+                const pageSearch = getPageSearch();
+
+                if (pageSearch && pageSearch.value !== query) {
+                  pageSearch.value = query;
+                  pageSearch.dispatchEvent(
+                    new Event("input", { bubbles: true }),
+                  );
+                  return;
+                }
+
+                const text = normalize(query);
+                const terms = text.split(/\s+/).filter(Boolean);
+                getSearchTargets().forEach((target) => {
+                  const haystack = normalize(
+                    target.dataset.searchText || target.textContent || "",
+                  );
+                  const matches = target.dataset.searchText
+                    ? terms.some((term) => haystack.includes(term))
+                    : terms.every((term) => haystack.includes(term));
+                  target.classList.toggle(
+                    "d-none",
+                    terms.length > 0 && !matches,
+                  );
+                });
+
+                document
+                  .querySelectorAll("tbody tr.table-active")
+                  .forEach((groupRow) => {
+                    if (terms.length === 0) {
+                      groupRow.classList.remove("d-none");
+                      return;
+                    }
+
+                    let hasVisibleItem = false;
+                    let row = groupRow.nextElementSibling;
+                    while (row && !row.classList.contains("table-active")) {
+                      if (!row.classList.contains("d-none")) {
+                        hasVisibleItem = true;
+                        break;
+                      }
+                      row = row.nextElementSibling;
+                    }
+
+                    groupRow.classList.toggle("d-none", !hasVisibleItem);
+                  });
+              };
+
+              const syncSearchClear = (input) => {
+                const wrapper = input.closest(".navbar-global-search");
+                wrapper?.classList.toggle("has-value", Boolean(input.value));
+              };
+
+              const bindSearch = () => {
+                document
+                  .querySelectorAll(".navbar-global-search-input")
+                  .forEach((input) => {
+                    if (input.dataset.globalSearchReady) return;
+                    input.dataset.globalSearchReady = "true";
+                    input.addEventListener("input", () => {
+                      applyGlobalSearch(input.value);
+                      syncSearchClear(input);
+                    });
+                    input
+                      .closest(".navbar-global-search")
+                      ?.querySelector("[data-navbar-search-clear]")
+                      ?.addEventListener("click", () => {
+                        input.value = "";
+                        applyGlobalSearch("");
+                        syncSearchClear(input);
+                        input.focus();
+                      });
+                    syncSearchClear(input);
+                  });
+
+                const pageSearch = getPageSearch();
+                const globalSearch = document.querySelector(
+                  ".navbar-global-search-input",
+                );
+                if (
+                  pageSearch &&
+                  globalSearch &&
+                  pageSearch.value &&
+                  !globalSearch.value
+                ) {
+                  globalSearch.value = pageSearch.value;
+                  syncSearchClear(globalSearch);
+                }
+              };
+
+              bindSearch();
+              document.addEventListener("DOMContentLoaded", bindSearch);
+            })();
+          </script>
+
+          <!-- BEGIN NAVBAR ACTIONS -->
+          <div class="navbar-nav flex-row navbar-side order-md-last ms-auto">
+            <div class="navbar-side-actions d-flex align-items-center me-3">
+              <!-- BEGIN THEME TOGGLE -->
+              <div class="nav-item">
+                <a
+                  href="?theme=dark"
+                  class="nav-link px-0 hide-theme-dark js-theme-toggle"
+                  title="Enable dark mode"
+                  data-theme-value="dark"
+                  data-bs-toggle="tooltip"
+                  data-bs-placement="bottom"
+                >
+                  <!-- Download SVG icon from http://tabler.io/icons/icon/moon -->
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="24"
+                    height="24"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    aria-hidden="true"
+                    focusable="false"
+                    class="icon"
+                  >
+                    <path
+                      d="M12 3c.132 0 .263 0 .393 0a7.5 7.5 0 0 0 7.92 12.446a9 9 0 1 1 -8.313 -12.454l0 .008"
+                    />
+                  </svg>
+                </a>
+
+                <a
+                  href="?theme=light"
+                  class="nav-link px-0 hide-theme-light js-theme-toggle"
+                  title="Enable light mode"
+                  data-theme-value="light"
+                  data-bs-toggle="tooltip"
+                  data-bs-placement="bottom"
+                >
+                  <!-- Download SVG icon from http://tabler.io/icons/icon/sun -->
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="24"
+                    height="24"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    aria-hidden="true"
+                    focusable="false"
+                    class="icon"
+                  >
+                    <path d="M8 12a4 4 0 1 0 8 0a4 4 0 1 0 -8 0" />
+                    <path
+                      d="M3 12h1m8 -9v1m8 8h1m-9 8v1m-6.4 -15.4l.7 .7m12.1 -.7l-.7 .7m0 11.4l.7 .7m-12.1 -.7l-.7 .7"
+                    />
+                  </svg>
+                </a>
+              </div>
+              <!-- END THEME TOGGLE -->
+              <!-- BEGIN NOTIFICATIONS -->
+              <div class="nav-item dropdown" data-astro-cid-ry6bbqh3>
+                <a
+                  href="#"
+                  id="navbar-notifications-toggle"
+                  class="nav-link px-0"
+                  data-bs-toggle="dropdown"
+                  aria-label="Show notifications"
+                  data-bs-auto-close="outside"
+                  aria-expanded="false"
+                  data-astro-cid-ry6bbqh3
+                >
+                  <!-- Download SVG icon from http://tabler.io/icons/icon/bell -->
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="24"
+                    height="24"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    aria-hidden="true"
+                    focusable="false"
+                    class="icon"
+                  >
+                    <path
+                      d="M10 5a2 2 0 1 1 4 0a7 7 0 0 1 4 6v3a4 4 0 0 0 2 3h-16a4 4 0 0 0 2 -3v-3a7 7 0 0 1 4 -6"
+                    />
+                    <path d="M9 17v1a3 3 0 0 0 6 0v-1" />
+                  </svg>
+                  <span
+                    class="badge bg-red d-none"
+                    data-navbar-notifications-badge
+                    data-astro-cid-ry6bbqh3
+                  ></span>
+                </a>
+                <!-- BEGIN NAVBAR NOTIFICATIONS -->
+                <div
+                  class="dropdown-menu dropdown-menu-arrow dropdown-menu-end dropdown-menu-card navbar-notifications-menu"
+                  data-astro-cid-ry6bbqh3
+                >
+                  <div class="card" data-astro-cid-ry6bbqh3>
+                    <div class="card-header d-flex" data-astro-cid-ry6bbqh3>
+                      <h3 class="card-title">Notifications</h3>
+                      <button
+                        type="button"
+                        class="btn-close ms-auto"
+                        data-navbar-notifications-close
+                        aria-label="Close"
+                        data-astro-cid-ry6bbqh3
+                      ></button>
+                    </div>
+                    <div
+                      class="list-group list-group-flush list-group-hoverable"
+                      data-navbar-notifications-list
+                      data-astro-cid-ry6bbqh3
+                    >
+                      <div class="list-group-item" data-astro-cid-ry6bbqh3>
+                        <div class="text-secondary" data-astro-cid-ry6bbqh3>
+                          <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>Memuat notifikasi...
+                        </div>
+                      </div>
+                    </div>
+                    <div class="card-body" data-astro-cid-ry6bbqh3>
+                      <div class="notification-actions" data-astro-cid-ry6bbqh3>
+                        <a
+                          href="farm-log.html"
+                          class="btn"
+                          data-astro-cid-ry6bbqh3
+                          >Lihat Log</a
+                        >
+                        <button
+                          type="button"
+                          class="btn"
+                          data-navbar-notifications-clear
+                          data-astro-cid-ry6bbqh3
+                        >
+                          Clear
+                        </button>
+                        <button
+                          type="button"
+                          class="btn"
+                          data-navbar-notifications-read-all
+                          data-astro-cid-ry6bbqh3
+                        >
+                          Mark all read
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <!-- END NAVBAR NOTIFICATIONS -->
+              </div>
+
+              <!-- END NOTIFICATIONS -->
+            </div>
+
+            <!-- BEGIN USER MENU -->
+            <div class="nav-item dropdown">
+              <a
+                href="#"
+                class="nav-link d-flex lh-1 p-0 px-2"
+                data-bs-toggle="dropdown"
+                aria-label="Open user menu"
+              >
+                <span
+                  class="koi-api-indicator koi-api-indicator-loading me-2"
+                  data-api-indicator
+                  title="Memeriksa API"
+                  aria-label="Memeriksa API"
+                ></span>
+                <span class="avatar avatar-sm" data-auth-avatar>HA</span>
+                <div class="d-none d-xl-block ps-2">
+                  <div data-auth-name>Holil</div>
+                  <div class="mt-1 small text-secondary" data-auth-role>
+                    Master Admin
+                  </div>
+                </div>
+              </a>
+              <div class="dropdown-menu dropdown-menu-end dropdown-menu-arrow navbar-user-menu">
+                <a class="dropdown-item" href="#" data-koi-my-profile><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false" class="icon dropdown-item-icon"><path d="M8 7a4 4 0 1 0 8 0a4 4 0 0 0 -8 0" /><path d="M6 21v-2a4 4 0 0 1 4 -4h4a4 4 0 0 1 4 4v2" /></svg> Profile</a>
+                <div class="dropdown-divider"></div>
+                <a class="dropdown-item d-flex align-items-center" href="#" data-koi-sp-toggle aria-expanded="false">Settings &amp; Privacy</a>
+                <div class="koi-sp-list" data-koi-sp-list hidden>
+                  <a class="dropdown-item" href="./settings.html">Pengaturan Akun</a>
+                  <a class="dropdown-item" href="./farm-log.html#changelog" data-koi-changelog>Change Log</a>
+                  <a class="dropdown-item" href="#" data-bs-toggle="offcanvas" data-bs-target="#offcanvas-settings" aria-controls="offcanvas-settings">Theme Settings</a>
+                  <a class="dropdown-item" href="#" data-feedback-open>Give Feedback</a>
+                  <a class="dropdown-item" href="./settings-master-account.html" data-role-required="master-admin">Master Akun</a>
+                </div>
+                <div class="dropdown-divider"></div>
+                <a class="dropdown-item" href="./sign-in.html" data-action="logout">Sign out</a>
+              </div>
+            </div>
+            <!-- END USER MENU -->
+          </div>
+          <!-- END NAVBAR ACTIONS -->
+        </div>
+      </header>
+
+      <div class="navbar-expand-md" data-astro-cid-wfnge2tk>
+        <div
+          class="collapse navbar-collapse"
+          id="navbar-menu"
+          data-astro-cid-wfnge2tk
+        >
+          <div class="navbar" data-astro-cid-wfnge2tk>
+            <div class="container-xl" data-astro-cid-wfnge2tk>
+              <div
+                class="row flex-column flex-md-row flex-fill align-items-center justify-content-center"
+                data-astro-cid-wfnge2tk
+              >
+                <div class="col-auto" data-astro-cid-wfnge2tk>
+                  <!-- BEGIN NAVBAR MENU -->
+                  <nav aria-label="Primary" data-astro-cid-wfnge2tk>
+                    <!-- BEGIN NAVBAR MENU -->
+                    <ul class="navbar-nav">
+                      <!-- BEGIN NAVBAR ITEM -->
+                      <li class="nav-item">
+                        <a class="nav-link" href="./farm.html">
+                          <span
+                            class="nav-link-icon d-md-none d-lg-inline-block"
+                            ><!-- Download SVG icon from http://tabler.io/icons/icon/dashboard -->
+                            <svg
+                              xmlns="http://www.w3.org/2000/svg"
+                              width="24"
+                              height="24"
+                              viewBox="0 0 24 24"
+                              fill="none"
+                              stroke="currentColor"
+                              stroke-width="2"
+                              stroke-linecap="round"
+                              stroke-linejoin="round"
+                              aria-hidden="true"
+                              focusable="false"
+                              class="icon"
+                            >
+                              <path d="M10 13a2 2 0 1 0 4 0a2 2 0 1 0 -4 0" />
+                              <path d="M13.45 11.55l2.05 -2.05" />
+                              <path d="M6.4 20a9 9 0 1 1 11.2 0l-11.2 0" /></svg
+                          ></span>
+
+                          <span class="nav-link-title">Dashboard</span>
+                        </a>
+                      </li>
+                      <!-- END NAVBAR ITEM -->
+
+                      <!-- BEGIN NAVBAR ITEM -->
+                      <li class="nav-item">
+                        <a class="nav-link" href="./farm-koi.html">
+                          <span
+                            class="nav-link-icon d-md-none d-lg-inline-block"
+                            ><!-- Download SVG icon from http://tabler.io/icons/icon/fish -->
+                            <svg
+                              xmlns="http://www.w3.org/2000/svg"
+                              width="24"
+                              height="24"
+                              viewBox="0 0 24 24"
+                              fill="none"
+                              stroke="currentColor"
+                              stroke-width="2"
+                              stroke-linecap="round"
+                              stroke-linejoin="round"
+                              aria-hidden="true"
+                              focusable="false"
+                              class="icon"
+                            >
+                              <path
+                                d="M16.69 7.44a6.973 6.973 0 0 0 -1.69 4.56c0 1.747 .64 3.345 1.699 4.571"
+                              />
+                              <path
+                                d="M2 9.504c7.715 8.647 14.75 10.265 20 2.498c-5.25 -7.761 -12.285 -6.142 -20 2.504"
+                              />
+                              <path d="M18 11v.01" />
+                              <path d="M11.5 10.5c-.667 1 -.667 2 0 3" /></svg
+                          ></span>
+
+                          <span class="nav-link-title">Data Ikan</span>
+                        </a>
+                      </li>
+                      <!-- END NAVBAR ITEM -->
+
+                      <!-- BEGIN NAVBAR ITEM -->
+                      <li class="nav-item">
+                        <a class="nav-link" href="./farm-ponds.html">
+                          <span
+                            class="nav-link-icon d-md-none d-lg-inline-block"
+                            ><!-- Download SVG icon from http://tabler.io/icons/icon/bowl -->
+                            <svg
+                              xmlns="http://www.w3.org/2000/svg"
+                              width="24"
+                              height="24"
+                              viewBox="0 0 24 24"
+                              fill="none"
+                              stroke="currentColor"
+                              stroke-width="2"
+                              stroke-linecap="round"
+                              stroke-linejoin="round"
+                              aria-hidden="true"
+                              focusable="false"
+                              class="icon"
+                            >
+                              <path
+                                d="M4 8h16a1 1 0 0 1 1 1v.5c0 1.5 -2.517 5.573 -4 6.5v1a1 1 0 0 1 -1 1h-8a1 1 0 0 1 -1 -1v-1c-1.687 -1.054 -4 -5 -4 -6.5v-.5a1 1 0 0 1 1 -1"
+                              /></svg
+                          ></span>
+
+                          <span class="nav-link-title">Data Kolam</span>
+                        </a>
+                      </li>
+                      <!-- END NAVBAR ITEM -->
+
+                      <!-- BEGIN NAVBAR ITEM -->
+                      <li class="nav-item">
+                        <a
+                          class="nav-link"
+                          href="./farm-breeding.html"
+                        >
+                          <span
+                            class="nav-link-icon d-md-none d-lg-inline-block"
+                            ><!-- Download SVG icon from http://tabler.io/icons/icon/dna-2 -->
+                            <svg
+                              xmlns="http://www.w3.org/2000/svg"
+                              width="24"
+                              height="24"
+                              viewBox="0 0 24 24"
+                              fill="none"
+                              stroke="currentColor"
+                              stroke-width="2"
+                              stroke-linecap="round"
+                              stroke-linejoin="round"
+                              aria-hidden="true"
+                              focusable="false"
+                              class="icon"
+                            >
+                              <path
+                                d="M17 3v1c-.01 3.352 -1.68 6.023 -5.008 8.014c-3.328 1.99 3.336 -2 .008 -.014c-3.328 1.99 -5 4.662 -5.008 8.014v1"
+                              />
+                              <path
+                                d="M17 21.014v-1c-.01 -3.352 -1.68 -6.023 -5.008 -8.014c-3.328 -1.99 3.336 2 .008 .014c-3.328 -1.991 -5 -4.662 -5.008 -8.014v-1"
+                              />
+                              <path d="M7 4h10" />
+                              <path d="M7 20h10" />
+                              <path d="M8 8h8" />
+                              <path d="M8 16h8" /></svg
+                          ></span>
+
+                          <span class="nav-link-title">Breeding</span>
+                        </a>
+                      </li>
+                      <!-- END NAVBAR ITEM -->
+
+                      <!-- BEGIN NAVBAR ITEM -->
+                      <li class="nav-item">
+                        <a class="nav-link" href="./farm-reports.html">
+                          <span
+                            class="nav-link-icon d-md-none d-lg-inline-block"
+                            ><!-- Download SVG icon from http://tabler.io/icons/icon/report -->
+                            <svg
+                              xmlns="http://www.w3.org/2000/svg"
+                              width="24"
+                              height="24"
+                              viewBox="0 0 24 24"
+                              fill="none"
+                              stroke="currentColor"
+                              stroke-width="2"
+                              stroke-linecap="round"
+                              stroke-linejoin="round"
+                              aria-hidden="true"
+                              focusable="false"
+                              class="icon"
+                            >
+                              <path
+                                d="M8 5h-2a2 2 0 0 0 -2 2v12a2 2 0 0 0 2 2h5.697"
+                              />
+                              <path d="M18 14v4h4" />
+                              <path d="M18 11v-4a2 2 0 0 0 -2 -2h-2" />
+                              <path
+                                d="M8 5a2 2 0 0 1 2 -2h2a2 2 0 0 1 2 2a2 2 0 0 1 -2 2h-2a2 2 0 0 1 -2 -2"
+                              />
+                              <path d="M14 18a4 4 0 1 0 8 0a4 4 0 1 0 -8 0" />
+                              <path d="M8 11h4" />
+                              <path d="M8 15h3" /></svg
+                          ></span>
+
+                          <span class="nav-link-title">Laporan</span>
+                        </a>
+                      </li>
+                      <!-- END NAVBAR ITEM -->
+
+                      <!-- BEGIN NAVBAR ITEM -->
+                      <li class="nav-item dropdown">
+                        <a
+                          class="nav-link dropdown-toggle"
+                          href="#navbar-penjualan"
+                          data-bs-toggle="dropdown"
+                          data-bs-auto-close="outside"
+                          role="button"
+                          aria-haspopup="true"
+                          aria-expanded="false"
+                        >
+                          <span class="nav-link-icon d-md-none d-lg-inline-block"
+                            ><!-- Download SVG icon from http://tabler.io/icons/icon/tag -->
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false" class="icon">
+<path d="M6.5 7.5a1 1 0 1 0 2 0a1 1 0 1 0 -2 0" /><path d="M3 6v5.172a2 2 0 0 0 .586 1.414l7.71 7.71a2.41 2.41 0 0 0 3.408 0l5.592 -5.592a2.41 2.41 0 0 0 0 -3.408l-7.71 -7.71a2 2 0 0 0 -1.414 -.586h-5.172a3 3 0 0 0 -3 3" />
+                            </svg></span
+                          >
+
+                          <span class="nav-link-title">Penjualan</span>
+                        </a>
+
+                        <div class="dropdown-menu">
+                        <!-- BEGIN NAVBAR ITEM --><a
+                          class="dropdown-item"
+                          href="./farm-sell.html"
+                        >
+                          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false" class="icon icon-inline me-1">
+<path d="M4 19a2 2 0 1 0 4 0a2 2 0 1 0 -4 0" /><path d="M15 19a2 2 0 1 0 4 0a2 2 0 1 0 -4 0" /><path d="M17 17h-11v-14h-2" /><path d="M6 5l14 1l-1 7h-13" />
+                          </svg>
+
+                          Katalog
+                        </a>
+                        <!-- END NAVBAR ITEM -->
+                        <!-- BEGIN NAVBAR ITEM --><a
+                          class="dropdown-item"
+                          href="./farm-invoice.html"
+                        >
+                          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false" class="icon icon-inline me-1">
+<path d="M14 3v4a1 1 0 0 0 1 1h4" /><path d="M17 21h-10a2 2 0 0 1 -2 -2v-14a2 2 0 0 1 2 -2h7l5 5v11a2 2 0 0 1 -2 2" /><path d="M9 7l1 0" /><path d="M9 13l6 0" /><path d="M13 17l2 0" />
+                          </svg>
+
+                          Invoice
+                        </a>
+                        <!-- END NAVBAR ITEM -->
+                        </div>
+                      </li>
+                      <!-- END NAVBAR ITEM -->
+
+                      <!-- BEGIN NAVBAR ITEM -->
+                      <li class="nav-item dropdown active">
+                        <a
+                          class="nav-link dropdown-toggle"
+                          href="#navbar-management"
+                          data-bs-toggle="dropdown"
+                          data-bs-auto-close="outside"
+                          role="button"
+                          aria-haspopup="true"
+                          aria-expanded="false"
+                    aria-current="page"
+                          data-role-required="database-write"
+                        >
+                          <span
+                            class="nav-link-icon d-md-none d-lg-inline-block"
+                            ><!-- Download SVG icon from http://tabler.io/icons/icon/category -->
+                            <svg
+                              xmlns="http://www.w3.org/2000/svg"
+                              width="24"
+                              height="24"
+                              viewBox="0 0 24 24"
+                              fill="none"
+                              stroke="currentColor"
+                              stroke-width="2"
+                              stroke-linecap="round"
+                              stroke-linejoin="round"
+                              aria-hidden="true"
+                              focusable="false"
+                              class="icon"
+                            >
+                              <path d="M4 4h6v6h-6l0 -6" />
+                              <path d="M14 4h6v6h-6l0 -6" />
+                              <path d="M4 14h6v6h-6l0 -6" />
+                              <path
+                                d="M14 17a3 3 0 1 0 6 0a3 3 0 1 0 -6 0"
+                              /></svg
+                          ></span>
+
+                          <span class="nav-link-title">Etc</span>
+                        </a>
+
+                        <div class="dropdown-menu">
+                          <!-- BEGIN NAVBAR ITEM --><a
+                            class="dropdown-item"
+                            href="./farm-archive.html"
+                          >
+                            <!-- Download SVG icon from http://tabler.io/icons/icon/archive -->
+                            <svg
+                              xmlns="http://www.w3.org/2000/svg"
+                              width="24"
+                              height="24"
+                              viewBox="0 0 24 24"
+                              fill="none"
+                              stroke="currentColor"
+                              stroke-width="2"
+                              stroke-linecap="round"
+                              stroke-linejoin="round"
+                              aria-hidden="true"
+                              focusable="false"
+                              class="icon icon-inline me-1"
+                            >
+                              <path
+                                d="M3 4m0 2a2 2 0 0 1 2 -2h14a2 2 0 0 1 2 2v0a2 2 0 0 1 -2 2h-14a2 2 0 0 1 -2 -2z"
+                              />
+                              <path d="M5 8v10a2 2 0 0 0 2 2h10a2 2 0 0 0 2 -2v-10" />
+                              <path d="M10 12l4 0" />
+                            </svg>
+
+                            Archive
+                          </a>
+                          <!-- END NAVBAR ITEM --><!-- BEGIN NAVBAR ITEM --><a
+                            class="dropdown-item active"
+                            href="./farm-inventory.html"
+                            aria-current="page"
+                          >
+                            <!-- Download SVG icon from http://tabler.io/icons/icon/package -->
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false" class="icon icon-inline me-1"><path d="M12 3l8 4.5l0 9l-8 4.5l-8 -4.5l0 -9l8 -4.5" /><path d="M12 12l8 -4.5" /><path d="M12 12l0 9" /><path d="M12 12l-8 -4.5" /><path d="M16 5.25l-8 4.5" /></svg>
+
+                            Inventaris
+                          </a>
+                          <!-- END NAVBAR ITEM --><!-- BEGIN NAVBAR ITEM --><a
+                            class="dropdown-item"
+                            href="./farm-queue.html"
+                          >
+                            <!-- Download SVG icon from http://tabler.io/icons/icon/stack-2 -->
+                            <svg
+                              xmlns="http://www.w3.org/2000/svg"
+                              width="24"
+                              height="24"
+                              viewBox="0 0 24 24"
+                              fill="none"
+                              stroke="currentColor"
+                              stroke-width="2"
+                              stroke-linecap="round"
+                              stroke-linejoin="round"
+                              aria-hidden="true"
+                              focusable="false"
+                              class="icon icon-inline me-1"
+                            >
+                              <path d="M12 4l-8 4l8 4l8 -4l-8 -4" />
+                              <path d="M4 12l8 4l8 -4" />
+                              <path d="M4 16l8 4l8 -4" />
+                            </svg>
+
+                            Queue
+                          </a>
+                          <!-- END NAVBAR ITEM --><!-- BEGIN NAVBAR ITEM --><a
+                            class="dropdown-item"
+                            href="./farm-gallery.html"
+                          >
+                            <!-- Download SVG icon from http://tabler.io/icons/icon/photo -->
+                            <svg
+                              xmlns="http://www.w3.org/2000/svg"
+                              width="24"
+                              height="24"
+                              viewBox="0 0 24 24"
+                              fill="none"
+                              stroke="currentColor"
+                              stroke-width="2"
+                              stroke-linecap="round"
+                              stroke-linejoin="round"
+                              aria-hidden="true"
+                              focusable="false"
+                              class="icon icon-inline me-1"
+                            >
+                              <path d="M15 8h.01" />
+                              <path
+                                d="M3 6a3 3 0 0 1 3 -3h12a3 3 0 0 1 3 3v12a3 3 0 0 1 -3 3h-12a3 3 0 0 1 -3 -3v-12"
+                              />
+                              <path
+                                d="M3 16l5 -5c.928 -.893 2.072 -.893 3 0l5 5"
+                              />
+                              <path
+                                d="M14 14l1 -1c.928 -.893 2.072 -.893 3 0l3 3"
+                              />
+                            </svg>
+
+                            Gallery
+                          </a>
+                          <!-- END NAVBAR ITEM --><!-- BEGIN NAVBAR ITEM --><a
+                            class="dropdown-item"
+                            href="./farm-log.html"
+                          >
+                            <!-- Download SVG icon from http://tabler.io/icons/icon/clipboard-list -->
+                            <svg
+                              xmlns="http://www.w3.org/2000/svg"
+                              width="24"
+                              height="24"
+                              viewBox="0 0 24 24"
+                              fill="none"
+                              stroke="currentColor"
+                              stroke-width="2"
+                              stroke-linecap="round"
+                              stroke-linejoin="round"
+                              aria-hidden="true"
+                              focusable="false"
+                              class="icon icon-inline me-1"
+                            >
+                              <path
+                                d="M9 5h-2a2 2 0 0 0 -2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2 -2v-12a2 2 0 0 0 -2 -2h-2"
+                              />
+                              <path
+                                d="M9 5a2 2 0 0 1 2 -2h2a2 2 0 0 1 2 2a2 2 0 0 1 -2 2h-2a2 2 0 0 1 -2 -2"
+                              />
+                              <path d="M9 12l.01 0" />
+                              <path d="M13 12l2 0" />
+                              <path d="M9 16l.01 0" />
+                              <path d="M13 16l2 0" />
+                            </svg>
+
+                            Log
+                          </a>
+                          <!-- END NAVBAR ITEM -->
+                        </div>
+                      </li>
+                      <!-- END NAVBAR ITEM -->
+                    </ul>
+                    <!-- END NAVBAR MENU -->
+                  </nav>
+                  <!-- END NAVBAR MENU -->
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <!-- END NAVBAR -->
+
+      <!-- END NAVBAR  -->
+
+      <div class="page-wrapper">
+        <!-- BEGIN PAGE HEADER -->
+
+        <div class="page-header d-print-none" data-astro-cid-52ptlyh5>
+          <div class="container-xl" data-astro-cid-52ptlyh5>
+            <div class="row g-0 align-items-center" data-astro-cid-52ptlyh5>
+              <div
+                class="col page-header-compact-title"
+                data-astro-cid-52ptlyh5
+              >
+                <div class="page-title-line" data-astro-cid-52ptlyh5>
+                  <span class="page-title-line-title" data-astro-cid-52ptlyh5>Etc Inventaris</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <!-- END PAGE HEADER -->
+
+        <!-- BEGIN PAGE BODY -->
+        <main id="content" class="page-body">
+          <div class="container-xl">
+  
+
+  <!-- item form -->
+  <div class="modal modal-blur fade" id="inventory-modal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered" role="document">
+      <form class="modal-content" data-inv-form>
+        <div class="modal-header">
+          <h5 class="modal-title" data-inv-modal-title>Formulir Tambah Barang</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Tutup"></button>
+        </div>
+        <div class="modal-body">
+          <div class="alert alert-danger d-none" data-inv-error></div>
+          <input type="hidden" name="id" />
+          <div class="row g-3">
+            <div class="col-12">
+              <label class="form-label">Jenis</label>
+              <div class="btn-group w-100" role="group">
+                <input type="radio" class="btn-check" name="kind" id="inv-kind-habis" value="habis_pakai" checked />
+                <label class="btn btn-outline-primary" for="inv-kind-habis">Habis pakai</label>
+                <input type="radio" class="btn-check" name="kind" id="inv-kind-aset" value="aset" />
+                <label class="btn btn-outline-primary" for="inv-kind-aset">Aset (sekali beli)</label>
+                <input type="radio" class="btn-check" name="kind" id="inv-kind-ikan" value="ikan" />
+                <label class="btn btn-outline-primary" for="inv-kind-ikan">Pembelian ikan</label>
+              </div>
+              <div class="form-hint" data-inv-kind-hint></div>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">Nama barang</label>
+              <input class="form-control" name="name" maxlength="200" placeholder="Contoh: Pakan Hikari 5 kg" required />
+            </div>
+            <div class="col-md-3">
+              <label class="form-label">Kategori</label>
+              <input class="form-control" name="category" maxlength="100" list="inv-category-list" placeholder="Pakan, obat, alat..." autocomplete="off" />
+              <datalist id="inv-category-list"></datalist>
+            </div>
+            <div class="col-md-3">
+              <label class="form-label">Satuan</label>
+              <input class="form-control" name="unit" maxlength="30" list="inv-unit-list" placeholder="kg, pcs, sak..." autocomplete="off" />
+              <datalist id="inv-unit-list"></datalist>
+            </div>
+            <div class="col-md-3" data-inv-only="habis_pakai">
+              <label class="form-label">Stok minimum</label>
+              <input class="form-control" name="min_stock" inputmode="decimal" placeholder="Batas perlu beli" autocomplete="off" />
+            </div>
+            <div class="col-md-3" data-inv-only="habis_pakai">
+              <label class="form-label">Kebutuhan per bulan</label>
+              <input class="form-control" name="monthly_need" inputmode="decimal" placeholder="Opsional" autocomplete="off" />
+            </div>
+            <div class="col-12">
+              <label class="form-label">Catatan</label>
+              <textarea class="form-control" name="notes" rows="2" placeholder="Merek, ukuran, kegunaan, atau catatan lain"></textarea>
+            </div>
+            <div class="col-12">
+              <label class="form-label">Gambar</label>
+              <div class="inv-dropzone" data-inv-zone tabindex="0">
+                <div class="d-flex align-items-center gap-3 flex-wrap justify-content-center">
+                  <img class="inv-preview d-none" alt="" data-inv-preview />
+                  <div>
+                    <div class="text-secondary small">Tarik gambar ke sini, tempel dengan Ctrl+V, atau pilih dari tombol.</div>
+                    <div class="d-flex gap-2 justify-content-center mt-2">
+                      <input class="d-none" type="file" accept="image/*" data-inv-image-input />
+                      <button class="btn btn-outline-primary btn-sm" type="button" data-inv-image-upload>Unggah gambar</button>
+                      <button class="btn btn-outline-primary btn-sm" type="button" data-inv-image-paste>Paste gambar</button>
+                      <button class="btn btn-outline-danger btn-sm d-none" type="button" data-inv-image-clear>Hapus gambar</button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="text-secondary small mt-1" data-inv-image-status></div>
+            </div>
+
+            <div class="col-12 border-top pt-3" data-inv-initial>
+              <div class="fw-semibold mb-2">Pembelian pertama <span class="text-secondary fw-normal">(opsional, bisa diisi nanti lewat tombol Masuk)</span></div>
+              <div class="row g-3">
+                <div class="col-md-3">
+                  <label class="form-label">Jumlah</label>
+                  <input class="form-control" name="initial_qty" inputmode="decimal" autocomplete="off" />
+                </div>
+                <div class="col-md-3">
+                  <label class="form-label">Harga satuan (Rp)</label>
+                  <input class="form-control text-end" name="initial_price" inputmode="numeric" autocomplete="off" />
+                </div>
+                <div class="col-md-3">
+                  <label class="form-label">Tanggal masuk</label>
+                  <input class="form-control" type="date" name="initial_date" />
+                </div>
+                <div class="col-md-3">
+                  <label class="form-label">Lokasi</label>
+                  <input class="form-control" name="initial_location" maxlength="200" list="inv-location-list" placeholder="Gudang, kolam, ruang..." autocomplete="off" />
+                </div>
+                <div class="col-12">
+                  <label class="form-label">Penjual / toko</label>
+                  <input class="form-control" name="initial_supplier" maxlength="200" placeholder="Opsional" autocomplete="off" />
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-icon me-auto" data-bs-dismiss="modal" aria-label="Tutup" title="Tutup">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false" class="icon"><path d="M18 6l-12 12" /><path d="M6 6l12 12" /></svg>
+          </button>
+          <button type="submit" class="btn btn-primary btn-icon" data-inv-submit aria-label="Simpan" title="Simpan">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false" class="icon"><path d="M6 4h10l4 4v10a2 2 0 0 1 -2 2h-12a2 2 0 0 1 -2 -2v-12a2 2 0 0 1 2 -2" /><path d="M10 14a2 2 0 1 0 4 0a2 2 0 1 0 -4 0" /><path d="M14 4l0 4l-6 0l0 -4" /></svg>
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- movement form (masuk / keluar / rusak / diperbaiki / pindah / koreksi) -->
+  <div class="modal modal-blur fade" id="inventory-move-modal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+      <form class="modal-content" data-inv-move-form>
+        <div class="modal-header">
+          <h5 class="modal-title" data-inv-move-title>Catatan barang</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Tutup"></button>
+        </div>
+        <div class="modal-body">
+          <div class="alert alert-danger d-none" data-inv-move-error></div>
+          <div class="alert alert-info py-2" data-inv-move-info></div>
+          <div class="row g-3">
+            <div class="col-6">
+              <label class="form-label">Tanggal</label>
+              <input class="form-control" type="date" name="movement_date" required />
+            </div>
+            <div class="col-6" data-move-only="qty">
+              <label class="form-label" data-move-qty-label>Jumlah</label>
+              <input class="form-control" name="qty" inputmode="decimal" autocomplete="off" />
+            </div>
+            <div class="col-6" data-move-only="koreksi">
+              <label class="form-label">Stok sebenarnya</label>
+              <input class="form-control" name="actual_stock" inputmode="decimal" autocomplete="off" />
+            </div>
+            <div class="col-6" data-move-only="masuk">
+              <label class="form-label">Harga satuan (Rp)</label>
+              <input class="form-control text-end" name="unit_price" inputmode="numeric" autocomplete="off" />
+            </div>
+            <div class="col-6" data-move-only="masuk">
+              <label class="form-label">Penjual / toko</label>
+              <input class="form-control" name="supplier" maxlength="200" autocomplete="off" />
+            </div>
+            <div class="col-12" data-move-only="location">
+              <label class="form-label" data-move-location-label>Lokasi</label>
+              <input class="form-control" name="location" maxlength="200" list="inv-location-list" placeholder="Gudang, kolam, ruang..." autocomplete="off" />
+            </div>
+            <div class="col-12" data-move-only="koi">
+              <label class="form-label">Kode ikan yang dibeli (opsional)</label>
+              <div class="d-flex gap-2 align-items-center flex-wrap">
+                <button class="btn btn-outline-primary btn-sm" type="button" data-inv-move-pull>Tarik dari Data Ikan</button>
+                <span class="small text-secondary" data-inv-move-koi>Belum ada ikan dipilih</span>
+              </div>
+            </div>
+            <div class="col-12">
+              <label class="form-label">Catatan</label>
+              <textarea class="form-control" name="notes" rows="2"></textarea>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-icon me-auto" data-bs-dismiss="modal" aria-label="Tutup" title="Tutup">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false" class="icon"><path d="M18 6l-12 12" /><path d="M6 6l12 12" /></svg>
+          </button>
+          <button type="submit" class="btn btn-primary btn-icon" data-inv-move-submit aria-label="Simpan" title="Simpan">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false" class="icon"><path d="M6 4h10l4 4v10a2 2 0 0 1 -2 2h-12a2 2 0 0 1 -2 -2v-12a2 2 0 0 1 2 -2" /><path d="M10 14a2 2 0 1 0 4 0a2 2 0 1 0 -4 0" /><path d="M14 4l0 4l-6 0l0 -4" /></svg>
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- detail + history -->
+  <div class="modal modal-blur fade" id="inventory-detail-modal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable" role="document">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" data-inv-detail-title>Detail Barang</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Tutup"></button>
+        </div>
+        <div class="modal-body" data-inv-detail-body></div>
+      </div>
+    </div>
+  </div>
+
+  <datalist id="inv-location-list"></datalist>
+
+  <div class="row row-deck row-cards">
+    <div class="col-12">
+      <div class="card">
+        <div class="card-header">
+          <h3 class="card-title">Daftar Inventaris</h3>
+          <div class="card-actions">
+            <button class="btn btn-primary btn-icon" type="button" data-add-inventory data-role-required="farm-operate" aria-label="Tambah barang" title="Tambah barang">
+              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false" class="icon"><path d="M12 5l0 14" /><path d="M5 12l14 0" /></svg>
+            </button>
+          </div>
+        </div>
+        <div class="card-body">
+          <div class="d-flex flex-wrap gap-2 mb-3">
+            <span class="badge bg-blue-lt inv-filter-chip" data-inv-filter="all">Semua</span>
+            <span class="badge bg-cyan-lt inv-filter-chip" data-inv-filter="habis_pakai">Habis pakai</span>
+            <span class="badge bg-purple-lt inv-filter-chip" data-inv-filter="aset">Aset</span>
+            <span class="badge bg-teal-lt inv-filter-chip" data-inv-filter="ikan">Ikan</span>
+            <span class="badge bg-yellow-lt inv-filter-chip" data-inv-filter="perlu">Perlu beli</span>
+            <span class="badge bg-red-lt inv-filter-chip" data-inv-filter="rusak">Rusak</span>
+          </div>
+          <div class="row g-3" data-inv-table>
+            <div class="col-12 text-secondary"><div class="d-flex flex-column align-items-center justify-content-center gap-2 py-5 text-secondary"><span class="spinner-border text-primary" role="status" aria-hidden="true"></span><span>Memuat data inventaris...</span></div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <input class="d-none" id="inventory-search" name="inventory_search" type="search" data-inventory-search aria-hidden="true" tabindex="-1" autocomplete="off" />
+
+  <script src="/assets/koi-picker.js?v=20261020b"></script>
+  <script src="/assets/vendor/xlsx/xlsx.core.min.js"></script>
+
+  
+<script>
+(function () {
+const editIcon = "\u003csvg xmlns=\"http://www.w3.org/2000/svg\" width=\"24\" height=\"24\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\" focusable=\"false\" class=\"icon\">\u003cpath d=\"M7 7h-1a2 2 0 0 0 -2 2v9a2 2 0 0 0 2 2h9a2 2 0 0 0 2 -2v-1\" />\u003cpath d=\"M20.385 6.585a2.1 2.1 0 0 0 -2.97 -2.97l-8.415 8.385v3h3l8.385 -8.415\" />\u003cpath d=\"M16 5l3 3\" />\u003c/svg>"
+const printIcon = "\u003csvg xmlns=\"http://www.w3.org/2000/svg\" width=\"24\" height=\"24\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\" focusable=\"false\" class=\"icon\">\u003cpath d=\"M17 17h2a2 2 0 0 0 2 -2v-4a2 2 0 0 0 -2 -2h-14a2 2 0 0 0 -2 2v4a2 2 0 0 0 2 2h2\" />\u003cpath d=\"M17 9v-4a2 2 0 0 0 -2 -2h-6a2 2 0 0 0 -2 2v4\" />\u003cpath d=\"M7 15a2 2 0 0 1 2 -2h6a2 2 0 0 1 2 2v4a2 2 0 0 1 -2 2h-6a2 2 0 0 1 -2 -2l0 -4\" />\u003c/svg>"
+const trashIcon = "\u003csvg xmlns=\"http://www.w3.org/2000/svg\" width=\"24\" height=\"24\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\" focusable=\"false\" class=\"icon\">\u003cpath d=\"M4 7l16 0\" />\u003cpath d=\"M10 11l0 6\" />\u003cpath d=\"M14 11l0 6\" />\u003cpath d=\"M5 7l1 12a2 2 0 0 0 2 2h8a2 2 0 0 0 2 -2l1 -12\" />\u003cpath d=\"M9 7v-3a1 1 0 0 1 1 -1h4a1 1 0 0 1 1 1v3\" />\u003c/svg>"
+const saveIcon = "\u003csvg xmlns=\"http://www.w3.org/2000/svg\" width=\"24\" height=\"24\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\" focusable=\"false\" class=\"icon\">\u003cpath d=\"M6 4h10l4 4v10a2 2 0 0 1 -2 2h-12a2 2 0 0 1 -2 -2v-12a2 2 0 0 1 2 -2\" />\u003cpath d=\"M10 14a2 2 0 1 0 4 0a2 2 0 1 0 -4 0\" />\u003cpath d=\"M14 4l0 4l-6 0l0 -4\" />\u003c/svg>"
+const historyIcon = "\u003csvg xmlns=\"http://www.w3.org/2000/svg\" width=\"24\" height=\"24\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\" focusable=\"false\" class=\"icon\">\u003cpath d=\"M12 8l0 4l2 2\" />\u003cpath d=\"M3.05 11a9 9 0 1 1 .5 4m-.5 5v-5h5\" />\u003c/svg>"
+const packageIcon = "\u003csvg xmlns=\"http://www.w3.org/2000/svg\" width=\"24\" height=\"24\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\" focusable=\"false\" class=\"icon\">\u003cpath d=\"M12 3l8 4.5l0 9l-8 4.5l-8 -4.5l0 -9l8 -4.5\" />\u003cpath d=\"M12 12l8 -4.5\" />\u003cpath d=\"M12 12l0 9\" />\u003cpath d=\"M12 12l-8 -4.5\" />\u003cpath d=\"M16 5.25l-8 4.5\" />\u003c/svg>"
+    const apiUrl = '/api'
+    const table = document.querySelector('[data-inv-table]')
+    const searchInput = document.querySelector('[data-inventory-search]')
+    const navbarSearchBox = document.querySelector('#navbar-global-search')
+    if (navbarSearchBox) {
+      navbarSearchBox.setAttribute('placeholder', 'Nama, kategori, lokasi, status:perlu')
+      navbarSearchBox.setAttribute('title', 'Cari bebas: nama, kategori, lokasi, penjual, catatan. Cari per kolom dengan kolom:isi, boleh digabung: jenis:aset lokasi:gudang stok:<5. Nama kolom boleh disingkat. Kolom: nama, kategori, jenis, status, lokasi, penjual, catatan, stok, harga.')
+    }
+    const form = document.querySelector('[data-inv-form]')
+    const modalElement = document.querySelector('#inventory-modal')
+    const modalTitle = document.querySelector('[data-inv-modal-title]')
+    const errorBox = document.querySelector('[data-inv-error]')
+    const submitButton = document.querySelector('[data-inv-submit]')
+    const addButton = document.querySelector('[data-add-inventory]')
+    const kindHint = document.querySelector('[data-inv-kind-hint]')
+    const initialBox = document.querySelector('[data-inv-initial]')
+    const zone = document.querySelector('[data-inv-zone]')
+    const imageInput = document.querySelector('[data-inv-image-input]')
+    const imagePreview = document.querySelector('[data-inv-preview]')
+    const imageClear = document.querySelector('[data-inv-image-clear]')
+    const imageStatus = document.querySelector('[data-inv-image-status]')
+    const moveModalElement = document.querySelector('#inventory-move-modal')
+    const moveForm = document.querySelector('[data-inv-move-form]')
+    const moveTitle = document.querySelector('[data-inv-move-title]')
+    const moveError = document.querySelector('[data-inv-move-error]')
+    const moveInfo = document.querySelector('[data-inv-move-info]')
+    const moveSubmit = document.querySelector('[data-inv-move-submit]')
+    const moveKoiLabel = document.querySelector('[data-inv-move-koi]')
+    const detailModalElement = document.querySelector('#inventory-detail-modal')
+    const detailTitle = document.querySelector('[data-inv-detail-title]')
+    const detailBody = document.querySelector('[data-inv-detail-body]')
+    const filterChips = [...document.querySelectorAll('[data-inv-filter]')]
+    const cacheKey = 'nishikigoi-cache:farm-inventory'
+    const filterKey = 'nishikigoi-inventory-filter'
+
+    let items = []
+    let koiLoaded = false
+    let kindFilter = 'all'
+    let signature = ''
+    let imageState = { url: '', file: null, previewUrl: '' }
+    let moveItem = null
+    let moveType = ''
+    let moveKoiIds = []
+    let detailId = null
+    try { kindFilter = sessionStorage.getItem(filterKey) || 'all' } catch {}
+
+    const kindLabels = {
+      habis_pakai: { label: 'Habis pakai', className: 'bg-cyan-lt text-cyan' },
+      aset: { label: 'Aset', className: 'bg-purple-lt text-purple' },
+      ikan: { label: 'Ikan', className: 'bg-teal-lt text-teal' },
+    }
+    const kindHints = {
+      habis_pakai: 'Barang yang dipakai lalu dibeli lagi, misalnya pakan, obat, atau garam. Isi stok minimum supaya muncul tanda Perlu beli.',
+      aset: 'Barang sekali beli yang bisa rusak, misalnya pompa, jaring, atau aerator. Kerusakan dan perbaikan dicatat di riwayat.',
+      ikan: 'Catatan pembelian ikan. Boleh dikaitkan ke kode ikan di Data Ikan saat mencatat Masuk.',
+    }
+    const moveLabels = {
+      masuk: 'Masuk (pembelian)', keluar: 'Keluar (dipakai)', rusak: 'Rusak', diperbaiki: 'Diperbaiki', pindah: 'Pindah lokasi', koreksi: 'Koreksi stok',
+    }
+    const moveBadge = {
+      masuk: 'bg-green-lt text-green', keluar: 'bg-blue-lt text-blue', rusak: 'bg-red-lt text-red', diperbaiki: 'bg-teal-lt text-teal',
+      pindah: 'bg-purple-lt text-purple', koreksi: 'bg-yellow-lt text-yellow',
+    }
+    const escapeHtml = (value) =>
+      String(value ?? '').replace(/[&<>'"]/g, (char) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' })[char])
+    const money = (value) => `Rp ${Math.round(Number(value) || 0).toLocaleString('id-ID')}`
+    const num = (value) => Number(value || 0).toLocaleString('id-ID', { maximumFractionDigits: 2 })
+    const dateShort = (value) => (value ? window.KoiAuth.formatDate(String(value).slice(0, 10)) : '')
+    const today = () => new Date().toISOString().slice(0, 10)
+    const norm = (value) => String(value === null || value === undefined ? '' : value).toLowerCase().trim()
+    const digitsOf = (value) => Number(String(value || '').replace(/[^\d]/g, '')) || 0
+    const decimalOf = (value) => {
+      const text = String(value ?? '').trim().replace(/\./g, '').replace(',', '.')
+      if (text === '') return null
+      const number = Number(text)
+      return Number.isFinite(number) ? number : NaN
+    }
+    const withUnit = (item, value) => `${num(value)}${item.unit ? ' ' + item.unit : ''}`
+    const keepScroll = async (callback) => {
+      const scrollX = window.scrollX
+      const scrollY = window.scrollY
+      const result = await callback()
+      requestAnimationFrame(() => window.scrollTo(scrollX, scrollY))
+      return result
+    }
+    const formatMoneyInput = (input) => {
+      const digits = input.value.replace(/[^\d]/g, '')
+      input.value = digits ? Number(digits).toLocaleString('id-ID') : ''
+    }
+    const readError = async (response, fallback) => {
+      const data = await response.json().catch(() => ({}))
+      return data.error || data.detail || fallback
+    }
+    const itemStatus = (item) => {
+      const tags = []
+      if (item.needs_buy) tags.push({ key: 'perlu', label: 'Perlu beli', className: 'bg-yellow text-yellow-fg' })
+      if (Number(item.damaged) > 0) tags.push({ key: 'rusak', label: `Rusak ${num(item.damaged)}`, className: 'bg-red text-red-fg' })
+      if (item.kind === 'habis_pakai' && Number(item.stock) <= 0 && Number(item.movement_count) > 0 && !item.needs_buy) tags.push({ key: 'habis', label: 'Habis', className: 'bg-orange text-orange-fg' })
+      return tags
+    }
+    const statusText = (item) => {
+      const tags = itemStatus(item).map((tag) => tag.label)
+      if (!tags.length) tags.push(item.kind === 'aset' && Number(item.stock) > 0 ? 'Baik' : 'Aman')
+      return tags.join(', ')
+    }
+    const suggestedBuy = (item) => {
+      const target = Math.max(Number(item.min_stock) || 0, Number(item.monthly_need) || 0)
+      return Math.max(0, Math.round((target - Number(item.stock)) * 100) / 100)
+    }
+
+    // ---- search: plain words + "field:value" ---------------------------------------------------------------
+    const searchAliases = {
+      nama: 'name', barang: 'name',
+      kategori: 'category', golongan: 'category',
+      jenis: 'kind', tipe: 'kind',
+      status: 'status',
+      lokasi: 'last_location', tempat: 'last_location',
+      penjual: 'last_supplier', toko: 'last_supplier', supplier: 'last_supplier',
+      catatan: 'notes',
+      stok: 'stock', jumlah: 'stock',
+      harga: 'last_price',
+    }
+    const resolveMarkers = (keyword) => {
+      const names = Object.keys(searchAliases)
+      const found = []
+      const pattern = /(?:^|[\s,])([a-z]+)\s*:/gi
+      let match
+      while ((match = pattern.exec(keyword))) {
+        const key = match[1].toLowerCase()
+        const name = searchAliases[key] ? key : (key.length >= 2 ? names.find((alias) => alias.startsWith(key)) : null)
+        if (name) {
+          const hit = [match[0], name]
+          hit.index = match.index
+          found.push(hit)
+        }
+      }
+      return found
+    }
+    const numberTest = (value) => {
+      const text = String(value || '').toLowerCase().replace(/rp|\s/g, '')
+      const toNumber = (part) => Number(String(part).replace(/\./g, '').replace(',', '.'))
+      const compare = text.match(/^(>=|<=|>|<)([\d.,]+)$/)
+      if (compare) {
+        const limit = toNumber(compare[2])
+        return { '>=': (n) => n >= limit, '<=': (n) => n <= limit, '>': (n) => n > limit, '<': (n) => n < limit }[compare[1]]
+      }
+      const range = text.match(/^([\d.,]+)-([\d.,]+)$/)
+      if (range) {
+        const [a, b] = [toNumber(range[1]), toNumber(range[2])]
+        return (n) => n >= Math.min(a, b) && n <= Math.max(a, b)
+      }
+      return /^[\d.,]+$/.test(text) ? (n) => n === toNumber(text) : null
+    }
+    const kindWords = { habis: 'habis_pakai', pakai: 'habis_pakai', consumable: 'habis_pakai', aset: 'aset', asset: 'aset', ikan: 'ikan' }
+    const matchesField = (item, field, rawValue) => {
+      const value = norm(rawValue)
+      if (!value) return null
+      if (field === 'stock' || field === 'last_price') {
+        const test = numberTest(value)
+        return test ? test(Number(item[field]) || 0) : null
+      }
+      return value.split(',').map((part) => part.trim()).filter(Boolean).some((choice) => {
+        if (field === 'kind') {
+          const wanted = Object.entries(kindWords).find(([word]) => choice.startsWith(word))?.[1] || choice
+          return item.kind === wanted
+        }
+        if (field === 'status') return norm(statusText(item)).includes(choice)
+        return norm(item[field]).includes(choice)
+      })
+    }
+    const matchesSearch = (item) => {
+      const keyword = String(searchInput.value || '').trim()
+      if (!keyword) return true
+      const markers = resolveMarkers(keyword)
+      const plain = markers.length ? keyword.slice(0, markers[0].index) : keyword
+      for (let index = 0; index < markers.length; index += 1) {
+        const marker = markers[index]
+        const start = marker.index + marker[0].length
+        const end = index + 1 < markers.length ? markers[index + 1].index : keyword.length
+        if (matchesField(item, searchAliases[marker[1]], keyword.slice(start, end)) === false) return false
+      }
+      const alternatives = plain.split(',').map((part) => norm(part).split(/\s+/).filter(Boolean)).filter((words) => words.length)
+      if (!alternatives.length) return true
+      const blob = norm([item.name, item.category, kindLabels[item.kind]?.label, item.last_location, item.last_supplier, item.notes, statusText(item)].join(' '))
+      return alternatives.some((words) => words.every((word) => blob.includes(word)))
+    }
+    const kindMatches = (item) => {
+      if (kindFilter === 'all') return true
+      if (kindFilter === 'perlu') return Boolean(item.needs_buy)
+      if (kindFilter === 'rusak') return Number(item.damaged) > 0
+      return item.kind === kindFilter
+    }
+    const visibleItems = () => dock.apply(items.filter((item) => kindMatches(item) && matchesSearch(item)))
+
+    // ---- list ----------------------------------------------------------------------------------------------
+    const refreshSuggestions = () => {
+      const fill = (id, values) => {
+        const list = document.getElementById(id)
+        if (list) list.innerHTML = [...new Set(values.filter(Boolean))].sort((a, b) => a.localeCompare(b, 'id')).map((value) => `<option value="${escapeHtml(value)}"></option>`).join('')
+      }
+      fill('inv-category-list', items.map((item) => item.category))
+      fill('inv-unit-list', ['pcs', 'kg', 'gram', 'liter', 'botol', 'sak', 'dus', 'pack', 'buah', 'unit', 'meter', 'roll', 'set', ...items.map((item) => item.unit)])
+      fill('inv-location-list', items.map((item) => item.last_location))
+    }
+    const renderFilters = () => {
+      const counts = { all: items.length, habis_pakai: 0, aset: 0, ikan: 0, perlu: 0, rusak: 0 }
+      items.forEach((item) => {
+        counts[item.kind] = (counts[item.kind] || 0) + 1
+        if (item.needs_buy) counts.perlu += 1
+        if (Number(item.damaged) > 0) counts.rusak += 1
+      })
+      const names = { all: 'Semua', habis_pakai: 'Habis pakai', aset: 'Aset', ikan: 'Ikan', perlu: 'Perlu beli', rusak: 'Rusak' }
+      filterChips.forEach((chip) => {
+        const key = chip.dataset.invFilter
+        chip.textContent = `${names[key]} (${counts[key] || 0})`
+        chip.style.outline = key === kindFilter ? '2px solid var(--tblr-primary)' : ''
+      })
+    }
+    const renderTable = () => {
+      dock.prune(items)
+      renderFilters()
+      const list = visibleItems()
+      table.innerHTML = list.map((item) => {
+        const kind = kindLabels[item.kind] || kindLabels.habis_pakai
+        const tags = itemStatus(item)
+        const minText = item.kind === 'habis_pakai' && item.min_stock !== null ? ` · min ${withUnit(item, item.min_stock)}` : ''
+        return `
+        <div class="col-sm-6 col-lg-4 col-xl-3">
+          <div class="card h-100 inv-card" data-dock-id="${escapeHtml(item.id)}">
+            <div class="inv-card-top" data-dock-select title="Klik kartu untuk memilih, klik dua kali untuk membuka detail">
+              <span class="badge ${kind.className}">${escapeHtml(kind.label)}</span>
+              <span class="d-flex align-items-center gap-1 flex-shrink-0">
+                <span class="badge bg-blue text-blue-fg dock-selected-badge">Terpilih</span>
+                ${tags.map((tag) => `<span class="badge ${tag.className}">${escapeHtml(tag.label)}</span>`).join('')}
+              </span>
+            </div>
+            <div class="card-body d-flex flex-column" role="button" tabindex="0" data-inv-id="${escapeHtml(item.id)}">
+              ${item.image_url ? `<img class="inv-thumb" src="${escapeHtml(item.image_url)}" alt="" loading="lazy" />` : `<div class="inv-thumb inv-thumb-empty">${packageIcon}</div>`}
+              <div class="fw-semibold inv-ellipsis mt-2" title="${escapeHtml(item.name)}">${escapeHtml(item.name)}</div>
+              <div class="text-secondary small inv-ellipsis">${escapeHtml(item.category || 'Tanpa kategori')}</div>
+              <div class="inv-stock mt-1">${escapeHtml(withUnit(item, item.stock))}<span class="text-secondary small fw-normal">${escapeHtml(minText)}</span></div>
+              <div class="text-secondary small inv-ellipsis">${item.last_location ? `Lokasi: ${escapeHtml(item.last_location)}` : 'Lokasi belum diisi'}</div>
+              <div class="text-secondary small">${item.last_price !== null && item.last_price !== undefined ? `Harga terakhir ${escapeHtml(money(item.last_price))}` : 'Belum ada harga beli'}${item.last_in_date ? ` · masuk ${escapeHtml(dateShort(item.last_in_date))}` : ''}</div>
+              <div class="d-flex gap-2 mt-3 pt-2" style="margin-top:auto">
+                <button class="btn btn-sm flex-fill" type="button" data-detail-inv="${escapeHtml(item.id)}">${historyIcon} Riwayat</button>
+                <button class="btn btn-sm flex-fill" type="button" data-edit-inv="${escapeHtml(item.id)}" data-role-required="farm-operate">${editIcon} Edit</button>
+                <button class="btn btn-sm btn-outline-danger flex-fill" type="button" data-delete-inv="${escapeHtml(item.id)}" data-role-required="farm-operate">${trashIcon} Hapus</button>
+              </div>
+            </div>
+          </div>
+        </div>`
+      }).join('') || `<div class="col-12 text-secondary">${items.length ? 'Tidak ada barang yang cocok.' : 'Belum ada barang. Tekan + untuk menambah.'}</div>`
+      dock.refresh()
+    }
+    const loadItems = async (silent = false) => {
+      try {
+        const response = await fetch(`${apiUrl}/inventory`)
+        if (!response.ok) throw new Error('Data inventaris gagal dimuat')
+        const data = await response.json()
+        const next = JSON.stringify(data)
+        try { localStorage.setItem(cacheKey, next) } catch {}
+        if (silent && next === signature) return
+        signature = next
+        items = data
+        refreshSuggestions()
+        renderTable()
+      } catch (error) {
+        if (!silent) table.innerHTML = `<div class="col-12 text-danger">${escapeHtml(error.message)}</div>`
+      }
+    }
+    const loadKoi = async () => {
+      // the fish are searched on the server by the picker; nothing is downloaded here
+      koiLoaded = true
+    }
+    // codes of the fish linked in the history of an item (they are looked up by id, only those)
+    const withKoi = async (item) => {
+      const ids = (item.movements || []).flatMap((move) => move.koi_ids || [])
+      if (ids.length) {
+        try { await window.KoiPicker.byIds(ids, { scope: 'all' }) } catch {}
+      }
+      return item
+    }
+
+    // ---- modal helpers -------------------------------------------------------------------------------------
+    const modalApi = () => window.tabler?.bootstrap?.Modal || window.bootstrap?.Modal
+    const showModal = (element) => {
+      const api = modalApi()
+      if (api) { api.getOrCreateInstance(element).show(); return }
+      element.classList.add('show')
+      element.style.display = 'block'
+    }
+    const hideModal = (element) => {
+      const api = modalApi()
+      if (api) { api.getInstance(element)?.hide(); return }
+      element.classList.remove('show')
+      element.style.display = 'none'
+    }
+
+    // ---- image: upload button, paste, drag and drop --------------------------------------------------------
+    const readFileAsDataUrl = (file) => new Promise((resolve, reject) => {
+      const reader = new FileReader()
+      reader.addEventListener('load', () => resolve(reader.result))
+      reader.addEventListener('error', () => reject(new Error('File gagal dibaca')))
+      reader.readAsDataURL(file)
+    })
+    const loadImage = (src) => new Promise((resolve, reject) => {
+      const image = new Image()
+      image.addEventListener('load', () => resolve(image))
+      image.addEventListener('error', () => reject(new Error('Gambar gagal diproses')))
+      image.src = src
+    })
+    const compressImage = async (file) => {
+      const image = await loadImage(await readFileAsDataUrl(file))
+      const scale = Math.min(1, 1600 / Math.max(image.naturalWidth, image.naturalHeight))
+      const canvas = document.createElement('canvas')
+      canvas.width = Math.max(1, Math.round(image.naturalWidth * scale))
+      canvas.height = Math.max(1, Math.round(image.naturalHeight * scale))
+      canvas.getContext('2d').drawImage(image, 0, 0, canvas.width, canvas.height)
+      return canvas.toDataURL('image/jpeg', 0.8)
+    }
+    const renderImage = () => {
+      const src = imageState.previewUrl || imageState.url
+      imagePreview.classList.toggle('d-none', !src)
+      if (src) imagePreview.src = src
+      imageClear.classList.toggle('d-none', !src)
+    }
+    const setImageFile = (file) => {
+      if (!file || !/^image\//.test(file.type)) { imageStatus.textContent = 'Hanya file gambar yang bisa dipakai.'; return }
+      imageStatus.textContent = ''
+      imageState = { url: '', file, previewUrl: URL.createObjectURL(file) }
+      renderImage()
+    }
+    const uploadImage = async () => {
+      if (!imageState.file) return imageState.url || ''
+      imageStatus.textContent = 'Mengupload gambar...'
+      const response = await fetch(`${apiUrl}/images`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ prefix: 'inventory', image_data: await compressImage(imageState.file) }) })
+      const data = await response.json().catch(() => ({}))
+      if (!response.ok) throw new Error(data.error || data.detail || 'Gambar gagal diupload')
+      imageStatus.textContent = ''
+      return data.image_url
+    }
+    const readClipboardImage = async () => {
+      const clipboardItems = await navigator.clipboard.read()
+      for (const clipboardItem of clipboardItems) {
+        const type = clipboardItem.types.find((entry) => entry.startsWith('image/'))
+        if (!type) continue
+        const blob = await clipboardItem.getType(type)
+        return new File([blob], `barang-${Date.now()}.${type.split('/')[1] || 'png'}`, { type })
+      }
+      return null
+    }
+
+    // ---- item form -----------------------------------------------------------------------------------------
+    const currentKind = () => form.querySelector('[name="kind"]:checked')?.value || 'habis_pakai'
+    const syncKind = () => {
+      const kind = currentKind()
+      kindHint.textContent = kindHints[kind] || ''
+      form.querySelectorAll('[data-inv-only]').forEach((element) => {
+        element.classList.toggle('d-none', element.dataset.invOnly !== kind)
+      })
+    }
+    const openForm = (id) => {
+      const item = id ? items.find((entry) => String(entry.id) === String(id)) : null
+      form.reset()
+      errorBox.classList.add('d-none')
+      imageStatus.textContent = ''
+      form.elements.id.value = item ? item.id : ''
+      modalTitle.textContent = item ? `Formulir Edit Barang` : 'Formulir Tambah Barang'
+      form.querySelectorAll('[name="kind"]').forEach((radio) => { radio.checked = radio.value === (item?.kind || 'habis_pakai') })
+      form.elements.name.value = item?.name || ''
+      form.elements.category.value = item?.category || ''
+      form.elements.unit.value = item?.unit || ''
+      form.elements.min_stock.value = item && item.min_stock !== null ? String(item.min_stock).replace('.', ',') : ''
+      form.elements.monthly_need.value = item && item.monthly_need !== null ? String(item.monthly_need).replace('.', ',') : ''
+      form.elements.notes.value = item?.notes || ''
+      form.elements.initial_date.value = today()
+      imageState = { url: item?.image_url || '', file: null, previewUrl: '' }
+      initialBox.classList.toggle('d-none', Boolean(item))
+      renderImage()
+      syncKind()
+      showModal(modalElement)
+    }
+    form.addEventListener('submit', async (event) => {
+      event.preventDefault()
+      errorBox.classList.add('d-none')
+      submitButton.disabled = true
+      try {
+        const id = form.elements.id.value
+        const kind = currentKind()
+        const payload = {
+          name: form.elements.name.value.trim(),
+          kind,
+          category: form.elements.category.value.trim(),
+          unit: form.elements.unit.value.trim(),
+          notes: form.elements.notes.value.trim(),
+        }
+        if (!payload.name) throw new Error('Nama barang wajib diisi')
+        if (kind === 'habis_pakai') {
+          const min = decimalOf(form.elements.min_stock.value)
+          const monthly = decimalOf(form.elements.monthly_need.value)
+          if (Number.isNaN(min) || Number.isNaN(monthly)) throw new Error('Stok minimum dan kebutuhan per bulan harus berupa angka')
+          payload.min_stock = min
+          payload.monthly_need = monthly
+        } else {
+          payload.min_stock = null
+          payload.monthly_need = null
+        }
+        payload.image_url = await uploadImage()
+        if (!id) {
+          const qty = decimalOf(form.elements.initial_qty.value)
+          if (Number.isNaN(qty)) throw new Error('Jumlah pembelian pertama harus berupa angka')
+          payload.initial = {
+            qty: qty === null ? '' : qty,
+            unit_price: digitsOf(form.elements.initial_price.value) || null,
+            supplier: form.elements.initial_supplier.value.trim(),
+            movement_date: form.elements.initial_date.value,
+            location: form.elements.initial_location.value.trim(),
+          }
+        }
+        const response = await fetch(id ? `${apiUrl}/inventory/${id}` : `${apiUrl}/inventory`, { method: id ? 'PATCH' : 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(payload) })
+        if (!response.ok) throw new Error(await readError(response, 'Barang gagal disimpan'))
+        await keepScroll(loadItems)
+        hideModal(modalElement)
+      } catch (error) {
+        errorBox.textContent = error.message
+        errorBox.classList.remove('d-none')
+        imageStatus.textContent = ''
+      } finally {
+        submitButton.disabled = false
+      }
+    })
+    form.querySelectorAll('[name="kind"]').forEach((radio) => radio.addEventListener('change', syncKind))
+    form.elements.initial_price.addEventListener('input', () => formatMoneyInput(form.elements.initial_price))
+
+    // ---- movement form -------------------------------------------------------------------------------------
+    const renderMoveKoi = () => {
+      moveKoiLabel.textContent = moveKoiIds.length
+        ? `${moveKoiIds.length} ikan: ${moveKoiIds.map((id) => window.KoiPicker.cache[String(id)]?.code || id).join(', ')}`
+        : 'Belum ada ikan dipilih'
+    }
+    const openMove = (id, type) => {
+      const item = items.find((entry) => String(entry.id) === String(id))
+      if (!item) return
+      moveItem = item
+      moveType = type
+      moveKoiIds = []
+      moveForm.reset()
+      moveError.classList.add('d-none')
+      moveTitle.textContent = `${moveLabels[type]} - ${item.name}`
+      moveForm.elements.movement_date.value = today()
+      const parts = [`Stok sekarang ${withUnit(item, item.stock)}`]
+      if (item.kind === 'aset' || Number(item.damaged) > 0) parts.push(`baik ${withUnit(item, item.good)}`, `rusak ${withUnit(item, item.damaged)}`)
+      if (item.last_location) parts.push(`lokasi terakhir ${item.last_location}`)
+      moveInfo.textContent = parts.join(' · ')
+      const show = {
+        qty: ['masuk', 'keluar', 'rusak', 'diperbaiki'].includes(type),
+        koreksi: type === 'koreksi',
+        masuk: type === 'masuk',
+        location: ['masuk', 'pindah', 'keluar', 'rusak', 'diperbaiki'].includes(type),
+        koi: type === 'masuk' && item.kind === 'ikan',
+      }
+      moveForm.querySelectorAll('[data-move-only]').forEach((element) => {
+        element.classList.toggle('d-none', !show[element.dataset.moveOnly])
+      })
+      moveForm.querySelector('[data-move-qty-label]').textContent = { masuk: 'Jumlah dibeli', keluar: 'Jumlah dipakai', rusak: 'Jumlah rusak', diperbaiki: 'Jumlah diperbaiki' }[type] || 'Jumlah'
+      moveForm.querySelector('[data-move-location-label]').textContent = type === 'pindah' ? 'Lokasi baru' : 'Lokasi (opsional)'
+      if (type === 'pindah') moveForm.elements.location.required = true
+      else moveForm.elements.location.required = false
+      if (type === 'koreksi') moveForm.elements.actual_stock.value = String(item.stock).replace('.', ',')
+      if (type === 'masuk' && item.last_price) moveForm.elements.unit_price.value = Math.round(item.last_price).toLocaleString('id-ID')
+      if (type === 'masuk' && item.last_supplier) moveForm.elements.supplier.value = item.last_supplier
+      if (['masuk', 'pindah'].includes(type) && item.last_location) moveForm.elements.location.value = type === 'pindah' ? '' : item.last_location
+      renderMoveKoi()
+      showModal(moveModalElement)
+    }
+    moveForm.addEventListener('submit', async (event) => {
+      event.preventDefault()
+      moveError.classList.add('d-none')
+      moveSubmit.disabled = true
+      try {
+        const payload = {
+          type: moveType,
+          movement_date: moveForm.elements.movement_date.value,
+          location: moveForm.elements.location.value.trim(),
+          notes: moveForm.elements.notes.value.trim(),
+        }
+        if (['masuk', 'keluar', 'rusak', 'diperbaiki'].includes(moveType)) {
+          const qty = decimalOf(moveForm.elements.qty.value)
+          if (qty === null || Number.isNaN(qty) || qty <= 0) throw new Error('Isi jumlah dengan angka lebih dari 0')
+          payload.qty = qty
+        }
+        if (moveType === 'koreksi') {
+          const actual = decimalOf(moveForm.elements.actual_stock.value)
+          if (actual === null || Number.isNaN(actual) || actual < 0) throw new Error('Isi stok sebenarnya dengan angka 0 atau lebih')
+          payload.actual_stock = actual
+        }
+        if (moveType === 'masuk') {
+          payload.unit_price = digitsOf(moveForm.elements.unit_price.value) || null
+          payload.supplier = moveForm.elements.supplier.value.trim()
+          if (moveKoiIds.length) payload.koi_ids = moveKoiIds
+        }
+        if (moveType === 'pindah' && !payload.location) throw new Error('Lokasi baru wajib diisi')
+        const response = await fetch(`${apiUrl}/inventory/${moveItem.id}/movements`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(payload) })
+        if (!response.ok) throw new Error(await readError(response, 'Catatan gagal disimpan'))
+        dock.clear()
+        await keepScroll(loadItems)
+        hideModal(moveModalElement)
+      } catch (error) {
+        moveError.textContent = error.message
+        moveError.classList.remove('d-none')
+      } finally {
+        moveSubmit.disabled = false
+      }
+    })
+    moveForm.elements.unit_price.addEventListener('input', () => formatMoneyInput(moveForm.elements.unit_price))
+    moveForm.querySelector('[data-inv-move-pull]').addEventListener('click', async () => {
+      await loadKoi()
+      if (!window.KoiPicker) { window.alert('Modul pilih ikan belum dimuat. Muat ulang halaman.'); return }
+      window.KoiPicker.open({
+        title: 'Tarik dari Data Ikan',
+        disabledIds: [],
+        confirmLabel: 'Kaitkan ke pembelian',
+        onConfirm: (ids) => {
+          moveKoiIds = ids.map((value) => Number(value)).filter(Boolean)
+          if (moveKoiIds.length && !String(moveForm.elements.qty.value).trim()) moveForm.elements.qty.value = String(moveKoiIds.length)
+          renderMoveKoi()
+        },
+      })
+    })
+
+    // ---- detail + history ----------------------------------------------------------------------------------
+    const renderDetail = (item) => {
+      const kind = kindLabels[item.kind] || kindLabels.habis_pakai
+      const rows = (item.movements || []).map((move) => {
+        const qty = move.type === 'pindah' ? '-' : (move.type === 'koreksi' ? `${Number(move.qty) > 0 ? '+' : ''}${num(move.qty)}` : num(move.qty))
+        const koiCodes = (move.koi_ids || []).map((id) => window.KoiPicker.cache[String(id)]?.code || id)
+        return `<tr>
+          <td>${escapeHtml(dateShort(move.movement_date))}</td>
+          <td class="inv-history-type"><span class="badge ${moveBadge[move.type] || ''}">${escapeHtml(moveLabels[move.type] || move.type)}</span></td>
+          <td class="text-end">${escapeHtml(qty)}${move.type !== 'pindah' && item.unit ? ' ' + escapeHtml(item.unit) : ''}</td>
+          <td class="text-end">${move.unit_price !== null && move.unit_price !== undefined ? escapeHtml(money(move.unit_price)) : ''}</td>
+          <td class="text-end">${move.total_price !== null && move.total_price !== undefined ? escapeHtml(money(move.total_price)) : ''}</td>
+          <td>${escapeHtml([move.supplier, move.location, koiCodes.length ? 'Ikan: ' + koiCodes.join(', ') : '', move.notes].filter(Boolean).join(' · '))}</td>
+          <td class="text-secondary small">${escapeHtml(move.created_by || '')}</td>
+          <td class="text-end"><button class="btn btn-sm btn-outline-danger btn-icon" type="button" data-undo-move="${escapeHtml(move.id)}" data-role-required="farm-operate" title="Batalkan catatan ini" aria-label="Batalkan catatan ini">${trashIcon}</button></td>
+        </tr>`
+      }).join('')
+      detailBody.innerHTML = `
+        <div class="row g-3">
+          <div class="col-md-3">
+            ${item.image_url ? `<img class="inv-thumb" src="${escapeHtml(item.image_url)}" alt="" />` : `<div class="inv-thumb inv-thumb-empty">${packageIcon}</div>`}
+          </div>
+          <div class="col-md-9">
+            <div class="d-flex flex-wrap gap-2 mb-2">
+              <span class="badge ${kind.className}">${escapeHtml(kind.label)}</span>
+              ${itemStatus(item).map((tag) => `<span class="badge ${tag.className}">${escapeHtml(tag.label)}</span>`).join('')}
+              ${item.category ? `<span class="badge bg-secondary-lt">${escapeHtml(item.category)}</span>` : ''}
+            </div>
+            <div class="row g-2">
+              <div class="col-6 col-lg-3"><div class="text-secondary small">Stok</div><div class="fw-bold">${escapeHtml(withUnit(item, item.stock))}</div></div>
+              <div class="col-6 col-lg-3"><div class="text-secondary small">Baik / Rusak</div><div class="fw-bold">${escapeHtml(num(item.good))} / ${escapeHtml(num(item.damaged))}</div></div>
+              <div class="col-6 col-lg-3"><div class="text-secondary small">Harga terakhir</div><div class="fw-bold">${item.last_price !== null && item.last_price !== undefined ? escapeHtml(money(item.last_price)) : '-'}</div></div>
+              <div class="col-6 col-lg-3"><div class="text-secondary small">Total belanja</div><div class="fw-bold">${escapeHtml(money(item.total_spent))}</div></div>
+              <div class="col-6 col-lg-3"><div class="text-secondary small">Tanggal masuk terakhir</div><div>${item.last_in_date ? escapeHtml(dateShort(item.last_in_date)) : '-'}</div></div>
+              <div class="col-6 col-lg-3"><div class="text-secondary small">Lokasi terakhir</div><div>${escapeHtml(item.last_location || '-')}</div></div>
+              <div class="col-6 col-lg-3"><div class="text-secondary small">Penjual terakhir</div><div>${escapeHtml(item.last_supplier || '-')}</div></div>
+              <div class="col-6 col-lg-3"><div class="text-secondary small">Stok minimum / kebutuhan bulan</div><div>${item.min_stock !== null ? escapeHtml(num(item.min_stock)) : '-'} / ${item.monthly_need !== null ? escapeHtml(num(item.monthly_need)) : '-'}</div></div>
+            </div>
+            ${item.notes ? `<div class="mt-2 text-secondary" style="white-space:pre-wrap">${escapeHtml(item.notes)}</div>` : ''}
+          </div>
+          <div class="col-12">
+            <h4 class="mt-2">Riwayat</h4>
+            <div class="table-responsive">
+              <table class="table table-sm table-vcenter">
+                <thead><tr><th>Tanggal</th><th>Jenis</th><th class="text-end">Jumlah</th><th class="text-end">Harga satuan</th><th class="text-end">Total</th><th>Keterangan</th><th>Oleh</th><th></th></tr></thead>
+                <tbody>${rows || '<tr><td colspan="8" class="text-secondary">Belum ada catatan.</td></tr>'}</tbody>
+              </table>
+            </div>
+          </div>
+        </div>`
+      detailTitle.textContent = item.name
+    }
+    const openDetail = async (id) => {
+      detailId = id
+      detailBody.innerHTML = '<div class="text-secondary"><span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>Memuat riwayat...</div>'
+      detailTitle.textContent = 'Detail Barang'
+      showModal(detailModalElement)
+      try {
+        await loadKoi()
+        const response = await fetch(`${apiUrl}/inventory/${id}`)
+        if (!response.ok) throw new Error(await readError(response, 'Riwayat gagal dimuat'))
+        renderDetail(await withKoi(await response.json()))
+      } catch (error) {
+        detailBody.innerHTML = `<div class="text-danger">${escapeHtml(error.message)}</div>`
+      }
+    }
+    detailBody.addEventListener('click', async (event) => {
+      const undo = event.target.closest('[data-undo-move]')
+      if (!undo || !detailId) return
+      if (!(await window.KoiDialog.confirm('Batalkan catatan ini? Stok akan dihitung ulang.'))) return
+      try {
+        const response = await fetch(`${apiUrl}/inventory/${detailId}/movements/${undo.dataset.undoMove}`, { method: 'DELETE' })
+        if (!response.ok) throw new Error(await readError(response, 'Catatan gagal dibatalkan'))
+        renderDetail(await withKoi(await response.json()))
+        await keepScroll(() => loadItems(true))
+      } catch (error) {
+        window.alert(error.message)
+      }
+    })
+
+    // ---- print + export ------------------------------------------------------------------------------------
+    const chosenItems = (ids) => {
+      if (ids && ids.length) return ids.map((id) => items.find((entry) => String(entry.id) === String(id))).filter(Boolean)
+      return visibleItems()
+    }
+    const printStock = (list) => {
+      if (!window.KoiPrint) { window.alert('Modul cetak belum dimuat. Muat ulang halaman.'); return }
+      if (!list.length) { window.alert('Tidak ada barang untuk dicetak.'); return }
+      const e = window.KoiPrint.escapeHtml
+      const rows = list.map((item, index) => `<tr>
+        <td class="kp-center">${index + 1}</td>
+        <td>${e(item.name)}</td>
+        <td>${e(kindLabels[item.kind]?.label || '')}</td>
+        <td>${e(item.category || '')}</td>
+        <td class="kp-num">${e(withUnit(item, item.stock))}</td>
+        <td class="kp-num">${Number(item.damaged) > 0 ? e(num(item.damaged)) : ''}</td>
+        <td>${e(statusText(item))}</td>
+        <td>${e(item.last_location || '')}</td>
+        <td class="kp-num">${item.last_price !== null && item.last_price !== undefined ? e(money(item.last_price)) : ''}</td>
+        <td>${e(item.last_in_date ? dateShort(item.last_in_date) : '')}</td></tr>`).join('')
+      window.KoiPrint.print({
+        key: 'inventory-stock',
+        title: 'Daftar Stok Inventaris',
+        heading: 'DAFTAR STOK INVENTARIS',
+        subheading: `${list.length} barang`,
+        info: [['Tanggal cetak', window.KoiAuth.formatDate(new Date(), { weekday: true })], ['Jumlah barang', String(list.length)]],
+        body: `<section class="kp-section"><table class="kp-table">
+          <thead><tr><th class="kp-center" style="width:28px">No</th><th>Nama</th><th>Jenis</th><th>Kategori</th><th class="kp-num">Stok</th><th class="kp-num">Rusak</th><th>Status</th><th>Lokasi</th><th class="kp-num">Harga terakhir</th><th>Masuk</th></tr></thead>
+          <tbody>${rows}</tbody></table></section>`,
+        signatures: [],
+      })
+    }
+    const printShopping = (ids) => {
+      if (!window.KoiPrint) { window.alert('Modul cetak belum dimuat. Muat ulang halaman.'); return }
+      // chosen cards win; otherwise everything that needs buying
+      const list = (ids && ids.length ? chosenItems(ids) : items.filter((item) => item.needs_buy))
+      if (!list.length) { window.alert('Tidak ada barang yang perlu dibeli.'); return }
+      const e = window.KoiPrint.escapeHtml
+      let grand = 0
+      const rows = list.map((item, index) => {
+        const buy = suggestedBuy(item)
+        const estimate = item.last_price ? buy * Number(item.last_price) : 0
+        grand += estimate
+        return `<tr>
+          <td class="kp-center">${index + 1}</td>
+          <td>${e(item.name)}${item.category ? `<div style="font-size:9px;color:#555">${e(item.category)}</div>` : ''}</td>
+          <td class="kp-num">${e(withUnit(item, item.stock))}</td>
+          <td class="kp-num">${item.min_stock !== null ? e(withUnit(item, item.min_stock)) : ''}</td>
+          <td class="kp-num"><strong>${buy ? e(withUnit(item, buy)) : ''}</strong></td>
+          <td>${e(item.last_supplier || '')}</td>
+          <td class="kp-num">${item.last_price ? e(money(item.last_price)) : ''}</td>
+          <td class="kp-num">${estimate ? e(money(estimate)) : ''}</td></tr>`
+      }).join('')
+      window.KoiPrint.print({
+        key: 'inventory-shopping',
+        title: 'Daftar Belanja',
+        heading: 'DAFTAR BELANJA',
+        subheading: `${list.length} barang`,
+        info: [['Tanggal', window.KoiAuth.formatDate(new Date(), { weekday: true })], ['Perkiraan total', money(grand)]],
+        body: `<section class="kp-section"><table class="kp-table">
+          <thead><tr><th class="kp-center" style="width:28px">No</th><th>Barang</th><th class="kp-num">Stok</th><th class="kp-num">Minimum</th><th class="kp-num">Perlu beli</th><th>Penjual terakhir</th><th class="kp-num">Harga terakhir</th><th class="kp-num">Perkiraan</th></tr></thead>
+          <tbody>${rows}</tbody></table>
+          <div style="text-align:right;margin-top:6px;font-weight:800">Perkiraan total: ${e(money(grand))}</div></section>`,
+        signatures: [],
+      })
+    }
+    const exportExcel = (list) => {
+      if (!window.XLSX) { window.alert('Pustaka Excel belum termuat. Muat ulang halaman.'); return }
+      if (!list.length) { window.alert('Tidak ada barang untuk diexport.'); return }
+      const header = ['Nama', 'Jenis', 'Kategori', 'Satuan', 'Stok', 'Baik', 'Rusak', 'Stok minimum', 'Kebutuhan per bulan', 'Status', 'Lokasi terakhir', 'Harga terakhir', 'Tanggal masuk terakhir', 'Penjual terakhir', 'Total belanja', 'Catatan']
+      const rows = list.map((item) => [
+        item.name, kindLabels[item.kind]?.label || '', item.category || '', item.unit || '', Number(item.stock), Number(item.good), Number(item.damaged),
+        item.min_stock ?? '', item.monthly_need ?? '', statusText(item), item.last_location || '', item.last_price ?? '',
+        item.last_in_date ? String(item.last_in_date).slice(0, 10) : '', item.last_supplier || '', Number(item.total_spent), item.notes || '',
+      ])
+      const sheet = XLSX.utils.aoa_to_sheet([header, ...rows])
+      sheet['!cols'] = header.map((title, index) => ({ wch: index === 0 || index === 15 ? 32 : 16 }))
+      const workbook = XLSX.utils.book_new()
+      XLSX.utils.book_append_sheet(workbook, sheet, 'Inventaris')
+      const blob = new Blob([XLSX.write(workbook, { type: 'array', bookType: 'xlsx' })], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' })
+      const link = document.createElement('a')
+      link.href = URL.createObjectURL(blob)
+      link.download = `inventaris-${today()}.xlsx`
+      document.body.appendChild(link)
+      link.click()
+      link.remove()
+      setTimeout(() => URL.revokeObjectURL(link.href), 2000)
+    }
+
+    // ---- actions -------------------------------------------------------------------------------------------
+    const deleteItems = async (ids) => {
+      const names = ids.map((id) => items.find((entry) => String(entry.id) === String(id))?.name).filter(Boolean)
+      if (!(await window.KoiDialog.confirm(`Hapus ${ids.length} barang (${names.join(', ')}) beserta seluruh riwayatnya?`))) return
+      const failed = []
+      for (const id of ids) {
+        try {
+          const response = await fetch(`${apiUrl}/inventory/${id}`, { method: 'DELETE' })
+          if (!response.ok) failed.push(id)
+        } catch { failed.push(id) }
+      }
+      dock.clear()
+      await keepScroll(loadItems)
+      if (failed.length) window.alert(`${failed.length} barang gagal dihapus.`)
+    }
+    const single = (count) => count === 1
+    const dock = window.KoiDock.create({
+      root: table,
+      label: 'barang',
+      idOf: (item) => String(item.id),
+      visibleItems: () => visibleItems(),
+      render: () => renderTable(),
+      actions: [
+        { key: 'edit', icon: 'edit', title: 'Edit barang terpilih', role: 'farm-operate', show: single, onClick: (ids) => openForm(ids[0]) },
+        { key: 'masuk', icon: 'package', variant: 'success', title: 'Catat masuk (pembelian)', role: 'farm-operate', show: single, onClick: (ids) => openMove(ids[0], 'masuk') },
+        { key: 'keluar', icon: 'package-export', title: 'Catat keluar (dipakai)', role: 'farm-operate', show: single, onClick: (ids) => openMove(ids[0], 'keluar') },
+        { key: 'rusak', icon: 'alert-triangle', variant: 'warning', title: 'Catat rusak', role: 'farm-operate', show: single, onClick: (ids) => openMove(ids[0], 'rusak') },
+        { key: 'diperbaiki', icon: 'tool', title: 'Catat diperbaiki', role: 'farm-operate', show: single, onClick: (ids) => openMove(ids[0], 'diperbaiki') },
+        { key: 'pindah', icon: 'arrows-exchange', title: 'Pindah lokasi', role: 'farm-operate', show: single, onClick: (ids) => openMove(ids[0], 'pindah') },
+        { key: 'koreksi', icon: 'list-check', title: 'Koreksi stok (hitung ulang)', role: 'farm-operate', show: single, onClick: (ids) => openMove(ids[0], 'koreksi') },
+        { key: 'detail', icon: 'history', variant: 'secondary', title: 'Lihat riwayat', show: single, onClick: (ids) => openDetail(ids[0]) },
+        { key: 'shopping', icon: 'basket', variant: 'secondary', always: true, title: (count) => (count ? `Cetak daftar belanja (${count} terpilih)` : 'Cetak daftar belanja (yang perlu beli)'), onClick: (ids) => printShopping(ids) },
+        { key: 'print', icon: 'printer', variant: 'secondary', always: true, title: (count) => (count ? `Cetak daftar stok (${count} terpilih)` : 'Cetak daftar stok (semua yang tampil)'), onClick: (ids) => printStock(chosenItems(ids)) },
+        { key: 'export', icon: 'file-spreadsheet', variant: 'success', always: true, title: (count) => (count ? `Export Excel (${count} terpilih)` : 'Export Excel'), onClick: (ids) => exportExcel(chosenItems(ids)) },
+        { key: 'delete', icon: 'trash', variant: 'danger', title: (count) => `Hapus ${count} barang terpilih`, role: 'farm-operate', onClick: (ids) => deleteItems(ids) },
+      ],
+      add: { title: 'Tambah barang', role: 'farm-operate', onClick: () => openForm(null) },
+    })
+
+    // ---- events --------------------------------------------------------------------------------------------
+    filterChips.forEach((chip) => chip.addEventListener('click', () => {
+      kindFilter = chip.dataset.invFilter
+      try { sessionStorage.setItem(filterKey, kindFilter) } catch {}
+      renderTable()
+    }))
+    searchInput.addEventListener('input', () => renderTable())
+    addButton?.addEventListener('click', () => openForm(null))
+    table.addEventListener('click', (event) => {
+      const detail = event.target.closest('[data-detail-inv]')
+      if (detail) { openDetail(detail.dataset.detailInv); return }
+      const edit = event.target.closest('[data-edit-inv]')
+      if (edit) { openForm(edit.dataset.editInv); return }
+      const remove = event.target.closest('[data-delete-inv]')
+      if (remove) { deleteItems([remove.dataset.deleteInv]); return }
+      // anywhere else on the card selects it (several cards can be selected); double-click opens the history
+      if (event.target.closest('button, a, input')) return
+      const card = event.target.closest('[data-dock-id]')
+      if (card) dock.toggle(card.dataset.dockId)
+    })
+    table.addEventListener('dblclick', (event) => {
+      if (event.target.closest('button, a, input')) return
+      const card = event.target.closest('[data-dock-id]')
+      if (!card) return
+      window.getSelection()?.removeAllRanges()
+      openDetail(card.dataset.dockId)
+    })
+    table.addEventListener('keydown', (event) => {
+      if (event.key !== 'Enter' && event.key !== ' ') return
+      const row = event.target.closest('[data-inv-id]')
+      if (row && event.target === row) {
+        event.preventDefault()
+        openDetail(row.dataset.invId)
+      }
+    })
+    form.querySelector('[data-inv-image-upload]').addEventListener('click', () => imageInput.click())
+    imageInput.addEventListener('change', () => {
+      if (imageInput.files[0]) setImageFile(imageInput.files[0])
+      imageInput.value = ''
+    })
+    form.querySelector('[data-inv-image-paste]').addEventListener('click', async () => {
+      try {
+        const file = await readClipboardImage()
+        if (file) setImageFile(file)
+        else imageStatus.textContent = 'Tidak ada gambar di clipboard.'
+      } catch {
+        imageStatus.textContent = 'Clipboard tidak bisa dibaca. Tempel dengan Ctrl+V atau pilih file.'
+      }
+    })
+    imageClear.addEventListener('click', () => {
+      imageState = { url: '', file: null, previewUrl: '' }
+      imageStatus.textContent = ''
+      renderImage()
+    })
+    modalElement.addEventListener('paste', (event) => {
+      const file = Array.from(event.clipboardData?.files || []).find((entry) => /^image\//.test(entry.type))
+      if (file) { event.preventDefault(); setImageFile(file) }
+    })
+    const dragHasFiles = (event) => Array.from(event.dataTransfer?.types || []).includes('Files')
+    modalElement.addEventListener('dragover', (event) => {
+      if (!dragHasFiles(event)) return
+      event.preventDefault()
+      zone.classList.add('is-over')
+    })
+    modalElement.addEventListener('dragleave', (event) => {
+      if (!modalElement.contains(event.relatedTarget)) zone.classList.remove('is-over')
+    })
+    modalElement.addEventListener('drop', (event) => {
+      if (!dragHasFiles(event)) return
+      event.preventDefault()
+      zone.classList.remove('is-over')
+      const file = Array.from(event.dataTransfer.files).find((entry) => /^image\//.test(entry.type))
+      if (file) setImageFile(file)
+      else imageStatus.textContent = 'Hanya file gambar yang bisa dipakai.'
+    })
+
+    try {
+      const cached = JSON.parse(localStorage.getItem(cacheKey) || '[]')
+      if (Array.isArray(cached) && cached.length) { items = cached; signature = JSON.stringify(cached); refreshSuggestions(); renderTable() }
+    } catch {}
+    loadItems(items.length > 0)
+    window.KoiAuth?.registerRealtimeRefresh(() => keepScroll(() => loadItems(true)), { intervalMs: 30000 })
+  
+})()
+</script>
+
+          </div>
+        </main>
+        <!-- END PAGE BODY -->
+
+        <!-- BEGIN FOOTER -->
+        <!--  BEGIN FOOTER  -->
+        <footer class="footer footer-transparent d-print-none">
+          <div class="container-xl">
+            <div class="row text-center align-items-center flex-row-reverse">
+              <div class="col-lg-auto ms-lg-auto">
+                <nav aria-label="Footer">
+                  <ul class="list-inline mb-0">
+                    <li class="list-inline-item">
+                      <a href="./license.html" class="link-secondary"
+                        >License</a
+                      >
+                    </li>
+                  </ul>
+                </nav>
+              </div>
+              <div class="col-12 col-lg-auto mt-3 mt-lg-0">
+                <ul class="list-inline mb-0">
+                  <li class="list-inline-item">
+                    Copyright &copy; 2026 <span data-brand-owner>Nishikigoi Farm</span>. All rights
+                    reserved. V1-261018
+                  </li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        </footer>
+        <!--  END FOOTER  -->
+        <!-- END FOOTER -->
+      </div>
+    </div>
+
+    <!-- BEGIN THEME SETTINGS -->
+    <div>
+      <form
+        class="offcanvas offcanvas-start offcanvas-narrow"
+        tabindex="-1"
+        id="offcanvas-settings"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="offcanvas-settings-title"
+      >
+        <div class="offcanvas-header">
+          <h2 class="offcanvas-title" id="offcanvas-settings-title">
+            Theme Settings
+          </h2>
+          <button
+            type="button"
+            class="btn-close"
+            data-bs-dismiss="offcanvas"
+            aria-label="Close"
+          ></button>
+        </div>
+        <div class="offcanvas-body d-flex flex-column">
+          <div>
+            <fieldset class="border-0 p-0 mb-4">
+              <legend
+                class="form-label float-none mb-0"
+                style="font-size: inherit"
+              >
+                Color mode
+              </legend>
+              <p class="form-hint">Choose the color mode for your app.</p>
+              <label class="form-check">
+                <div class="form-selectgroup-item">
+                  <input
+                    type="radio"
+                    name="theme"
+                    value="light"
+                    class="form-check-input"
+                    checked
+                  />
+                  <div class="form-check-label">Light</div>
+                </div> </label
+              ><label class="form-check">
+                <div class="form-selectgroup-item">
+                  <input
+                    type="radio"
+                    name="theme"
+                    value="dark"
+                    class="form-check-input"
+                  />
+                  <div class="form-check-label">Dark</div>
+                </div> </label
+              ><label class="form-check">
+                <div class="form-selectgroup-item">
+                  <input
+                    type="radio"
+                    name="theme"
+                    value="auto"
+                    class="form-check-input"
+                  />
+                  <div class="form-check-label">Auto</div>
+                </div>
+              </label>
+            </fieldset>
+
+            <fieldset class="border-0 p-0 mb-4">
+              <legend
+                class="form-label float-none mb-0"
+                style="font-size: inherit"
+              >
+                Color scheme
+              </legend>
+              <p class="form-hint">The perfect color mode for your app.</p>
+
+              <div class="row g-2">
+                <div class="col-auto">
+                  <label class="form-colorinput">
+                    <input
+                      name="theme-primary"
+                      type="radio"
+                      value="blue"
+                      class="form-colorinput-input"
+                      aria-label="blue"
+                    />
+                    <span class="form-colorinput-color bg-blue"></span>
+                  </label>
+                </div>
+                <div class="col-auto">
+                  <label class="form-colorinput">
+                    <input
+                      name="theme-primary"
+                      type="radio"
+                      value="azure"
+                      class="form-colorinput-input"
+                      aria-label="azure"
+                    />
+                    <span class="form-colorinput-color bg-azure"></span>
+                  </label>
+                </div>
+                <div class="col-auto">
+                  <label class="form-colorinput">
+                    <input
+                      name="theme-primary"
+                      type="radio"
+                      value="indigo"
+                      class="form-colorinput-input"
+                      aria-label="indigo"
+                    />
+                    <span class="form-colorinput-color bg-indigo"></span>
+                  </label>
+                </div>
+                <div class="col-auto">
+                  <label class="form-colorinput">
+                    <input
+                      name="theme-primary"
+                      type="radio"
+                      value="purple"
+                      class="form-colorinput-input"
+                      aria-label="purple"
+                    />
+                    <span class="form-colorinput-color bg-purple"></span>
+                  </label>
+                </div>
+                <div class="col-auto">
+                  <label class="form-colorinput">
+                    <input
+                      name="theme-primary"
+                      type="radio"
+                      value="pink"
+                      class="form-colorinput-input"
+                      aria-label="pink"
+                    />
+                    <span class="form-colorinput-color bg-pink"></span>
+                  </label>
+                </div>
+                <div class="col-auto">
+                  <label class="form-colorinput">
+                    <input
+                      name="theme-primary"
+                      type="radio"
+                      value="red"
+                      class="form-colorinput-input"
+                      aria-label="red"
+                    />
+                    <span class="form-colorinput-color bg-red"></span>
+                  </label>
+                </div>
+                <div class="col-auto">
+                  <label class="form-colorinput">
+                    <input
+                      name="theme-primary"
+                      type="radio"
+                      value="orange"
+                      class="form-colorinput-input"
+                      aria-label="orange"
+                    />
+                    <span class="form-colorinput-color bg-orange"></span>
+                  </label>
+                </div>
+                <div class="col-auto">
+                  <label class="form-colorinput">
+                    <input
+                      name="theme-primary"
+                      type="radio"
+                      value="yellow"
+                      class="form-colorinput-input"
+                      aria-label="yellow"
+                    />
+                    <span class="form-colorinput-color bg-yellow"></span>
+                  </label>
+                </div>
+                <div class="col-auto">
+                  <label class="form-colorinput">
+                    <input
+                      name="theme-primary"
+                      type="radio"
+                      value="lime"
+                      class="form-colorinput-input"
+                      aria-label="lime"
+                    />
+                    <span class="form-colorinput-color bg-lime"></span>
+                  </label>
+                </div>
+                <div class="col-auto">
+                  <label class="form-colorinput">
+                    <input
+                      name="theme-primary"
+                      type="radio"
+                      value="green"
+                      class="form-colorinput-input"
+                      aria-label="green"
+                    />
+                    <span class="form-colorinput-color bg-green"></span>
+                  </label>
+                </div>
+                <div class="col-auto">
+                  <label class="form-colorinput">
+                    <input
+                      name="theme-primary"
+                      type="radio"
+                      value="teal"
+                      class="form-colorinput-input"
+                      aria-label="teal"
+                    />
+                    <span class="form-colorinput-color bg-teal"></span>
+                  </label>
+                </div>
+                <div class="col-auto">
+                  <label class="form-colorinput">
+                    <input
+                      name="theme-primary"
+                      type="radio"
+                      value="cyan"
+                      class="form-colorinput-input"
+                      aria-label="cyan"
+                    />
+                    <span class="form-colorinput-color bg-cyan"></span>
+                  </label>
+                </div>
+                <div class="col-auto">
+                  <label class="form-colorinput">
+                    <input
+                      name="theme-primary"
+                      type="radio"
+                      value="inverted"
+                      class="form-colorinput-input"
+                      aria-label="Inverted"
+                    />
+                    <span class="form-colorinput-color bg-inverted"></span>
+                  </label>
+                </div>
+              </div>
+            </fieldset>
+
+            <fieldset class="border-0 p-0 mb-4">
+              <legend
+                class="form-label float-none mb-0"
+                style="font-size: inherit"
+              >
+                Font family
+              </legend>
+              <p class="form-hint">
+                Choose the font family that fits your app.
+              </p>
+
+              <div>
+                <label class="form-check">
+                  <div class="form-selectgroup-item">
+                    <input
+                      type="radio"
+                      name="theme-font"
+                      value="sans-serif"
+                      class="form-check-input"
+                      checked
+                    />
+                    <div class="form-check-label">Sans-serif</div>
+                  </div> </label
+                ><label class="form-check">
+                  <div class="form-selectgroup-item">
+                    <input
+                      type="radio"
+                      name="theme-font"
+                      value="serif"
+                      class="form-check-input"
+                    />
+                    <div class="form-check-label">Serif</div>
+                  </div> </label
+                ><label class="form-check">
+                  <div class="form-selectgroup-item">
+                    <input
+                      type="radio"
+                      name="theme-font"
+                      value="monospace"
+                      class="form-check-input"
+                    />
+                    <div class="form-check-label">Monospace</div>
+                  </div> </label
+                ><label class="form-check">
+                  <div class="form-selectgroup-item">
+                    <input
+                      type="radio"
+                      name="theme-font"
+                      value="comic"
+                      class="form-check-input"
+                    />
+                    <div class="form-check-label">Comic</div>
+                  </div>
+                </label>
+              </div>
+            </fieldset>
+
+            <fieldset class="border-0 p-0 mb-4">
+              <legend
+                class="form-label float-none mb-0"
+                style="font-size: inherit"
+              >
+                Theme base
+              </legend>
+              <p class="form-hint">Choose the gray shade for your app.</p>
+
+              <div>
+                <label class="form-check">
+                  <div class="form-selectgroup-item">
+                    <input
+                      type="radio"
+                      name="theme-base"
+                      value="slate"
+                      class="form-check-input"
+                    />
+                    <div class="form-check-label">Slate</div>
+                  </div> </label
+                ><label class="form-check">
+                  <div class="form-selectgroup-item">
+                    <input
+                      type="radio"
+                      name="theme-base"
+                      value="gray"
+                      class="form-check-input"
+                      checked
+                    />
+                    <div class="form-check-label">Gray</div>
+                  </div> </label
+                ><label class="form-check">
+                  <div class="form-selectgroup-item">
+                    <input
+                      type="radio"
+                      name="theme-base"
+                      value="zinc"
+                      class="form-check-input"
+                    />
+                    <div class="form-check-label">Zinc</div>
+                  </div> </label
+                ><label class="form-check">
+                  <div class="form-selectgroup-item">
+                    <input
+                      type="radio"
+                      name="theme-base"
+                      value="neutral"
+                      class="form-check-input"
+                    />
+                    <div class="form-check-label">Neutral</div>
+                  </div> </label
+                ><label class="form-check">
+                  <div class="form-selectgroup-item">
+                    <input
+                      type="radio"
+                      name="theme-base"
+                      value="stone"
+                      class="form-check-input"
+                    />
+                    <div class="form-check-label">Stone</div>
+                  </div>
+                </label>
+              </div>
+            </fieldset>
+
+            <fieldset class="border-0 p-0 mb-4">
+              <legend
+                class="form-label float-none mb-0"
+                style="font-size: inherit"
+              >
+                Corner Radius
+              </legend>
+              <p class="form-hint">
+                Choose the border radius factor for your app.
+              </p>
+
+              <div>
+                <label class="form-check">
+                  <div class="form-selectgroup-item">
+                    <input
+                      type="radio"
+                      name="theme-radius"
+                      value="0"
+                      class="form-check-input"
+                    />
+                    <div class="form-check-label">0</div>
+                  </div> </label
+                ><label class="form-check">
+                  <div class="form-selectgroup-item">
+                    <input
+                      type="radio"
+                      name="theme-radius"
+                      value="0.5"
+                      class="form-check-input"
+                    />
+                    <div class="form-check-label">0.5</div>
+                  </div> </label
+                ><label class="form-check">
+                  <div class="form-selectgroup-item">
+                    <input
+                      type="radio"
+                      name="theme-radius"
+                      value="1"
+                      class="form-check-input"
+                      checked
+                    />
+                    <div class="form-check-label">1</div>
+                  </div> </label
+                ><label class="form-check">
+                  <div class="form-selectgroup-item">
+                    <input
+                      type="radio"
+                      name="theme-radius"
+                      value="1.5"
+                      class="form-check-input"
+                    />
+                    <div class="form-check-label">1.5</div>
+                  </div> </label
+                ><label class="form-check">
+                  <div class="form-selectgroup-item">
+                    <input
+                      type="radio"
+                      name="theme-radius"
+                      value="2"
+                      class="form-check-input"
+                    />
+                    <div class="form-check-label">2</div>
+                  </div>
+                </label>
+              </div>
+            </fieldset>
+          </div>
+
+          <div class="mt-auto space-y">
+            <button type="button" class="btn w-100" id="reset-changes">
+              <!-- Download SVG icon from http://tabler.io/icons/icon/rotate -->
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="24"
+                height="24"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                aria-hidden="true"
+                focusable="false"
+                class="icon"
+              >
+                <path d="M19.95 11a8 8 0 1 0 -.5 4m.5 5v-5h-5" />
+              </svg>
+              Reset changes
+            </button>
+            <button
+              type="button"
+              class="btn btn-primary w-100"
+              data-bs-dismiss="offcanvas"
+            >
+              Save
+            </button>
+          </div>
+        </div>
+      </form>
+    </div>
+    <!-- END THEME SETTINGS -->
+
+    <!-- BEGIN PAGE LIBRARIES -->
+    <script src="./dist/libs/litepicker/dist/litepicker.js" defer></script>
+    <!-- END PAGE LIBRARIES -->
+
+    <!-- BEGIN GLOBAL MANDATORY SCRIPTS -->
+    <script src="./dist/js/tabler.js" defer></script>
+    <!-- END GLOBAL MANDATORY SCRIPTS -->
+
+    <script>
+      document.addEventListener("DOMContentLoaded", () => {
+        const toggle = document.getElementById("navbar-notifications-toggle");
+        const closeButton = document.querySelector(
+          "[data-navbar-notifications-close]",
+        );
+        const readAllButton = document.querySelector(
+          "[data-navbar-notifications-read-all]",
+        );
+        const clearButton = document.querySelector(
+          "[data-navbar-notifications-clear]",
+        );
+        const list = document.querySelector("[data-navbar-notifications-list]");
+        const badge = document.querySelector(
+          "[data-navbar-notifications-badge]",
+        );
+        let currentNotifications = [];
+
+        const escapeHtml = (value) =>
+          String(value || "").replace(
+            /[&<>'"]/g,
+            (char) =>
+              ({
+                "&": "&amp;",
+                "<": "&lt;",
+                ">": "&gt;",
+                "'": "&#39;",
+                '"': "&quot;",
+              })[char],
+          );
+
+        const dotClass = (type, status) => {
+          if (status === "read") return "status-dot d-block";
+          if (type === "error")
+            return "status-dot status-dot-animated bg-red d-block";
+          if (type === "success")
+            return "status-dot status-dot-animated bg-green d-block";
+          if (type === "warning")
+            return "status-dot status-dot-animated bg-yellow d-block";
+          return "status-dot status-dot-animated bg-blue d-block";
+        };
+
+        const renderNotifications = (notifications) => {
+          const items = Array.isArray(notifications)
+            ? notifications
+            : Array.isArray(notifications?.items)
+              ? notifications.items
+              : [];
+          currentNotifications = items;
+          const unread = items.filter((item) => item.status !== "read");
+
+          badge?.classList.toggle("d-none", unread.length === 0);
+          clearButton?.classList.toggle("d-none", items.length === 0);
+          readAllButton?.classList.toggle("d-none", unread.length === 0);
+
+          if (!items.length) {
+            list.innerHTML =
+              '<div class="list-group-item"><div class="text-secondary">Belum ada notifikasi.</div></div>';
+            return;
+          }
+
+          list.innerHTML = items
+            .slice(0, 8)
+            .map(
+              (item) => `
+          <div class="list-group-item ${item.type === 'feedback' ? 'cursor-pointer' : ''}" ${item.type === 'feedback' ? `data-feedback-notification="${escapeHtml(item.id)}"` : ''}>
+            <div class="row align-items-center">
+              <div class="col-auto">
+                <span class="${dotClass(item.type, item.status)}"><span class="visually-hidden">${item.status === "read" ? "Read" : "Unread"}</span></span>
+              </div>
+              <div class="col text-truncate">
+                <div class="text-body d-block text-truncate">${escapeHtml(item.title || "Notifikasi Sistem")}</div>
+                <div class="d-block text-secondary text-truncate mt-n1">${escapeHtml(item.message || item.created_at || "")}</div>
+              </div>
+            </div>
+          </div>
+        `,
+            )
+            .join("");
+        };
+
+        const loadNotifications = async () => {
+          try {
+            const request = window.KoiAuth?.apiRequest;
+            const response = request
+              ? await request("/notifications?panel=1")
+              : await fetch("/api/notifications?panel=1");
+            if (!response.ok) throw new Error("Notifikasi gagal dimuat");
+            renderNotifications(await response.json());
+          } catch {
+            badge?.classList.add("d-none");
+            list.innerHTML =
+              '<div class="list-group-item"><div class="text-danger">Notifikasi gagal dimuat.</div></div>';
+          }
+        };
+
+        closeButton?.addEventListener("click", () => {
+          window.tabler.bootstrap.Dropdown.getOrCreateInstance(toggle).hide();
+        });
+
+        readAllButton?.addEventListener("click", async () => {
+          try {
+            const request = window.KoiAuth?.apiRequest;
+            const response = request
+              ? await request("/notifications?panel=1")
+              : await fetch("/api/notifications?panel=1");
+            const payload = response.ok ? await response.json() : [];
+            const items = Array.isArray(payload)
+              ? payload
+              : Array.isArray(payload?.items)
+                ? payload.items
+                : [];
+            const unread = items.filter((item) => item.status !== "read");
+            await Promise.all(
+              unread.map((item) =>
+                request
+                  ? request(`/notifications/${item.id}/read`, {
+                      method: "PATCH",
+                    })
+                  : fetch(`/api/notifications/${item.id}/read`, {
+                      method: "PATCH",
+                    }),
+              ),
+            );
+            await loadNotifications();
+          } catch {
+            await loadNotifications();
+          }
+        });
+
+        clearButton?.addEventListener("click", async () => {
+          try {
+            const request = window.KoiAuth?.apiRequest;
+            const ids = currentNotifications
+              .map((item) => item.id)
+              .filter(Boolean);
+            if (!ids.length) return;
+
+            const options = {
+              method: "PATCH",
+              headers: { "content-type": "application/json" },
+              body: JSON.stringify({ ids }),
+            };
+
+            const response = request
+              ? await request("/notifications/clear", options)
+              : await fetch("/api/notifications/clear", options);
+            if (!response.ok) throw new Error("Notifikasi gagal dibersihkan");
+            await loadNotifications();
+          } catch {
+            await loadNotifications();
+          }
+        });
+
+        toggle?.addEventListener("shown.bs.dropdown", loadNotifications);
+        loadNotifications();
+      });
+    </script>
+
+    <!-- BEGIN PAGE SCRIPTS -->
+    <script>
+      document.addEventListener("DOMContentLoaded", function () {
+        var themeConfig = {
+          theme: "light",
+          "theme-base": "gray",
+          "theme-font": "sans-serif",
+          "theme-primary": "blue",
+          "theme-radius": "1",
+        };
+
+        var url = new URL(window.location);
+        var form = document.getElementById("offcanvas-settings");
+        var resetButton = document.getElementById("reset-changes");
+        if (!form || !resetButton) return;
+
+        var themeKeys = Object.keys(themeConfig);
+        var getAccountThemeKey = function () {
+          var session =
+            window.KoiAuth && window.KoiAuth.getSession
+              ? window.KoiAuth.getSession()
+              : JSON.parse(
+                  sessionStorage.getItem("koi-farm-auth-session") || "null",
+                );
+          return session && session.username
+            ? "koi-farm-theme-settings-" + session.username
+            : "koi-farm-theme-settings-guest";
+        };
+
+        var readAccountTheme = function () {
+          return (
+            JSON.parse(
+              window.localStorage.getItem(getAccountThemeKey()) || "null",
+            ) || {}
+          );
+        };
+
+        var writeAccountTheme = function (theme) {
+          window.localStorage.setItem(
+            getAccountThemeKey(),
+            JSON.stringify(theme),
+          );
+        };
+
+        var checkItems = function () {
+          var accountTheme = readAccountTheme();
+          for (var key in themeConfig) {
+            var value = accountTheme[key] || themeConfig[key];
+
+            if (!!value) {
+              var radios = form.querySelectorAll(`[name="${key}"]`);
+
+              if (!!radios) {
+                radios.forEach((radio) => {
+                  radio.checked = radio.value === value;
+                });
+              }
+            }
+          }
+        };
+
+        form.addEventListener("change", function (event) {
+          var target = event.target,
+            name = target.name,
+            value = target.value;
+
+          for (var key in themeConfig) {
+            if (name === key) {
+              var applied = value;
+              if (key === "theme" && value === "auto") {
+                applied = window.matchMedia("(prefers-color-scheme: dark)")
+                  .matches
+                  ? "dark"
+                  : "light";
+              }
+              if (applied !== themeConfig[key]) {
+                document.documentElement.setAttribute(
+                  "data-bs-" + key,
+                  applied,
+                );
+              } else {
+                document.documentElement.removeAttribute("data-bs-" + key);
+              }
+              window.localStorage.setItem("tabler-" + key, value);
+              var accountTheme = readAccountTheme();
+              accountTheme[key] = value;
+              writeAccountTheme(accountTheme);
+              url.searchParams.set(key, value);
+            }
+          }
+
+          window.history.pushState({}, "", url);
+        });
+
+        resetButton.addEventListener("click", function () {
+          var accountTheme = {};
+          for (var key in themeConfig) {
+            document.documentElement.removeAttribute("data-bs-" + key);
+            window.localStorage.removeItem("tabler-" + key);
+            url.searchParams.delete(key);
+          }
+          writeAccountTheme(accountTheme);
+
+          checkItems();
+
+          window.history.pushState({}, "", url);
+        });
+
+        document
+          .querySelectorAll(".js-theme-toggle[data-theme-value]")
+          .forEach(function (toggle) {
+            toggle.addEventListener("click", function (event) {
+              var value = toggle.getAttribute("data-theme-value");
+              if (!value) return;
+
+              event.preventDefault();
+
+              document.documentElement.setAttribute("data-bs-theme", value);
+              window.localStorage.setItem("tabler-theme", value);
+
+              var accountTheme = readAccountTheme();
+              accountTheme.theme = value;
+              writeAccountTheme(accountTheme);
+
+              url.searchParams.set("theme", value);
+              window.history.replaceState({}, "", url);
+            });
+          });
+
+        checkItems();
+      });
+    </script>
+    <!-- END PAGE SCRIPTS -->
+      <script>
+  ;(function () {
+    var current = null
+    var sides = ['top', 'bottom', 'left', 'right']
+    function place(menu, toggle) {
+      if (window.innerWidth > 991.98) return
+      var r = toggle.getBoundingClientRect()
+      var mh = menu.offsetHeight
+      menu.style.setProperty('left', 'auto', 'important')
+      menu.style.setProperty('right', Math.max(8, window.innerWidth - r.right) + 'px', 'important')
+      if (r.bottom + 4 + mh > window.innerHeight - 8) {
+        menu.style.setProperty('top', 'auto', 'important')
+        menu.style.setProperty('bottom', window.innerHeight - r.top + 4 + 'px', 'important')
+      } else {
+        menu.style.setProperty('bottom', 'auto', 'important')
+        menu.style.setProperty('top', r.bottom + 4 + 'px', 'important')
+      }
+    }
+    document.addEventListener('shown.bs.dropdown', function (event) {
+      var dropdown = event.target.closest && event.target.closest('.breeding-actions-dropdown')
+      if (!dropdown) return
+      var menu = dropdown.querySelector('.dropdown-menu')
+      current = { menu: menu, toggle: event.target }
+      // Popper applies its own inset after this event; place on the next frames so ours wins.
+      requestAnimationFrame(function () {
+        place(menu, event.target)
+        requestAnimationFrame(function () { place(menu, event.target) })
+      })
+    })
+    document.addEventListener('hidden.bs.dropdown', function (event) {
+      var dropdown = event.target.closest && event.target.closest('.breeding-actions-dropdown')
+      if (!dropdown) return
+      var menu = dropdown.querySelector('.dropdown-menu')
+      sides.forEach(function (side) { menu.style.removeProperty(side) })
+      current = null
+    })
+    function reposition() {
+      if (!current) return
+      requestAnimationFrame(function () {
+        if (current) place(current.menu, current.toggle)
+      })
+    }
+    window.addEventListener('scroll', reposition, true)
+    window.addEventListener('resize', reposition)
+  })()
+</script>
+  </body>
+</html>

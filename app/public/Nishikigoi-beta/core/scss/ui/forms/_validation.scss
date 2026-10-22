@@ -1,0 +1,15 @@
+@use '../../config' as *;
+
+%validation-lite {
+  border-color: var(--border-color) !important;
+}
+
+@each $state, $data in $form-validation-states {
+  .form-control.is-#{$state}-lite {
+    @extend %validation-lite;
+  }
+
+  .form-select.is-#{$state}-lite {
+    @extend %validation-lite;
+  }
+}

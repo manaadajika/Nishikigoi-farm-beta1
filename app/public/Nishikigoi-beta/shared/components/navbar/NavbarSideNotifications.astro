@@ -1,0 +1,166 @@
+---
+import Icon from '@ui/Icon.astro'
+import CardTitle from '@ui/CardTitle.astro'
+import CaptureScript from '../CaptureScript.astro'
+---
+
+<!-- BEGIN NOTIFICATIONS -->
+<div class="nav-item dropdown">
+  <a href="#" id="navbar-notifications-toggle" class="nav-link px-0" data-bs-toggle="dropdown" aria-label="Show notifications" data-bs-auto-close="outside" aria-expanded="false">
+    <Icon name="bell" />
+    <span class="badge bg-red d-none" data-navbar-notifications-badge></span>
+  </a>
+  <!-- BEGIN NAVBAR NOTIFICATIONS -->
+  <div class="dropdown-menu dropdown-menu-arrow dropdown-menu-end dropdown-menu-card navbar-notifications-menu">
+    <div class="card">
+      <div class="card-header d-flex">
+        <CardTitle>Notifications</CardTitle>
+        <button type="button" class="btn-close ms-auto" data-navbar-notifications-close aria-label="Close"></button>
+      </div>
+      <div class="list-group list-group-flush list-group-hoverable" data-navbar-notifications-list>
+        <div class="list-group-item">
+          <div class="text-secondary"><span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>Memuat notifikasi...</div>
+        </div>
+      </div>
+      <div class="card-body">
+        <div class="notification-actions">
+          <a href="farm-log.html" class="btn">Lihat Log</a>
+          <button type="button" class="btn" data-navbar-notifications-clear>Clear</button>
+          <button type="button" class="btn" data-navbar-notifications-read-all>Mark all read</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <!-- END NAVBAR NOTIFICATIONS -->
+</div>
+<CaptureScript>
+  <!-- BEGIN NAVBAR NOTIFICATIONS DATA -->
+  <script is:inline>
+    document.addEventListener('DOMContentLoaded', () => {
+      const toggle = document.getElementById('navbar-notifications-toggle')
+      const closeButton = document.querySelector('[data-navbar-notifications-close]')
+      const readAllButton = document.querySelector('[data-navbar-notifications-read-all]')
+      const clearButton = document.querySelector('[data-navbar-notifications-clear]')
+      const list = document.querySelector('[data-navbar-notifications-list]')
+      const badge = document.querySelector('[data-navbar-notifications-badge]')
+      let currentNotifications = []
+
+      const escapeHtml = (value) => String(value || '').replace(/[&<>'"]/g, (char) => ({
+        '&': '&amp;',
+        '<': '&lt;',
+        '>': '&gt;',
+        "'": '&#39;',
+        '"': '&quot;',
+      }[char]))
+
+      const dotClass = (type, status) => {
+        if (status === 'read') return 'status-dot d-block'
+        if (type === 'error') return 'status-dot status-dot-animated bg-red d-block'
+        if (type === 'success') return 'status-dot status-dot-animated bg-green d-block'
+        if (type === 'warning') return 'status-dot status-dot-animated bg-yellow d-block'
+        return 'status-dot status-dot-animated bg-blue d-block'
+      }
+
+      const renderNotifications = (notifications) => {
+        const items = Array.isArray(notifications) ? notifications : Array.isArray(notifications?.items) ? notifications.items : []
+        currentNotifications = items
+        const unread = items.filter((item) => item.status !== 'read')
+
+        badge?.classList.toggle('d-none', unread.length === 0)
+        clearButton?.classList.toggle('d-none', items.length === 0)
+        readAllButton?.classList.toggle('d-none', unread.length === 0)
+
+        if (!items.length) {
+          list.innerHTML = '<div class="list-group-item"><div class="text-secondary">Belum ada notifikasi.</div></div>'
+          return
+        }
+
+        list.innerHTML = items.slice(0, 8).map((item) => `
+          <div class="list-group-item ${item.type === 'feedback' ? 'cursor-pointer' : ''}" ${item.type === 'feedback' ? `data-feedback-notification="${escapeHtml(item.id)}"` : ''}>
+            <div class="row align-items-center">
+              <div class="col-auto">
+                <span class="${dotClass(item.type, item.status)}"><span class="visually-hidden">${item.status === 'read' ? 'Read' : 'Unread'}</span></span>
+              </div>
+              <div class="col text-truncate">
+                <div class="text-body d-block text-truncate">${escapeHtml(item.title || 'Notifikasi Sistem')}</div>
+                <div class="d-block text-secondary text-truncate mt-n1">${escapeHtml(item.message || item.created_at || '')}</div>
+              </div>
+            </div>
+          </div>
+        `).join('')
+      }
+
+      const loadNotifications = async () => {
+        try {
+          const request = window.KoiAuth?.apiRequest
+          const response = request ? await request('/notifications?panel=1') : await fetch('/api/notifications?panel=1')
+          if (!response.ok) throw new Error('Notifikasi gagal dimuat')
+          renderNotifications(await response.json())
+        } catch {
+          badge?.classList.add('d-none')
+          list.innerHTML = '<div class="list-group-item"><div class="text-danger">Notifikasi gagal dimuat.</div></div>'
+        }
+      }
+
+      closeButton?.addEventListener('click', () => {
+        window.tabler.bootstrap.Dropdown.getOrCreateInstance(toggle).hide()
+      })
+
+      readAllButton?.addEventListener('click', async () => {
+        try {
+          const request = window.KoiAuth?.apiRequest
+          const response = request ? await request('/notifications?panel=1') : await fetch('/api/notifications?panel=1')
+          const payload = response.ok ? await response.json() : []
+          const items = Array.isArray(payload) ? payload : Array.isArray(payload?.items) ? payload.items : []
+          const unread = items.filter((item) => item.status !== 'read')
+          await Promise.all(unread.map((item) => request
+            ? request(`/notifications/${item.id}/read`, { method: 'PATCH' })
+            : fetch(`/api/notifications/${item.id}/read`, { method: 'PATCH' })))
+          await loadNotifications()
+        } catch {
+          await loadNotifications()
+        }
+      })
+
+      clearButton?.addEventListener('click', async () => {
+        try {
+          const request = window.KoiAuth?.apiRequest
+          const ids = currentNotifications.map((item) => item.id).filter(Boolean)
+          if (!ids.length) return
+
+          const options = {
+            method: 'PATCH',
+            headers: { 'content-type': 'application/json' },
+            body: JSON.stringify({ ids }),
+          }
+
+          const response = request ? await request('/notifications/clear', options) : await fetch('/api/notifications/clear', options)
+          if (!response.ok) throw new Error('Notifikasi gagal dibersihkan')
+          await loadNotifications()
+        } catch {
+          await loadNotifications()
+        }
+      })
+
+      toggle?.addEventListener('shown.bs.dropdown', loadNotifications)
+      loadNotifications()
+    })
+  </script>
+  <!-- END NAVBAR NOTIFICATIONS DATA -->
+</CaptureScript>
+<!-- END NOTIFICATIONS -->
+
+<style>
+  .notification-actions {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: .5rem;
+  }
+
+  .notification-actions .btn {
+    min-width: 0;
+    padding-inline: .35rem;
+    white-space: nowrap;
+    font-size: .78rem;
+  }
+</style>

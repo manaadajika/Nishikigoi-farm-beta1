@@ -1,0 +1,578 @@
+---
+import DefaultLayout from '@shared/layouts/DefaultLayout.astro'
+---
+
+<DefaultLayout title="Archive" pageHeader="Archive" pretitle="Etc" pageMenu="management.archive">
+<style is:global>
+  .koi-card-preview{aspect-ratio:2/3;background:var(--koi-preview-color,#d8e2ef);min-height:220px}
+  .koi-card-preview img{object-fit:cover;width:100%;height:100%}
+  .koi-card-preview[data-archive-select]{cursor:pointer;border-radius:6px;overflow:hidden}
+  .koi-card-preview-placeholder{width:100%;height:100%;color:var(--tblr-secondary-color);text-align:center;flex-direction:column;justify-content:center;align-items:center;gap:.45rem;padding:1rem;display:flex}
+  .koi-card-preview-code{color:#182433;background:#ffffffd1;border-radius:4px;padding:.25rem .5rem;font-weight:600}
+  .koi-card-preview-placeholder small{text-transform:uppercase;letter-spacing:.04em;font-size:.75rem}
+  .koi-card-compact{border:1px solid var(--tblr-border-color);transition:border-color .15s,box-shadow .15s}
+  .koi-card-compact.is-selected{border-color:var(--tblr-primary);outline:2px solid var(--tblr-primary);outline-offset:-2px;box-shadow:0 8px 22px rgba(0,0,0,.16)}
+  .koi-card-compact.is-selected .koi-card-preview[data-archive-select]{box-shadow:inset 0 0 0 2px var(--tblr-primary);border-bottom-right-radius:0;border-bottom-left-radius:0}
+  .koi-card-compact .card-body{padding:.75rem}
+  .koi-text-ellipsis{text-overflow:ellipsis;white-space:nowrap;min-width:0;max-width:100%;display:block;overflow:hidden}
+  .koi-card-detail-cell{min-width:0}
+  .koi-card-main-text{min-width:0;max-width:100%}
+  .koi-selected-badge{display:none}
+  .koi-card-compact.is-selected .koi-selected-badge{display:inline-flex}
+</style>
+
+<div class="card">
+  <div class="card-header d-flex flex-wrap align-items-center justify-content-between gap-2">
+    <div>
+      <h3 class="card-title mb-0">Data Ikan Arsip</h3>
+      <div class="text-secondary small" data-archive-summary><span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>Memuat data arsip...</div>
+    </div>
+    <div class="d-flex flex-wrap align-items-center gap-2">
+      <button class="btn btn-outline-primary btn-icon" type="button" data-archive-select-visible aria-label="Pilih semua ikan yang tampil" title="Pilih semua yang tampil"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false" class="icon"><path d="M7 12l5 5l10 -10" /><path d="M2 12l5 5m5 -5l5 -5" /></svg></button>
+      <span class="text-secondary small d-none" data-archive-selected-label></span>
+      <button class="btn btn-outline-success d-none" type="button" data-archive-restore data-role-required="database-write"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false" class="icon"><path d="M9 14l-4 -4l4 -4" /><path d="M5 10h11a4 4 0 1 1 0 8h-1" /></svg> Kembalikan</button>
+      <button class="btn btn-outline-danger d-none" type="button" data-archive-delete data-role-required="database-write"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false" class="icon"><path d="M4 7l16 0" /><path d="M10 11l0 6" /><path d="M14 11l0 6" /><path d="M5 7l1 12a2 2 0 0 0 2 2h8a2 2 0 0 0 2 -2l1 -12" /><path d="M9 7v-3a1 1 0 0 1 1 -1h4a1 1 0 0 1 1 1v3" /></svg> Hapus permanen</button>
+      <button class="btn btn-outline-orange btn-icon d-none" type="button" data-archive-clear aria-label="Batal pilih" title="Batal pilih"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false" class="icon"><path d="M18 6l-12 12" /><path d="M6 6l12 12" /></svg></button>
+    </div>
+  </div>
+  <div class="card-body">
+    <input class="d-none" id="archive-search" name="archive_search" type="search" data-koi-search aria-hidden="true" tabindex="-1" autocomplete="off" />
+    <div class="row g-3" data-archive-cards><div class="col-12 text-secondary"><div class="d-flex flex-column align-items-center justify-content-center gap-2 py-5 text-secondary"><span class="spinner-border text-primary" role="status" aria-hidden="true"></span><span>Memuat data arsip...</span></div></div></div>
+    <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mt-3 d-none" data-archive-pager>
+      <div class="text-secondary small" data-archive-page-summary></div>
+      <ul class="pagination mb-0" data-archive-pagination></ul>
+    </div>
+  </div>
+</div>
+
+<div class="modal modal-blur fade" id="archive-edit-modal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-lg modal-dialog-centered" role="document">
+    <form class="modal-content" data-archive-edit-form>
+      <div class="modal-header">
+        <h5 class="modal-title">Edit Ikan Arsip</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Tutup"></button>
+      </div>
+      <div class="modal-body">
+        <div class="alert alert-danger d-none" data-archive-edit-error></div>
+        <div class="row g-3">
+          <div class="col-md-4"><label class="form-label">Kode Koi</label><input class="form-control" name="code" autocomplete="off" required /></div>
+          <div class="col-md-4"><label class="form-label">Nama</label><input class="form-control" name="name" autocomplete="off" /></div>
+          <div class="col-md-4"><label class="form-label">Variety</label><input class="form-control" name="variety" autocomplete="off" /></div>
+          <div class="col-md-4"><label class="form-label">Bloodline</label><input class="form-control" name="bloodline" autocomplete="off" /></div>
+          <div class="col-md-4"><label class="form-label">Ternakan</label><input class="form-control" name="farm_name" autocomplete="off" /></div>
+          <div class="col-md-4"><label class="form-label">Owner</label><input class="form-control" name="breeder" autocomplete="off" /></div>
+          <div class="col-md-4"><label class="form-label">Gender</label>
+            <select class="form-select" name="gender"><option value="unknown">Unknown</option><option value="male">Male</option><option value="female">Female</option></select></div>
+          <div class="col-md-4"><label class="form-label">Status</label>
+            <select class="form-select" name="status"><option value="active">Active</option><option value="non_active">Non-Active</option><option value="quarantine">Quarantine</option><option value="sold">Sold</option><option value="dead">Dead</option></select></div>
+          <div class="col-md-4 d-flex align-items-end"><label class="form-check mb-2"><input class="form-check-input" type="checkbox" name="parent_type" value="indukan" /><span class="form-check-label">Indukan</span></label></div>
+          <div class="col-md-4"><label class="form-label">Tanggal Lahir</label><input class="form-control" type="date" name="birth_date" /></div>
+          <div class="col-md-4"><label class="form-label">Tanggal Beli</label><input class="form-control" type="date" name="purchase_date" /></div>
+          <div class="col-md-4"><label class="form-label">Size Saat Ini (cm)</label><input class="form-control" type="number" min="0" step="0.1" name="current_length_cm" /></div>
+          <div class="col-md-6"><label class="form-label">Harga Beli</label><input class="form-control" type="number" min="0" step="any" name="purchase_price" /></div>
+          <div class="col-md-6"><label class="form-label">Harga Jual</label><input class="form-control" type="number" min="0" step="any" name="sale_price" /></div>
+          <div class="col-12"><label class="form-label">Lokasi Arsip</label><input class="form-control" name="archive_location" autocomplete="off" placeholder="Bebas diisi, tidak terhubung ke daftar kolam" />
+            <div class="form-hint">Saat ikan dikembalikan ke Data Ikan, kolam dipilih lagi dari daftar kolam yang berlaku.</div></div>
+          <div class="col-12"><label class="form-label">Catatan</label><textarea class="form-control" name="notes" rows="3"></textarea></div>
+          <div class="col-md-6"><label class="form-label">Diarsipkan</label><input class="form-control" type="text" data-archive-edit-archived readonly tabindex="-1" placeholder="-" /></div>
+          <div class="col-md-6"><label class="form-label">Terakhir Diedit</label><input class="form-control" type="text" data-archive-edit-last-edited readonly tabindex="-1" placeholder="-" /></div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn" data-bs-dismiss="modal">Batal</button>
+        <button type="submit" class="btn btn-primary" data-archive-edit-save>Simpan</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<div class="modal modal-blur fade" id="archive-restore-modal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-sm modal-dialog-centered" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Kembalikan ke Data Ikan</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Tutup"></button>
+      </div>
+      <div class="modal-body">
+        <p class="mb-3" data-archive-restore-info></p>
+        <label class="form-label">Kolam (dari daftar kolam saat ini)</label>
+        <select class="form-select" name="restore_pond" data-archive-restore-pond></select>
+        <div class="text-secondary small mt-2" data-archive-restore-hint></div>
+        <div class="alert alert-danger d-none mt-3 mb-0" data-archive-restore-error></div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn" data-bs-dismiss="modal">Batal</button>
+        <button type="button" class="btn btn-success" data-archive-restore-confirm>Kembalikan</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal modal-blur fade" id="archive-delete-modal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title text-danger">Hapus Permanen</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Tutup"></button>
+      </div>
+      <div class="modal-body">
+        <div class="alert alert-danger" data-archive-delete-info></div>
+        <label class="form-label">Ketik <strong>HAPUS</strong> untuk melanjutkan</label>
+        <input class="form-control" name="delete_confirm" autocomplete="off" data-archive-delete-input />
+        <div class="alert alert-danger d-none mt-3 mb-0" data-archive-delete-error></div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn" data-bs-dismiss="modal">Batal</button>
+        <button type="button" class="btn btn-danger" data-archive-delete-confirm disabled>Hapus permanen</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+  <script is:inline>
+;(() => {
+  // DEAD CODE (2026-10-14): the fish list and its modals below are no longer shown. The Ikan tab of Archive opens
+  // farm-koi.html?arsip=1 (archive-gallery.js redirects). Only the Galeri tab of this page is in use. Safe to remove.
+  const apiUrl = '/api'
+  const pageSize = 24
+  const previewColors = ['#dbeafe', '#fee2e2', '#dcfce7', '#fef3c7', '#ede9fe', '#e0f2fe', '#fce7f3', '#e5e7eb']
+  const statusLabels = { active: 'Active', non_active: 'Non-Active', quarantine: 'Quarantine', sold: 'Sold', dead: 'Dead' }
+  const statusClasses = { active: 'bg-green-lt', non_active: 'bg-secondary-lt', quarantine: 'bg-yellow-lt', sold: 'bg-purple-lt', dead: 'bg-red-lt' }
+  const genderLabels = { unknown: 'Unknown', male: 'Male', female: 'Female' }
+  const dayNames = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu']
+  const editIcon = '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false" class="icon"><path d="M7 7h-1a2 2 0 0 0 -2 2v9a2 2 0 0 0 2 2h9a2 2 0 0 0 2 -2v-1" /><path d="M20.385 6.585a2.1 2.1 0 0 0 -2.97 -2.97l-8.415 8.385v3h3l8.385 -8.415" /><path d="M16 5l3 3" /></svg>'
+
+  const cardsEl = document.querySelector('[data-archive-cards]')
+  const summaryEl = document.querySelector('[data-archive-summary]')
+  const pagerEl = document.querySelector('[data-archive-pager]')
+  const paginationEl = document.querySelector('[data-archive-pagination]')
+  const pageSummaryEl = document.querySelector('[data-archive-page-summary]')
+  const searchInput = document.querySelector('[data-koi-search]')
+  const archiveNavbarSearch = document.querySelector('#navbar-global-search')
+  if (archiveNavbarSearch) {
+    archiveNavbarSearch.setAttribute('placeholder', 'Kode, nama, bloodline:isa')
+    archiveNavbarSearch.setAttribute('title', 'Cari bebas: kode, nama, variety, bloodline, ternakan, breeder, lokasi. Cari per kolom dengan kolom:isi, boleh digabung: bloodline:isa status:sold catatan:dijual. Nama kolom boleh disingkat (misalnya bloo:isa). Kolom: kode, nama, variety, bloodline, ternakan, breeder, lokasi, status, gender, catatan, ukuran, tanggal.')
+  }
+  const selectVisibleButton = document.querySelector('[data-archive-select-visible]')
+  const selectedLabel = document.querySelector('[data-archive-selected-label]')
+  const restoreButton = document.querySelector('[data-archive-restore]')
+  const deleteButton = document.querySelector('[data-archive-delete]')
+  const clearButton = document.querySelector('[data-archive-clear]')
+  const editModalEl = document.getElementById('archive-edit-modal')
+  const editForm = document.querySelector('[data-archive-edit-form]')
+  const editError = document.querySelector('[data-archive-edit-error]')
+  const restoreModalEl = document.getElementById('archive-restore-modal')
+  const restorePondSelect = document.querySelector('[data-archive-restore-pond]')
+  const restoreError = document.querySelector('[data-archive-restore-error]')
+  const deleteModalEl = document.getElementById('archive-delete-modal')
+  const deleteInput = document.querySelector('[data-archive-delete-input]')
+  const deleteConfirmButton = document.querySelector('[data-archive-delete-confirm]')
+  const deleteError = document.querySelector('[data-archive-delete-error]')
+
+  let items = []
+  let ponds = []
+  let page = 1
+  let signature = ''
+  let editingId = null
+  const selected = new Set()
+  const selectedKey = 'nishikigoi-selected:farm-archive'
+  try {
+    JSON.parse(sessionStorage.getItem(selectedKey) || '[]').forEach((id) => selected.add(String(id)))
+  } catch {}
+
+  const escapeHtml = (value) => String(value ?? '').replace(/[&<>'"]/g, (char) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[char]))
+  const text = (value) => (value === null || value === undefined || value === '' ? '-' : value)
+  const getModal = () => (window.tabler?.bootstrap || window.bootstrap)?.Modal
+  const openModal = (element) => getModal()?.getOrCreateInstance(element).show()
+  const closeModal = (element) => {
+    const instance = getModal()?.getInstance(element)
+    if (!instance) return
+    instance.hide()
+    // hide() is ignored while the open animation is still running, so try once more.
+    window.setTimeout(() => { if (element.classList.contains('show')) instance.hide() }, 450)
+  }
+
+  const formatDay = (value) => (value ? window.KoiAuth.formatDate(value, { weekday: true }) : '')
+  const formatSize = (value) => {
+    if (value === null || value === undefined || value === '') return '-'
+    const number = Number(value)
+    return Number.isFinite(number) ? `${number.toLocaleString('id-ID', { maximumFractionDigits: 1 })} cm` : '-'
+  }
+
+  const request = async (path, options) => {
+    const response = await fetch(`${apiUrl}${path}`, options)
+    let data = null
+    try {
+      data = await response.json()
+    } catch {
+      data = null
+    }
+    if (!response.ok) throw new Error((data && data.error) || 'Permintaan gagal diproses')
+    return data
+  }
+  const postJson = (path, body, method = 'POST') => request(path, { method, headers: { 'content-type': 'application/json' }, body: JSON.stringify(body) })
+
+  // ---- search: plain words + "field:value" ----------------------------------------------------------------
+  // "bloodline:isa status:sold catatan:dijual" -> every field:value must match (a value runs until the next field:).
+  // Plain words must all be found in kode, nama, variety, bloodline, ternakan, breeder, lokasi arsip, status, gender.
+  // A comma inside a text value means "or". Catatan is only searched with catatan:.
+  const archiveAliases = {
+    kode: 'code', code: 'code', id: 'code',
+    nama: 'name', name: 'name',
+    variety: 'variety', varietas: 'variety', jenis: 'variety',
+    bloodline: 'bloodline', darah: 'bloodline',
+    ternakan: 'farm_name', peternakan: 'farm_name', farm: 'farm_name',
+    breeder: 'breeder',
+    lokasi: 'archive_location', arsip: 'archive_location', kolam: 'archive_location',
+    status: 'status',
+    gender: 'gender', kelamin: 'gender', jk: 'gender',
+    catatan: 'notes', notes: 'notes',
+    ukuran: 'current_length_cm', size: 'current_length_cm', panjang: 'current_length_cm',
+    tanggal: 'archived_at', diarsipkan: 'archived_at',
+  }
+  // "bloo:isa" works too: a field name may be shortened to its first letters (2 or more). Exact names win, then the
+  // first name in the list above that starts with what was typed. Unknown names stay plain text.
+  const resolveSearchMarkers = (keyword, aliases) => {
+    const names = Object.keys(aliases)
+    const found = []
+    const pattern = /(?:^|[\s,])([a-z]+)\s*:/gi
+    let match
+    while ((match = pattern.exec(keyword))) {
+      const key = match[1].toLowerCase()
+      const name = aliases[key] ? key : (key.length >= 2 ? names.find((alias) => alias.startsWith(key)) : null)
+      if (name) {
+        const hit = [match[0], name]
+        hit.index = match.index
+        found.push(hit)
+      }
+    }
+    return found
+  }
+  const archiveStatusWords = { aktif: 'active', nonaktif: 'non_active', 'non-aktif': 'non_active', karantina: 'quarantine', terjual: 'sold', mati: 'dead' }
+  const archiveGenderWords = { jantan: 'male', betina: 'female', male: 'male', female: 'female', m: 'male', f: 'female', unknown: 'unknown' }
+  const archiveNorm = (value) => String(value === null || value === undefined ? '' : value).toLowerCase().trim()
+  const archiveNumberTest = (value) => {
+    const text = String(value || '').toLowerCase().replace(/\s|cm/g, '').replace(',', '.')
+    const compare = text.match(/^(>=|<=|>|<)(\d+(?:\.\d+)?)$/)
+    if (compare) {
+      const limit = Number(compare[2])
+      return { '>=': (n) => n >= limit, '<=': (n) => n <= limit, '>': (n) => n > limit, '<': (n) => n < limit }[compare[1]]
+    }
+    const range = text.match(/^(\d+(?:\.\d+)?)-(\d+(?:\.\d+)?)$/)
+    if (range) {
+      const [min, max] = [Math.min(Number(range[1]), Number(range[2])), Math.max(Number(range[1]), Number(range[2]))]
+      return (n) => n >= min && n <= max
+    }
+    return /^\d+(?:\.\d+)?$/.test(text) ? (n) => (Number.isInteger(Number(text)) ? Math.floor(n) === Number(text) : n === Number(text)) : null
+  }
+  const archiveDateText = (value) => {
+    const match = String(value || '').trim().match(/^(\d{1,2})[/.-](\d{1,2})[/.-](\d{4})$/)
+    return match ? `${match[3]}-${match[2].padStart(2, '0')}-${match[1].padStart(2, '0')}` : String(value || '').trim()
+  }
+  const archiveField = (item, field, rawValue) => {
+    const value = archiveNorm(rawValue)
+    if (!value) return null
+    if (field === 'current_length_cm') {
+      const test = archiveNumberTest(value)
+      const number = Number(item.current_length_cm)
+      if (!test) return null
+      return item.current_length_cm !== null && item.current_length_cm !== undefined && item.current_length_cm !== '' && Number.isFinite(number) && test(number)
+    }
+    if (field === 'archived_at') return String(item.archived_at || '').slice(0, 10).includes(archiveDateText(value))
+    return value.split(',').map((part) => part.trim()).filter(Boolean).some((choice) => {
+      if (field === 'status') return String(item.status || '').toLowerCase() === (archiveStatusWords[choice] || choice) || archiveNorm(statusLabels[item.status]).includes(choice)
+      if (field === 'gender') return String(item.gender || 'unknown').toLowerCase() === (archiveGenderWords[choice] || choice)
+      return archiveNorm(item[field]).includes(choice)
+    })
+  }
+  const searchText = (item) => [item.code, item.name, item.variety, item.bloodline, item.farm_name, item.breeder, item.archive_location, statusLabels[item.status], genderLabels[item.gender]]
+    .filter(Boolean).join(' ').toLowerCase()
+  const filteredItems = () => {
+    const keyword = String(searchInput.value || '').trim()
+    if (!keyword) return items
+    const markers = resolveSearchMarkers(keyword, archiveAliases)
+    const plain = markers.length ? keyword.slice(0, markers[0].index) : keyword
+    const alternatives = plain.split(',').map((part) => archiveNorm(part).split(/\s+/).filter(Boolean)).filter((words) => words.length)
+
+    return items.filter((item) => {
+      for (let index = 0; index < markers.length; index += 1) {
+        const marker = markers[index]
+        const valueStart = marker.index + marker[0].length
+        const valueEnd = index + 1 < markers.length ? markers[index + 1].index : keyword.length
+        if (archiveField(item, archiveAliases[marker[1].toLowerCase()], keyword.slice(valueStart, valueEnd)) === false) return false
+      }
+      if (!alternatives.length) return true
+      const haystack = searchText(item)
+      return alternatives.some((words) => words.every((word) => haystack.includes(word)))
+    })
+  }
+
+  const cardHtml = (item, index) => {
+    const id = escapeHtml(item.id)
+    const image = item.image_url
+    const media = image
+      ? `<img src="${escapeHtml(image)}" alt="${escapeHtml(text(item.name))}" loading="lazy" decoding="async" fetchpriority="low" />`
+      : `<span class="koi-card-preview-placeholder"><span class="koi-card-preview-code">${escapeHtml(text(item.code))}</span><small>No foto</small></span>`
+    const cell = (label, value) => `<div class="col-6 koi-card-detail-cell"><span class="text-secondary">${label}</span><div class="koi-text-ellipsis" title="${escapeHtml(value)}">${escapeHtml(value)}</div></div>`
+    return `
+      <div class="col-sm-6 col-lg-4 col-xl-3">
+        <div class="card h-100 koi-card-compact ${selected.has(String(item.id)) ? 'is-selected' : ''}">
+          <div class="koi-card-preview d-flex align-items-end position-relative ${image ? '' : 'p-3'}" style="--koi-preview-color: ${previewColors[index % previewColors.length]}" data-archive-select="${id}">${media}</div>
+          <div class="card-body">
+            <div class="d-flex align-items-start justify-content-between gap-2 mb-2">
+              <div class="koi-card-main-text">
+                <div class="fw-semibold koi-text-ellipsis" title="${escapeHtml(text(item.code))}">${escapeHtml(text(item.code))}</div>
+                <div class="text-secondary small koi-text-ellipsis" title="${escapeHtml(text(item.variety))}">${escapeHtml(text(item.variety))}</div>
+              </div>
+              <div class="d-flex align-items-center gap-1 flex-shrink-0">
+                <span class="badge bg-blue text-blue-fg koi-selected-badge">Terpilih</span>
+                <span class="badge ${statusClasses[item.status] || 'bg-blue-lt'}">${escapeHtml(statusLabels[item.status] || text(item.status))}</span>
+              </div>
+            </div>
+            <div class="row g-2 small">
+              ${cell('Nama', text(item.name))}
+              ${cell('Bloodline', text(item.bloodline))}
+              ${cell('Ternakan', text(item.farm_name))}
+              ${cell('Lokasi Arsip', text(item.archive_location))}
+              ${cell('Kelamin', genderLabels[item.gender] || text(item.gender))}
+              ${cell('Size', formatSize(item.current_length_cm))}
+            </div>
+            <div class="mt-2 d-flex align-items-center justify-content-between gap-2">
+              <span class="text-secondary small koi-text-ellipsis" title="Tanggal diarsipkan">Arsip: ${escapeHtml(formatDay(item.archived_at) || '-')}</span>
+              <button class="btn btn-outline-primary btn-icon" type="button" data-archive-edit="${id}" data-role-required="database-write" aria-label="Edit ikan arsip" title="Edit ikan arsip">${editIcon}</button>
+            </div>
+          </div>
+        </div>
+      </div>`
+  }
+
+  const pageNumbers = (current, total) => {
+    const start = Math.max(1, current - 2)
+    const end = Math.min(total, current + 2)
+    const numbers = []
+    for (let number = start; number <= end; number += 1) numbers.push(number)
+    return numbers
+  }
+
+  const updateSelection = () => {
+    const count = selected.size
+    selectedLabel.textContent = `${count} ikan dipilih`
+    selectedLabel.classList.toggle('d-none', count === 0)
+    ;[restoreButton, deleteButton, clearButton].forEach((button) => button.classList.toggle('d-none', count === 0))
+  }
+
+  const render = () => {
+    try { sessionStorage.setItem(selectedKey, JSON.stringify([...selected])) } catch {}
+    const list = filteredItems()
+    const totalPages = Math.max(1, Math.ceil(list.length / pageSize))
+    page = Math.min(Math.max(page, 1), totalPages)
+    const start = (page - 1) * pageSize
+    const pageItems = list.slice(start, start + pageSize)
+    const searching = list.length !== items.length
+
+    summaryEl.textContent = items.length === 0
+      ? 'Belum ada ikan di arsip.'
+      : searching ? `${list.length} dari ${items.length} ikan arsip cocok dengan pencarian` : `${items.length} ikan diarsipkan`
+    cardsEl.innerHTML = pageItems.map(cardHtml).join('')
+      || `<div class="col-12 text-secondary">${items.length === 0 ? 'Belum ada ikan di arsip. Pilih ikan di Data Ikan lalu klik tombol Arsipkan.' : 'Tidak ada ikan arsip yang cocok dengan pencarian.'}</div>`
+
+    pagerEl.classList.toggle('d-none', list.length <= pageSize)
+    pageSummaryEl.textContent = list.length ? `Menampilkan ${start + 1} - ${Math.min(start + pageSize, list.length)} dari ${list.length} ikan` : ''
+    paginationEl.innerHTML = `
+      <li class="page-item ${page <= 1 ? 'disabled' : ''}"><button class="page-link" type="button" data-archive-page="${page - 1}">Prev</button></li>
+      ${pageNumbers(page, totalPages).map((number) => `<li class="page-item ${number === page ? 'active' : ''}"><button class="page-link" type="button" data-archive-page="${number}">${number}</button></li>`).join('')}
+      <li class="page-item ${page >= totalPages ? 'disabled' : ''}"><button class="page-link" type="button" data-archive-page="${page + 1}">Next</button></li>`
+    updateSelection()
+  }
+
+  const load = async (silent = false) => {
+    try {
+      const [koi, pondList] = await Promise.all([request('/koi?archived=1'), request('/ponds')])
+      ponds = pondList
+      const nextSignature = JSON.stringify(koi)
+      if (silent && nextSignature === signature) return
+      signature = nextSignature
+      items = koi
+      const ids = new Set(items.map((item) => String(item.id)))
+      ;[...selected].forEach((id) => { if (!ids.has(id)) selected.delete(id) })
+      render()
+    } catch (error) {
+      if (!silent) cardsEl.innerHTML = '<div class="col-12 text-danger">Data arsip gagal dimuat.</div>'
+    }
+  }
+
+  const findItem = (id) => items.find((item) => String(item.id) === String(id))
+
+  const toggleSelection = (id) => {
+    const key = String(id)
+    if (selected.has(key)) selected.delete(key)
+    else selected.add(key)
+    const card = cardsEl.querySelector(`[data-archive-select="${key}"]`)?.closest('.koi-card-compact')
+    card?.classList.toggle('is-selected', selected.has(key))
+    updateSelection()
+  }
+
+  const setError = (element, message) => {
+    element.textContent = message || ''
+    element.classList.toggle('d-none', !message)
+  }
+
+  // ---- edit
+  const openEdit = (id) => {
+    const item = findItem(id)
+    if (!item) return
+    editingId = item.id
+    setError(editError, '')
+    const fields = ['code', 'name', 'variety', 'bloodline', 'farm_name', 'breeder', 'gender', 'status', 'current_length_cm', 'purchase_price', 'sale_price', 'archive_location', 'notes']
+    fields.forEach((name) => {
+      const field = editForm.elements[name]
+      if (field) field.value = item[name] === null || item[name] === undefined ? '' : item[name]
+    })
+    editForm.elements.gender.value = item.gender || 'unknown'
+    editForm.elements.status.value = item.status || 'active'
+    editForm.elements.birth_date.value = item.birth_date ? String(item.birth_date).slice(0, 10) : ''
+    editForm.elements.purchase_date.value = item.purchase_date ? String(item.purchase_date).slice(0, 10) : ''
+    editForm.elements.parent_type.checked = item.parent_type === 'indukan'
+    document.querySelector('[data-archive-edit-archived]').value = formatDay(item.archived_at)
+    document.querySelector('[data-archive-edit-last-edited]').value = formatDay(item.updated_at)
+    openModal(editModalEl)
+  }
+
+  editForm.addEventListener('submit', async (event) => {
+    event.preventDefault()
+    if (editingId === null) return
+    const saveButton = document.querySelector('[data-archive-edit-save]')
+    const value = (name) => editForm.elements[name].value
+    saveButton.disabled = true
+    setError(editError, '')
+    try {
+      await postJson(`/koi/${editingId}`, {
+        code: value('code').trim().toUpperCase(),
+        name: value('name'),
+        variety: value('variety'),
+        bloodline: value('bloodline'),
+        farm_name: value('farm_name'),
+        breeder: value('breeder'),
+        gender: value('gender'),
+        status: value('status'),
+        parent_type: editForm.elements.parent_type.checked ? 'indukan' : 'non_indukan',
+        birth_date: value('birth_date'),
+        purchase_date: value('purchase_date'),
+        current_length_cm: value('current_length_cm'),
+        purchase_price: value('purchase_price'),
+        sale_price: value('sale_price'),
+        archive_location: value('archive_location'),
+        notes: value('notes'),
+      }, 'PATCH')
+      closeModal(editModalEl)
+      await load()
+    } catch (error) {
+      setError(editError, error.message)
+    } finally {
+      saveButton.disabled = false
+    }
+  })
+
+  // ---- restore
+  const openRestore = () => {
+    const chosen = [...selected].map(findItem).filter(Boolean)
+    if (chosen.length === 0) return
+    setError(restoreError, '')
+    document.querySelector('[data-archive-restore-info]').textContent = `${chosen.length} ikan akan dikembalikan ke daftar Data Ikan.`
+    const locations = [...new Set(chosen.map((item) => String(item.archive_location || '').trim().toLowerCase()))]
+    const sorted = [...ponds].sort((first, second) => String(first.name).localeCompare(String(second.name), 'id', { sensitivity: 'base' }))
+    const previous = locations.length === 1 && locations[0] ? sorted.find((pond) => String(pond.name).trim().toLowerCase() === locations[0]) : null
+    restorePondSelect.innerHTML = '<option value="">Tanpa kolam</option>' + sorted.map((pond) => `<option value="${escapeHtml(pond.id)}">${escapeHtml(pond.name)} (${Number(pond.koi_count || 0)} ikan)</option>`).join('')
+    restorePondSelect.value = previous ? String(previous.id) : ''
+    document.querySelector('[data-archive-restore-hint]').textContent = locations.length === 1 && locations[0]
+      ? (previous ? `Kolam terakhir "${chosen[0].archive_location}" ditemukan di daftar kolam dan dipilih otomatis.` : `Lokasi arsip "${chosen[0].archive_location}" tidak ada di daftar kolam. Pilih kolam yang sesuai.`)
+      : 'Pilih kolam dari daftar kolam yang berlaku sekarang.'
+    openModal(restoreModalEl)
+  }
+
+  document.querySelector('[data-archive-restore-confirm]').addEventListener('click', async (event) => {
+    const button = event.currentTarget
+    button.disabled = true
+    setError(restoreError, '')
+    try {
+      await postJson('/koi/unarchive', { ids: [...selected].map(Number), pond_id: restorePondSelect.value || null })
+      selected.clear()
+      closeModal(restoreModalEl)
+      await load()
+    } catch (error) {
+      setError(restoreError, error.message)
+    } finally {
+      button.disabled = false
+    }
+  })
+
+  // ---- permanent delete
+  const openDelete = () => {
+    const count = selected.size
+    if (count === 0) return
+    setError(deleteError, '')
+    deleteInput.value = ''
+    deleteConfirmButton.disabled = true
+    document.querySelector('[data-archive-delete-info]').textContent = `${count} ikan akan dihapus selamanya beserta riwayat progress fotonya dan tidak bisa dikembalikan. Data di Breeding dan Laporan tetap menyimpan teks kode dan nama ikan, tetapi foto ikan tidak ada lagi.`
+    openModal(deleteModalEl)
+  }
+
+  deleteInput.addEventListener('input', () => {
+    deleteConfirmButton.disabled = deleteInput.value.trim() !== 'HAPUS'
+  })
+
+  deleteConfirmButton.addEventListener('click', async () => {
+    if (deleteInput.value.trim() !== 'HAPUS') return
+    deleteConfirmButton.disabled = true
+    setError(deleteError, '')
+    try {
+      await postJson('/koi/archive-delete', { ids: [...selected].map(Number) })
+      selected.clear()
+      closeModal(deleteModalEl)
+      await load()
+    } catch (error) {
+      setError(deleteError, error.message)
+      deleteConfirmButton.disabled = deleteInput.value.trim() !== 'HAPUS'
+    }
+  })
+
+  // ---- events
+  cardsEl.addEventListener('click', (event) => {
+    const editButton = event.target.closest('[data-archive-edit]')
+    if (editButton) {
+      openEdit(editButton.dataset.archiveEdit)
+      return
+    }
+    const preview = event.target.closest('[data-archive-select]')
+    if (preview) toggleSelection(preview.dataset.archiveSelect)
+  })
+  paginationEl.addEventListener('click', (event) => {
+    const button = event.target.closest('[data-archive-page]')
+    if (!button || button.closest('.disabled')) return
+    page = Number(button.dataset.archivePage) || 1
+    render()
+    window.scrollTo({ top: 0, behavior: 'smooth' })
+  })
+  selectVisibleButton.addEventListener('click', () => {
+    const list = filteredItems().slice((page - 1) * pageSize, page * pageSize)
+    const allSelected = list.length > 0 && list.every((item) => selected.has(String(item.id)))
+    list.forEach((item) => (allSelected ? selected.delete(String(item.id)) : selected.add(String(item.id))))
+    render()
+  })
+  clearButton.addEventListener('click', () => {
+    selected.clear()
+    render()
+  })
+  restoreButton.addEventListener('click', openRestore)
+  deleteButton.addEventListener('click', openDelete)
+  searchInput.addEventListener('input', () => {
+    page = 1
+    render()
+  })
+
+  load()
+  window.KoiAuth?.registerRealtimeRefresh(() => load(true), { intervalMs: 20000 })
+})()
+</script>
+  <script is:inline src="/assets/archive-gallery.js?v=20261024b"></script>
+</DefaultLayout>

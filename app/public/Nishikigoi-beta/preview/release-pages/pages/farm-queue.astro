@@ -1,0 +1,162 @@
+---
+import DefaultLayout from '@shared/layouts/DefaultLayout.astro'
+---
+
+<DefaultLayout title="Queue" pageHeader="Queue" pretitle="Etc" pageMenu="management.queue">
+  <div class="card">
+    <div class="card-header d-flex align-items-center justify-content-between gap-3">
+      <h3 class="card-title">Background Job</h3>
+      <button type="button" class="btn" data-action="refresh-jobs">Refresh</button>
+    </div>
+    <div class="table-responsive">
+      <table class="table table-vcenter card-table">
+        <thead>
+          <tr>
+            <th>Waktu</th>
+            <th>Jenis</th>
+            <th>Nama Job</th>
+            <th>Status</th>
+            <th>Progress</th>
+            <th>Catatan</th>
+          </tr>
+        </thead>
+        <tbody data-jobs-table>
+          <tr><td colspan="6" class="text-secondary"><div class="d-flex flex-column align-items-center justify-content-center gap-2 py-5 text-secondary"><span class="spinner-border text-primary" role="status" aria-hidden="true"></span><span>Memuat job...</span></div></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <script is:inline>
+    document.addEventListener('DOMContentLoaded', () => {
+      const escapeHtml = (value) => String(value ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c])
+      const time = (value) => window.KoiDrafts?.formatTime(value) || value || '-'
+      const jobTable = document.querySelector('[data-jobs-table]')
+      const jobCard = jobTable.closest('.card')
+
+      // ---- Draft formulir (Operator, Admin, Master Admin) ----
+      const draftCard = document.createElement('div')
+      draftCard.className = 'card mb-3'
+      draftCard.setAttribute('data-role-required', 'farm-operate')
+      draftCard.innerHTML = `
+        <div class="card-header d-flex align-items-center justify-content-between gap-3 flex-wrap">
+          <h3 class="card-title">Draft Formulir</h3>
+          <div class="d-flex gap-2">
+            <select class="form-select w-auto" data-draft-filter aria-label="Filter jenis draft">
+              <option value="">Semua jenis</option>
+              <option value="koi">Data Ikan</option>
+              <option value="breeding">Breeding</option>
+              <option value="report">Laporan</option>
+              <option value="activity">Laporan Kegiatan</option>
+              <option value="arrival">Laporan Ikan Datang</option>
+            </select>
+            <button type="button" class="btn" data-action="refresh-drafts">Refresh</button>
+          </div>
+        </div>
+        <div class="table-responsive">
+          <table class="table table-vcenter card-table">
+            <thead><tr><th>Jenis</th><th>Draft</th><th>Oleh</th><th>Terakhir diubah</th><th class="w-1">Aksi</th></tr></thead>
+            <tbody data-drafts-table><tr><td colspan="5" class="text-secondary"><div class="d-flex flex-column align-items-center justify-content-center gap-2 py-5 text-secondary"><span class="spinner-border text-primary" role="status" aria-hidden="true"></span><span>Memuat draft...</span></div></td></tr></tbody>
+          </table>
+        </div>`
+      jobCard.parentNode.insertBefore(draftCard, jobCard)
+      const draftTable = draftCard.querySelector('[data-drafts-table]')
+      const draftFilter = draftCard.querySelector('[data-draft-filter]')
+      const typeBadge = { koi: 'blue', breeding: 'purple', report: 'green', activity: 'orange', arrival: 'cyan' }
+      let drafts = []
+
+      const renderDrafts = () => {
+        const list = drafts.filter((draft) => !draftFilter.value || draft.type === draftFilter.value)
+        if (!list.length) {
+          draftTable.innerHTML = '<tr><td colspan="5" class="text-secondary">Belum ada draft.</td></tr>'
+          return
+        }
+        draftTable.innerHTML = list.map((draft) => {
+          const canUse = window.KoiDrafts?.canUse(draft.type)
+          const title = draft.name || draft.summary || 'Draft tanpa nama'
+          return `
+            <tr>
+              <td><span class="badge bg-${typeBadge[draft.type] || 'secondary'}-lt">${escapeHtml(draft.type_label)}</span></td>
+              <td>
+                <div class="fw-medium">${escapeHtml(title)}</div>
+                ${draft.name && draft.summary ? `<div class="small text-secondary">${escapeHtml(draft.summary)}</div>` : ''}
+              </td>
+              <td>${escapeHtml(draft.updated_by_name || draft.created_by_name || '-')}</td>
+              <td>${escapeHtml(time(draft.updated_at))}</td>
+              <td>
+                <div class="btn-list flex-nowrap">
+                  ${canUse ? `<a class="btn btn-sm btn-primary" href="${escapeHtml(window.KoiDrafts.link(draft))}">Lanjutkan</a>` : ''}
+                  ${canUse ? `<button type="button" class="btn btn-sm" data-draft-rename="${draft.id}">Ganti nama</button>` : ''}
+                  ${canUse ? `<button type="button" class="btn btn-sm btn-outline-danger" data-draft-delete="${draft.id}">Hapus</button>` : '<span class="text-secondary small">Khusus Admin</span>'}
+                </div>
+              </td>
+            </tr>`
+        }).join('')
+      }
+
+      const loadDrafts = async () => {
+        if (!window.KoiDrafts?.canSee()) return
+        try {
+          drafts = await window.KoiDrafts.list()
+          renderDrafts()
+        } catch (error) {
+          draftTable.innerHTML = `<tr><td colspan="5" class="text-danger">${escapeHtml(error.message || 'Draft gagal dimuat.')}</td></tr>`
+        }
+      }
+
+      draftFilter.addEventListener('change', renderDrafts)
+      draftCard.querySelector('[data-action="refresh-drafts"]').addEventListener('click', loadDrafts)
+      draftTable.addEventListener('click', async (event) => {
+        const renameButton = event.target.closest('[data-draft-rename]')
+        const deleteButton = event.target.closest('[data-draft-delete]')
+        try {
+          if (renameButton) {
+            const draft = drafts.find((item) => String(item.id) === renameButton.dataset.draftRename)
+            const name = (await window.KoiDialog.prompt('Nama draft', draft ? (draft.name || draft.summary || '') : ''))
+            if (!name || !name.trim()) return
+            await window.KoiDrafts.rename(renameButton.dataset.draftRename, name.trim())
+            await loadDrafts()
+          }
+          if (deleteButton) {
+            if (!(await window.KoiDialog.confirm('Hapus draft ini? Foto yang hanya dipakai draft ini ikut terhapus.'))) return
+            await window.KoiDrafts.remove(deleteButton.dataset.draftDelete)
+            await loadDrafts()
+          }
+        } catch (error) {
+          window.alert(error.message)
+        }
+      })
+
+      // ---- Background job (Backup, Restore, Clear data) ----
+      const statusLabel = { completed: ['success', 'Selesai'], failed: ['danger', 'Gagal'], running: ['warning', 'Berjalan'], queued: ['secondary', 'Antre'] }
+      const typeLabel = { backup: 'Backup', restore: 'Restore', maintenance: 'Maintenance' }
+      const loadJobs = async () => {
+        try {
+          const response = await window.KoiAuth.apiRequest('/jobs')
+          const jobs = response.ok ? await response.json() : []
+          if (!jobs.length) {
+            jobTable.innerHTML = '<tr><td colspan="6" class="text-secondary">Belum ada job.</td></tr>'
+            return
+          }
+          jobTable.innerHTML = jobs.map((job) => {
+            const [color, label] = statusLabel[job.status] || ['secondary', job.status || '-']
+            return `
+              <tr>
+                <td>${escapeHtml(time(job.created_at))}</td>
+                <td>${escapeHtml(typeLabel[job.type] || job.type || '-')}</td>
+                <td>${escapeHtml(job.title || '-')}</td>
+                <td><span class="badge bg-${color}-lt">${escapeHtml(label)}</span></td>
+                <td>${Number(job.progress || 0)}%</td>
+                <td>${escapeHtml(job.message || '-')}</td>
+              </tr>`
+          }).join('')
+        } catch {
+          jobTable.innerHTML = '<tr><td colspan="6" class="text-danger">Job gagal dimuat.</td></tr>'
+        }
+      }
+      document.querySelector('[data-action="refresh-jobs"]')?.addEventListener('click', loadJobs)
+      loadDrafts()
+      loadJobs()
+    })
+  </script>
+</DefaultLayout>

@@ -1,0 +1,10 @@
+node_modules
+**/node_modules
+.pnpm-store
+.astro
+preview/dist
+preview/public
+preview/tmp-assets
+docs/dist
+screenshots/dist
+.git

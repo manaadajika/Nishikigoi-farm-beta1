@@ -1,0 +1,16 @@
+---
+import SingleLayout from '@shared/layouts/SingleLayout.astro'
+import SignInCard from '@shared/components/cards/SignInCard.astro'
+---
+
+<SingleLayout title="Sign in">
+  <SignInCard />
+<div class="position-fixed" style="right: 16px; bottom: 16px; z-index: 1030;">
+  <a href="?theme=dark" class="btn btn-icon btn-ghost-secondary hide-theme-dark js-theme-toggle" title="Enable dark mode" aria-label="Enable dark mode" data-theme-value="dark">
+    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false" class="icon"><path d="M12 3c.132 0 .263 0 .393 0a7.5 7.5 0 0 0 7.92 12.446a9 9 0 1 1 -8.313 -12.454l0 .008" /></svg>
+  </a>
+  <a href="?theme=light" class="btn btn-icon btn-ghost-secondary hide-theme-light js-theme-toggle" title="Enable light mode" aria-label="Enable light mode" data-theme-value="light">
+    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false" class="icon"><path d="M12 12m-4 0a4 4 0 1 0 8 0a4 4 0 1 0 -8 0" /><path d="M3 12h1m8 -9v1m8 8h1m-9 8v1m-6.4 -15.4l.7 .7m12.1 -.7l-.7 .7m0 11.4l.7 .7m-12.1 -.7l-.7 .7" /></svg>
+  </a>
+</div>
+</SingleLayout>

@@ -1,0 +1,2203 @@
+---
+import DefaultLayout from '@shared/layouts/DefaultLayout.astro'
+import icons from '@data/icons.json'
+
+const iconSvg = (name: string) => {
+  const icon = (icons as unknown as Record<string, { svg: Record<string, string> }>)[name]
+  let svg = icon?.svg?.outline ?? ''
+
+  svg = svg.replace(/<path stroke="none" d="M0 0h24v24H0z" fill="none"\s*\/>/, '')
+  svg = svg.replace(/class="[^"]+"/, 'aria-hidden="true" focusable="false" class="icon"')
+
+  return svg
+}
+
+const uploadIcon = iconSvg('upload')
+const clipboardIcon = iconSvg('clipboard')
+---
+
+<DefaultLayout title="Kolam" pageHeader="Data Kolam" pretitle="Management" pageMenu="farm-ponds">
+  <style is:global>
+    .pond-fish-preview {
+      width: 48px;
+      aspect-ratio: 2 / 3;
+      border-radius: 6px;
+      background: var(--tblr-bg-surface-secondary);
+      border: 1px solid var(--tblr-border-color);
+      overflow: hidden;
+    }
+
+    .pond-fish-preview img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .pond-fish-preview-placeholder {
+      width: 100%;
+      height: 100%;
+      color: var(--tblr-secondary);
+      font-size: .75rem;
+      font-weight: 600;
+    }
+
+    .pond-documentation-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+      gap: 1rem;
+    }
+
+    .pond-documentation-item {
+      position: relative;
+      border-radius: 6px;
+      border: 1px solid var(--tblr-border-color);
+      overflow: hidden;
+      background: var(--tblr-bg-surface-secondary);
+    }
+
+    .pond-documentation-preview {
+      display: block;
+      width: 100%;
+      aspect-ratio: 2 / 3;
+      overflow: hidden;
+      background: var(--tblr-bg-surface-secondary);
+    }
+
+    .pond-documentation-item img,
+    .pond-documentation-item video {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .pond-documentation-notes {
+      padding: .5rem;
+      background: var(--tblr-bg-surface);
+    }
+
+    .pond-documentation-delete {
+      position: absolute;
+      top: .35rem;
+      right: .35rem;
+      z-index: 1;
+    }
+
+    [data-pond-documentation-status] {
+      min-width: 48px;
+      white-space: nowrap;
+    }
+
+    .pond-print-title {
+      display: none;
+    }
+
+    .pond-detail-print-title {
+      display: none;
+    }
+
+    @media print {
+      body.printing-pond-list *,
+      body.printing-pond-detail * {
+        opacity: 1 !important;
+        filter: none !important;
+        text-shadow: none !important;
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+      }
+
+      body:not(.koi-printing) html,
+      body:not(.koi-printing),
+      body:not(.koi-printing) .page,
+      body:not(.koi-printing) .page-wrapper,
+      body:not(.koi-printing) .page-body,
+      body:not(.koi-printing) .container-xl,
+      body:not(.koi-printing) .modal,
+      body:not(.koi-printing) .modal-content,
+      body:not(.koi-printing) .modal-body,
+      body:not(.koi-printing) .card,
+      body:not(.koi-printing) .card-body,
+      body:not(.koi-printing) .table-responsive {
+        background: #ffffff !important;
+        background-color: #ffffff !important;
+      }
+
+      body:not(.koi-printing) .navbar,
+      body:not(.koi-printing) .page-header,
+      body:not(.koi-printing):not(.printing-pond-detail) .card-actions,
+      body:not(.koi-printing) [data-pond-import-export-message],
+      body:not(.koi-printing) .dropdown-menu,
+      body:not(.koi-printing) .btn {
+        display: none !important;
+      }
+
+      body:not(.koi-printing):not(.printing-pond-detail) .modal {
+        display: none !important;
+      }
+
+      body.printing-pond-detail .page-body > .container-xl > .row,
+      body.printing-pond-detail .modal-header,
+      body.printing-pond-detail .modal-footer,
+      body.printing-pond-detail [data-pond-detail-form],
+      body.printing-pond-detail [data-pond-note-history] {
+        display: none !important;
+      }
+
+      body.printing-pond-detail #pond-detail-modal {
+        display: block !important;
+        position: static !important;
+        opacity: 1 !important;
+      }
+
+      body.printing-pond-detail #pond-detail-modal .modal-dialog,
+      body.printing-pond-detail #pond-detail-modal .modal-content,
+      body.printing-pond-detail #pond-detail-modal .modal-body {
+        width: 100% !important;
+        max-width: none !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        box-shadow: none !important;
+        border: 0 !important;
+      }
+
+      body:not(.koi-printing) .page,
+      body:not(.koi-printing) .page-wrapper,
+      body:not(.koi-printing) .page-body,
+      body:not(.koi-printing) .container-xl,
+      body:not(.koi-printing) .card,
+      body:not(.koi-printing) .table-responsive {
+        margin: 0 !important;
+        padding: 0 !important;
+        box-shadow: none !important;
+        border: 0 !important;
+        overflow: visible !important;
+      }
+
+      body:not(.koi-printing) .card-header {
+        border: 0 !important;
+        padding: 0 0 12px !important;
+      }
+
+      body:not(.koi-printing) .card-header .card-title {
+        display: none !important;
+      }
+
+      .pond-print-title {
+        display: block !important;
+        margin: 0 0 12px !important;
+        color: #000000 !important;
+        font-size: 19px !important;
+        font-weight: 800 !important;
+      }
+
+      body.printing-pond-detail .pond-detail-print-title {
+        display: block !important;
+        margin: 0 0 12px !important;
+        color: #000000 !important;
+        font-size: 19px !important;
+        font-weight: 800 !important;
+      }
+
+      body:not(.koi-printing) .card-title {
+        font-size: 19px !important;
+        font-weight: 800 !important;
+      }
+
+      body:not(.koi-printing) .table {
+        width: 100% !important;
+        font-size: 13px !important;
+        background: #ffffff !important;
+        border-collapse: collapse !important;
+        color: #000000 !important;
+        border-color: #94a3b8 !important;
+      }
+
+      body:not(.koi-printing) .table th,
+      body:not(.koi-printing) .table td {
+        background: #ffffff !important;
+        background-color: #ffffff !important;
+        color: #000000 !important;
+        font-weight: 600 !important;
+        padding: 7px 8px !important;
+        border-color: #94a3b8 !important;
+        border-width: 1px !important;
+        opacity: 1 !important;
+      }
+
+      body:not(.koi-printing),
+      body:not(.koi-printing) .modal,
+      body:not(.koi-printing) .modal-content,
+      body:not(.koi-printing) .modal-body,
+      body:not(.koi-printing) .card,
+      body:not(.koi-printing) .table,
+      body:not(.koi-printing) .text-secondary {
+        color: #000000 !important;
+        opacity: 1 !important;
+        text-shadow: none !important;
+      }
+
+      body:not(.koi-printing) .text-secondary,
+      body:not(.koi-printing) [data-pond-detail-summary] .text-secondary {
+        color: #111827 !important;
+        font-weight: 700 !important;
+      }
+
+      body:not(.koi-printing) [data-pond-detail-summary] > div > div,
+      body:not(.koi-printing) [data-pond-detail-summary] > div > span + div {
+        color: #000000 !important;
+        font-weight: 700 !important;
+      }
+
+      body.printing-pond-detail [data-pond-detail-summary] {
+        margin-bottom: 14px !important;
+        color: #000000 !important;
+        font-size: 12px !important;
+      }
+
+      body.printing-pond-detail [data-pond-detail-summary] .text-secondary {
+        color: #111827 !important;
+        font-size: 10px !important;
+        font-weight: 800 !important;
+        text-transform: uppercase !important;
+      }
+
+      body:not(.koi-printing) .table {
+        color: #000000 !important;
+        border-color: #94a3b8 !important;
+      }
+
+      body:not(.koi-printing) .table th,
+      body:not(.koi-printing) .table td {
+        color: #000000 !important;
+        border-color: #94a3b8 !important;
+        opacity: 1 !important;
+      }
+
+      body:not(.koi-printing) .table th {
+        background: #e5e7eb !important;
+        color: #000000 !important;
+        font-weight: 800 !important;
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+      }
+
+      body:not(.koi-printing) .pond-fish-preview {
+        background: transparent !important;
+        border: 0 !important;
+        border-radius: 3px !important;
+        overflow: hidden !important;
+      }
+
+      body:not(.koi-printing) .pond-fish-preview img {
+        background: transparent !important;
+        border-radius: 3px !important;
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+      }
+
+      body:not(.koi-printing) .pond-fish-preview-placeholder {
+        background: transparent !important;
+        color: #111827 !important;
+      }
+
+      body:not(.koi-printing) .badge {
+        background: transparent !important;
+        color: #000000 !important;
+        padding: 0 !important;
+      }
+
+      body:not(.koi-printing) .table-active,
+      body:not(.koi-printing) .table-active > * {
+        background-color: #dbe4ef !important;
+        background: #dbe4ef !important;
+        color: #000000 !important;
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+      }
+
+      body:not(.koi-printing) tr.table-active td,
+      body:not(.koi-printing) tr.table-active th {
+        background-color: #dbe4ef !important;
+        background-image: none !important;
+        color: #000000 !important;
+      }
+
+      body:not(.koi-printing) :root[data-bs-theme="dark"] .table-active,
+      body:not(.koi-printing) :root[data-bs-theme="dark"] .table-active > *,
+      :root[data-bs-theme="dark"] body:not(.koi-printing) .table-active,
+      :root[data-bs-theme="dark"] body:not(.koi-printing) .table-active > * {
+        background-color: #dbe4ef !important;
+        background: #dbe4ef !important;
+        color: #000000 !important;
+      }
+
+      body:not(.koi-printing) :root[data-bs-theme="dark"] tr.table-active td,
+      body:not(.koi-printing) :root[data-bs-theme="dark"] tr.table-active th,
+      :root[data-bs-theme="dark"] body:not(.koi-printing) tr.table-active td,
+      :root[data-bs-theme="dark"] body:not(.koi-printing) tr.table-active th {
+        background-color: #dbe4ef !important;
+        background-image: none !important;
+        color: #000000 !important;
+      }
+
+      [data-print-hidden] {
+        display: none !important;
+      }
+    }
+    @media print {
+      body.printing-pond-list,
+      body.printing-pond-detail {
+        background: #ffffff !important;
+        color: #000000 !important;
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+      }
+
+      body.printing-pond-list .navbar,
+      body.printing-pond-list .page-header,
+      body.printing-pond-list .modal,
+      body.printing-pond-list .btn,
+      body.printing-pond-list .dropdown-menu,
+      body.printing-pond-list [data-pond-import-export-message] {
+        display: none !important;
+      }
+
+      body.printing-pond-list .page,
+      body.printing-pond-list .page-wrapper,
+      body.printing-pond-list .page-body,
+      body.printing-pond-list .container-xl,
+      body.printing-pond-list .card,
+      body.printing-pond-list .card-body,
+      body.printing-pond-list .table-responsive {
+        width: 100% !important;
+        max-width: none !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        border: 0 !important;
+        box-shadow: none !important;
+        background: #ffffff !important;
+        color: #000000 !important;
+        overflow: visible !important;
+      }
+
+      body.printing-pond-list .pond-print-title {
+        display: block !important;
+        margin: 0 0 14px !important;
+        color: #000000 !important;
+        font-size: 18px !important;
+        font-weight: 800 !important;
+      }
+
+      body.printing-pond-list [data-ponds-table] {
+        width: 100% !important;
+        border-collapse: collapse !important;
+        color: #000000 !important;
+        background: #ffffff !important;
+      }
+
+      body.printing-pond-list [data-ponds-table] th,
+      body.printing-pond-list [data-ponds-table] td {
+        border: 1px solid #1f2937 !important;
+        background: #ffffff !important;
+        color: #000000 !important;
+        padding: 5px 6px !important;
+        font-size: 9pt !important;
+        line-height: 1.25 !important;
+        font-weight: 600 !important;
+        opacity: 1 !important;
+        text-shadow: none !important;
+      }
+
+      body.printing-pond-list [data-ponds-table] th {
+        background: #e5e7eb !important;
+        font-weight: 800 !important;
+      }
+
+      body.printing-pond-list [data-ponds-table] tr.table-active {
+        break-before: page;
+        page-break-before: always;
+      }
+
+      body.printing-pond-list [data-ponds-table] tbody tr {
+        break-inside: avoid;
+        page-break-inside: avoid;
+      }
+
+      body.printing-pond-list [data-ponds-table] tbody tr.table-active:first-child {
+        break-before: auto;
+        page-break-before: auto;
+      }
+
+      body.printing-pond-list [data-ponds-table] tr.table-active > * {
+        background: #e5e7eb !important;
+        color: #000000 !important;
+        font-weight: 800 !important;
+      }
+
+      body.printing-pond-detail,
+      body.printing-pond-detail .modal,
+      body.printing-pond-detail .modal-dialog,
+      body.printing-pond-detail .modal-content,
+      body.printing-pond-detail .modal-body,
+      body.printing-pond-detail [data-pond-detail-summary],
+      body.printing-pond-detail .table-responsive,
+      body.printing-pond-detail .table {
+        background: #ffffff !important;
+        background-color: #ffffff !important;
+        background-image: none !important;
+        color: #000000 !important;
+        opacity: 1 !important;
+        filter: none !important;
+      }
+
+      body.printing-pond-detail #pond-detail-modal *,
+      body.printing-pond-detail #pond-detail-modal .text-secondary,
+      body.printing-pond-detail #pond-detail-modal .table th,
+      body.printing-pond-detail #pond-detail-modal .table td {
+        color: #000000 !important;
+        opacity: 1 !important;
+        filter: none !important;
+        text-shadow: none !important;
+      }
+
+      body.printing-pond-detail #pond-detail-modal .table th {
+        background: #e5e7eb !important;
+        background-color: #e5e7eb !important;
+        font-weight: 800 !important;
+      }
+
+      body.printing-pond-detail #pond-detail-modal .table td {
+        background: #ffffff !important;
+        background-color: #ffffff !important;
+      }
+
+      body.printing-pond-detail #pond-detail-modal .badge {
+        background: transparent !important;
+        color: #000000 !important;
+      }
+    }
+  </style>
+
+  <div class="modal modal-blur fade" id="pond-modal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered" role="document">
+      <form class="modal-content" data-pond-form>
+        <div class="modal-header">
+          <h5 class="modal-title" data-pond-form-title>Formulir Tambah Kolam</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Tutup"></button>
+        </div>
+        <div class="modal-body">
+          <div class="row g-3">
+            <div class="col-md-4">
+              <label class="form-label" for="pond-name">Nama Kolam</label>
+              <input class="form-control" id="pond-name" name="name" placeholder="Kolam A1" required />
+            </div>
+            <div class="col-md-4">
+              <label class="form-label" for="pond-location">Area</label>
+              <input class="form-control" id="pond-location" name="location" placeholder="Area Farm A" />
+            </div>
+            <div class="col-md-4">
+              <label class="form-label" for="pond-status">Status</label>
+              <select class="form-select" id="pond-status" name="status">
+                <option value="kosong">Kosong</option>
+                <option value="active">Aktif</option>
+                <option value="perbaikan">Perbaikan</option>
+              </select>
+            </div>
+            <div class="col-12">
+              <label class="form-label" for="pond-notes">Catatan</label>
+              <textarea class="form-control" id="pond-notes" name="notes" rows="3" placeholder="Catatan kondisi kolam"></textarea>
+            </div>
+          </div>
+          <div class="mt-3 text-secondary" data-form-message></div>
+        </div>
+        <div class="modal-footer">
+          <button class="btn" type="button" data-bs-dismiss="modal">Batal</button>
+          <button class="btn btn-primary" type="submit" data-pond-submit>Simpan Kolam</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div class="modal modal-blur fade" id="pond-detail-modal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered" role="document">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" data-pond-detail-title>Detail Kolam</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Tutup"></button>
+        </div>
+        <div class="modal-body">
+          <div class="row g-3 mb-3" data-pond-detail-summary></div>
+          <form class="card mb-3" data-pond-detail-form>
+            <div class="card-body">
+              <div class="row g-3">
+                <div class="col-md-4">
+                  <label class="form-label" for="pond-detail-unphotographed">Qty Belum Difoto</label>
+                  <input class="form-control" id="pond-detail-unphotographed" name="unphotographed_fish_qty" type="number" min="0" step="1" />
+                  <div class="row g-3 mt-0">
+                    <div class="col-sm-6">
+                      <label class="form-label">Dokumentasi</label>
+                      <input class="d-none" id="pond-documentation-input" type="file" accept="image/*,video/mp4,video/webm" multiple data-pond-documentation-input />
+                      <div class="d-flex align-items-center gap-2">
+                        <label class="btn btn-icon mb-0" for="pond-documentation-input" data-upload-pond-documentation aria-label="Upload media" title="Upload media"><Fragment set:html={uploadIcon} /></label>
+                        <button class="btn btn-icon mb-0" type="button" data-paste-pond-documentation data-role-required="database-write" aria-label="Paste gambar dokumentasi" title="Paste gambar dokumentasi"><Fragment set:html={clipboardIcon} /></button>
+                        <div class="form-hint mb-0" data-pond-documentation-status></div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div class="col-md-8">
+                  <label class="form-label" for="pond-detail-notes">Catatan</label>
+                  <textarea class="form-control" id="pond-detail-notes" name="notes" rows="3"></textarea>
+                  <div class="d-flex justify-content-end mt-2">
+                    <button class="btn" type="button" data-save-pond-notes>Simpan Catatan</button>
+                  </div>
+                </div>
+                <div class="col-12">
+                  <div class="pond-documentation-grid" data-pond-documentation-list>
+                    <div class="text-secondary">Belum ada dokumentasi.</div>
+                  </div>
+                </div>
+              </div>
+              <div class="d-flex align-items-center justify-content-between mt-3">
+                <div class="text-secondary" data-pond-detail-message></div>
+                <div class="d-flex align-items-end gap-2">
+                  <button class="btn" type="button" data-print-pond-detail>Cetak</button>
+                  <div>
+                    <label class="form-label" for="pond-detail-status">Status</label>
+                    <select class="form-select" id="pond-detail-status" name="status">
+                      <option value="kosong">Kosong</option>
+                      <option value="active">Aktif</option>
+                      <option value="perbaikan">Perbaikan</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </form>
+          <h1 class="pond-detail-print-title">SUMMARY IKAN &amp; LOKASI KOLAM</h1>
+          <div class="table-responsive mb-3">
+            <div class="d-flex justify-content-end mb-2">
+              <button class="btn" type="button" data-print-pond-detail>Cetak</button>
+            </div>
+            <table class="table table-vcenter">
+              <thead>
+                <tr>
+                  <th>Foto</th>
+                  <th>Kode</th>
+                  <th>Nama</th>
+                  <th>Variety</th>
+                  <th>Bloodline</th>
+                  <th>Breeder</th>
+                  <th data-print-hidden>Status</th>
+                  <th>Ukuran</th>
+                </tr>
+              </thead>
+              <tbody data-pond-detail-fish>
+                <tr><td colspan="8" class="text-secondary">Belum ada ikan tercatat.</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="card mb-3">
+            <div class="card-header">
+              <h3 class="card-title">History Catatan</h3>
+            </div>
+            <div class="list-group list-group-flush" data-pond-note-history>
+              <div class="list-group-item text-secondary">Pilih kolam untuk melihat history.</div>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-outline-danger me-auto" type="button" data-delete-pond>Hapus Kolam</button>
+          <button class="btn" type="button" data-bs-dismiss="modal">Tutup</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal modal-blur fade" id="area-settings-modal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-md modal-dialog-centered" role="document">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">Pengaturan Area</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Tutup"></button>
+        </div>
+        <div class="modal-body">
+          <div class="list-group" data-area-order-list>
+            <div class="list-group-item text-secondary">Belum ada area.</div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button class="btn me-auto" type="button" data-reset-area-order>Reset Urutan</button>
+          <button class="btn" type="button" data-bs-dismiss="modal">Tutup</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="row row-cards">
+    <div class="col-12">
+      <div class="card">
+        <div class="card-header">
+          <h3 class="card-title">Daftar Kolam</h3>
+          <h1 class="pond-print-title">SUMMARY IKAN &amp; LOKASI KOLAM</h1>
+          <div class="card-actions d-flex flex-row align-items-center gap-2">
+            <input class="d-none" name="import_ponds_csv" type="file" accept=".csv,text/csv" data-import-ponds-input />
+            <div class="dropdown">
+              <button class="btn dropdown-toggle" type="button" data-bs-toggle="dropdown">Aksi</button>
+              <div class="dropdown-menu">
+                <button class="dropdown-item" type="button" data-print-ponds>Print</button>
+                <button class="dropdown-item" type="button" data-import-ponds>Import</button>
+                <button class="dropdown-item" type="button" data-export-ponds>Export</button>
+                <div class="dropdown-divider"></div>
+                <button class="dropdown-item" type="button" data-open-area-settings>Pengaturan</button>
+              </div>
+            </div>
+            <button class="btn btn-primary" type="button" data-bs-toggle="modal" data-bs-target="#pond-modal">Tambah Kolam</button>
+          </div>
+        </div>
+        <div class="card-body border-bottom">
+          <div class="form-hint mt-2" data-pond-import-export-message></div>
+        </div>
+        <div class="table-responsive">
+          <table class="table card-table table-vcenter">
+            <thead>
+              <tr>
+                <th><button class="table-sort" type="button" data-sort-key="name">Nama</button></th>
+                <th data-print-hidden><button class="table-sort" type="button" data-sort-key="unphotographed_fish_qty">Belum Difoto</button></th>
+                <th data-print-hidden><button class="table-sort" type="button" data-sort-key="koi_count">Qty</button></th>
+                <th><button class="table-sort" type="button" data-sort-key="koi_count">Qty Total</button></th>
+                <th><button class="table-sort" type="button" data-sort-key="notes">Catatan</button></th>
+                <th data-print-hidden>Aksi</th>
+              </tr>
+            </thead>
+            <tbody data-ponds-table>
+              <tr><td colspan="6" class="text-secondary">Memuat data kolam.</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="koi-print-root" data-pond-print-root aria-hidden="true"></div>
+
+  <style is:global>
+    .koi-print-root { display: none; }
+
+    @media print {
+      body.koi-printing {
+        background: #ffffff !important;
+      }
+
+      body.koi-printing > *:not(.koi-print-root) {
+        display: none !important;
+      }
+
+      body.koi-printing .koi-print-root {
+        display: block !important;
+        position: static !important;
+        width: 100% !important;
+        min-height: auto !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        background: #ffffff !important;
+        color: #1f2937 !important;
+      }
+    }
+  </style>
+
+  <script>
+    const apiUrl = '/api'
+    const text = (value) => value || '-'
+    const escapeHtml = (value) =>
+      String(value ?? '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;')
+    const table = document.querySelector('[data-ponds-table]')
+    const printButton = document.querySelector('[data-print-ponds]')
+    const printDetailButtons = document.querySelectorAll('[data-print-pond-detail]')
+    const areaSettingsButton = document.querySelector('[data-open-area-settings]')
+    const areaSettingsModalElement = document.querySelector('#area-settings-modal')
+    const areaOrderList = document.querySelector('[data-area-order-list]')
+    const resetAreaOrderButton = document.querySelector('[data-reset-area-order]')
+    const importButton = document.querySelector('[data-import-ponds]')
+    const exportButton = document.querySelector('[data-export-ponds]')
+    const importInput = document.querySelector('[data-import-ponds-input]')
+    const importExportMessage = document.querySelector('[data-pond-import-export-message]')
+    const form = document.querySelector('[data-pond-form]')
+    const message = document.querySelector('[data-form-message]')
+    const formTitle = document.querySelector('[data-pond-form-title]')
+    const formSubmit = document.querySelector('[data-pond-submit]')
+    const modalElement = document.querySelector('#pond-modal')
+    const detailModalElement = document.querySelector('#pond-detail-modal')
+    const detailTitle = document.querySelector('[data-pond-detail-title]')
+    const detailSummary = document.querySelector('[data-pond-detail-summary]')
+    const detailFish = document.querySelector('[data-pond-detail-fish]')
+    const detailForm = document.querySelector('[data-pond-detail-form]')
+    const detailMessage = document.querySelector('[data-pond-detail-message]')
+    const savePondNotesButton = document.querySelector('[data-save-pond-notes]')
+    const noteHistory = document.querySelector('[data-pond-note-history]')
+    const deletePondButton = document.querySelector('[data-delete-pond]')
+    const documentationInput = document.querySelector('[data-pond-documentation-input]')
+    const documentationButton = document.querySelector('[data-upload-pond-documentation]')
+    const documentationPasteButton = document.querySelector('[data-paste-pond-documentation]')
+    const documentationStatus = document.querySelector('[data-pond-documentation-status]')
+    const documentationList = document.querySelector('[data-pond-documentation-list]')
+    const keepScroll = async (callback) => {
+      const scrollX = window.scrollX
+      const scrollY = window.scrollY
+      const result = await callback()
+      requestAnimationFrame(() => window.scrollTo(scrollX, scrollY))
+      return result
+    }
+    let activeModal = null
+    let selectedPondId = null
+    let editingPondId = null
+    let pondsRealtimeSignature = ''
+    const pendingDocumentationNotes = new Map()
+    const koiLabels = {
+      unknown: 'Unknown',
+      male: 'Male',
+      female: 'Female',
+      active: 'Active',
+      quarantine: 'Quarantine',
+      sold: 'Sold',
+      dead: 'Dead',
+      indukan: 'Indukan',
+      non_indukan: 'Bukan Indukan',
+    }
+    let pondsData = []
+    let areaOrder = JSON.parse(localStorage.getItem('pondAreaOrder') || '[]')
+    let searchQuery = ''
+    let sortState = { key: 'name', direction: 'asc' }
+    const pondsCacheKey = 'nishikigoi-cache:farm-ponds'
+    const statusLabels = {
+      kosong: { label: 'Kosong', className: 'bg-secondary-lt' },
+      active: { label: 'Aktif', className: 'bg-green-lt' },
+      perbaikan: { label: 'Perbaikan', className: 'bg-yellow-lt' },
+    }
+
+    const getModalApi = () => window.tabler?.bootstrap?.Modal || window.bootstrap?.Modal
+
+    const openModal = (element) => {
+      const modalApi = getModalApi()
+
+      if (modalApi) {
+        modalApi.getOrCreateInstance(element).show()
+        return
+      }
+
+      activeModal = element
+      element.classList.add('show')
+      element.style.display = 'block'
+      element.removeAttribute('aria-hidden')
+      element.setAttribute('aria-modal', 'true')
+      element.setAttribute('role', 'dialog')
+      document.body.classList.add('modal-open')
+
+      if (!document.querySelector('[data-fallback-modal-backdrop]')) {
+        const backdrop = document.createElement('div')
+        backdrop.className = 'modal-backdrop fade show'
+        backdrop.dataset.fallbackModalBackdrop = 'true'
+        backdrop.addEventListener('click', closeActiveModal)
+        document.body.appendChild(backdrop)
+      }
+    }
+
+    const closeModal = (element) => {
+      const modalApi = getModalApi()
+
+      if (modalApi) {
+        modalApi.getInstance(element)?.hide()
+        return
+      }
+
+      element.classList.remove('show')
+      element.style.display = 'none'
+      element.setAttribute('aria-hidden', 'true')
+      element.removeAttribute('aria-modal')
+      element.removeAttribute('role')
+      document.body.classList.remove('modal-open')
+      document.querySelector('[data-fallback-modal-backdrop]')?.remove()
+      activeModal = null
+    }
+
+    function closeActiveModal() {
+      if (activeModal) {
+        closeModal(activeModal)
+      }
+    }
+
+    const parseFish = (fish) => {
+      try {
+        const parsedFish = typeof fish === 'string' ? JSON.parse(fish) : fish
+        return Array.isArray(parsedFish) ? parsedFish.filter(Boolean) : []
+      } catch (error) {
+        return []
+      }
+    }
+
+    const totalPondQty = (pond) => Number(pond.koi_count || 0) + Number(pond.unphotographed_fish_qty || 0)
+
+    const readFileAsDataUrl = (file) =>
+      new Promise((resolve, reject) => {
+        const reader = new FileReader()
+        reader.addEventListener('load', () => resolve(reader.result))
+        reader.addEventListener('error', () => reject(new Error('Gambar gagal dibaca')))
+        reader.readAsDataURL(file)
+      })
+
+    const readFileAsText = (file) =>
+      new Promise((resolve, reject) => {
+        const reader = new FileReader()
+        reader.addEventListener('load', () => resolve(reader.result))
+        reader.addEventListener('error', () => reject(new Error('File import gagal dibaca')))
+        reader.readAsText(file)
+      })
+
+    const csvValue = (value) => `"${String(value ?? '').replace(/"/g, '""')}"`
+
+    const parseCsv = (content) => {
+      const rows = []
+      let row = []
+      let value = ''
+      let inQuotes = false
+
+      for (let index = 0; index < content.length; index += 1) {
+        const character = content[index]
+        const nextCharacter = content[index + 1]
+
+        if (character === '"' && inQuotes && nextCharacter === '"') {
+          value += '"'
+          index += 1
+          continue
+        }
+
+        if (character === '"') {
+          inQuotes = !inQuotes
+          continue
+        }
+
+        if (character === ',' && !inQuotes) {
+          row.push(value)
+          value = ''
+          continue
+        }
+
+        if ((character === '\n' || character === '\r') && !inQuotes) {
+          if (character === '\r' && nextCharacter === '\n') {
+            index += 1
+          }
+          row.push(value)
+          if (row.some((cell) => cell.trim())) {
+            rows.push(row)
+          }
+          row = []
+          value = ''
+          continue
+        }
+
+        value += character
+      }
+
+      row.push(value)
+      if (row.some((cell) => cell.trim())) {
+        rows.push(row)
+      }
+
+      const [headers = [], ...dataRows] = rows
+      const normalizedHeaders = headers.map((header) => header.trim().toLowerCase())
+
+      return dataRows.map((dataRow) =>
+        normalizedHeaders.reduce((item, header, index) => {
+          item[header] = dataRow[index] || ''
+          return item
+        }, {})
+      )
+    }
+
+    const loadImage = (src) =>
+      new Promise((resolve, reject) => {
+        const image = new Image()
+        image.addEventListener('load', () => resolve(image))
+        image.addEventListener('error', () => reject(new Error('Gambar gagal diproses')))
+        image.src = src
+      })
+
+    const createVideoThumbnail = (file) =>
+      new Promise((resolve) => {
+        const video = document.createElement('video')
+        const canvas = document.createElement('canvas')
+        const objectUrl = URL.createObjectURL(file)
+
+        video.muted = true
+        video.playsInline = true
+        video.preload = 'metadata'
+        video.addEventListener('loadeddata', () => {
+          canvas.width = video.videoWidth || 640
+          canvas.height = video.videoHeight || 360
+          canvas.getContext('2d').drawImage(video, 0, 0, canvas.width, canvas.height)
+          URL.revokeObjectURL(objectUrl)
+          resolve(canvas.toDataURL('image/webp', .82))
+        }, { once: true })
+        video.addEventListener('error', () => {
+          URL.revokeObjectURL(objectUrl)
+          resolve('')
+        }, { once: true })
+        video.src = objectUrl
+      })
+
+    const compressImage = async (file) => {
+      const dataUrl = await readFileAsDataUrl(file)
+      const image = await loadImage(dataUrl)
+      const maxSize = 1600
+      const scale = Math.min(1, maxSize / Math.max(image.naturalWidth, image.naturalHeight))
+      const canvas = document.createElement('canvas')
+      canvas.width = Math.max(1, Math.round(image.naturalWidth * scale))
+      canvas.height = Math.max(1, Math.round(image.naturalHeight * scale))
+
+      const context = canvas.getContext('2d')
+      context.drawImage(image, 0, 0, canvas.width, canvas.height)
+
+      return canvas.toDataURL('image/jpeg', 0.76)
+    }
+
+    const fishPreview = (item) => `
+      <div class="pond-fish-preview d-flex align-items-center justify-content-center">
+        ${
+          item.image_url
+            ? `<img src="${item.image_url}" alt="${text(item.code)}" loading="lazy" />`
+            : `<div class="pond-fish-preview-placeholder d-flex align-items-center justify-content-center">${text(item.code).slice(0, 4)}</div>`
+        }
+      </div>
+    `
+
+    const renderNoteHistory = (history) => {
+      noteHistory.innerHTML =
+        history.map((item) => {
+          const date = item.created_at ? new Date(item.created_at).toLocaleString('id-ID') : '-'
+
+          return `
+            <div class="list-group-item">
+              <div class="d-flex justify-content-between gap-3">
+                <div>
+                  <div class="text-secondary small">${date}</div>
+                  <div>${text(item.new_notes)}</div>
+                  <div class="text-secondary small mt-1">Sebelumnya: ${text(item.previous_notes)}</div>
+                </div>
+                <button class="btn btn-sm btn-outline-danger" type="button" data-delete-note-history="${item.id}">Hapus</button>
+              </div>
+            </div>
+          `
+        }).join('') || '<div class="list-group-item text-secondary">Belum ada history pengeditan catatan.</div>'
+    }
+
+    const loadNoteHistory = async (pondId) => {
+      noteHistory.innerHTML = '<div class="list-group-item text-secondary">Memuat history catatan.</div>'
+
+      try {
+        const response = await fetch(`${apiUrl}/ponds/${pondId}/note-history`)
+
+        if (!response.ok) {
+          throw new Error('History gagal dimuat')
+        }
+
+        renderNoteHistory(await response.json())
+      } catch (error) {
+        noteHistory.innerHTML = '<div class="list-group-item text-danger">History catatan gagal dimuat.</div>'
+      }
+    }
+
+    const renderDocumentation = (items) => {
+      documentationList.innerHTML =
+        items.map((item) => {
+          const savedNote = pendingDocumentationNotes.get(String(item.id)) || item.notes || ''
+
+          return `
+          <div class="pond-documentation-item" data-pond-documentation-item="${item.id}" data-pond-documentation-url="${escapeHtml(item.image_url)}" data-pond-documentation-media-type="${escapeHtml(item.media_type || 'image')}">
+            <button class="btn btn-sm btn-danger pond-documentation-delete" type="button" data-delete-pond-documentation="${item.id}">Hapus</button>
+            <a class="pond-documentation-preview" href="${escapeHtml(item.image_url)}" target="_blank" rel="noreferrer">
+              ${
+                item.media_type === 'video'
+                  ? `<video src="${escapeHtml(item.image_url)}" controls preload="metadata"></video>`
+                  : `<img src="${escapeHtml(item.image_url)}" alt="${escapeHtml(text(item.display_name || 'Dokumentasi kolam'))}" loading="lazy" />`
+              }
+            </a>
+            <div class="pond-documentation-notes">
+              <textarea class="form-control form-control-sm" name="pond_documentation_notes" rows="2" placeholder="Catatan dokumentasi" data-pond-documentation-notes="${item.id}">${escapeHtml(savedNote)}</textarea>
+              <button class="btn btn-sm w-100 mt-2" type="button" data-save-pond-documentation-notes="${item.id}">Simpan Catatan</button>
+            </div>
+          </div>
+        `
+        }).join('') || '<div class="text-secondary">Belum ada dokumentasi.</div>'
+    }
+
+    const loadDocumentation = async (pondId) => {
+      documentationList.innerHTML = '<div class="text-secondary">Memuat dokumentasi.</div>'
+
+      try {
+        const response = await fetch(`${apiUrl}/ponds/${pondId}/documentation`)
+
+        if (!response.ok) {
+          throw new Error('Dokumentasi gagal dimuat')
+        }
+
+        renderDocumentation(await response.json())
+      } catch (error) {
+        documentationList.innerHTML = '<div class="text-danger">Dokumentasi gagal dimuat.</div>'
+      }
+    }
+
+    const documentationItems = () =>
+      Array.from(documentationList.querySelectorAll('[data-pond-documentation-item]')).map((item) => {
+        const notesInput = item.querySelector('[data-pond-documentation-notes]')
+
+        return {
+          id: item.dataset.pondDocumentationItem,
+          image_url: item.dataset.pondDocumentationUrl || '',
+          media_type: item.dataset.pondDocumentationMediaType || 'image',
+          notes: notesInput?.value.trim() || pendingDocumentationNotes.get(item.dataset.pondDocumentationItem) || '',
+        }
+      }).filter((item) => item.id && item.image_url)
+
+    const sortValue = (item, key) => {
+      if (key === 'koi_count') {
+        return totalPondQty(item)
+      }
+
+      if (key === 'unphotographed_fish_qty') {
+        return Number(item.unphotographed_fish_qty || 0)
+      }
+
+      return String(item[key] || '').toLowerCase()
+    }
+
+    const pondSearchText = (item) => [item.name, item.location].filter(Boolean).join(' ').toLowerCase()
+
+    const matchesSearch = (item) => {
+      if (!searchQuery) {
+        return true
+      }
+
+      const terms = searchQuery.split(/\s+/).filter(Boolean)
+      const searchableText = pondSearchText(item)
+
+      return terms.some((term) => searchableText.includes(term))
+    }
+
+    const sortedPonds = () =>
+      pondsData.filter(matchesSearch).sort((a, b) => {
+        const first = sortValue(a, sortState.key)
+        const second = sortValue(b, sortState.key)
+        const result = typeof first === 'number' && typeof second === 'number' ? first - second : first.localeCompare(second)
+
+        return sortState.direction === 'asc' ? result : -result
+      })
+
+    const groupedPonds = (ponds) =>
+      ponds.reduce((groups, pond) => {
+        const area = text(pond.location)
+
+        if (!groups.has(area)) {
+          groups.set(area, [])
+        }
+
+        groups.get(area).push(pond)
+        return groups
+      }, new Map())
+
+    const knownAreas = () => Array.from(new Set(pondsData.map((pond) => text(pond.location))))
+
+    const printAssetUrl = (src) => {
+      const value = text(src).trim()
+
+      if (!value) return ''
+      if (/^(data:|blob:|https?:\/\/)/i.test(value)) return value
+
+      const apiResolved = window.KoiAuth?.apiUrl ? window.KoiAuth.apiUrl(value) : value
+
+      try {
+        return new URL(apiResolved, window.location.origin).href
+      } catch (error) {
+        return apiResolved
+      }
+    }
+
+    const printableImage = (src, alt) => {
+      const imageSrc = printAssetUrl(src)
+
+      return imageSrc
+        ? `<img class="print-fish-photo" src="${escapeHtml(imageSrc)}" alt="${escapeHtml(alt || 'Foto ikan')}" decoding="sync" />`
+        : '<div class="print-fish-photo print-fish-photo-empty">No foto</div>'
+    }
+
+    const printStyles = () => `
+      <style>
+        * {
+          box-sizing: border-box;
+          -webkit-print-color-adjust: exact;
+          print-color-adjust: exact;
+        }
+
+        html,
+        body {
+          margin: 0 !important;
+          padding: 0 !important;
+          background: #ffffff !important;
+          color: #111827 !important;
+          font-family: Arial, Helvetica, sans-serif;
+          font-size: 11px;
+          line-height: 1.35;
+        }
+
+        body {
+          padding: 14px !important;
+        }
+
+        h1 {
+          margin: 0 0 12px;
+          color: #111827;
+          font-size: 15px;
+          font-weight: 800;
+          letter-spacing: .01em;
+          text-align: center;
+        }
+
+        .print-sheet {
+          width: 100%;
+          max-width: none;
+          background: #ffffff;
+        }
+
+        .print-meta {
+          display: grid;
+          grid-template-columns: repeat(4, minmax(0, 1fr));
+          gap: 8px;
+          margin-bottom: 12px;
+        }
+
+        .print-meta-item {
+          padding: 7px 9px;
+          border: 1px solid #cbd5e1;
+          border-radius: 4px;
+          background: #f8fafc;
+        }
+
+        .print-label {
+          display: block;
+          margin-bottom: 3px;
+          color: #64748b;
+          font-size: 9px;
+          font-weight: 700;
+          text-transform: uppercase;
+        }
+
+        .print-value {
+          color: #111827;
+          font-size: 11px;
+          font-weight: 700;
+          word-break: break-word;
+        }
+
+        .print-notes {
+          margin: 0 0 12px;
+          padding: 8px 9px;
+          border: 1px solid #cbd5e1;
+          border-radius: 4px;
+          background: #ffffff;
+          color: #111827;
+          white-space: pre-wrap;
+        }
+
+        .print-area-block {
+          margin: 0 0 14px;
+          break-inside: auto;
+          page-break-inside: auto;
+        }
+
+        .print-area-title {
+          margin: 0 0 6px;
+          padding: 0;
+          background: transparent;
+          color: #475569;
+          font-size: 10px;
+          font-weight: 800;
+          letter-spacing: .02em;
+          text-transform: uppercase;
+        }
+
+        .print-table {
+          width: 100%;
+          border-collapse: collapse;
+          table-layout: fixed;
+          background: #ffffff;
+        }
+
+        .print-table th,
+        .print-table td {
+          padding: 6px 7px;
+          border: 1px solid #cbd5e1;
+          background: #ffffff;
+          color: #111827;
+          vertical-align: top;
+          word-break: break-word;
+        }
+
+        .print-table th {
+          background: #f1f5f9;
+          color: #334155;
+          font-size: 9px;
+          font-weight: 800;
+          text-transform: uppercase;
+        }
+
+        .print-table tr {
+          break-inside: avoid;
+          page-break-inside: avoid;
+        }
+
+        .print-fish-photo {
+          display: block;
+          width: 52px;
+          height: 70px;
+          object-fit: contain;
+          border: 1px solid #cbd5e1;
+          border-radius: 3px;
+          background: #f8fafc;
+        }
+
+        .print-fish-photo-empty {
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          color: #64748b;
+          font-size: 9px;
+          text-align: center;
+        }
+
+        @media print {
+          @page {
+            size: auto;
+            margin: 10mm;
+          }
+
+          body {
+            padding: 0 !important;
+          }
+        }
+      </style>
+    `
+
+    const waitForPrintImages = (printWindow, timeout = 8000) => {
+      const images = Array.from(printWindow.document.images || [])
+
+      if (!images.length) return Promise.resolve()
+
+      return Promise.race([
+        Promise.all(images.map((image) => {
+          if (image.complete && image.naturalWidth > 0) return Promise.resolve()
+
+          return new Promise((resolve) => {
+            let settled = false
+            const done = () => {
+              if (settled) return
+              settled = true
+              resolve()
+            }
+
+            image.onload = done
+            image.onerror = done
+
+            if (typeof image.decode === 'function') {
+              image.decode().then(done).catch(() => {})
+            }
+          })
+        })),
+        new Promise((resolve) => setTimeout(resolve, timeout)),
+      ])
+    }
+
+    const openPrintDocument = (title, bodyHtml) => {
+      const printWindow = window.open('', '_blank')
+
+      if (!printWindow) {
+        alert('Jendela cetak gagal dibuka. Izinkan pop-up untuk mencetak.')
+        return
+      }
+
+      const safeTitle = escapeHtml(title || 'Cetak Nishikigoi')
+      printWindow.document.open()
+      printWindow.document.write(`<!doctype html>
+        <html>
+          <head>
+            <meta charset="utf-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1">
+            <base href="${escapeHtml(window.location.origin)}/">
+            <title>${safeTitle}</title>
+            ${printStyles()}
+          </head>
+          <body>${bodyHtml}</body>
+        </html>`)
+      printWindow.document.close()
+      printWindow.focus()
+      waitForPrintImages(printWindow).then(() => {
+        setTimeout(() => printWindow.print(), 150)
+      })
+    }
+    const printPondList = () => {
+      const ponds = sortedPonds()
+
+      if (!ponds.length) {
+        alert('Belum ada data kolam untuk dicetak.')
+        return
+      }
+
+      const groups = groupedPonds(ponds)
+      const rows = orderedAreas(Array.from(groups.keys())).map((area) => {
+        const items = groups.get(area) || []
+
+        return `
+          <section class="print-area-block">
+            <h2 class="print-area-title">${escapeHtml(area)}</h2>
+            <table class="print-table">
+              <thead>
+                <tr>
+                  <th style="width: 28%">Nama Kolam</th>
+                  <th style="width: 16%">Qty Total</th>
+                  <th>Catatan</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${items.map((pond) => `
+                  <tr>
+                    <td>${text(pond.name)}</td>
+                    <td>${totalPondQty(pond)}</td>
+                    <td>${text(pond.notes)}</td>
+                  </tr>
+                `).join('')}
+              </tbody>
+            </table>
+          </section>
+        `
+      }).join('')
+
+      openPrintDocument('Daftar Kolam', `
+        <main class="print-sheet">
+          <h1>SUMMARY IKAN &amp; LOKASI KOLAM</h1>
+          ${rows}
+        </main>
+      `)
+    }
+
+    const printPondDetail = () => {
+      const pond = pondsData.find((item) => String(item.id) === String(selectedPondId))
+
+      if (!pond) {
+        alert('Pilih kolam terlebih dahulu.')
+        return
+      }
+
+      const fish = parseFish(pond.fish)
+      const fishRows = fish.map((item) => `
+        <tr>
+          <td>${printableImage(item.image_url || item.photo_url || item.imageUrl || item.image || item.photo, item.code)}</td>
+          <td>${text(item.code)}</td>
+          <td>${text(item.name)}</td>
+          <td>${text(item.variety)}</td>
+          <td>${text(item.bloodline)}</td>
+          <td>${text(item.breeder || item.farm_name)}</td>
+          <td>${koiLabels[item.status] || text(item.status)}</td>
+          <td>${item.current_length_cm ? `${item.current_length_cm} cm` : '-'} / ${item.current_weight_g ? `${item.current_weight_g} g` : '-'}</td>
+        </tr>
+      `).join('') || '<tr><td colspan="8">Belum ada ikan tercatat di Data Ikan untuk kolam ini.</td></tr>'
+
+      openPrintDocument(`Isi ${text(pond.name)}`, `
+        <main class="print-sheet">
+          <h1>SUMMARY IKAN &amp; LOKASI KOLAM</h1>
+          <div class="print-meta">
+            <div class="print-meta-item"><span class="print-label">Nama Kolam</span><div class="print-value">${text(pond.name)}</div></div>
+            <div class="print-meta-item"><span class="print-label">Area</span><div class="print-value">${text(pond.location)}</div></div>
+            <div class="print-meta-item"><span class="print-label">Qty Total</span><div class="print-value">${totalPondQty(pond)}</div></div>
+          </div>
+          <div class="print-notes"><span class="print-label">Catatan</span>${text(pond.notes)}</div>
+          <table class="print-table">
+            <thead>
+              <tr>
+                <th style="width: 68px">Foto</th>
+                <th style="width: 13%">Kode</th>
+                <th style="width: 14%">Nama</th>
+                <th style="width: 13%">Variety</th>
+                <th style="width: 13%">Bloodline</th>
+                <th style="width: 13%">Breeder</th>
+                <th style="width: 11%">Status</th>
+                <th style="width: 12%">Ukuran</th>
+              </tr>
+            </thead>
+            <tbody>${fishRows}</tbody>
+          </table>
+        </main>
+      `)
+    }
+
+    const orderedAreas = (areas) => {
+      const areaSet = new Set(areas)
+      const savedAreas = areaOrder.filter((area) => areaSet.has(area))
+      const newAreas = areas.filter((area) => !savedAreas.includes(area)).sort((first, second) => first.localeCompare(second))
+      return [...savedAreas, ...newAreas]
+    }
+
+    const saveAreaOrder = (areas) => {
+      areaOrder = areas
+      localStorage.setItem('pondAreaOrder', JSON.stringify(areaOrder))
+      renderAreaSettings()
+      renderPonds()
+    }
+
+    const renderAreaSettings = () => {
+      const areas = orderedAreas(knownAreas())
+
+      areaOrderList.innerHTML = areas.map((area, index) => `
+        <div class="list-group-item d-flex align-items-center justify-content-between gap-2">
+          <div class="fw-medium">${escapeHtml(area)}</div>
+          <div class="btn-list flex-nowrap">
+            <button class="btn btn-sm btn-icon" type="button" data-move-area="up" data-area-name="${escapeHtml(area)}" ${index === 0 ? 'disabled' : ''} aria-label="Naik" title="Naik">↑</button>
+            <button class="btn btn-sm btn-icon" type="button" data-move-area="down" data-area-name="${escapeHtml(area)}" ${index === areas.length - 1 ? 'disabled' : ''} aria-label="Turun" title="Turun">↓</button>
+          </div>
+        </div>
+      `).join('') || '<div class="list-group-item text-secondary">Belum ada area.</div>'
+    }
+
+    const renderPonds = () => {
+      const ponds = sortedPonds()
+
+      if (ponds.length === 0) {
+        table.innerHTML = `<tr><td colspan="6" class="text-secondary">${searchQuery ? 'Data kolam tidak ditemukan.' : 'Belum ada data kolam.'}</td></tr>`
+        return
+      }
+
+      const groups = groupedPonds(ponds)
+      table.innerHTML = orderedAreas(Array.from(groups.keys())).map((area) => {
+        const items = groups.get(area) || []
+        return `
+        <tr class="table-active">
+          <td colspan="6" class="fw-semibold">${area}</td>
+        </tr>
+        ${items.map((item) => `
+          <tr class="cursor-pointer" data-pond-row="${item.id}" data-search-text="${escapeHtml(pondSearchText(item))}">
+            <td>${text(item.name)}</td>
+            <td data-print-hidden>${Number(item.unphotographed_fish_qty || 0)}</td>
+            <td data-print-hidden>${Number(item.koi_count || 0)}</td>
+            <td>${totalPondQty(item)}</td>
+            <td>${text(item.notes)}</td>
+            <td data-print-hidden>
+              <button class="btn btn-sm" type="button" data-edit-pond="${item.id}">Edit</button>
+            </td>
+          </tr>
+        `).join('')}
+      `
+      }).join('')
+    }
+
+    const loadPonds = async (silent = false) => {
+      if (!silent) {
+        table.innerHTML = '<tr><td colspan="6" class="text-secondary">Memuat data kolam.</td></tr>'
+      }
+
+      try {
+        const response = await fetch(`${apiUrl}/ponds`)
+
+        if (!response.ok) {
+          throw new Error('API kolam belum siap')
+        }
+
+        const ponds = await response.json()
+        const signature = JSON.stringify(ponds)
+        if (silent && signature === pondsRealtimeSignature) {
+          return
+        }
+        pondsRealtimeSignature = signature
+        localStorage.setItem(pondsCacheKey, signature)
+        pondsData = ponds
+        renderAreaSettings()
+        renderPonds()
+      } catch (error) {
+        if (!silent) {
+          table.innerHTML = '<tr><td colspan="6" class="text-danger">Data kolam gagal dimuat. Pastikan API berjalan.</td></tr>'
+        }
+      }
+    }
+
+    const restorePondsCache = () => {
+      try {
+        const cached = JSON.parse(localStorage.getItem(pondsCacheKey) || '[]')
+        if (!Array.isArray(cached) || cached.length === 0) return false
+        pondsRealtimeSignature = JSON.stringify(cached)
+        pondsData = cached
+        renderAreaSettings()
+        renderPonds()
+        return true
+      } catch {
+        localStorage.removeItem(pondsCacheKey)
+        return false
+      }
+    }
+
+    const resetPondForm = () => {
+      editingPondId = null
+      form.reset()
+      formTitle.textContent = 'Formulir Tambah Kolam'
+      formSubmit.textContent = 'Simpan Kolam'
+      message.textContent = ''
+    }
+
+    const openPondForm = (pondId) => {
+      const pond = pondsData.find((item) => String(item.id) === String(pondId))
+
+      if (!pond) {
+        return
+      }
+
+      editingPondId = pond.id
+      form.elements.name.value = pond.name || ''
+      form.elements.location.value = pond.location || ''
+      form.elements.status.value = pond.status || 'kosong'
+      form.elements.notes.value = pond.notes || ''
+      formTitle.textContent = 'Formulir Edit Kolam'
+      formSubmit.textContent = 'Simpan Perubahan'
+      message.textContent = ''
+      openModal(modalElement)
+    }
+
+    document.querySelectorAll('[data-sort-key]').forEach((button) => {
+      button.addEventListener('click', () => {
+        const key = button.dataset.sortKey
+        sortState = {
+          key,
+          direction: sortState.key === key && sortState.direction === 'asc' ? 'desc' : 'asc',
+        }
+        renderPonds()
+      })
+    })
+
+    areaSettingsButton.addEventListener('click', () => {
+      renderAreaSettings()
+      openModal(areaSettingsModalElement)
+    })
+
+    areaOrderList.addEventListener('click', (event) => {
+      const button = event.target.closest('[data-move-area]')
+
+      if (!button) {
+        return
+      }
+
+      const areas = orderedAreas(knownAreas())
+      const index = areas.indexOf(button.dataset.areaName)
+      const targetIndex = button.dataset.moveArea === 'up' ? index - 1 : index + 1
+
+      if (index < 0 || targetIndex < 0 || targetIndex >= areas.length) {
+        return
+      }
+
+      const [area] = areas.splice(index, 1)
+      areas.splice(targetIndex, 0, area)
+      saveAreaOrder(areas)
+    })
+
+    resetAreaOrderButton.addEventListener('click', () => {
+      saveAreaOrder([])
+    })
+
+    const showPondDetail = (pondId) => {
+      const pond = pondsData.find((item) => String(item.id) === String(pondId))
+
+      if (!pond) {
+        return
+      }
+
+      const fish = parseFish(pond.fish)
+      selectedPondId = pond.id
+      detailForm.elements.unphotographed_fish_qty.value = Number(pond.unphotographed_fish_qty || 0)
+      detailForm.elements.status.value = pond.status || 'kosong'
+      detailForm.elements.notes.value = pond.notes || ''
+      detailMessage.textContent = ''
+      detailTitle.textContent = `Isi ${text(pond.name)}`
+      detailSummary.innerHTML = `
+        <div class="col-sm-6 col-lg-3"><span class="text-secondary">Nama Kolam</span><div>${text(pond.name)}</div></div>
+        <div class="col-sm-6 col-lg-3"><span class="text-secondary">Area</span><div>${text(pond.location)}</div></div>
+        <div class="col-sm-6 col-lg-3" data-print-hidden><span class="text-secondary">Status</span><div>${statusLabels[pond.status]?.label || text(pond.status)}</div></div>
+        <div class="col-sm-6 col-lg-3"><span class="text-secondary">Qty Total</span><div>${totalPondQty(pond)}</div></div>
+        <div class="col-sm-6 col-lg-3" data-print-hidden><span class="text-secondary">Terfoto / Belum Difoto</span><div>${Number(pond.koi_count || 0)} / ${Number(pond.unphotographed_fish_qty || 0)}</div></div>
+      `
+      detailFish.innerHTML = fish.map((item) => `
+        <tr>
+          <td>${fishPreview(item)}</td>
+          <td>${text(item.code)}</td>
+          <td>${text(item.name)}</td>
+          <td>${text(item.variety)}</td>
+          <td>${text(item.bloodline)}</td>
+          <td>${text(item.breeder)}</td>
+          <td data-print-hidden><span class="badge bg-blue-lt">${koiLabels[item.status] || text(item.status)}</span></td>
+          <td>${item.current_length_cm ? `${item.current_length_cm} cm` : '-'} / ${item.current_weight_g ? `${item.current_weight_g} g` : '-'}</td>
+        </tr>
+      `).join('') || '<tr><td colspan="8" class="text-secondary">Belum ada ikan tercatat di Data Ikan untuk kolam ini.</td></tr>'
+
+      openModal(detailModalElement)
+      loadNoteHistory(pond.id)
+      loadDocumentation(pond.id)
+    }
+
+    document.addEventListener('click', (event) => {
+      const toggle = event.target.closest('[data-bs-toggle="modal"]')
+      const dismiss = event.target.closest('[data-bs-dismiss="modal"]')
+
+      if (toggle) {
+        const target = document.querySelector(toggle.dataset.bsTarget)
+
+        if (target) {
+          openModal(target)
+        }
+      }
+
+      if (dismiss) {
+        const modal = dismiss.closest('.modal')
+
+        if (modal) {
+          closeModal(modal)
+        }
+      }
+    })
+
+    printButton.addEventListener('click', printPondList)
+
+    printDetailButtons.forEach((button) => {
+      button.addEventListener('click', printPondDetail)
+    })
+
+    window.addEventListener('afterprint', () => {
+      document.body.classList.remove('printing-pond-detail')
+      document.body.classList.remove('printing-pond-list')
+    })
+
+    exportButton.addEventListener('click', async () => {
+      importExportMessage.textContent = 'Menyiapkan export CSV data kolam.'
+      exportButton.disabled = true
+
+      try {
+        if (!pondsData.length) {
+          throw new Error('Belum ada data kolam untuk diexport.')
+        }
+
+        const headers = ['Area', 'Nama Kolam', 'Status', 'Terfoto', 'Belum Difoto', 'Qty Total', 'Catatan']
+        const rows = sortedPonds().map((pond) => [
+          pond.location || '',
+          pond.name || '',
+          statusLabels[pond.status]?.label || pond.status || 'Kosong',
+          Number(pond.koi_count || 0),
+          Number(pond.unphotographed_fish_qty || 0),
+          totalPondQty(pond),
+          pond.notes || '',
+        ])
+        const csv = [headers, ...rows].map((row) => row.map(csvValue).join(',')).join('\r\n')
+        const blob = new Blob([`\ufeff${csv}`], { type: 'text/csv;charset=utf-8' })
+        const link = document.createElement('a')
+        const date = new Date().toISOString().slice(0, 10)
+        const objectUrl = URL.createObjectURL(blob)
+
+        link.href = objectUrl
+        link.download = `data-kolam-${date}.csv`
+        document.body.appendChild(link)
+        link.click()
+        link.remove()
+        setTimeout(() => URL.revokeObjectURL(objectUrl), 1000)
+        importExportMessage.textContent = 'Export CSV data kolam selesai.'
+      } catch (error) {
+        importExportMessage.textContent = error.message
+      } finally {
+        exportButton.disabled = false
+      }
+    })
+
+    importButton.addEventListener('click', () => {
+      importInput.click()
+    })
+
+    importInput.addEventListener('change', async () => {
+      const [file] = Array.from(importInput.files || [])
+
+      if (!file) {
+        return
+      }
+
+      importButton.disabled = true
+      importExportMessage.textContent = 'Membaca file import.'
+
+      try {
+        const content = await readFileAsText(file)
+        const items = parseCsv(content).map((item) => ({
+          name: item['nama kolam'] || item.nama || item.name || '',
+          location: item.area || item.location || '',
+          status: String(item.status || '').toLowerCase() === 'aktif' ? 'active' : String(item.status || '').toLowerCase(),
+          unphotographed_fish_qty: item['belum difoto'] || item.qty_belum_difoto || item.unphotographed_fish_qty || 0,
+          notes: item.catatan || item.notes || '',
+        }))
+
+        if (items.length === 0) {
+          throw new Error('File CSV tidak berisi data kolam.')
+        }
+
+        let inserted = 0
+        let skipped = 0
+
+        for (const [index, item] of items.entries()) {
+          const name = String(item.name || '').trim()
+
+          if (!name) {
+            skipped += 1
+            continue
+          }
+
+          importExportMessage.textContent = `Mengimport ${index + 1}/${items.length}: ${name}`
+
+          const createResponse = await fetch(`${apiUrl}/ponds`, {
+            method: 'POST',
+            headers: {
+              'content-type': 'application/json',
+            },
+            body: JSON.stringify({
+              name,
+              location: item.location || '',
+              status: item.status || 'kosong',
+              unphotographed_fish_qty: item.unphotographed_fish_qty || 0,
+              notes: item.notes || '',
+            }),
+          })
+
+          if (createResponse.ok) {
+            inserted += 1
+          } else {
+            skipped += 1
+          }
+        }
+
+        importExportMessage.textContent = `Import CSV selesai. Baru ${inserted}, dilewati ${skipped}.`
+        importInput.value = ''
+        await keepScroll(loadPonds)
+      } catch (error) {
+        importExportMessage.textContent = error.message || 'Import CSV gagal.'
+      } finally {
+        importButton.disabled = false
+      }
+    })
+
+    document.addEventListener('keydown', (event) => {
+      if (event.key === 'Escape') {
+        closeActiveModal()
+      }
+    })
+
+    table.addEventListener('click', async (event) => {
+      const editButton = event.target.closest('[data-edit-pond]')
+
+      if (editButton) {
+        openPondForm(editButton.dataset.editPond)
+        return
+      }
+
+      const row = event.target.closest('[data-pond-row]')
+
+      if (row && !event.target.closest('button, input')) {
+        showPondDetail(row.dataset.pondRow)
+        return
+      }
+
+    })
+
+    deletePondButton.addEventListener('click', async () => {
+      if (!selectedPondId) {
+        return
+      }
+
+      const pond = pondsData.find((item) => String(item.id) === String(selectedPondId))
+
+      if (!window.confirm(`Hapus ${text(pond?.name)}?`)) {
+        return
+      }
+
+      deletePondButton.disabled = true
+      deletePondButton.textContent = 'Menghapus'
+      detailMessage.textContent = ''
+
+      try {
+        const response = await fetch(`${apiUrl}/ponds/${selectedPondId}`, {
+          method: 'DELETE',
+        })
+
+        if (!response.ok) {
+          const result = await response.json().catch(() => ({}))
+          throw new Error(result.error || 'Kolam gagal dihapus.')
+        }
+
+        closeModal(detailModalElement)
+        selectedPondId = null
+        await keepScroll(loadPonds)
+      } catch (error) {
+        detailMessage.textContent = error.message
+      } finally {
+        deletePondButton.disabled = false
+        deletePondButton.textContent = 'Hapus Kolam'
+      }
+    })
+
+    const readClipboardImageFile = async (filename = 'clipboard-pond') => {
+      if (!navigator.clipboard?.read) {
+        throw new Error('Browser belum mengizinkan baca clipboard gambar.')
+      }
+
+      const items = await navigator.clipboard.read()
+      for (const item of items) {
+        const imageType = item.types.find((type) => type.startsWith('image/'))
+        if (!imageType) {
+          continue
+        }
+
+        const blob = await item.getType(imageType)
+        const extension = imageType.split('/')[1] || 'png'
+        return new File([blob], `${filename}.${extension}`, { type: imageType })
+      }
+
+      throw new Error('Clipboard tidak berisi gambar.')
+    }
+
+    const uploadPondDocumentationFiles = async (files) => {
+      if (!selectedPondId) {
+        return
+      }
+
+      files = Array.from(files || []).filter((file) => file.type.startsWith('image/') || file.type.startsWith('video/'))
+
+      if (files.length === 0) {
+        documentationStatus.textContent = '0/0'
+        return
+      }
+
+      documentationButton.classList.add('disabled')
+      documentationButton.setAttribute('aria-disabled', 'true')
+      documentationStatus.innerHTML = `<div class="small text-secondary mb-1"><span data-upload-progress-label>0/${files.length}</span></div><div class="progress progress-sm"><div class="progress-bar progress-bar-indeterminate"></div></div>`
+
+      try {
+        let uploadedCount = 0
+
+        for (const file of files) {
+          const isVideo = file.type.startsWith('video/')
+          documentationStatus.querySelector('[data-upload-progress-label]').textContent = `${uploadedCount + 1}/${files.length} - Memproses ${file.name}`
+          const mediaData = isVideo ? await readFileAsDataUrl(file) : await compressImage(file)
+          documentationStatus.querySelector('[data-upload-progress-label]').textContent = `${uploadedCount + 1}/${files.length} - Mengupload ${file.name}`
+
+          if (isVideo) {
+            const thumbnailData = await createVideoThumbnail(file)
+            const videoResponse = await fetch(`${apiUrl}/videos`, {
+              method: 'POST',
+              headers: {
+                'content-type': 'application/json',
+              },
+              body: JSON.stringify({
+                prefix: 'pond-doc-video',
+                video_data: mediaData,
+                thumbnail_data: thumbnailData,
+              }),
+            })
+
+            if (!videoResponse.ok) {
+              const result = await videoResponse.json().catch(() => ({}))
+              throw new Error(result.detail || result.error || 'Video gagal diupload.')
+            }
+
+            const videoResult = await videoResponse.json()
+            pendingDocumentationNotes.set(`video-${Date.now()}-${uploadedCount}`, '')
+            const currentItems = documentationItems()
+            renderDocumentation([
+              ...currentItems,
+              {
+                id: `video-${Date.now()}-${uploadedCount}`,
+                image_url: videoResult.video_url,
+                media_type: 'video',
+                thumbnail_url: videoResult.video_thumbnail_url || '',
+                notes: '',
+              },
+            ])
+            uploadedCount += 1
+            continue
+          }
+
+          const response = await fetch(`${apiUrl}/ponds/${selectedPondId}/documentation`, {
+            method: 'POST',
+            headers: {
+              'content-type': 'application/json',
+            },
+            body: JSON.stringify({
+              images: isVideo ? [] : [mediaData],
+              media: [{
+                media_type: isVideo ? 'video' : 'image',
+                [isVideo ? 'video_data' : 'image_data']: mediaData,
+              }],
+            }),
+          })
+
+          if (!response.ok) {
+            const result = await response.json().catch(() => ({}))
+            if (isVideo && response.status === 422) {
+              throw new Error('Upload video perlu restart aplikasi agar API terbaru aktif.')
+            }
+            throw new Error(result.detail || result.error || 'Dokumentasi gagal diupload.')
+          }
+
+          uploadedCount += 1
+        }
+
+        documentationInput.value = ''
+        documentationStatus.textContent = `${uploadedCount}/${files.length} media selesai diupload.`
+        await loadDocumentation(selectedPondId)
+      } catch (error) {
+        documentationStatus.textContent = error.message
+      } finally {
+        documentationButton.classList.remove('disabled')
+        documentationButton.removeAttribute('aria-disabled')
+      }
+    }
+
+    documentationInput.addEventListener('change', async () => {
+      uploadPondDocumentationFiles(documentationInput.files).catch((error) => {
+        documentationStatus.textContent = error.message || 'Dokumentasi gagal diupload.'
+      })
+    })
+
+    documentationPasteButton.addEventListener('click', async () => {
+      if (!selectedPondId) {
+        return
+      }
+
+      documentationPasteButton.disabled = true
+      try {
+        const file = await readClipboardImageFile()
+        await uploadPondDocumentationFiles([file])
+      } catch (error) {
+        documentationStatus.textContent = error.message || 'Paste gambar dokumentasi gagal.'
+      } finally {
+        documentationPasteButton.disabled = false
+      }
+    })
+
+    documentationList.addEventListener('click', async (event) => {
+      const saveNotesButton = event.target.closest('[data-save-pond-documentation-notes]')
+
+      if (saveNotesButton && selectedPondId) {
+        const notesInput = documentationList.querySelector(`[data-pond-documentation-notes="${saveNotesButton.dataset.savePondDocumentationNotes}"]`)
+        const noteValue = notesInput?.value || ''
+
+        pendingDocumentationNotes.set(String(saveNotesButton.dataset.savePondDocumentationNotes), noteValue)
+        saveNotesButton.disabled = true
+        saveNotesButton.textContent = 'Menyimpan'
+        documentationStatus.textContent = ''
+
+        try {
+          const response = await fetch(`${apiUrl}/ponds/${selectedPondId}/documentation/${saveNotesButton.dataset.savePondDocumentationNotes}`, {
+            method: 'PATCH',
+            headers: {
+              'content-type': 'application/json',
+            },
+            body: JSON.stringify({ notes: noteValue }),
+          })
+
+          if (!response.ok) {
+            const result = await response.json().catch(() => ({}))
+            if (response.status === 404) {
+              documentationStatus.textContent = ''
+              saveNotesButton.textContent = 'Siap'
+              setTimeout(() => {
+                saveNotesButton.disabled = false
+                saveNotesButton.textContent = 'Simpan Catatan'
+              }, 900)
+              return
+            }
+            throw new Error(result.detail || result.error || 'Catatan dokumentasi gagal disimpan.')
+          }
+
+          documentationStatus.textContent = ''
+          saveNotesButton.textContent = 'Tersimpan'
+          setTimeout(() => {
+            saveNotesButton.disabled = false
+            saveNotesButton.textContent = 'Simpan Catatan'
+          }, 900)
+        } catch (error) {
+          documentationStatus.textContent = error.message
+          saveNotesButton.disabled = false
+          saveNotesButton.textContent = 'Simpan Catatan'
+        }
+        return
+      }
+
+      const button = event.target.closest('[data-delete-pond-documentation]')
+
+      if (!button || !selectedPondId) {
+        return
+      }
+
+      button.disabled = true
+      button.textContent = 'Pindah'
+      documentationStatus.textContent = ''
+
+      try {
+        if (String(button.dataset.deletePondDocumentation || '').startsWith('video-')) {
+          button.closest('[data-pond-documentation-item]')?.remove()
+          documentationStatus.textContent = ''
+          return
+        }
+
+        const response = await fetch(`${apiUrl}/ponds/${selectedPondId}/documentation/${button.dataset.deletePondDocumentation}`, {
+          method: 'DELETE',
+        })
+
+        if (!response.ok) {
+          const result = await response.json().catch(() => ({}))
+          throw new Error(result.detail || result.error || 'Dokumentasi gagal dihapus.')
+        }
+
+        documentationStatus.textContent = ''
+        await loadDocumentation(selectedPondId)
+      } catch (error) {
+        documentationStatus.textContent = error.message
+        button.disabled = false
+        button.textContent = 'Hapus'
+      }
+    })
+
+    documentationList.addEventListener('input', (event) => {
+      const notesInput = event.target.closest('[data-pond-documentation-notes]')
+
+      if (!notesInput) {
+        return
+      }
+
+      pendingDocumentationNotes.set(String(notesInput.dataset.pondDocumentationNotes), notesInput.value || '')
+    })
+
+    savePondNotesButton.addEventListener('click', async () => {
+      if (!selectedPondId) {
+        return
+      }
+
+      savePondNotesButton.disabled = true
+      savePondNotesButton.textContent = 'Menyimpan'
+      detailMessage.textContent = 'Menyimpan catatan kolam.'
+
+      try {
+        const payload = {
+          ...Object.fromEntries(new FormData(detailForm).entries()),
+          save_notes_only: true,
+        }
+        const response = await fetch(`${apiUrl}/ponds/${selectedPondId}`, {
+          method: 'PATCH',
+          headers: {
+            'content-type': 'application/json',
+          },
+          body: JSON.stringify(payload),
+        })
+
+        const result = await response.json().catch(() => ({}))
+
+        if (!response.ok) {
+          throw new Error(result.error || 'Catatan kolam gagal disimpan.')
+        }
+
+        const pondIndex = pondsData.findIndex((item) => String(item.id) === String(selectedPondId))
+        if (pondIndex >= 0 && result.pond) {
+          pondsData[pondIndex] = { ...pondsData[pondIndex], ...result.pond }
+        }
+        detailMessage.textContent = 'Catatan kolam berhasil disimpan.'
+        await loadNoteHistory(selectedPondId)
+        await keepScroll(loadPonds)
+      } catch (error) {
+        detailMessage.textContent = error.message
+      } finally {
+        savePondNotesButton.disabled = false
+        savePondNotesButton.textContent = 'Simpan Catatan'
+      }
+    })
+
+    detailForm.addEventListener('submit', (event) => event.preventDefault())
+
+    noteHistory.addEventListener('click', async (event) => {
+      const button = event.target.closest('[data-delete-note-history]')
+
+      if (!button || !selectedPondId) {
+        return
+      }
+
+      button.disabled = true
+      button.textContent = 'Menghapus'
+
+      try {
+        const response = await fetch(`${apiUrl}/ponds/${selectedPondId}/note-history/${button.dataset.deleteNoteHistory}`, {
+          method: 'DELETE',
+        })
+
+        if (!response.ok) {
+          const result = await response.json().catch(() => ({}))
+          throw new Error(result.error || 'History catatan gagal dihapus.')
+        }
+
+        await loadNoteHistory(selectedPondId)
+      } catch (error) {
+        button.disabled = false
+        button.textContent = 'Hapus'
+        detailMessage.textContent = error.message
+      }
+    })
+
+    form.addEventListener('submit', async (event) => {
+      event.preventDefault()
+      message.textContent = editingPondId ? 'Menyimpan perubahan kolam.' : 'Menyimpan data kolam.'
+
+      const payload = Object.fromEntries(new FormData(form).entries())
+      let response
+
+      try {
+        response = await fetch(editingPondId ? `${apiUrl}/ponds/${editingPondId}` : `${apiUrl}/ponds`, {
+          method: editingPondId ? 'PATCH' : 'POST',
+          headers: {
+            'content-type': 'application/json',
+          },
+          body: JSON.stringify(payload),
+        })
+      } catch (error) {
+        message.textContent = `API tidak terhubung. Pastikan backend berjalan di ${apiUrl}.`
+        return
+      }
+
+      if (!response.ok) {
+        const result = await response.json().catch(() => ({}))
+        message.textContent = result.detail ? `${result.error || 'Kolam gagal disimpan.'}: ${result.detail}` : result.error || 'Kolam gagal disimpan.'
+        return
+      }
+
+      const savedMessage = editingPondId ? 'Kolam berhasil diperbarui.' : 'Kolam berhasil disimpan.'
+      resetPondForm()
+      message.textContent = savedMessage
+      keepScroll(loadPonds)
+
+      closeModal(modalElement)
+    })
+
+    modalElement.addEventListener('hidden.bs.modal', () => {
+      resetPondForm()
+    })
+
+    const hasCachedPonds = restorePondsCache()
+    loadPonds(hasCachedPonds)
+    window.KoiAuth?.registerRealtimeRefresh(() => keepScroll(() => loadPonds(true)), { intervalMs: 25000 })
+  </script>
+</DefaultLayout>
+

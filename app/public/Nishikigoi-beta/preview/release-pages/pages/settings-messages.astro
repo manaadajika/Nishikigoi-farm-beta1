@@ -1,0 +1,13 @@
+---
+import SettingsLayout from '@shared/layouts/SettingsLayout.astro'
+---
+
+<SettingsLayout active="settings-messages" title="Message">
+  <div class="card-body text-secondary">Membuka pesan...</div>
+  <script is:inline>
+    ;(() => {
+      const user = new URLSearchParams(window.location.search).get('user')
+      window.location.replace('./farm.html?pesan=1' + (user ? '&user=' + encodeURIComponent(user) : ''))
+    })()
+  </script>
+</SettingsLayout>

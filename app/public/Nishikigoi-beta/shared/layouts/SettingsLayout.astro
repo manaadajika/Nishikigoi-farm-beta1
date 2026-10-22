@@ -1,0 +1,53 @@
+---
+// Wraps the page body in a card with a left settings-nav column; the active
+// nav item is driven by the `active` prop.
+
+import Subheader from '@ui/Subheader.astro'
+import DefaultLayout from './DefaultLayout.astro'
+import ListGroup from '@ui/ListGroup.astro'
+import ListGroupItem from '@ui/ListGroupItem.astro'
+import Badge from '@ui/Badge.astro'
+
+interface Props {
+  /** current page slug for the active nav item: 'settings' | 'settings-master-account' */
+  active?: string
+  /** <title> — falls back to "Settings" */
+  title?: string
+}
+
+const { active, title = 'Settings' } = Astro.props
+---
+
+<DefaultLayout title={title} pageHeader="Account Settings">
+  <div class="card">
+    <div class="row g-0">
+      <!-- BEGIN SETTINGS NAV -->
+      <div class="col-12 col-md-3 border-end">
+        <div class="card-body">
+          <Subheader as="h4">Configuration Acount</Subheader>
+
+          <ListGroup as="nav" aria-label="Configuration Acount" transparent>
+            <ListGroupItem as="a" action active={active === 'settings'} class="d-flex align-items-center" href="./settings.html">My Account</ListGroupItem>
+            <ListGroupItem as="a" action active={active === 'settings-master-account'} class="d-flex align-items-center justify-content-between gap-2" href="./settings-master-account.html" data-role-required="master-admin">
+              <span>Master Akun</span>
+              <Badge text="Master Admin" color="purple" light />
+            </ListGroupItem>
+          </ListGroup>
+
+          <Subheader as="h4" class="mt-4">Experience</Subheader>
+
+          <ListGroup as="nav" aria-label="Experience" transparent>
+            <ListGroupItem as="button" type="button" action class="text-start" data-bs-toggle="offcanvas" data-bs-target="#offcanvas-settings" aria-controls="offcanvas-settings">Theme Settings</ListGroupItem>
+            <ListGroupItem as="a" action href="#" data-feedback-open>Give Feedback</ListGroupItem>
+          </ListGroup>
+        </div>
+      </div>
+      <!-- END SETTINGS NAV -->
+      <div class="col-12 col-md-9 d-flex flex-column">
+        <slot />
+      </div>
+    </div>
+  </div>
+</DefaultLayout>
+
+

@@ -1,0 +1,42 @@
+---
+import Icon from '@ui/Icon.astro'
+
+interface Props {
+  personId?: number
+  hideUsername?: boolean
+  dark?: boolean
+}
+
+const { hideUsername = false, dark = false } = Astro.props
+---
+
+<!-- BEGIN USER MENU -->
+<div class="nav-item dropdown">
+  <a href="#" class="nav-link d-flex lh-1 p-0 px-2" data-bs-toggle="dropdown" aria-label="Open user menu">
+    <span class="koi-api-indicator koi-api-indicator-loading me-2" data-api-indicator title="Memeriksa API" aria-label="Memeriksa API"></span>
+    <span class="avatar avatar-sm" data-auth-avatar>HA</span>
+    {
+      !hideUsername && (
+        <div class="d-none d-xl-block ps-2">
+          <div data-auth-name>Holil</div>
+          <div class="mt-1 small text-secondary" data-auth-role>Master Admin</div>
+        </div>
+      )
+    }
+  </a>
+  <div class="dropdown-menu dropdown-menu-end dropdown-menu-arrow navbar-user-menu" data-bs-theme={dark ? 'light' : undefined}>
+    <a class="dropdown-item" href="#" data-koi-my-profile><Icon name="user" class="dropdown-item-icon" /> Profile</a>
+    <div class="dropdown-divider"></div>
+    <a class="dropdown-item d-flex align-items-center" href="#" data-koi-sp-toggle aria-expanded="false"><Icon name="settings" class="dropdown-item-icon" /> Settings &amp; Privacy</a>
+    <div class="koi-sp-list" data-koi-sp-list hidden>
+      <a class="dropdown-item" href="./settings.html">Pengaturan Akun</a>
+      <a class="dropdown-item" href="./farm-log.html#changelog" data-koi-changelog>Change Log</a>
+      <a class="dropdown-item" href="#" data-bs-toggle="offcanvas" data-bs-target="#offcanvas-settings" aria-controls="offcanvas-settings">Theme Settings</a>
+      <a class="dropdown-item" href="#" data-feedback-open>Give Feedback</a>
+      <a class="dropdown-item" href="./settings-master-account.html" data-role-required="master-admin">Master Akun</a>
+    </div>
+    <div class="dropdown-divider"></div>
+    <a class="dropdown-item" href="./sign-in.html" data-action="logout"><Icon name="logout" class="dropdown-item-icon" /> Sign out</a>
+  </div>
+</div>
+<!-- END USER MENU -->

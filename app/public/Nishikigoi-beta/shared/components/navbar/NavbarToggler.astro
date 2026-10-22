@@ -1,0 +1,63 @@
+---
+import Icon from '@shared/ui/Icon.astro'
+
+interface Props {
+  target?: string
+}
+
+const { target } = Astro.props
+
+const ariaLabel = target === 'sidebar-menu' ? 'Toggle sidebar navigation' : 'Toggle primary navigation'
+---
+
+<!-- BEGIN NAVBAR TOGGLER -->
+<button class="navbar-toggler navbar-toggler-tabler" type="button" data-bs-toggle="collapse" data-bs-target={target ? `#${target}` : undefined} aria-controls={target ? target : undefined} aria-expanded="false" aria-label={ariaLabel}>
+  <Icon name="menu-2" class="navbar-toggler-symbol navbar-toggler-symbol-menu" />
+  <Icon name="x" class="navbar-toggler-symbol navbar-toggler-symbol-close" />
+</button>
+<!-- END NAVBAR TOGGLER -->
+
+<style>
+  .navbar-toggler-tabler {
+    width: 2.5rem;
+    height: 2.5rem;
+    padding: 0;
+    color: var(--tblr-navbar-color, var(--tblr-body-color));
+  }
+
+  .navbar-toggler-tabler :global(.navbar-toggler-symbol) {
+    width: 1.55rem;
+    height: 1.55rem;
+    stroke-width: 2.25;
+  }
+
+  @media (max-width: 767.98px) {
+    .navbar-toggler-tabler {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 2.75rem;
+      height: 2.75rem;
+      margin-left: -0.5rem;
+      margin-right: 0.25rem;
+    }
+
+    .navbar-toggler-tabler :global(.navbar-toggler-symbol) {
+      width: 1.75rem;
+      height: 1.75rem;
+      stroke-width: 2.4;
+    }
+  }
+
+  .navbar-toggler-tabler :global(.navbar-toggler-symbol-close) {
+    display: none;
+  }
+
+  .navbar-toggler-tabler[aria-expanded='true'] :global(.navbar-toggler-symbol-menu) {
+    display: none;
+  }
+
+  .navbar-toggler-tabler[aria-expanded='true'] :global(.navbar-toggler-symbol-close) {
+    display: block;
+  }
+</style>

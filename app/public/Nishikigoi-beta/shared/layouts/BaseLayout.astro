@@ -1,0 +1,289 @@
+---
+import ThemeSettings from '@ui/ThemeSettings.astro'
+import { site } from '@shared/lib/site'
+import PageModals from '@shared/components/PageModals.astro'
+import PageScripts from '@shared/components/PageScripts.astro'
+import libs from '@tabler/core/libs.json'
+
+interface Props {
+  title?: string | undefined
+  /** Third-party libs from libs.json, e.g. ['apexcharts', 'jsvectormap'] */
+  pageLibs?: string[] | undefined
+  /** Extra body classes, e.g. "layout-boxed" / "layout-fluid" */
+  bodyClass?: string | undefined
+  /** dir="rtl" + RTL variants of the tabler/plugin stylesheets */
+  rtl?: boolean | undefined
+  /** Relative asset base: '.' for root pages, '..' one level deep */
+  base?: string
+}
+
+const { title, pageLibs = [], bodyClass, rtl = false, base = '.' } = Astro.props
+
+// Development build: unminified assets, dev favicon.
+const environment = 'development'
+const min = environment === 'development' ? '' : '.min'
+// RTL swaps tabler/plugin stylesheets for their .rtl.css variants (demo stays LTR)
+const rtlSuffix = rtl ? '.rtl' : ''
+
+type Lib = { npm?: string; js?: string[]; css?: string[]; head?: boolean }
+const pageLibEntries = Object.entries(libs as Record<string, Lib>).filter(([name]) => pageLibs.includes(name))
+const googleMapsKey = site.googleMapsDevKey
+// External URLs (http/https) are emitted verbatim (with the maps-key placeholder
+// replaced); local files as ./dist/libs/{npm}/{file}.
+const libHref = (lib: Lib, file: string) => (/^https?:\/\//.test(file) ? file.replace('GOOGLE_MAPS_KEY', googleMapsKey) : `${base}/dist/libs/${lib.npm}/${file}`)
+const libCssFiles = pageLibEntries.flatMap(([, lib]) => (lib.css ?? []).map((file) => libHref(lib, file)))
+const libJsFiles = (head: boolean) => pageLibEntries.filter(([, lib]) => Boolean(lib.head) === head).flatMap(([, lib]) => (lib.js ?? []).map((file) => libHref(lib, file)))
+---
+
+<!doctype html>
+<html lang="en" dir={rtl ? 'rtl' : undefined}>
+  <head>
+    <!-- BEGIN META -->
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="color-scheme" content="light dark" />
+    <meta http-equiv="X-UA-Compatible" content="ie=edge" />
+
+    <title>{title ? `${title} - ` : ''}{site.title}</title>
+
+    <link rel="icon" href="/api/favicon?v=2" data-brand-favicon />
+    <link rel="shortcut icon" href="/api/favicon?v=2" data-brand-favicon />
+    <link rel="manifest" href="/api/manifest" />
+    <script is:inline>
+      ;(() => {
+        try {
+          const settings = JSON.parse(localStorage.getItem('nishikigoi-app-settings') || 'null') || {}
+          const icon = String(settings.brand_favicon || settings.brand_icon || '').trim()
+          if (!icon) return
+          document.querySelectorAll('[data-brand-favicon]').forEach((link) => {
+            link.href = icon
+            link.type = icon.startsWith('data:image/png') ? 'image/png' : icon.startsWith('data:image/svg') ? 'image/svg+xml' : icon.startsWith('data:image/webp') ? 'image/webp' : 'image/x-icon'
+          })
+        } catch {}
+      })()
+    </script>    <!-- END META -->
+
+    {
+      libCssFiles.length > 0 && (
+        <Fragment>
+          <Fragment set:html={'<!-- BEGIN PAGE LEVEL STYLES -->'} />
+          {libCssFiles.map((href) => (
+            <link href={href} rel="stylesheet" />
+          ))}
+          <Fragment set:html={'<!-- END PAGE LEVEL STYLES -->'} />
+        </Fragment>
+      )
+    }
+
+    <!-- BEGIN GLOBAL MANDATORY STYLES -->
+    <link href={`${base}/dist/css/tabler${rtlSuffix}${min}.css`} rel="stylesheet" />
+    <!-- END GLOBAL MANDATORY STYLES -->
+
+    <!-- BEGIN PLUGINS STYLES -->
+    {site.cssPlugins.map((plugin) => <link href={`${base}/dist/css/tabler-${plugin}${rtlSuffix}${min}.css`} rel="stylesheet" />)}
+    <!-- END PLUGINS STYLES -->
+
+    <!-- BEGIN DEMO STYLES -->
+    <link href={`${base}/preview/css/demo${min}.css`} rel="stylesheet" />
+    <!-- END DEMO STYLES -->
+
+    {
+      libJsFiles(true).length > 0 && (
+        <Fragment>
+          <Fragment set:html={'<!-- BEGIN PAGE LIBRARIES -->'} />
+          {libJsFiles(true).map((src) => (
+            <script is:inline src={src} defer />
+          ))}
+          <Fragment set:html={'<!-- END PAGE LIBRARIES -->'} />
+        </Fragment>
+      )
+    }
+
+    <!-- BEGIN CUSTOM FONT -->
+    {/* is:inline: keep the tag verbatim — Astro's scoped-style pipeline would add data-astro-cid-* attributes across the page */}
+    <style is:inline>
+      @import url('https://rsms.me/inter/inter.css');
+    </style>
+    <!-- END CUSTOM FONT -->
+  </head>
+
+  <body class={bodyClass}>
+    <a href="#content" class="visually-hidden-focusable skip-link">Skip to main content</a>
+
+    <!-- BEGIN GLOBAL THEME SCRIPT -->
+    <script is:inline>
+      ;(function () {
+        var themeKeys = ['theme', 'theme-base', 'theme-font', 'theme-primary', 'theme-radius']
+        var session = JSON.parse(sessionStorage.getItem('koi-farm-auth-session') || 'null')
+        var username = session && session.username
+        if (!username) return
+
+        var accountThemeKey = 'koi-farm-theme-settings-' + username
+        var accountTheme = JSON.parse(localStorage.getItem(accountThemeKey) || 'null') || {}
+
+        themeKeys.forEach(function (key) {
+          var accountValue = accountTheme[key]
+          if (accountValue) {
+            localStorage.setItem('tabler-' + key, accountValue)
+          } else {
+            localStorage.removeItem('tabler-' + key)
+          }
+        })
+      })()
+    </script>
+    <script is:inline src={`${base}/assets/theme-auto.js?v=20261016a`}></script>
+    <script is:inline src={`${base}/dist/js/tabler-theme${min}.js`}></script>
+    <!-- END GLOBAL THEME SCRIPT -->
+
+    <!-- BEGIN APP AUTH SCRIPT -->
+    <script is:inline src={`${base}/assets/auth.js?v=20261026a`}></script>
+    <script is:inline src={`${base}/assets/drafts.js?v=20261024b`}></script>
+    <script is:inline src={`${base}/assets/theme-sync.js?v=20261014b`}></script>
+    <script is:inline src={`${base}/assets/print-kit.js?v=20261024a`}></script>
+    <script is:inline src={`${base}/assets/action-dock.js?v=20261013c`}></script>
+    <!-- END APP AUTH SCRIPT -->
+
+    <slot />
+
+    <PageModals />
+
+    <ThemeSettings />
+
+    {
+      libJsFiles(false).length > 0 && (
+        <Fragment>
+          <Fragment set:html={'<!-- BEGIN PAGE LIBRARIES -->'} />
+          {libJsFiles(false).map((src) => (
+            <script is:inline src={src} defer />
+          ))}
+          <Fragment set:html={'<!-- END PAGE LIBRARIES -->'} />
+        </Fragment>
+      )
+    }
+
+    <!-- BEGIN GLOBAL MANDATORY SCRIPTS -->
+    <script is:inline src={`${base}/dist/js/tabler${min}.js`} defer></script>
+    <!-- END GLOBAL MANDATORY SCRIPTS -->
+
+
+
+    <PageScripts />
+
+    <!-- BEGIN PAGE SCRIPTS -->
+    <script is:inline>
+
+      document.addEventListener('DOMContentLoaded', function () {
+        var themeConfig = {
+          'theme': 'light',
+          'theme-base': 'gray',
+          'theme-font': 'sans-serif',
+          'theme-primary': 'blue',
+          'theme-radius': '1',
+        }
+
+        var url = new URL(window.location)
+        var form = document.getElementById('offcanvas-settings')
+        var resetButton = document.getElementById('reset-changes')
+        if (!form || !resetButton) return
+
+        var themeKeys = Object.keys(themeConfig)
+        var getAccountThemeKey = function () {
+          var session = window.KoiAuth && window.KoiAuth.getSession ? window.KoiAuth.getSession() : JSON.parse(sessionStorage.getItem('koi-farm-auth-session') || 'null')
+          return session && session.username ? 'koi-farm-theme-settings-' + session.username : 'koi-farm-theme-settings-guest'
+        }
+
+        var readAccountTheme = function () {
+          return JSON.parse(window.localStorage.getItem(getAccountThemeKey()) || 'null') || {}
+        }
+
+        var writeAccountTheme = function (theme) {
+          window.localStorage.setItem(getAccountThemeKey(), JSON.stringify(theme))
+        }
+
+        var checkItems = function () {
+          var accountTheme = readAccountTheme()
+          for (var key in themeConfig) {
+            var value = accountTheme[key] || themeConfig[key]
+
+            if (!!value) {
+              var radios = form.querySelectorAll(`[name="${key}"]`)
+
+              if (!!radios) {
+                radios.forEach((radio) => {
+                  radio.checked = radio.value === value
+                })
+              }
+            }
+          }
+        }
+
+        form.addEventListener('change', function (event) {
+          var target = event.target,
+            name = target.name,
+            value = target.value
+
+          for (var key in themeConfig) {
+            if (name === key) {
+              var applied = value
+              if (key === 'theme' && value === 'auto') {
+                applied = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'
+              }
+              if (applied !== themeConfig[key]) {
+                document.documentElement.setAttribute('data-bs-' + key, applied)
+              } else {
+                document.documentElement.removeAttribute('data-bs-' + key)
+              }
+              window.localStorage.setItem('tabler-' + key, value)
+              var accountTheme = readAccountTheme()
+              accountTheme[key] = value
+              writeAccountTheme(accountTheme)
+              url.searchParams.set(key, value)
+            }
+          }
+
+          window.history.pushState({}, '', url)
+        })
+
+        resetButton.addEventListener('click', function () {
+          var accountTheme = {}
+          for (var key in themeConfig) {
+            document.documentElement.removeAttribute('data-bs-' + key)
+            window.localStorage.removeItem('tabler-' + key)
+            url.searchParams.delete(key)
+          }
+          writeAccountTheme(accountTheme)
+
+          checkItems()
+
+          window.history.pushState({}, '', url)
+        })
+
+        document.querySelectorAll('.js-theme-toggle[data-theme-value]').forEach(function (toggle) {
+          toggle.addEventListener('click', function (event) {
+            var value = toggle.getAttribute('data-theme-value')
+            if (!value) return
+
+            event.preventDefault()
+
+            document.documentElement.setAttribute('data-bs-theme', value)
+            window.localStorage.setItem('tabler-theme', value)
+
+            var accountTheme = readAccountTheme()
+            accountTheme.theme = value
+            writeAccountTheme(accountTheme)
+
+            url.searchParams.set('theme', value)
+            window.history.replaceState({}, '', url)
+          })
+        })
+
+        checkItems()
+      })
+    </script>
+    <!-- END PAGE SCRIPTS -->
+  </body>
+</html>
+
+
+
+

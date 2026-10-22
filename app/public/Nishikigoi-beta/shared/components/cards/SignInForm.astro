@@ -1,0 +1,68 @@
+---
+---
+
+<form action="./farm.html" method="get" novalidate data-login-form>
+  <div class="alert alert-danger d-none" role="alert" data-login-message></div>
+
+  <div class="mb-3">
+    <label class="form-label" for="signin-username">Email atau username</label>
+    <input type="text" id="signin-username" class="form-control" placeholder="Email atau username" autocomplete="username" value="" />
+  </div>
+  <div class="mb-2">
+    <label class="form-label" for="signin-password">Kata sandi</label>
+    <div class="input-group">
+      <input type="password" class="form-control" placeholder="Kata sandi" autocomplete="current-password" id="signin-password" />
+      <button type="button" class="btn" title="Tampilkan kata sandi" aria-label="Tampilkan kata sandi" aria-pressed="false" data-password-toggle="signin-password">
+        <span class="icon-toggle-show">Show</span><span class="icon-toggle-hide d-none">Hide</span>
+      </button>
+    </div>
+  </div>
+  <div class="mb-2">
+    <label class="form-check">
+      <input type="checkbox" class="form-check-input" data-remember-device />
+      <span class="form-check-label">Ingat saya di perangkat ini</span>
+    </label>
+  </div>
+
+  <div class="form-footer">
+    <button type="submit" class="btn btn-primary w-100">Masuk</button>
+  </div>
+  <div class="text-center mt-3">
+    <a href="./forgot-password.html">Lupa kata sandi?</a>
+  </div>
+</form>
+
+<script is:inline>
+  // @ts-nocheck
+  document.querySelector('[data-login-form]')?.addEventListener('submit', async (event) => {
+    event.preventDefault()
+
+    const username = document.getElementById('signin-username')?.value.trim().toLowerCase()
+    const password = document.getElementById('signin-password')?.value
+    const rememberDevice = Boolean(document.querySelector('[data-remember-device]')?.checked)
+    const message = document.querySelector('[data-login-message]')
+
+    try {
+      const loginOptions = { rememberDevice }
+      const loggedIn = await window.KoiAuth?.loginRemote?.(username, password, loginOptions)
+        || (!window.KoiAuth?.usesRemoteApi && window.KoiAuth?.login(username, password, loginOptions))
+
+      if (loggedIn) {
+        window.location.href = './farm.html'
+        return
+      }
+    } catch (error) {
+      console.error(error)
+      if (message) {
+        message.textContent = error && error.message ? error.message : 'Login gagal. Coba lagi.'
+        message.classList.remove('d-none')
+      }
+      return
+    }
+
+    if (message) {
+      message.textContent = 'Email/username atau kata sandi salah, atau akun tidak aktif.'
+      message.classList.remove('d-none')
+    }
+  })
+</script>

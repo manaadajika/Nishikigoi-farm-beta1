@@ -1,0 +1,60 @@
+---
+import DefaultLayout from '@shared/layouts/DefaultLayout.astro'
+---
+
+<DefaultLayout title="Queue" pageHeader="Queue" pretitle="Etc" pageMenu="management.queue">
+  <div class="card">
+    <div class="card-header d-flex align-items-center justify-content-between gap-3">
+      <h3 class="card-title">Background Job</h3>
+      <button type="button" class="btn" data-action="refresh-jobs">Refresh</button>
+    </div>
+    <div class="table-responsive">
+      <table class="table table-vcenter card-table">
+        <thead>
+          <tr>
+            <th>Waktu</th>
+            <th>Jenis</th>
+            <th>Nama Job</th>
+            <th>Status</th>
+            <th>Progress</th>
+            <th>Catatan</th>
+          </tr>
+        </thead>
+        <tbody data-jobs-table>
+          <tr><td colspan="6" class="text-secondary">Memuat job.</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <script is:inline>
+    document.addEventListener('DOMContentLoaded', () => {
+      const table = document.querySelector('[data-jobs-table]')
+      const badge = (status) => status === 'completed' ? 'success' : status === 'failed' ? 'danger' : status === 'running' ? 'warning' : 'secondary'
+      const loadJobs = async () => {
+        try {
+          const response = await window.KoiAuth.apiRequest('/jobs')
+          const jobs = response.ok ? await response.json() : []
+          if (!jobs.length) {
+            table.innerHTML = '<tr><td colspan="6" class="text-secondary">Belum ada job.</td></tr>'
+            return
+          }
+          table.innerHTML = jobs.map((job) => `
+            <tr>
+              <td>${job.created_at || '-'}</td>
+              <td>${job.type || '-'}</td>
+              <td>${job.title || '-'}</td>
+              <td><span class="badge bg-${badge(job.status)}-lt">${job.status || '-'}</span></td>
+              <td>${Number(job.progress || 0)}%</td>
+              <td>${job.message || '-'}</td>
+            </tr>
+          `).join('')
+        } catch {
+          table.innerHTML = '<tr><td colspan="6" class="text-danger">Job gagal dimuat.</td></tr>'
+        }
+      }
+      document.querySelector('[data-action="refresh-jobs"]')?.addEventListener('click', loadJobs)
+      loadJobs()
+    })
+  </script>
+</DefaultLayout>

@@ -1,0 +1,340 @@
+---
+// Condensed and non-condensed navbar branches. DefaultLayout passes condensed,
+// overlap, dark, hideBrand, sticky, transparent, class, hideSearch; navigation
+// showcase pages also use sample, personId, hideLogo, smallLogo, showTitle,
+// hideIcons, hideUsername, background, backgroundColor, fluidSearch.
+//
+// fluidSearch has no effect on output (search in the condensed branch is dead
+// code); the prop is kept for call-site compatibility.
+import Icon from '@ui/Icon.astro';
+import Logo from './Logo.astro';
+import NavbarToggler from './NavbarToggler.astro';
+import NavbarSide from './NavbarSide.astro';
+import NavbarMenu from './NavbarMenu.astro';
+import NavbarSearch from './NavbarSearch.astro';
+
+interface Props {
+	hideSearch?: boolean;
+	/** equivalent of the page-menu front matter (active menu entry), e.g. "dashboards.default" */
+	pageMenu?: string | undefined;
+	breakpoint?: string;
+	condensed?: boolean | undefined;
+	dark?: boolean | undefined;
+	transparent?: boolean;
+	overlap?: boolean | undefined;
+	sticky?: boolean | undefined;
+	hideBrand?: boolean | undefined;
+	/** use the sample menu (menu-sample.json) instead of the real one */
+	sample?: boolean;
+	/** 1-based index into people.json for the user menu avatar */
+	personId?: number;
+	hideLogo?: boolean;
+	smallLogo?: boolean;
+	showTitle?: boolean;
+	hideIcons?: boolean;
+	hideUsername?: boolean;
+	/** bg-{background} class on the header (ignored when transparent) */
+	background?: string;
+	/** inline `background:` style on the header */
+	backgroundColor?: string;
+	/** no-op — see the fluid-search note above */
+	fluidSearch?: boolean;
+	/** layout-navbar-class */
+	class?: string | undefined;
+}
+
+// pageMenu is the front matter `page-menu` value; when a page has none, nothing
+// in the menu is active (pages must pass their own value — see index.astro).
+const {
+	hideSearch = false,
+	pageMenu,
+	breakpoint = 'md',
+	condensed = false,
+	dark = false,
+	transparent = false,
+	overlap = false,
+	sticky = false,
+	hideBrand = false,
+	sample = false,
+	personId,
+	hideLogo = false,
+	smallLogo = false,
+	showTitle = false,
+	hideIcons = false,
+	hideUsername = false,
+	background,
+	backgroundColor,
+	class: className,
+} = Astro.props;
+
+const headerClass = [
+	`navbar navbar-expand-${breakpoint}`,
+	transparent ? 'navbar-transparent' : background && `bg-${background}`,
+	sticky && 'sticky-top',
+	overlap && 'navbar-overlap',
+	className,
+	'd-print-none',
+]
+---
+
+{sticky && <Fragment set:html="<div class='sticky-top'>" />}
+
+<!-- BEGIN NAVBAR -->
+<header
+	class:list={headerClass}
+	style={backgroundColor ? `background: ${backgroundColor}` : undefined}
+	data-bs-theme={dark ? 'dark' : undefined}
+>
+	<div class="container-xl nishikigoi-navbar-head">
+		<NavbarToggler target="navbar-menu" />
+
+		{
+			!hideBrand && (
+				<Logo
+					header
+					class="d-none-navbar-horizontal pe-0 pe-md-2 flex-shrink-0"
+					smallLogo={smallLogo}
+					hideLogo={hideLogo}
+					showTitle={showTitle}
+				/>
+			)
+		}
+
+		{!hideSearch && <NavbarSearch class="nishikigoi-navbar-search order-1 order-md-0" />}
+
+		<NavbarSide
+			class="order-md-last ms-auto"
+			breakpoint={breakpoint}
+			condensed={condensed}
+			dark={dark}
+			personId={personId}
+			hideUsername={hideUsername}
+			showThemeToggle
+			showNotifications
+			showUser
+		/>
+
+		{
+			condensed && (
+				<div class="collapse navbar-collapse" id="navbar-menu">
+					{hideSearch ? (
+						<Fragment>
+							<Fragment set:html={'<!-- BEGIN NAVBAR MENU -->'} />
+							<nav aria-label="Primary">
+								<NavbarMenu sample={sample} hideIcons={hideIcons} pageMenu={pageMenu} />
+							</nav>
+							<Fragment set:html={'<!-- END NAVBAR MENU -->'} />
+						</Fragment>
+					) : (
+						<div class="d-flex flex-column flex-md-row flex-fill align-items-stretch align-items-md-center">
+							<!-- BEGIN NAVBAR MENU -->
+							<nav aria-label="Primary">
+								<NavbarMenu sample={sample} hideIcons={hideIcons} pageMenu={pageMenu} />
+							</nav>
+							<!-- END NAVBAR MENU -->
+							{/* Search block omitted when condensed — nothing to render */}
+						</div>
+					)}
+				</div>
+			)
+		}
+	</div>
+</header>
+
+{
+	!condensed && (
+		<div class={`navbar-expand-${breakpoint}`}>
+			<div class="collapse navbar-collapse" id="navbar-menu">
+				<div class="navbar">
+					<div class="container-xl">
+						<div class="row flex-column flex-md-row flex-fill align-items-center justify-content-center">
+							<div class="col-auto">
+								<!-- BEGIN NAVBAR MENU -->
+								<nav aria-label="Primary">
+									<NavbarMenu longTitles sample={sample} hideIcons={hideIcons} pageMenu={pageMenu} />
+								</nav>
+								<!-- END NAVBAR MENU -->
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	)
+}
+<!-- END NAVBAR -->
+
+{sticky && <Fragment set:html="</div>" />}
+
+<style>
+	@media (min-width: 768px) {
+		.nishikigoi-navbar-head {
+			position: relative;
+			z-index: 1030;
+		}
+
+		:global(.nishikigoi-navbar-search) {
+			position: absolute;
+			top: 50%;
+			left: 50%;
+			z-index: 1;
+			width: min(34vw, 360px);
+			margin: 0 !important;
+			transform: translate(-50%, -50%);
+		}
+
+		:global(.nishikigoi-navbar-search .input-icon) {
+			width: 100%;
+		}
+
+		:global(.nishikigoi-navbar-head .navbar-side),
+		:global(.nishikigoi-navbar-head .navbar-side .nav-item.dropdown) {
+			position: relative;
+			z-index: 1030;
+		}
+
+		:global(.navbar-collapse .navbar-nav) {
+			position: relative;
+			z-index: 1;
+		}
+
+		:global(.navbar .dropdown-menu) {
+			z-index: 1090;
+		}
+
+		:global(.navbar-notifications-menu) {
+			width: min(20rem, calc(100vw - 1rem));
+			max-width: calc(100vw - 1rem);
+			z-index: 1090;
+		}
+
+		:global(.navbar-notifications-menu .card) {
+			overflow: hidden;
+		}
+
+		:global(.navbar-user-menu) {
+			min-width: 11.25rem;
+			max-width: calc(100vw - 1rem);
+			z-index: 1090;
+		}
+	}
+
+	@media (max-width: 767.98px) {
+		:global(.nishikigoi-navbar-head) {
+			gap: .35rem;
+			padding-left: .75rem;
+			padding-right: .75rem;
+		}
+
+		:global(.nishikigoi-navbar-head > .navbar-side) {
+			align-items: center;
+			flex: 0 0 auto;
+			gap: .2rem;
+			min-width: 0;
+		}
+
+		:global(.nishikigoi-navbar-head > .navbar-side.ms-auto) {
+			margin-left: auto !important;
+			margin-right: .6rem;
+		}
+
+		:global(.nishikigoi-navbar-head .navbar-side-actions) {
+			gap: .2rem;
+			margin-right: .35rem !important;
+		}
+
+		:global(.nishikigoi-navbar-head .navbar-side .nav-link) {
+			width: 2rem;
+			min-width: 2rem;
+			height: 2rem;
+			justify-content: center;
+			padding: 0 !important;
+		}
+
+		:global(.nishikigoi-navbar-head .navbar-side .avatar) {
+			width: 2rem;
+			height: 2rem;
+			flex: 0 0 2rem;
+			aspect-ratio: 1 / 1;
+			background-position: center;
+			background-size: cover;
+		}
+
+		/* Anchored to the header (not the screen), so it scrolls away together with the page. */
+		:global(.nishikigoi-navbar-head .nav-item.dropdown:has(> .navbar-notifications-menu)) {
+			position: static !important;
+		}
+
+		:global(.nishikigoi-navbar-head .navbar-notifications-menu) {
+			position: absolute !important;
+			top: 3.25rem !important;
+			right: .5rem !important;
+			left: .5rem !important;
+			width: auto;
+			max-width: none;
+			transform: none !important;
+		}
+
+		:global(.navbar-collapse .container-xl) {
+			padding-left: .75rem !important;
+			padding-right: .75rem !important;
+			width: 100% !important;
+			max-width: 100% !important;
+		}
+
+		:global(.navbar-collapse .row) {
+			margin: 0 !important;
+			width: 100% !important;
+		}
+
+		:global(.navbar-collapse .col-auto) {
+			width: 100% !important;
+			max-width: 100% !important;
+			flex: 0 0 100% !important;
+			padding: 0 !important;
+		}
+
+		:global(.navbar-collapse nav) {
+			width: 100% !important;
+		}
+
+		:global(.navbar-collapse .navbar-nav) {
+			align-items: stretch !important;
+			justify-content: flex-start !important;
+			gap: .5rem;
+			width: 100% !important;
+			padding: .75rem 0 !important;
+			margin: 0 !important;
+			text-align: left;
+		}
+
+		:global(.navbar-collapse .navbar-nav > .nav-item) {
+			width: 100% !important;
+			border: 1px solid var(--tblr-border-color);
+			border-radius: var(--tblr-border-radius);
+			background: var(--tblr-bg-surface);
+			display: block !important;
+			padding: 0 !important;
+			margin: 0 !important;
+		}
+
+		:global(.navbar-collapse .navbar-nav > .nav-item > .nav-link) {
+			display: flex !important;
+			align-items: center !important;
+			justify-content: flex-start !important;
+			width: 100% !important;
+			box-sizing: border-box !important;
+			padding: .75rem 1rem !important;
+			text-align: left !important;
+		}
+
+		:global(.navbar-collapse .navbar-nav > .nav-item > .dropdown-menu) {
+			margin-top: .35rem;
+		}
+
+		:global(.navbar-collapse .dropdown-menu) {
+			width: 100%;
+			text-align: left;
+		}
+	}
+</style>

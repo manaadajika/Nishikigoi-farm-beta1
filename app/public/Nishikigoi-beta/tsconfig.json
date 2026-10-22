@@ -1,0 +1,51 @@
+{
+  "include": [
+    ".build/copy-assets.ts"
+  ],
+  "exclude": [
+    "**/dist/**",
+    "**/node_modules/**",
+    "core/**",
+    "docs/**",
+    "preview/**",
+    "screenshots/**",
+    "shared/**",
+    "preview/public/**",
+    "preview/tmp-assets/**"
+  ],
+  "compilerOptions": {
+    "baseUrl": ".",
+    "target": "ES2022",
+    "module": "ESNext",
+    "lib": [
+      "ES2022",
+      "DOM"
+    ],
+    "types": [
+      "node"
+    ],
+    "strict": false,
+    "noUnusedLocals": false,
+    "noUnusedParameters": false,
+    "exactOptionalPropertyTypes": false,
+    "noImplicitOverride": false,
+    "moduleResolution": "bundler",
+    "paths": {
+      "@data/*": [
+        "shared/data/*"
+      ],
+      "@shared/*": [
+        "shared/*"
+      ],
+      "@ui/*": [
+        "shared/ui/*"
+      ],
+      "@components/*": [
+        "shared/components/*"
+      ],
+      "@tabler/core/*": [
+        "core/*"
+      ]
+    }
+  }
+}

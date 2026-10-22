@@ -1,0 +1,48 @@
+---
+import NavbarToggler from './NavbarToggler.astro'
+import Logo from './Logo.astro'
+import NavbarSide from './NavbarSide.astro'
+import NavbarMenu from './NavbarMenu.astro'
+
+interface Props {
+  dark?: boolean | undefined
+  breakpoint?: string
+  /** layout-sidebar-end — navbar-end class */
+  end?: boolean | undefined
+  /** layout-navbar-transparent — navbar-transparent class */
+  transparent?: boolean | undefined
+  /** equivalent of the page-menu front matter (active menu entry), e.g. "layout.vertical" */
+  pageMenu?: string | undefined
+}
+
+const { dark = false, breakpoint = 'lg', end = false, transparent = false, pageMenu } = Astro.props
+
+const asideClass = ['navbar navbar-vertical', end && 'navbar-end', `navbar-expand-${breakpoint}`, transparent && 'navbar-transparent'].filter(Boolean).join(' ')
+---
+
+<!-- BEGIN SIDEBAR -->
+<aside class={asideClass} data-bs-theme={dark ? 'dark' : undefined}>
+  <div class="container-fluid sidebar-brand-row">
+    <NavbarToggler target="sidebar-menu" />
+
+    <Logo header />
+
+    {/* Only the Sponsor button renders (no show-* flags). */}
+    <NavbarSide class="d-lg-none" breakpoint={breakpoint} />
+
+    <nav class="collapse navbar-collapse" id="sidebar-menu" aria-label="Sidebar">
+      <NavbarMenu autoOpen class="pt-lg-3" keepOpen pageMenu={pageMenu} />
+    </nav>
+  </div>
+</aside>
+<!-- END SIDEBAR -->
+
+<style>
+  .sidebar-brand-row {
+    column-gap: 0.75rem;
+  }
+
+  .sidebar-brand-row :global(.navbar-brand) {
+    margin-inline-start: 0;
+  }
+</style>

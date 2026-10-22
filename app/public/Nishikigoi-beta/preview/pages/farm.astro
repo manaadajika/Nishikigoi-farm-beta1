@@ -1,0 +1,53 @@
+---
+import DefaultLayout from '@shared/layouts/DefaultLayout.astro'
+---
+
+<DefaultLayout title="Koi Farm" pageHeader="Dashboard Koi Farm" pretitle="Management" pageMenu="farm-dashboard">
+  <div class="row row-deck row-cards">
+    <div class="col-sm-6 col-lg-4">
+      <div class="card">
+        <div class="card-body">
+          <div class="subheader">Kolam</div>
+          <div class="h1 mb-0" data-summary="ponds">0</div>
+        </div>
+      </div>
+    </div>
+    <div class="col-sm-6 col-lg-4">
+      <div class="card">
+        <div class="card-body">
+          <div class="subheader">Total Koi</div>
+          <div class="h1 mb-0" data-summary="koi">0</div>
+        </div>
+      </div>
+    </div>
+    <div class="col-sm-6 col-lg-4">
+      <div class="card">
+        <div class="card-body">
+          <div class="subheader">Karantina</div>
+          <div class="h1 mb-0" data-summary="quarantine">0</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const apiUrl = '/api'
+
+    const renderSummary = async () => {
+      try {
+        const summaryResponse = await fetch(`${apiUrl}/summary`)
+        const summary = await summaryResponse.json()
+
+        document.querySelector('[data-summary="ponds"]').textContent = summary.ponds
+        document.querySelector('[data-summary="koi"]').textContent = summary.koi
+        document.querySelector('[data-summary="quarantine"]').textContent = summary.quarantine
+      } catch (error) {
+        document.querySelector('[data-summary="ponds"]').textContent = '-'
+        document.querySelector('[data-summary="koi"]').textContent = '-'
+        document.querySelector('[data-summary="quarantine"]').textContent = '-'
+      }
+    }
+
+    renderSummary()
+  </script>
+</DefaultLayout>

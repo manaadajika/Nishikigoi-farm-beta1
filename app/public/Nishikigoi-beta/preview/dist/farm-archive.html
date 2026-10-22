@@ -1,0 +1,2480 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <!-- BEGIN META -->
+    <meta charset="utf-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, viewport-fit=cover"
+    />
+    <meta name="color-scheme" content="light dark" />
+    <meta http-equiv="X-UA-Compatible" content="ie=edge" />
+
+    <title>Archive - Nishikigoi</title>
+
+    <link
+      rel="icon"
+      href="/api/favicon?v=2"
+      data-brand-favicon
+    />
+    <link
+      rel="shortcut icon"
+      href="/api/favicon?v=2"
+      data-brand-favicon
+    />
+    <script>
+      (() => {
+        try {
+          const settings =
+            JSON.parse(
+              localStorage.getItem("nishikigoi-app-settings") || "null",
+            ) || {};
+          const icon = String(settings.brand_favicon || settings.brand_icon || "").trim();
+          if (!icon) return;
+          document.querySelectorAll("[data-brand-favicon]").forEach((link) => {
+            link.href = icon;
+            link.type = icon.startsWith("data:image/png")
+              ? "image/png"
+              : icon.startsWith("data:image/svg")
+                ? "image/svg+xml"
+                : icon.startsWith("data:image/webp")
+                  ? "image/webp"
+                  : "image/x-icon";
+          });
+        } catch {}
+      })();
+    </script>
+    <!-- END META -->
+
+    <!-- BEGIN GLOBAL MANDATORY STYLES -->
+    <link href="./dist/css/tabler.css" rel="stylesheet" />
+    <!-- END GLOBAL MANDATORY STYLES -->
+
+    <!-- BEGIN PLUGINS STYLES -->
+    <link href="./dist/css/tabler-flags.css" rel="stylesheet" />
+    <link href="./dist/css/tabler-socials.css" rel="stylesheet" />
+    <link href="./dist/css/tabler-payments.css" rel="stylesheet" />
+    <link href="./dist/css/tabler-vendors.css" rel="stylesheet" />
+    <link href="./dist/css/tabler-marketing.css" rel="stylesheet" />
+    <link href="./dist/css/tabler-themes.css" rel="stylesheet" />
+    <!-- END PLUGINS STYLES -->
+
+    <!-- BEGIN DEMO STYLES -->
+    <link href="./preview/css/demo.css" rel="stylesheet" />
+    <!-- END DEMO STYLES -->
+
+    <!-- BEGIN CUSTOM FONT -->
+
+    <style>
+      @import url("https://rsms.me/inter/inter.css");
+    </style>
+    <!-- END CUSTOM FONT -->
+    <style>
+      .nishikigoi-brand-link[data-astro-cid-flr2tpzy],
+      .nishikigoi-brand-link[data-astro-cid-flr2tpzy]:hover,
+      .nishikigoi-brand-link[data-astro-cid-flr2tpzy]:focus {
+        text-decoration: none;
+      }
+      .nishikigoi-brand-custom-icon[data-astro-cid-flr2tpzy] {
+        object-fit: contain;
+        border-radius: 8px;
+        width: 32px;
+        height: 32px;
+      }
+      @media (width<=767.98px) {
+        .nishikigoi-brand-link[data-astro-cid-flr2tpzy] .navbar-brand-text {
+          display: none;
+        }
+      }
+    </style>
+    <link rel="stylesheet" href="/_astro/DefaultLayout.d0930n1.css" />
+      <link rel="manifest" href="/api/manifest" />
+  </head>
+
+  <body>
+    <a href="#content" class="visually-hidden-focusable skip-link"
+      >Skip to main content</a
+    >
+
+    <!-- BEGIN GLOBAL THEME SCRIPT -->
+    <script>
+      (function () {
+        var themeKeys = [
+          "theme",
+          "theme-base",
+          "theme-font",
+          "theme-primary",
+          "theme-radius",
+        ];
+        var session = JSON.parse(
+          sessionStorage.getItem("koi-farm-auth-session") || "null",
+        );
+        var username = session && session.username;
+        if (!username) return;
+
+        var accountThemeKey = "koi-farm-theme-settings-" + username;
+        var accountTheme =
+          JSON.parse(localStorage.getItem(accountThemeKey) || "null") || {};
+
+        themeKeys.forEach(function (key) {
+          var accountValue = accountTheme[key];
+          if (accountValue) {
+            localStorage.setItem("tabler-" + key, accountValue);
+          } else {
+            localStorage.removeItem("tabler-" + key);
+          }
+        });
+      })();
+    </script>
+    <script src="./assets/theme-auto.js?v=20261016a"></script>
+    <script src="./dist/js/tabler-theme.js"></script>
+    <!-- END GLOBAL THEME SCRIPT -->
+
+    <!-- BEGIN APP AUTH SCRIPT -->
+    <script src="./assets/auth.js?v=20261026a"></script>
+    <script src="./assets/drafts.js?v=20261024b"></script>
+    <script src="./assets/theme-sync.js?v=20261014b"></script>
+    <script src="./assets/print-kit.js?v=20261024a"></script>
+    <script src="./assets/action-dock.js?v=20261015f"></script>
+    <!-- END APP AUTH SCRIPT -->
+
+    <div class="page">
+      <!-- BEGIN NAVBAR  -->
+
+      <!-- BEGIN NAVBAR -->
+      <header
+        class="navbar navbar-expand-md d-print-none"
+        data-astro-cid-wfnge2tk
+      >
+        <div
+          class="container-xl nishikigoi-navbar-head"
+          data-astro-cid-wfnge2tk
+        >
+          <!-- BEGIN NAVBAR TOGGLER -->
+          <button
+            class="navbar-toggler navbar-toggler-tabler"
+            type="button"
+            data-bs-toggle="collapse"
+            data-bs-target="#navbar-menu"
+            aria-controls="navbar-menu"
+            aria-expanded="false"
+            aria-label="Toggle primary navigation"
+            data-astro-cid-eqcup72q
+          >
+            <!-- Download SVG icon from http://tabler.io/icons/icon/menu-2 -->
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="24"
+              height="24"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              aria-hidden="true"
+              focusable="false"
+              class="icon navbar-toggler-symbol navbar-toggler-symbol-menu"
+            >
+              <path d="M4 6l16 0" />
+              <path d="M4 12l16 0" />
+              <path d="M4 18l16 0" />
+            </svg>
+            <!-- Download SVG icon from http://tabler.io/icons/icon/x -->
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="24"
+              height="24"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              aria-hidden="true"
+              focusable="false"
+              class="icon navbar-toggler-symbol navbar-toggler-symbol-close"
+            >
+              <path d="M18 6l-12 12" />
+              <path d="M6 6l12 12" />
+            </svg>
+          </button>
+          <!-- END NAVBAR TOGGLER -->
+
+          <!-- BEGIN NAVBAR LOGO -->
+          <div
+            class="navbar-brand navbar-brand-autodark nishikigoi-brand-link d-none-navbar-horizontal pe-0 pe-md-2 flex-shrink-0"
+            data-astro-cid-flr2tpzy
+          >
+            <a
+              href="./farm.html"
+              aria-label="Nishikigoi"
+              class="nishikigoi-brand-link"
+              data-astro-cid-flr2tpzy
+            >
+              <span
+                class="nishikigoi-brand-default-icon"
+                data-brand-default-icon
+                hidden
+                data-astro-cid-flr2tpzy
+                ><svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  viewBox="0 0 68 68"
+                  width="32"
+                  height="32"
+                  aria-hidden="true"
+                  focusable="false"
+                  class="navbar-brand-image"
+                >
+                  <path
+                    d="M64.6 16.2C63 9.9 58.1 5 51.8 3.4 40 1.5 28 1.5 16.2 3.4 9.9 5 5 9.9 3.4 16.2 1.5 28 1.5 40 3.4 51.8 5 58.1 9.9 63 16.2 64.6c11.8 1.9 23.8 1.9 35.6 0C58.1 63 63 58.1 64.6 51.8c1.9-11.8 1.9-23.8 0-35.6zM33.3 36.3c-2.8 4.4-6.6 8.2-11.1 11-1.5.9-3.3.9-4.8.1s-2.4-2.3-2.5-4c0-1.7.9-3.3 2.4-4.1 2.3-1.4 4.4-3.2 6.1-5.3-1.8-2.1-3.8-3.8-6.1-5.3-2.3-1.3-3-4.2-1.7-6.4s4.3-2.9 6.5-1.6c4.5 2.8 8.2 6.5 11.1 10.9 1 1.4 1 3.3.1 4.7zM49.2 46H37.8c-2.1 0-3.8-1-3.8-3s1.7-3 3.8-3h11.4c2.1 0 3.8 1 3.8 3s-1.7 3-3.8 3z"
+                    fill="#066fd1"
+                    style="
+                      fill: var(
+                        --tblr-navbar-logo-color,
+                        var(--tblr-primary, #066fd1)
+                      );
+                    "
+                  /></svg></span
+              ><img
+                class="nishikigoi-brand-custom-icon"
+                data-brand-icon
+                hidden
+                alt=""
+                data-astro-cid-flr2tpzy
+              />
+              <span
+                class="navbar-brand-text fw-bold ms-2"
+                data-brand-name
+                data-astro-cid-flr2tpzy
+                >Nishikigoi</span
+              >
+            </a>
+          </div>
+          <!-- END NAVBAR LOGO -->
+
+          <!-- BEGIN NAVBAR SEARCH -->
+          <div
+            class="navbar-global-search nishikigoi-navbar-search order-1 order-md-0"
+            data-astro-cid-x2cvvrkm
+          >
+            <div class="input-icon">
+              <span class="input-icon-addon"
+                ><!-- Download SVG icon from http://tabler.io/icons/icon/search -->
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="24"
+                  height="24"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  aria-hidden="true"
+                  focusable="false"
+                  class="icon"
+                >
+                  <path d="M3 10a7 7 0 1 0 14 0a7 7 0 1 0 -14 0" />
+                  <path d="M21 21l-6 -6" /></svg
+              ></span>
+              <input
+                type="text"
+                id="navbar-global-search"
+                name="global_search"
+                value
+                class="form-control navbar-global-search-input"
+                placeholder="Cari data..."
+                aria-label="Cari data"
+                autocomplete="off"
+              />
+            </div>
+            <button
+              type="button"
+              class="navbar-global-search-clear"
+              data-navbar-search-clear
+              aria-label="Hapus pencarian"
+              title="Hapus pencarian"
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="24"
+                height="24"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                class="icon"
+              >
+                <path d="M18 6l-12 12" />
+                <path d="M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
+          <!-- END NAVBAR SEARCH -->
+
+          <script>
+            (() => {
+              const normalize = (value) =>
+                String(value || "")
+                  .toLowerCase()
+                  .trim();
+
+              const pageSearchSelector = [
+                "[data-koi-search]",
+                "[data-pond-search]",
+                "[data-gallery-search]",
+                "[data-report-search]",
+                "[data-breeding-search]",
+                "[data-log-search]",
+                "[data-sell-search]",
+                "[data-invoice-search]",
+                "[data-inventory-search]",
+              ].join(", ");
+
+              const getPageSearch = () => {
+                const candidates = Array.from(
+                  document.querySelectorAll(pageSearchSelector),
+                ).filter(
+                  (input) =>
+                    !input.closest(
+                      ".modal, .dropdown-menu, #offcanvas-settings",
+                    ),
+                );
+
+                return (
+                  candidates.find((input) =>
+                    input.matches(
+                      "[data-breeding-search], [data-report-search], [data-gallery-search], [data-koi-search], [data-pond-search], [data-log-search], [data-sell-search], [data-invoice-search], [data-inventory-search]",
+                    ),
+                  ) || null
+                );
+              };
+
+              const getSearchTargets = () => {
+                const tableRows = Array.from(
+                  document.querySelectorAll("tbody tr"),
+                ).filter((row) => row.children.length);
+                const cards = Array.from(
+                  document.querySelectorAll(".card"),
+                ).filter((card) => {
+                  if (
+                    card.closest(".modal, .dropdown-menu, #offcanvas-settings")
+                  )
+                    return false;
+                  return !card.querySelector("table");
+                });
+                return tableRows;
+              };
+
+              const applyGlobalSearch = (query) => {
+                const pageSearch = getPageSearch();
+
+                if (pageSearch && pageSearch.value !== query) {
+                  pageSearch.value = query;
+                  pageSearch.dispatchEvent(
+                    new Event("input", { bubbles: true }),
+                  );
+                  return;
+                }
+
+                const text = normalize(query);
+                const terms = text.split(/\s+/).filter(Boolean);
+                getSearchTargets().forEach((target) => {
+                  const haystack = normalize(
+                    target.dataset.searchText || target.textContent || "",
+                  );
+                  const matches = target.dataset.searchText
+                    ? terms.some((term) => haystack.includes(term))
+                    : terms.every((term) => haystack.includes(term));
+                  target.classList.toggle(
+                    "d-none",
+                    terms.length > 0 && !matches,
+                  );
+                });
+
+                document
+                  .querySelectorAll("tbody tr.table-active")
+                  .forEach((groupRow) => {
+                    if (terms.length === 0) {
+                      groupRow.classList.remove("d-none");
+                      return;
+                    }
+
+                    let hasVisibleItem = false;
+                    let row = groupRow.nextElementSibling;
+                    while (row && !row.classList.contains("table-active")) {
+                      if (!row.classList.contains("d-none")) {
+                        hasVisibleItem = true;
+                        break;
+                      }
+                      row = row.nextElementSibling;
+                    }
+
+                    groupRow.classList.toggle("d-none", !hasVisibleItem);
+                  });
+              };
+
+              const syncSearchClear = (input) => {
+                const wrapper = input.closest(".navbar-global-search");
+                wrapper?.classList.toggle("has-value", Boolean(input.value));
+              };
+
+              const bindSearch = () => {
+                document
+                  .querySelectorAll(".navbar-global-search-input")
+                  .forEach((input) => {
+                    if (input.dataset.globalSearchReady) return;
+                    input.dataset.globalSearchReady = "true";
+                    input.addEventListener("input", () => {
+                      applyGlobalSearch(input.value);
+                      syncSearchClear(input);
+                    });
+                    input
+                      .closest(".navbar-global-search")
+                      ?.querySelector("[data-navbar-search-clear]")
+                      ?.addEventListener("click", () => {
+                        input.value = "";
+                        applyGlobalSearch("");
+                        syncSearchClear(input);
+                        input.focus();
+                      });
+                    syncSearchClear(input);
+                  });
+
+                const pageSearch = getPageSearch();
+                const globalSearch = document.querySelector(
+                  ".navbar-global-search-input",
+                );
+                if (
+                  pageSearch &&
+                  globalSearch &&
+                  pageSearch.value &&
+                  !globalSearch.value
+                ) {
+                  globalSearch.value = pageSearch.value;
+                  syncSearchClear(globalSearch);
+                }
+              };
+
+              bindSearch();
+              document.addEventListener("DOMContentLoaded", bindSearch);
+            })();
+          </script>
+
+          <!-- BEGIN NAVBAR ACTIONS -->
+          <div class="navbar-nav flex-row navbar-side order-md-last ms-auto">
+            <div class="navbar-side-actions d-flex align-items-center me-3">
+              <!-- BEGIN THEME TOGGLE -->
+              <div class="nav-item">
+                <a
+                  href="?theme=dark"
+                  class="nav-link px-0 hide-theme-dark js-theme-toggle"
+                  title="Enable dark mode"
+                  data-theme-value="dark"
+                  data-bs-toggle="tooltip"
+                  data-bs-placement="bottom"
+                >
+                  <!-- Download SVG icon from http://tabler.io/icons/icon/moon -->
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="24"
+                    height="24"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    aria-hidden="true"
+                    focusable="false"
+                    class="icon"
+                  >
+                    <path
+                      d="M12 3c.132 0 .263 0 .393 0a7.5 7.5 0 0 0 7.92 12.446a9 9 0 1 1 -8.313 -12.454l0 .008"
+                    />
+                  </svg>
+                </a>
+
+                <a
+                  href="?theme=light"
+                  class="nav-link px-0 hide-theme-light js-theme-toggle"
+                  title="Enable light mode"
+                  data-theme-value="light"
+                  data-bs-toggle="tooltip"
+                  data-bs-placement="bottom"
+                >
+                  <!-- Download SVG icon from http://tabler.io/icons/icon/sun -->
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="24"
+                    height="24"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    aria-hidden="true"
+                    focusable="false"
+                    class="icon"
+                  >
+                    <path d="M8 12a4 4 0 1 0 8 0a4 4 0 1 0 -8 0" />
+                    <path
+                      d="M3 12h1m8 -9v1m8 8h1m-9 8v1m-6.4 -15.4l.7 .7m12.1 -.7l-.7 .7m0 11.4l.7 .7m-12.1 -.7l-.7 .7"
+                    />
+                  </svg>
+                </a>
+              </div>
+              <!-- END THEME TOGGLE -->
+              <!-- BEGIN NOTIFICATIONS -->
+              <div class="nav-item dropdown" data-astro-cid-ry6bbqh3>
+                <a
+                  href="#"
+                  id="navbar-notifications-toggle"
+                  class="nav-link px-0"
+                  data-bs-toggle="dropdown"
+                  aria-label="Show notifications"
+                  data-bs-auto-close="outside"
+                  aria-expanded="false"
+                  data-astro-cid-ry6bbqh3
+                >
+                  <!-- Download SVG icon from http://tabler.io/icons/icon/bell -->
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="24"
+                    height="24"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    aria-hidden="true"
+                    focusable="false"
+                    class="icon"
+                  >
+                    <path
+                      d="M10 5a2 2 0 1 1 4 0a7 7 0 0 1 4 6v3a4 4 0 0 0 2 3h-16a4 4 0 0 0 2 -3v-3a7 7 0 0 1 4 -6"
+                    />
+                    <path d="M9 17v1a3 3 0 0 0 6 0v-1" />
+                  </svg>
+                  <span
+                    class="badge bg-red d-none"
+                    data-navbar-notifications-badge
+                    data-astro-cid-ry6bbqh3
+                  ></span>
+                </a>
+                <!-- BEGIN NAVBAR NOTIFICATIONS -->
+                <div
+                  class="dropdown-menu dropdown-menu-arrow dropdown-menu-end dropdown-menu-card navbar-notifications-menu"
+                  data-astro-cid-ry6bbqh3
+                >
+                  <div class="card" data-astro-cid-ry6bbqh3>
+                    <div class="card-header d-flex" data-astro-cid-ry6bbqh3>
+                      <h3 class="card-title">Notifications</h3>
+                      <button
+                        type="button"
+                        class="btn-close ms-auto"
+                        data-navbar-notifications-close
+                        aria-label="Close"
+                        data-astro-cid-ry6bbqh3
+                      ></button>
+                    </div>
+                    <div
+                      class="list-group list-group-flush list-group-hoverable"
+                      data-navbar-notifications-list
+                      data-astro-cid-ry6bbqh3
+                    >
+                      <div class="list-group-item" data-astro-cid-ry6bbqh3>
+                        <div class="text-secondary" data-astro-cid-ry6bbqh3>
+                          <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>Memuat notifikasi...
+                        </div>
+                      </div>
+                    </div>
+                    <div class="card-body" data-astro-cid-ry6bbqh3>
+                      <div class="notification-actions" data-astro-cid-ry6bbqh3>
+                        <a
+                          href="farm-log.html"
+                          class="btn"
+                          data-astro-cid-ry6bbqh3
+                          >Lihat Log</a
+                        >
+                        <button
+                          type="button"
+                          class="btn"
+                          data-navbar-notifications-clear
+                          data-astro-cid-ry6bbqh3
+                        >
+                          Clear
+                        </button>
+                        <button
+                          type="button"
+                          class="btn"
+                          data-navbar-notifications-read-all
+                          data-astro-cid-ry6bbqh3
+                        >
+                          Mark all read
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <!-- END NAVBAR NOTIFICATIONS -->
+              </div>
+
+              <!-- END NOTIFICATIONS -->
+            </div>
+
+            <!-- BEGIN USER MENU -->
+            <div class="nav-item dropdown">
+              <a
+                href="#"
+                class="nav-link d-flex lh-1 p-0 px-2"
+                data-bs-toggle="dropdown"
+                aria-label="Open user menu"
+              >
+                <span
+                  class="koi-api-indicator koi-api-indicator-loading me-2"
+                  data-api-indicator
+                  title="Memeriksa API"
+                  aria-label="Memeriksa API"
+                ></span>
+                <span class="avatar avatar-sm" data-auth-avatar>HA</span>
+                <div class="d-none d-xl-block ps-2">
+                  <div data-auth-name>Holil</div>
+                  <div class="mt-1 small text-secondary" data-auth-role>
+                    Master Admin
+                  </div>
+                </div>
+              </a>
+              <div class="dropdown-menu dropdown-menu-end dropdown-menu-arrow navbar-user-menu">
+                <a class="dropdown-item" href="#" data-koi-my-profile><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false" class="icon dropdown-item-icon"><path d="M8 7a4 4 0 1 0 8 0a4 4 0 0 0 -8 0" /><path d="M6 21v-2a4 4 0 0 1 4 -4h4a4 4 0 0 1 4 4v2" /></svg> Profile</a>
+                <div class="dropdown-divider"></div>
+                <a class="dropdown-item d-flex align-items-center" href="#" data-koi-sp-toggle aria-expanded="false">Settings &amp; Privacy</a>
+                <div class="koi-sp-list" data-koi-sp-list hidden>
+                  <a class="dropdown-item" href="./settings.html">Pengaturan Akun</a>
+                  <a class="dropdown-item" href="./farm-log.html#changelog" data-koi-changelog>Change Log</a>
+                  <a class="dropdown-item" href="#" data-bs-toggle="offcanvas" data-bs-target="#offcanvas-settings" aria-controls="offcanvas-settings">Theme Settings</a>
+                  <a class="dropdown-item" href="#" data-feedback-open>Give Feedback</a>
+                  <a class="dropdown-item" href="./settings-master-account.html" data-role-required="master-admin">Master Akun</a>
+                </div>
+                <div class="dropdown-divider"></div>
+                <a class="dropdown-item" href="./sign-in.html" data-action="logout">Sign out</a>
+              </div>
+            </div>
+            <!-- END USER MENU -->
+          </div>
+          <!-- END NAVBAR ACTIONS -->
+        </div>
+      </header>
+
+      <div class="navbar-expand-md" data-astro-cid-wfnge2tk>
+        <div
+          class="collapse navbar-collapse"
+          id="navbar-menu"
+          data-astro-cid-wfnge2tk
+        >
+          <div class="navbar" data-astro-cid-wfnge2tk>
+            <div class="container-xl" data-astro-cid-wfnge2tk>
+              <div
+                class="row flex-column flex-md-row flex-fill align-items-center justify-content-center"
+                data-astro-cid-wfnge2tk
+              >
+                <div class="col-auto" data-astro-cid-wfnge2tk>
+                  <!-- BEGIN NAVBAR MENU -->
+                  <nav aria-label="Primary" data-astro-cid-wfnge2tk>
+                    <!-- BEGIN NAVBAR MENU -->
+                    <ul class="navbar-nav">
+                      <!-- BEGIN NAVBAR ITEM -->
+                      <li class="nav-item">
+                        <a class="nav-link" href="./farm.html">
+                          <span
+                            class="nav-link-icon d-md-none d-lg-inline-block"
+                            ><!-- Download SVG icon from http://tabler.io/icons/icon/dashboard -->
+                            <svg
+                              xmlns="http://www.w3.org/2000/svg"
+                              width="24"
+                              height="24"
+                              viewBox="0 0 24 24"
+                              fill="none"
+                              stroke="currentColor"
+                              stroke-width="2"
+                              stroke-linecap="round"
+                              stroke-linejoin="round"
+                              aria-hidden="true"
+                              focusable="false"
+                              class="icon"
+                            >
+                              <path d="M10 13a2 2 0 1 0 4 0a2 2 0 1 0 -4 0" />
+                              <path d="M13.45 11.55l2.05 -2.05" />
+                              <path d="M6.4 20a9 9 0 1 1 11.2 0l-11.2 0" /></svg
+                          ></span>
+
+                          <span class="nav-link-title">Dashboard</span>
+                        </a>
+                      </li>
+                      <!-- END NAVBAR ITEM -->
+
+                      <!-- BEGIN NAVBAR ITEM -->
+                      <li class="nav-item">
+                        <a class="nav-link" href="./farm-koi.html">
+                          <span
+                            class="nav-link-icon d-md-none d-lg-inline-block"
+                            ><!-- Download SVG icon from http://tabler.io/icons/icon/fish -->
+                            <svg
+                              xmlns="http://www.w3.org/2000/svg"
+                              width="24"
+                              height="24"
+                              viewBox="0 0 24 24"
+                              fill="none"
+                              stroke="currentColor"
+                              stroke-width="2"
+                              stroke-linecap="round"
+                              stroke-linejoin="round"
+                              aria-hidden="true"
+                              focusable="false"
+                              class="icon"
+                            >
+                              <path
+                                d="M16.69 7.44a6.973 6.973 0 0 0 -1.69 4.56c0 1.747 .64 3.345 1.699 4.571"
+                              />
+                              <path
+                                d="M2 9.504c7.715 8.647 14.75 10.265 20 2.498c-5.25 -7.761 -12.285 -6.142 -20 2.504"
+                              />
+                              <path d="M18 11v.01" />
+                              <path d="M11.5 10.5c-.667 1 -.667 2 0 3" /></svg
+                          ></span>
+
+                          <span class="nav-link-title">Data Ikan</span>
+                        </a>
+                      </li>
+                      <!-- END NAVBAR ITEM -->
+
+                      <!-- BEGIN NAVBAR ITEM -->
+                      <li class="nav-item">
+                        <a class="nav-link" href="./farm-ponds.html">
+                          <span
+                            class="nav-link-icon d-md-none d-lg-inline-block"
+                            ><!-- Download SVG icon from http://tabler.io/icons/icon/bowl -->
+                            <svg
+                              xmlns="http://www.w3.org/2000/svg"
+                              width="24"
+                              height="24"
+                              viewBox="0 0 24 24"
+                              fill="none"
+                              stroke="currentColor"
+                              stroke-width="2"
+                              stroke-linecap="round"
+                              stroke-linejoin="round"
+                              aria-hidden="true"
+                              focusable="false"
+                              class="icon"
+                            >
+                              <path
+                                d="M4 8h16a1 1 0 0 1 1 1v.5c0 1.5 -2.517 5.573 -4 6.5v1a1 1 0 0 1 -1 1h-8a1 1 0 0 1 -1 -1v-1c-1.687 -1.054 -4 -5 -4 -6.5v-.5a1 1 0 0 1 1 -1"
+                              /></svg
+                          ></span>
+
+                          <span class="nav-link-title">Data Kolam</span>
+                        </a>
+                      </li>
+                      <!-- END NAVBAR ITEM -->
+
+                      <!-- BEGIN NAVBAR ITEM -->
+                      <li class="nav-item">
+                        <a class="nav-link" href="./farm-breeding.html">
+                          <span
+                            class="nav-link-icon d-md-none d-lg-inline-block"
+                            ><!-- Download SVG icon from http://tabler.io/icons/icon/dna-2 -->
+                            <svg
+                              xmlns="http://www.w3.org/2000/svg"
+                              width="24"
+                              height="24"
+                              viewBox="0 0 24 24"
+                              fill="none"
+                              stroke="currentColor"
+                              stroke-width="2"
+                              stroke-linecap="round"
+                              stroke-linejoin="round"
+                              aria-hidden="true"
+                              focusable="false"
+                              class="icon"
+                            >
+                              <path
+                                d="M17 3v1c-.01 3.352 -1.68 6.023 -5.008 8.014c-3.328 1.99 3.336 -2 .008 -.014c-3.328 1.99 -5 4.662 -5.008 8.014v1"
+                              />
+                              <path
+                                d="M17 21.014v-1c-.01 -3.352 -1.68 -6.023 -5.008 -8.014c-3.328 -1.99 3.336 2 .008 .014c-3.328 -1.991 -5 -4.662 -5.008 -8.014v-1"
+                              />
+                              <path d="M7 4h10" />
+                              <path d="M7 20h10" />
+                              <path d="M8 8h8" />
+                              <path d="M8 16h8" /></svg
+                          ></span>
+
+                          <span class="nav-link-title">Breeding</span>
+                        </a>
+                      </li>
+                      <!-- END NAVBAR ITEM -->
+
+                      <!-- BEGIN NAVBAR ITEM -->
+                      <li class="nav-item">
+                        <a class="nav-link" href="./farm-reports.html">
+                          <span
+                            class="nav-link-icon d-md-none d-lg-inline-block"
+                            ><!-- Download SVG icon from http://tabler.io/icons/icon/report -->
+                            <svg
+                              xmlns="http://www.w3.org/2000/svg"
+                              width="24"
+                              height="24"
+                              viewBox="0 0 24 24"
+                              fill="none"
+                              stroke="currentColor"
+                              stroke-width="2"
+                              stroke-linecap="round"
+                              stroke-linejoin="round"
+                              aria-hidden="true"
+                              focusable="false"
+                              class="icon"
+                            >
+                              <path
+                                d="M8 5h-2a2 2 0 0 0 -2 2v12a2 2 0 0 0 2 2h5.697"
+                              />
+                              <path d="M18 14v4h4" />
+                              <path d="M18 11v-4a2 2 0 0 0 -2 -2h-2" />
+                              <path
+                                d="M8 5a2 2 0 0 1 2 -2h2a2 2 0 0 1 2 2a2 2 0 0 1 -2 2h-2a2 2 0 0 1 -2 -2"
+                              />
+                              <path d="M14 18a4 4 0 1 0 8 0a4 4 0 1 0 -8 0" />
+                              <path d="M8 11h4" />
+                              <path d="M8 15h3" /></svg
+                          ></span>
+
+                          <span class="nav-link-title">Laporan</span>
+                        </a>
+                      </li>
+                      <!-- END NAVBAR ITEM -->
+
+                      <!-- BEGIN NAVBAR ITEM -->
+                      <li class="nav-item dropdown">
+                        <a
+                          class="nav-link dropdown-toggle"
+                          href="#navbar-penjualan"
+                          data-bs-toggle="dropdown"
+                          data-bs-auto-close="outside"
+                          role="button"
+                          aria-haspopup="true"
+                          aria-expanded="false"
+                        >
+                          <span class="nav-link-icon d-md-none d-lg-inline-block"
+                            ><!-- Download SVG icon from http://tabler.io/icons/icon/tag -->
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false" class="icon">
+<path d="M6.5 7.5a1 1 0 1 0 2 0a1 1 0 1 0 -2 0" /><path d="M3 6v5.172a2 2 0 0 0 .586 1.414l7.71 7.71a2.41 2.41 0 0 0 3.408 0l5.592 -5.592a2.41 2.41 0 0 0 0 -3.408l-7.71 -7.71a2 2 0 0 0 -1.414 -.586h-5.172a3 3 0 0 0 -3 3" />
+                            </svg></span
+                          >
+
+                          <span class="nav-link-title">Penjualan</span>
+                        </a>
+
+                        <div class="dropdown-menu">
+                        <!-- BEGIN NAVBAR ITEM --><a
+                          class="dropdown-item"
+                          href="./farm-sell.html"
+                        >
+                          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false" class="icon icon-inline me-1">
+<path d="M4 19a2 2 0 1 0 4 0a2 2 0 1 0 -4 0" /><path d="M15 19a2 2 0 1 0 4 0a2 2 0 1 0 -4 0" /><path d="M17 17h-11v-14h-2" /><path d="M6 5l14 1l-1 7h-13" />
+                          </svg>
+
+                          Katalog
+                        </a>
+                        <!-- END NAVBAR ITEM -->
+                        <!-- BEGIN NAVBAR ITEM --><a
+                          class="dropdown-item"
+                          href="./farm-invoice.html"
+                        >
+                          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false" class="icon icon-inline me-1">
+<path d="M14 3v4a1 1 0 0 0 1 1h4" /><path d="M17 21h-10a2 2 0 0 1 -2 -2v-14a2 2 0 0 1 2 -2h7l5 5v11a2 2 0 0 1 -2 2" /><path d="M9 7l1 0" /><path d="M9 13l6 0" /><path d="M13 17l2 0" />
+                          </svg>
+
+                          Invoice
+                        </a>
+                        <!-- END NAVBAR ITEM -->
+                        </div>
+                      </li>
+                      <!-- END NAVBAR ITEM -->
+
+                      <!-- BEGIN NAVBAR ITEM -->
+                      <li class="nav-item active dropdown">
+                        <a
+                          class="nav-link dropdown-toggle"
+                          href="#navbar-management"
+                          data-bs-toggle="dropdown"
+                          data-bs-auto-close="outside"
+                          role="button"
+                          aria-haspopup="true"
+                          aria-expanded="false"
+                          aria-current="page"
+                          data-role-required="database-write"
+                        >
+                          <span
+                            class="nav-link-icon d-md-none d-lg-inline-block"
+                            ><!-- Download SVG icon from http://tabler.io/icons/icon/category -->
+                            <svg
+                              xmlns="http://www.w3.org/2000/svg"
+                              width="24"
+                              height="24"
+                              viewBox="0 0 24 24"
+                              fill="none"
+                              stroke="currentColor"
+                              stroke-width="2"
+                              stroke-linecap="round"
+                              stroke-linejoin="round"
+                              aria-hidden="true"
+                              focusable="false"
+                              class="icon"
+                            >
+                              <path d="M4 4h6v6h-6l0 -6" />
+                              <path d="M14 4h6v6h-6l0 -6" />
+                              <path d="M4 14h6v6h-6l0 -6" />
+                              <path
+                                d="M14 17a3 3 0 1 0 6 0a3 3 0 1 0 -6 0"
+                              /></svg
+                          ></span>
+
+                          <span class="nav-link-title">Etc</span>
+                        </a>
+
+                        <div class="dropdown-menu">
+                          <!-- BEGIN NAVBAR ITEM --><a
+                            class="dropdown-item active"
+                            href="./farm-archive.html"
+                          >
+                            <!-- Download SVG icon from http://tabler.io/icons/icon/archive -->
+                            <svg
+                              xmlns="http://www.w3.org/2000/svg"
+                              width="24"
+                              height="24"
+                              viewBox="0 0 24 24"
+                              fill="none"
+                              stroke="currentColor"
+                              stroke-width="2"
+                              stroke-linecap="round"
+                              stroke-linejoin="round"
+                              aria-hidden="true"
+                              focusable="false"
+                              class="icon icon-inline me-1"
+                            >
+                              <path
+                                d="M3 4m0 2a2 2 0 0 1 2 -2h14a2 2 0 0 1 2 2v0a2 2 0 0 1 -2 2h-14a2 2 0 0 1 -2 -2z"
+                              />
+                              <path d="M5 8v10a2 2 0 0 0 2 2h10a2 2 0 0 0 2 -2v-10" />
+                              <path d="M10 12l4 0" />
+                            </svg>
+
+                            Archive
+                          </a>
+                          <!-- END NAVBAR ITEM --><!-- BEGIN NAVBAR ITEM --><a
+                            class="dropdown-item"
+                            href="./farm-inventory.html"
+                          >
+                            <!-- Download SVG icon from http://tabler.io/icons/icon/package -->
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false" class="icon icon-inline me-1"><path d="M12 3l8 4.5l0 9l-8 4.5l-8 -4.5l0 -9l8 -4.5" /><path d="M12 12l8 -4.5" /><path d="M12 12l0 9" /><path d="M12 12l-8 -4.5" /><path d="M16 5.25l-8 4.5" /></svg>
+
+                            Inventaris
+                          </a>
+                          <!-- END NAVBAR ITEM --><!-- BEGIN NAVBAR ITEM --><a
+                            class="dropdown-item"
+                            href="./farm-queue.html"
+                            aria-current="page"
+                          >
+                            <!-- Download SVG icon from http://tabler.io/icons/icon/stack-2 -->
+                            <svg
+                              xmlns="http://www.w3.org/2000/svg"
+                              width="24"
+                              height="24"
+                              viewBox="0 0 24 24"
+                              fill="none"
+                              stroke="currentColor"
+                              stroke-width="2"
+                              stroke-linecap="round"
+                              stroke-linejoin="round"
+                              aria-hidden="true"
+                              focusable="false"
+                              class="icon icon-inline me-1"
+                            >
+                              <path d="M12 4l-8 4l8 4l8 -4l-8 -4" />
+                              <path d="M4 12l8 4l8 -4" />
+                              <path d="M4 16l8 4l8 -4" />
+                            </svg>
+
+                            Queue
+                          </a>
+                          <!-- END NAVBAR ITEM --><!-- BEGIN NAVBAR ITEM --><a
+                            class="dropdown-item"
+                            href="./farm-gallery.html"
+                          >
+                            <!-- Download SVG icon from http://tabler.io/icons/icon/photo -->
+                            <svg
+                              xmlns="http://www.w3.org/2000/svg"
+                              width="24"
+                              height="24"
+                              viewBox="0 0 24 24"
+                              fill="none"
+                              stroke="currentColor"
+                              stroke-width="2"
+                              stroke-linecap="round"
+                              stroke-linejoin="round"
+                              aria-hidden="true"
+                              focusable="false"
+                              class="icon icon-inline me-1"
+                            >
+                              <path d="M15 8h.01" />
+                              <path
+                                d="M3 6a3 3 0 0 1 3 -3h12a3 3 0 0 1 3 3v12a3 3 0 0 1 -3 3h-12a3 3 0 0 1 -3 -3v-12"
+                              />
+                              <path
+                                d="M3 16l5 -5c.928 -.893 2.072 -.893 3 0l5 5"
+                              />
+                              <path
+                                d="M14 14l1 -1c.928 -.893 2.072 -.893 3 0l3 3"
+                              />
+                            </svg>
+
+                            Gallery
+                          </a>
+                          <!-- END NAVBAR ITEM --><!-- BEGIN NAVBAR ITEM --><a
+                            class="dropdown-item"
+                            href="./farm-log.html"
+                          >
+                            <!-- Download SVG icon from http://tabler.io/icons/icon/clipboard-list -->
+                            <svg
+                              xmlns="http://www.w3.org/2000/svg"
+                              width="24"
+                              height="24"
+                              viewBox="0 0 24 24"
+                              fill="none"
+                              stroke="currentColor"
+                              stroke-width="2"
+                              stroke-linecap="round"
+                              stroke-linejoin="round"
+                              aria-hidden="true"
+                              focusable="false"
+                              class="icon icon-inline me-1"
+                            >
+                              <path
+                                d="M9 5h-2a2 2 0 0 0 -2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2 -2v-12a2 2 0 0 0 -2 -2h-2"
+                              />
+                              <path
+                                d="M9 5a2 2 0 0 1 2 -2h2a2 2 0 0 1 2 2a2 2 0 0 1 -2 2h-2a2 2 0 0 1 -2 -2"
+                              />
+                              <path d="M9 12l.01 0" />
+                              <path d="M13 12l2 0" />
+                              <path d="M9 16l.01 0" />
+                              <path d="M13 16l2 0" />
+                            </svg>
+
+                            Log
+                          </a>
+                          <!-- END NAVBAR ITEM -->
+                        </div>
+                      </li>
+                      <!-- END NAVBAR ITEM -->
+                    </ul>
+                    <!-- END NAVBAR MENU -->
+                  </nav>
+                  <!-- END NAVBAR MENU -->
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <!-- END NAVBAR -->
+
+      <!-- END NAVBAR  -->
+
+      <div class="page-wrapper">
+        <!-- BEGIN PAGE HEADER -->
+
+        <div class="page-header d-print-none" data-astro-cid-52ptlyh5>
+          <div class="container-xl" data-astro-cid-52ptlyh5>
+            <div class="row g-0 align-items-center" data-astro-cid-52ptlyh5>
+              <div
+                class="col page-header-compact-title"
+                data-astro-cid-52ptlyh5
+              >
+                <div class="page-title-line" data-astro-cid-52ptlyh5>
+                  <span class="page-title-line-title" data-astro-cid-52ptlyh5>Etc Archive</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <!-- END PAGE HEADER -->
+
+        <!-- BEGIN PAGE BODY -->
+        <main id="content" class="page-body">
+          <div class="container-xl">
+<style>
+  .koi-card-preview{aspect-ratio:2/3;background:var(--koi-preview-color,#d8e2ef);min-height:220px}
+  .koi-card-preview img{object-fit:cover;width:100%;height:100%}
+  .koi-card-preview[data-archive-select]{cursor:pointer;border-radius:6px;overflow:hidden}
+  .koi-card-preview-placeholder{width:100%;height:100%;color:var(--tblr-secondary-color);text-align:center;flex-direction:column;justify-content:center;align-items:center;gap:.45rem;padding:1rem;display:flex}
+  .koi-card-preview-code{color:#182433;background:#ffffffd1;border-radius:4px;padding:.25rem .5rem;font-weight:600}
+  .koi-card-preview-placeholder small{text-transform:uppercase;letter-spacing:.04em;font-size:.75rem}
+  .koi-card-compact{border:1px solid var(--tblr-border-color);transition:border-color .15s,box-shadow .15s}
+  .koi-card-compact.is-selected{border-color:var(--tblr-primary);outline:2px solid var(--tblr-primary);outline-offset:-2px;box-shadow:0 8px 22px rgba(0,0,0,.16)}
+  .koi-card-compact.is-selected .koi-card-preview[data-archive-select]{box-shadow:inset 0 0 0 2px var(--tblr-primary);border-bottom-right-radius:0;border-bottom-left-radius:0}
+  .koi-card-compact .card-body{padding:.75rem}
+  .koi-text-ellipsis{text-overflow:ellipsis;white-space:nowrap;min-width:0;max-width:100%;display:block;overflow:hidden}
+  .koi-card-detail-cell{min-width:0}
+  .koi-card-main-text{min-width:0;max-width:100%}
+  .koi-selected-badge{display:none}
+  .koi-card-compact.is-selected .koi-selected-badge{display:inline-flex}
+</style>
+<div class="card">
+  <div class="card-header d-flex flex-wrap align-items-center justify-content-between gap-2">
+    <div>
+      <h3 class="card-title mb-0">Data Ikan Arsip</h3>
+      <div class="text-secondary small" data-archive-summary><span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>Memuat data arsip...</div>
+    </div>
+    <div class="d-flex flex-wrap align-items-center gap-2">
+      <button class="btn btn-outline-primary btn-icon" type="button" data-archive-select-visible aria-label="Pilih semua ikan yang tampil" title="Pilih semua yang tampil"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false" class="icon"><path d="M7 12l5 5l10 -10" /><path d="M2 12l5 5m5 -5l5 -5" /></svg></button>
+      <span class="text-secondary small d-none" data-archive-selected-label></span>
+      <button class="btn btn-outline-success d-none" type="button" data-archive-restore data-role-required="database-write"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false" class="icon"><path d="M9 14l-4 -4l4 -4" /><path d="M5 10h11a4 4 0 1 1 0 8h-1" /></svg> Kembalikan</button>
+      <button class="btn btn-outline-danger d-none" type="button" data-archive-delete data-role-required="database-write"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false" class="icon"><path d="M4 7l16 0" /><path d="M10 11l0 6" /><path d="M14 11l0 6" /><path d="M5 7l1 12a2 2 0 0 0 2 2h8a2 2 0 0 0 2 -2l1 -12" /><path d="M9 7v-3a1 1 0 0 1 1 -1h4a1 1 0 0 1 1 1v3" /></svg> Hapus permanen</button>
+      <button class="btn btn-outline-orange btn-icon d-none" type="button" data-archive-clear aria-label="Batal pilih" title="Batal pilih"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false" class="icon"><path d="M18 6l-12 12" /><path d="M6 6l12 12" /></svg></button>
+    </div>
+  </div>
+  <div class="card-body">
+    <input class="d-none" id="archive-search" name="archive_search" type="search" data-koi-search aria-hidden="true" tabindex="-1" autocomplete="off" />
+    <div class="row g-3" data-archive-cards><div class="col-12 text-secondary"><div class="d-flex flex-column align-items-center justify-content-center gap-2 py-5 text-secondary"><span class="spinner-border text-primary" role="status" aria-hidden="true"></span><span>Memuat data arsip...</span></div></div></div>
+    <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mt-3 d-none" data-archive-pager>
+      <div class="text-secondary small" data-archive-page-summary></div>
+      <ul class="pagination mb-0" data-archive-pagination></ul>
+    </div>
+  </div>
+</div>
+
+<div class="modal modal-blur fade" id="archive-edit-modal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-lg modal-dialog-centered" role="document">
+    <form class="modal-content" data-archive-edit-form>
+      <div class="modal-header">
+        <h5 class="modal-title">Edit Ikan Arsip</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Tutup"></button>
+      </div>
+      <div class="modal-body">
+        <div class="alert alert-danger d-none" data-archive-edit-error></div>
+        <div class="row g-3">
+          <div class="col-md-4"><label class="form-label">Kode Koi</label><input class="form-control" name="code" autocomplete="off" required /></div>
+          <div class="col-md-4"><label class="form-label">Nama</label><input class="form-control" name="name" autocomplete="off" /></div>
+          <div class="col-md-4"><label class="form-label">Variety</label><input class="form-control" name="variety" autocomplete="off" /></div>
+          <div class="col-md-4"><label class="form-label">Bloodline</label><input class="form-control" name="bloodline" autocomplete="off" /></div>
+          <div class="col-md-4"><label class="form-label">Ternakan</label><input class="form-control" name="farm_name" autocomplete="off" /></div>
+          <div class="col-md-4"><label class="form-label">Owner</label><input class="form-control" name="breeder" autocomplete="off" /></div>
+          <div class="col-md-4"><label class="form-label">Gender</label>
+            <select class="form-select" name="gender"><option value="unknown">Unknown</option><option value="male">Male</option><option value="female">Female</option></select></div>
+          <div class="col-md-4"><label class="form-label">Status</label>
+            <select class="form-select" name="status"><option value="active">Active</option><option value="non_active">Non-Active</option><option value="quarantine">Quarantine</option><option value="sold">Sold</option><option value="dead">Dead</option></select></div>
+          <div class="col-md-4 d-flex align-items-end"><label class="form-check mb-2"><input class="form-check-input" type="checkbox" name="parent_type" value="indukan" /><span class="form-check-label">Indukan</span></label></div>
+          <div class="col-md-4"><label class="form-label">Tanggal Lahir</label><input class="form-control" type="date" name="birth_date" /></div>
+          <div class="col-md-4"><label class="form-label">Tanggal Beli</label><input class="form-control" type="date" name="purchase_date" /></div>
+          <div class="col-md-4"><label class="form-label">Size Saat Ini (cm)</label><input class="form-control" type="number" min="0" step="0.1" name="current_length_cm" /></div>
+          <div class="col-md-6"><label class="form-label">Harga Beli</label><input class="form-control" type="number" min="0" step="any" name="purchase_price" /></div>
+          <div class="col-md-6"><label class="form-label">Harga Jual</label><input class="form-control" type="number" min="0" step="any" name="sale_price" /></div>
+          <div class="col-12"><label class="form-label">Lokasi Arsip</label><input class="form-control" name="archive_location" autocomplete="off" placeholder="Bebas diisi, tidak terhubung ke daftar kolam" />
+            <div class="form-hint">Saat ikan dikembalikan ke Data Ikan, kolam dipilih lagi dari daftar kolam yang berlaku.</div></div>
+          <div class="col-12"><label class="form-label">Catatan</label><textarea class="form-control" name="notes" rows="3"></textarea></div>
+          <div class="col-md-6"><label class="form-label">Diarsipkan</label><input class="form-control" type="text" data-archive-edit-archived readonly tabindex="-1" placeholder="-" /></div>
+          <div class="col-md-6"><label class="form-label">Terakhir Diedit</label><input class="form-control" type="text" data-archive-edit-last-edited readonly tabindex="-1" placeholder="-" /></div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn" data-bs-dismiss="modal">Batal</button>
+        <button type="submit" class="btn btn-primary" data-archive-edit-save>Simpan</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<div class="modal modal-blur fade" id="archive-restore-modal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-sm modal-dialog-centered" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Kembalikan ke Data Ikan</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Tutup"></button>
+      </div>
+      <div class="modal-body">
+        <p class="mb-3" data-archive-restore-info></p>
+        <label class="form-label">Kolam (dari daftar kolam saat ini)</label>
+        <select class="form-select" name="restore_pond" data-archive-restore-pond></select>
+        <div class="text-secondary small mt-2" data-archive-restore-hint></div>
+        <div class="alert alert-danger d-none mt-3 mb-0" data-archive-restore-error></div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn" data-bs-dismiss="modal">Batal</button>
+        <button type="button" class="btn btn-success" data-archive-restore-confirm>Kembalikan</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal modal-blur fade" id="archive-delete-modal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title text-danger">Hapus Permanen</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Tutup"></button>
+      </div>
+      <div class="modal-body">
+        <div class="alert alert-danger" data-archive-delete-info></div>
+        <label class="form-label">Ketik <strong>HAPUS</strong> untuk melanjutkan</label>
+        <input class="form-control" name="delete_confirm" autocomplete="off" data-archive-delete-input />
+        <div class="alert alert-danger d-none mt-3 mb-0" data-archive-delete-error></div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn" data-bs-dismiss="modal">Batal</button>
+        <button type="button" class="btn btn-danger" data-archive-delete-confirm disabled>Hapus permanen</button>
+      </div>
+    </div>
+  </div>
+</div>
+<script>
+;(() => {
+  const apiUrl = '/api'
+  const pageSize = 24
+  const previewColors = ['#dbeafe', '#fee2e2', '#dcfce7', '#fef3c7', '#ede9fe', '#e0f2fe', '#fce7f3', '#e5e7eb']
+  const statusLabels = { active: 'Active', non_active: 'Non-Active', quarantine: 'Quarantine', sold: 'Sold', dead: 'Dead' }
+  const statusClasses = { active: 'bg-green-lt', non_active: 'bg-secondary-lt', quarantine: 'bg-yellow-lt', sold: 'bg-purple-lt', dead: 'bg-red-lt' }
+  const genderLabels = { unknown: 'Unknown', male: 'Male', female: 'Female' }
+  const dayNames = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu']
+  const editIcon = '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false" class="icon"><path d="M7 7h-1a2 2 0 0 0 -2 2v9a2 2 0 0 0 2 2h9a2 2 0 0 0 2 -2v-1" /><path d="M20.385 6.585a2.1 2.1 0 0 0 -2.97 -2.97l-8.415 8.385v3h3l8.385 -8.415" /><path d="M16 5l3 3" /></svg>'
+
+  const cardsEl = document.querySelector('[data-archive-cards]')
+  const summaryEl = document.querySelector('[data-archive-summary]')
+  const pagerEl = document.querySelector('[data-archive-pager]')
+  const paginationEl = document.querySelector('[data-archive-pagination]')
+  const pageSummaryEl = document.querySelector('[data-archive-page-summary]')
+  const searchInput = document.querySelector('[data-koi-search]')
+  const archiveNavbarSearch = document.querySelector('#navbar-global-search')
+  if (archiveNavbarSearch) {
+    archiveNavbarSearch.setAttribute('placeholder', 'Kode, nama, bloodline:isa')
+    archiveNavbarSearch.setAttribute('title', 'Cari bebas: kode, nama, variety, bloodline, ternakan, breeder, lokasi. Cari per kolom dengan kolom:isi, boleh digabung: bloodline:isa status:sold catatan:dijual. Nama kolom boleh disingkat (misalnya bloo:isa). Kolom: kode, nama, variety, bloodline, ternakan, breeder, lokasi, status, gender, catatan, ukuran, tanggal.')
+  }
+  const selectVisibleButton = document.querySelector('[data-archive-select-visible]')
+  const selectedLabel = document.querySelector('[data-archive-selected-label]')
+  const restoreButton = document.querySelector('[data-archive-restore]')
+  const deleteButton = document.querySelector('[data-archive-delete]')
+  const clearButton = document.querySelector('[data-archive-clear]')
+  const editModalEl = document.getElementById('archive-edit-modal')
+  const editForm = document.querySelector('[data-archive-edit-form]')
+  const editError = document.querySelector('[data-archive-edit-error]')
+  const restoreModalEl = document.getElementById('archive-restore-modal')
+  const restorePondSelect = document.querySelector('[data-archive-restore-pond]')
+  const restoreError = document.querySelector('[data-archive-restore-error]')
+  const deleteModalEl = document.getElementById('archive-delete-modal')
+  const deleteInput = document.querySelector('[data-archive-delete-input]')
+  const deleteConfirmButton = document.querySelector('[data-archive-delete-confirm]')
+  const deleteError = document.querySelector('[data-archive-delete-error]')
+
+  let items = []
+  let ponds = []
+  let page = 1
+  let signature = ''
+  let editingId = null
+  const selected = new Set()
+  const selectedKey = 'nishikigoi-selected:farm-archive'
+  try {
+    JSON.parse(sessionStorage.getItem(selectedKey) || '[]').forEach((id) => selected.add(String(id)))
+  } catch {}
+
+  const escapeHtml = (value) => String(value ?? '').replace(/[&<>'"]/g, (char) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[char]))
+  const text = (value) => (value === null || value === undefined || value === '' ? '-' : value)
+  const getModal = () => (window.tabler?.bootstrap || window.bootstrap)?.Modal
+  const openModal = (element) => getModal()?.getOrCreateInstance(element).show()
+  const closeModal = (element) => {
+    const instance = getModal()?.getInstance(element)
+    if (!instance) return
+    instance.hide()
+    // hide() is ignored while the open animation is still running, so try once more.
+    window.setTimeout(() => { if (element.classList.contains('show')) instance.hide() }, 450)
+  }
+
+  const formatDay = (value) => (value ? window.KoiAuth.formatDate(value, { weekday: true }) : '')
+  const formatSize = (value) => {
+    if (value === null || value === undefined || value === '') return '-'
+    const number = Number(value)
+    return Number.isFinite(number) ? `${number.toLocaleString('id-ID', { maximumFractionDigits: 1 })} cm` : '-'
+  }
+
+  const request = async (path, options) => {
+    const response = await fetch(`${apiUrl}${path}`, options)
+    let data = null
+    try {
+      data = await response.json()
+    } catch {
+      data = null
+    }
+    if (!response.ok) throw new Error((data && data.error) || 'Permintaan gagal diproses')
+    return data
+  }
+  const postJson = (path, body, method = 'POST') => request(path, { method, headers: { 'content-type': 'application/json' }, body: JSON.stringify(body) })
+
+  // ---- search: plain words + "field:value" ----------------------------------------------------------------
+  // "bloodline:isa status:sold catatan:dijual" -> every field:value must match (a value runs until the next field:).
+  // Plain words must all be found in kode, nama, variety, bloodline, ternakan, breeder, lokasi arsip, status, gender.
+  // A comma inside a text value means "or". Catatan is only searched with catatan:.
+  const archiveAliases = {
+    kode: 'code', code: 'code', id: 'code',
+    nama: 'name', name: 'name',
+    variety: 'variety', varietas: 'variety', jenis: 'variety',
+    bloodline: 'bloodline', darah: 'bloodline',
+    ternakan: 'farm_name', peternakan: 'farm_name', farm: 'farm_name',
+    breeder: 'breeder',
+    lokasi: 'archive_location', arsip: 'archive_location', kolam: 'archive_location',
+    status: 'status',
+    gender: 'gender', kelamin: 'gender', jk: 'gender',
+    catatan: 'notes', notes: 'notes',
+    ukuran: 'current_length_cm', size: 'current_length_cm', panjang: 'current_length_cm',
+    tanggal: 'archived_at', diarsipkan: 'archived_at',
+  }
+  // "bloo:isa" works too: a field name may be shortened to its first letters (2 or more). Exact names win, then the
+  // first name in the list above that starts with what was typed. Unknown names stay plain text.
+  const resolveSearchMarkers = (keyword, aliases) => {
+    const names = Object.keys(aliases)
+    const found = []
+    const pattern = /(?:^|[\s,])([a-z]+)\s*:/gi
+    let match
+    while ((match = pattern.exec(keyword))) {
+      const key = match[1].toLowerCase()
+      const name = aliases[key] ? key : (key.length >= 2 ? names.find((alias) => alias.startsWith(key)) : null)
+      if (name) {
+        const hit = [match[0], name]
+        hit.index = match.index
+        found.push(hit)
+      }
+    }
+    return found
+  }
+  const archiveStatusWords = { aktif: 'active', nonaktif: 'non_active', 'non-aktif': 'non_active', karantina: 'quarantine', terjual: 'sold', mati: 'dead' }
+  const archiveGenderWords = { jantan: 'male', betina: 'female', male: 'male', female: 'female', m: 'male', f: 'female', unknown: 'unknown' }
+  const archiveNorm = (value) => String(value === null || value === undefined ? '' : value).toLowerCase().trim()
+  const archiveNumberTest = (value) => {
+    const text = String(value || '').toLowerCase().replace(/\s|cm/g, '').replace(',', '.')
+    const compare = text.match(/^(>=|<=|>|<)(\d+(?:\.\d+)?)$/)
+    if (compare) {
+      const limit = Number(compare[2])
+      return { '>=': (n) => n >= limit, '<=': (n) => n <= limit, '>': (n) => n > limit, '<': (n) => n < limit }[compare[1]]
+    }
+    const range = text.match(/^(\d+(?:\.\d+)?)-(\d+(?:\.\d+)?)$/)
+    if (range) {
+      const [min, max] = [Math.min(Number(range[1]), Number(range[2])), Math.max(Number(range[1]), Number(range[2]))]
+      return (n) => n >= min && n <= max
+    }
+    return /^\d+(?:\.\d+)?$/.test(text) ? (n) => (Number.isInteger(Number(text)) ? Math.floor(n) === Number(text) : n === Number(text)) : null
+  }
+  const archiveDateText = (value) => {
+    const match = String(value || '').trim().match(/^(\d{1,2})[/.-](\d{1,2})[/.-](\d{4})$/)
+    return match ? `${match[3]}-${match[2].padStart(2, '0')}-${match[1].padStart(2, '0')}` : String(value || '').trim()
+  }
+  const archiveField = (item, field, rawValue) => {
+    const value = archiveNorm(rawValue)
+    if (!value) return null
+    if (field === 'current_length_cm') {
+      const test = archiveNumberTest(value)
+      const number = Number(item.current_length_cm)
+      if (!test) return null
+      return item.current_length_cm !== null && item.current_length_cm !== undefined && item.current_length_cm !== '' && Number.isFinite(number) && test(number)
+    }
+    if (field === 'archived_at') return String(item.archived_at || '').slice(0, 10).includes(archiveDateText(value))
+    return value.split(',').map((part) => part.trim()).filter(Boolean).some((choice) => {
+      if (field === 'status') return String(item.status || '').toLowerCase() === (archiveStatusWords[choice] || choice) || archiveNorm(statusLabels[item.status]).includes(choice)
+      if (field === 'gender') return String(item.gender || 'unknown').toLowerCase() === (archiveGenderWords[choice] || choice)
+      return archiveNorm(item[field]).includes(choice)
+    })
+  }
+  const searchText = (item) => [item.code, item.name, item.variety, item.bloodline, item.farm_name, item.breeder, item.archive_location, statusLabels[item.status], genderLabels[item.gender]]
+    .filter(Boolean).join(' ').toLowerCase()
+  const filteredItems = () => {
+    const keyword = String(searchInput.value || '').trim()
+    if (!keyword) return items
+    const markers = resolveSearchMarkers(keyword, archiveAliases)
+    const plain = markers.length ? keyword.slice(0, markers[0].index) : keyword
+    const alternatives = plain.split(',').map((part) => archiveNorm(part).split(/\s+/).filter(Boolean)).filter((words) => words.length)
+
+    return items.filter((item) => {
+      for (let index = 0; index < markers.length; index += 1) {
+        const marker = markers[index]
+        const valueStart = marker.index + marker[0].length
+        const valueEnd = index + 1 < markers.length ? markers[index + 1].index : keyword.length
+        if (archiveField(item, archiveAliases[marker[1].toLowerCase()], keyword.slice(valueStart, valueEnd)) === false) return false
+      }
+      if (!alternatives.length) return true
+      const haystack = searchText(item)
+      return alternatives.some((words) => words.every((word) => haystack.includes(word)))
+    })
+  }
+
+  const cardHtml = (item, index) => {
+    const id = escapeHtml(item.id)
+    const image = item.image_url
+    const media = image
+      ? `<img src="${escapeHtml(image)}" alt="${escapeHtml(text(item.name))}" loading="lazy" decoding="async" fetchpriority="low" />`
+      : `<span class="koi-card-preview-placeholder"><span class="koi-card-preview-code">${escapeHtml(text(item.code))}</span><small>No foto</small></span>`
+    const cell = (label, value) => `<div class="col-6 koi-card-detail-cell"><span class="text-secondary">${label}</span><div class="koi-text-ellipsis" title="${escapeHtml(value)}">${escapeHtml(value)}</div></div>`
+    return `
+      <div class="col-sm-6 col-lg-4 col-xl-3">
+        <div class="card h-100 koi-card-compact ${selected.has(String(item.id)) ? 'is-selected' : ''}">
+          <div class="koi-card-preview d-flex align-items-end position-relative ${image ? '' : 'p-3'}" style="--koi-preview-color: ${previewColors[index % previewColors.length]}" data-archive-select="${id}">${media}</div>
+          <div class="card-body">
+            <div class="d-flex align-items-start justify-content-between gap-2 mb-2">
+              <div class="koi-card-main-text">
+                <div class="fw-semibold koi-text-ellipsis" title="${escapeHtml(text(item.code))}">${escapeHtml(text(item.code))}</div>
+                <div class="text-secondary small koi-text-ellipsis" title="${escapeHtml(text(item.variety))}">${escapeHtml(text(item.variety))}</div>
+              </div>
+              <div class="d-flex align-items-center gap-1 flex-shrink-0">
+                <span class="badge bg-blue text-blue-fg koi-selected-badge">Terpilih</span>
+                <span class="badge ${statusClasses[item.status] || 'bg-blue-lt'}">${escapeHtml(statusLabels[item.status] || text(item.status))}</span>
+              </div>
+            </div>
+            <div class="row g-2 small">
+              ${cell('Nama', text(item.name))}
+              ${cell('Bloodline', text(item.bloodline))}
+              ${cell('Ternakan', text(item.farm_name))}
+              ${cell('Lokasi Arsip', text(item.archive_location))}
+              ${cell('Kelamin', genderLabels[item.gender] || text(item.gender))}
+              ${cell('Size', formatSize(item.current_length_cm))}
+            </div>
+            <div class="mt-2 d-flex align-items-center justify-content-between gap-2">
+              <span class="text-secondary small koi-text-ellipsis" title="Tanggal diarsipkan">Arsip: ${escapeHtml(formatDay(item.archived_at) || '-')}</span>
+              <button class="btn btn-outline-primary btn-icon" type="button" data-archive-edit="${id}" data-role-required="database-write" aria-label="Edit ikan arsip" title="Edit ikan arsip">${editIcon}</button>
+            </div>
+          </div>
+        </div>
+      </div>`
+  }
+
+  const pageNumbers = (current, total) => {
+    const start = Math.max(1, current - 2)
+    const end = Math.min(total, current + 2)
+    const numbers = []
+    for (let number = start; number <= end; number += 1) numbers.push(number)
+    return numbers
+  }
+
+  const updateSelection = () => {
+    const count = selected.size
+    selectedLabel.textContent = `${count} ikan dipilih`
+    selectedLabel.classList.toggle('d-none', count === 0)
+    ;[restoreButton, deleteButton, clearButton].forEach((button) => button.classList.toggle('d-none', count === 0))
+  }
+
+  const render = () => {
+    try { sessionStorage.setItem(selectedKey, JSON.stringify([...selected])) } catch {}
+    const list = filteredItems()
+    const totalPages = Math.max(1, Math.ceil(list.length / pageSize))
+    page = Math.min(Math.max(page, 1), totalPages)
+    const start = (page - 1) * pageSize
+    const pageItems = list.slice(start, start + pageSize)
+    const searching = list.length !== items.length
+
+    summaryEl.textContent = items.length === 0
+      ? 'Belum ada ikan di arsip.'
+      : searching ? `${list.length} dari ${items.length} ikan arsip cocok dengan pencarian` : `${items.length} ikan diarsipkan`
+    cardsEl.innerHTML = pageItems.map(cardHtml).join('')
+      || `<div class="col-12 text-secondary">${items.length === 0 ? 'Belum ada ikan di arsip. Pilih ikan di Data Ikan lalu klik tombol Arsipkan.' : 'Tidak ada ikan arsip yang cocok dengan pencarian.'}</div>`
+
+    pagerEl.classList.toggle('d-none', list.length <= pageSize)
+    pageSummaryEl.textContent = list.length ? `Menampilkan ${start + 1} - ${Math.min(start + pageSize, list.length)} dari ${list.length} ikan` : ''
+    paginationEl.innerHTML = `
+      <li class="page-item ${page <= 1 ? 'disabled' : ''}"><button class="page-link" type="button" data-archive-page="${page - 1}">Prev</button></li>
+      ${pageNumbers(page, totalPages).map((number) => `<li class="page-item ${number === page ? 'active' : ''}"><button class="page-link" type="button" data-archive-page="${number}">${number}</button></li>`).join('')}
+      <li class="page-item ${page >= totalPages ? 'disabled' : ''}"><button class="page-link" type="button" data-archive-page="${page + 1}">Next</button></li>`
+    updateSelection()
+  }
+
+  const load = async (silent = false) => {
+    try {
+      const [koi, pondList] = await Promise.all([request('/koi?archived=1'), request('/ponds')])
+      ponds = pondList
+      const nextSignature = JSON.stringify(koi)
+      if (silent && nextSignature === signature) return
+      signature = nextSignature
+      items = koi
+      const ids = new Set(items.map((item) => String(item.id)))
+      ;[...selected].forEach((id) => { if (!ids.has(id)) selected.delete(id) })
+      render()
+    } catch (error) {
+      if (!silent) cardsEl.innerHTML = '<div class="col-12 text-danger">Data arsip gagal dimuat.</div>'
+    }
+  }
+
+  const findItem = (id) => items.find((item) => String(item.id) === String(id))
+
+  const toggleSelection = (id) => {
+    const key = String(id)
+    if (selected.has(key)) selected.delete(key)
+    else selected.add(key)
+    const card = cardsEl.querySelector(`[data-archive-select="${key}"]`)?.closest('.koi-card-compact')
+    card?.classList.toggle('is-selected', selected.has(key))
+    updateSelection()
+  }
+
+  const setError = (element, message) => {
+    element.textContent = message || ''
+    element.classList.toggle('d-none', !message)
+  }
+
+  // ---- edit
+  const openEdit = (id) => {
+    const item = findItem(id)
+    if (!item) return
+    editingId = item.id
+    setError(editError, '')
+    const fields = ['code', 'name', 'variety', 'bloodline', 'farm_name', 'breeder', 'gender', 'status', 'current_length_cm', 'purchase_price', 'sale_price', 'archive_location', 'notes']
+    fields.forEach((name) => {
+      const field = editForm.elements[name]
+      if (field) field.value = item[name] === null || item[name] === undefined ? '' : item[name]
+    })
+    editForm.elements.gender.value = item.gender || 'unknown'
+    editForm.elements.status.value = item.status || 'active'
+    editForm.elements.birth_date.value = item.birth_date ? String(item.birth_date).slice(0, 10) : ''
+    editForm.elements.purchase_date.value = item.purchase_date ? String(item.purchase_date).slice(0, 10) : ''
+    editForm.elements.parent_type.checked = item.parent_type === 'indukan'
+    document.querySelector('[data-archive-edit-archived]').value = formatDay(item.archived_at)
+    document.querySelector('[data-archive-edit-last-edited]').value = formatDay(item.updated_at)
+    openModal(editModalEl)
+  }
+
+  editForm.addEventListener('submit', async (event) => {
+    event.preventDefault()
+    if (editingId === null) return
+    const saveButton = document.querySelector('[data-archive-edit-save]')
+    const value = (name) => editForm.elements[name].value
+    saveButton.disabled = true
+    setError(editError, '')
+    try {
+      await postJson(`/koi/${editingId}`, {
+        code: value('code').trim().toUpperCase(),
+        name: value('name'),
+        variety: value('variety'),
+        bloodline: value('bloodline'),
+        farm_name: value('farm_name'),
+        breeder: value('breeder'),
+        gender: value('gender'),
+        status: value('status'),
+        parent_type: editForm.elements.parent_type.checked ? 'indukan' : 'non_indukan',
+        birth_date: value('birth_date'),
+        purchase_date: value('purchase_date'),
+        current_length_cm: value('current_length_cm'),
+        purchase_price: value('purchase_price'),
+        sale_price: value('sale_price'),
+        archive_location: value('archive_location'),
+        notes: value('notes'),
+      }, 'PATCH')
+      closeModal(editModalEl)
+      await load()
+    } catch (error) {
+      setError(editError, error.message)
+    } finally {
+      saveButton.disabled = false
+    }
+  })
+
+  // ---- restore
+  const openRestore = () => {
+    const chosen = [...selected].map(findItem).filter(Boolean)
+    if (chosen.length === 0) return
+    setError(restoreError, '')
+    document.querySelector('[data-archive-restore-info]').textContent = `${chosen.length} ikan akan dikembalikan ke daftar Data Ikan.`
+    const locations = [...new Set(chosen.map((item) => String(item.archive_location || '').trim().toLowerCase()))]
+    const sorted = [...ponds].sort((first, second) => String(first.name).localeCompare(String(second.name), 'id', { sensitivity: 'base' }))
+    const previous = locations.length === 1 && locations[0] ? sorted.find((pond) => String(pond.name).trim().toLowerCase() === locations[0]) : null
+    restorePondSelect.innerHTML = '<option value="">Tanpa kolam</option>' + sorted.map((pond) => `<option value="${escapeHtml(pond.id)}">${escapeHtml(pond.name)} (${Number(pond.koi_count || 0)} ikan)</option>`).join('')
+    restorePondSelect.value = previous ? String(previous.id) : ''
+    document.querySelector('[data-archive-restore-hint]').textContent = locations.length === 1 && locations[0]
+      ? (previous ? `Kolam terakhir "${chosen[0].archive_location}" ditemukan di daftar kolam dan dipilih otomatis.` : `Lokasi arsip "${chosen[0].archive_location}" tidak ada di daftar kolam. Pilih kolam yang sesuai.`)
+      : 'Pilih kolam dari daftar kolam yang berlaku sekarang.'
+    openModal(restoreModalEl)
+  }
+
+  document.querySelector('[data-archive-restore-confirm]').addEventListener('click', async (event) => {
+    const button = event.currentTarget
+    button.disabled = true
+    setError(restoreError, '')
+    try {
+      await postJson('/koi/unarchive', { ids: [...selected].map(Number), pond_id: restorePondSelect.value || null })
+      selected.clear()
+      closeModal(restoreModalEl)
+      await load()
+    } catch (error) {
+      setError(restoreError, error.message)
+    } finally {
+      button.disabled = false
+    }
+  })
+
+  // ---- permanent delete
+  const openDelete = () => {
+    const count = selected.size
+    if (count === 0) return
+    setError(deleteError, '')
+    deleteInput.value = ''
+    deleteConfirmButton.disabled = true
+    document.querySelector('[data-archive-delete-info]').textContent = `${count} ikan akan dihapus selamanya beserta riwayat progress fotonya dan tidak bisa dikembalikan. Data di Breeding dan Laporan tetap menyimpan teks kode dan nama ikan, tetapi foto ikan tidak ada lagi.`
+    openModal(deleteModalEl)
+  }
+
+  deleteInput.addEventListener('input', () => {
+    deleteConfirmButton.disabled = deleteInput.value.trim() !== 'HAPUS'
+  })
+
+  deleteConfirmButton.addEventListener('click', async () => {
+    if (deleteInput.value.trim() !== 'HAPUS') return
+    deleteConfirmButton.disabled = true
+    setError(deleteError, '')
+    try {
+      await postJson('/koi/archive-delete', { ids: [...selected].map(Number) })
+      selected.clear()
+      closeModal(deleteModalEl)
+      await load()
+    } catch (error) {
+      setError(deleteError, error.message)
+      deleteConfirmButton.disabled = deleteInput.value.trim() !== 'HAPUS'
+    }
+  })
+
+  // ---- events
+  cardsEl.addEventListener('click', (event) => {
+    const editButton = event.target.closest('[data-archive-edit]')
+    if (editButton) {
+      openEdit(editButton.dataset.archiveEdit)
+      return
+    }
+    const preview = event.target.closest('[data-archive-select]')
+    if (preview) toggleSelection(preview.dataset.archiveSelect)
+  })
+  paginationEl.addEventListener('click', (event) => {
+    const button = event.target.closest('[data-archive-page]')
+    if (!button || button.closest('.disabled')) return
+    page = Number(button.dataset.archivePage) || 1
+    render()
+    window.scrollTo({ top: 0, behavior: 'smooth' })
+  })
+  selectVisibleButton.addEventListener('click', () => {
+    const list = filteredItems().slice((page - 1) * pageSize, page * pageSize)
+    const allSelected = list.length > 0 && list.every((item) => selected.has(String(item.id)))
+    list.forEach((item) => (allSelected ? selected.delete(String(item.id)) : selected.add(String(item.id))))
+    render()
+  })
+  clearButton.addEventListener('click', () => {
+    selected.clear()
+    render()
+  })
+  restoreButton.addEventListener('click', openRestore)
+  deleteButton.addEventListener('click', openDelete)
+  searchInput.addEventListener('input', () => {
+    page = 1
+    render()
+  })
+
+  load()
+  window.KoiAuth?.registerRealtimeRefresh(() => load(true), { intervalMs: 20000 })
+})()
+</script>
+          </div>
+        </main>
+        <!-- END PAGE BODY -->
+
+        <!-- BEGIN FOOTER -->
+        <!--  BEGIN FOOTER  -->
+        <footer class="footer footer-transparent d-print-none">
+          <div class="container-xl">
+            <div class="row text-center align-items-center flex-row-reverse">
+              <div class="col-lg-auto ms-lg-auto">
+                <nav aria-label="Footer">
+                  <ul class="list-inline mb-0">
+                    <li class="list-inline-item">
+                      <a href="./license.html" class="link-secondary"
+                        >License</a
+                      >
+                    </li>
+                  </ul>
+                </nav>
+              </div>
+              <div class="col-12 col-lg-auto mt-3 mt-lg-0">
+                <ul class="list-inline mb-0">
+                  <li class="list-inline-item">
+                    Copyright &copy; 2026 <span data-brand-owner>Nishikigoi Farm</span>. All rights
+                    reserved. V1-261018
+                  </li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        </footer>
+        <!--  END FOOTER  -->
+        <!-- END FOOTER -->
+      </div>
+    </div>
+
+    <!-- BEGIN THEME SETTINGS -->
+    <div>
+      <form
+        class="offcanvas offcanvas-start offcanvas-narrow"
+        tabindex="-1"
+        id="offcanvas-settings"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="offcanvas-settings-title"
+      >
+        <div class="offcanvas-header">
+          <h2 class="offcanvas-title" id="offcanvas-settings-title">
+            Theme Settings
+          </h2>
+          <button
+            type="button"
+            class="btn-close"
+            data-bs-dismiss="offcanvas"
+            aria-label="Close"
+          ></button>
+        </div>
+        <div class="offcanvas-body d-flex flex-column">
+          <div>
+            <fieldset class="border-0 p-0 mb-4">
+              <legend
+                class="form-label float-none mb-0"
+                style="font-size: inherit"
+              >
+                Color mode
+              </legend>
+              <p class="form-hint">Choose the color mode for your app.</p>
+              <label class="form-check">
+                <div class="form-selectgroup-item">
+                  <input
+                    type="radio"
+                    name="theme"
+                    value="light"
+                    class="form-check-input"
+                    checked
+                  />
+                  <div class="form-check-label">Light</div>
+                </div> </label
+              ><label class="form-check">
+                <div class="form-selectgroup-item">
+                  <input
+                    type="radio"
+                    name="theme"
+                    value="dark"
+                    class="form-check-input"
+                  />
+                  <div class="form-check-label">Dark</div>
+                </div> </label
+              ><label class="form-check">
+                <div class="form-selectgroup-item">
+                  <input
+                    type="radio"
+                    name="theme"
+                    value="auto"
+                    class="form-check-input"
+                  />
+                  <div class="form-check-label">Auto</div>
+                </div>
+              </label>
+            </fieldset>
+
+            <fieldset class="border-0 p-0 mb-4">
+              <legend
+                class="form-label float-none mb-0"
+                style="font-size: inherit"
+              >
+                Color scheme
+              </legend>
+              <p class="form-hint">The perfect color mode for your app.</p>
+
+              <div class="row g-2">
+                <div class="col-auto">
+                  <label class="form-colorinput">
+                    <input
+                      name="theme-primary"
+                      type="radio"
+                      value="blue"
+                      class="form-colorinput-input"
+                      aria-label="blue"
+                    />
+                    <span class="form-colorinput-color bg-blue"></span>
+                  </label>
+                </div>
+                <div class="col-auto">
+                  <label class="form-colorinput">
+                    <input
+                      name="theme-primary"
+                      type="radio"
+                      value="azure"
+                      class="form-colorinput-input"
+                      aria-label="azure"
+                    />
+                    <span class="form-colorinput-color bg-azure"></span>
+                  </label>
+                </div>
+                <div class="col-auto">
+                  <label class="form-colorinput">
+                    <input
+                      name="theme-primary"
+                      type="radio"
+                      value="indigo"
+                      class="form-colorinput-input"
+                      aria-label="indigo"
+                    />
+                    <span class="form-colorinput-color bg-indigo"></span>
+                  </label>
+                </div>
+                <div class="col-auto">
+                  <label class="form-colorinput">
+                    <input
+                      name="theme-primary"
+                      type="radio"
+                      value="purple"
+                      class="form-colorinput-input"
+                      aria-label="purple"
+                    />
+                    <span class="form-colorinput-color bg-purple"></span>
+                  </label>
+                </div>
+                <div class="col-auto">
+                  <label class="form-colorinput">
+                    <input
+                      name="theme-primary"
+                      type="radio"
+                      value="pink"
+                      class="form-colorinput-input"
+                      aria-label="pink"
+                    />
+                    <span class="form-colorinput-color bg-pink"></span>
+                  </label>
+                </div>
+                <div class="col-auto">
+                  <label class="form-colorinput">
+                    <input
+                      name="theme-primary"
+                      type="radio"
+                      value="red"
+                      class="form-colorinput-input"
+                      aria-label="red"
+                    />
+                    <span class="form-colorinput-color bg-red"></span>
+                  </label>
+                </div>
+                <div class="col-auto">
+                  <label class="form-colorinput">
+                    <input
+                      name="theme-primary"
+                      type="radio"
+                      value="orange"
+                      class="form-colorinput-input"
+                      aria-label="orange"
+                    />
+                    <span class="form-colorinput-color bg-orange"></span>
+                  </label>
+                </div>
+                <div class="col-auto">
+                  <label class="form-colorinput">
+                    <input
+                      name="theme-primary"
+                      type="radio"
+                      value="yellow"
+                      class="form-colorinput-input"
+                      aria-label="yellow"
+                    />
+                    <span class="form-colorinput-color bg-yellow"></span>
+                  </label>
+                </div>
+                <div class="col-auto">
+                  <label class="form-colorinput">
+                    <input
+                      name="theme-primary"
+                      type="radio"
+                      value="lime"
+                      class="form-colorinput-input"
+                      aria-label="lime"
+                    />
+                    <span class="form-colorinput-color bg-lime"></span>
+                  </label>
+                </div>
+                <div class="col-auto">
+                  <label class="form-colorinput">
+                    <input
+                      name="theme-primary"
+                      type="radio"
+                      value="green"
+                      class="form-colorinput-input"
+                      aria-label="green"
+                    />
+                    <span class="form-colorinput-color bg-green"></span>
+                  </label>
+                </div>
+                <div class="col-auto">
+                  <label class="form-colorinput">
+                    <input
+                      name="theme-primary"
+                      type="radio"
+                      value="teal"
+                      class="form-colorinput-input"
+                      aria-label="teal"
+                    />
+                    <span class="form-colorinput-color bg-teal"></span>
+                  </label>
+                </div>
+                <div class="col-auto">
+                  <label class="form-colorinput">
+                    <input
+                      name="theme-primary"
+                      type="radio"
+                      value="cyan"
+                      class="form-colorinput-input"
+                      aria-label="cyan"
+                    />
+                    <span class="form-colorinput-color bg-cyan"></span>
+                  </label>
+                </div>
+                <div class="col-auto">
+                  <label class="form-colorinput">
+                    <input
+                      name="theme-primary"
+                      type="radio"
+                      value="inverted"
+                      class="form-colorinput-input"
+                      aria-label="Inverted"
+                    />
+                    <span class="form-colorinput-color bg-inverted"></span>
+                  </label>
+                </div>
+              </div>
+            </fieldset>
+
+            <fieldset class="border-0 p-0 mb-4">
+              <legend
+                class="form-label float-none mb-0"
+                style="font-size: inherit"
+              >
+                Font family
+              </legend>
+              <p class="form-hint">
+                Choose the font family that fits your app.
+              </p>
+
+              <div>
+                <label class="form-check">
+                  <div class="form-selectgroup-item">
+                    <input
+                      type="radio"
+                      name="theme-font"
+                      value="sans-serif"
+                      class="form-check-input"
+                      checked
+                    />
+                    <div class="form-check-label">Sans-serif</div>
+                  </div> </label
+                ><label class="form-check">
+                  <div class="form-selectgroup-item">
+                    <input
+                      type="radio"
+                      name="theme-font"
+                      value="serif"
+                      class="form-check-input"
+                    />
+                    <div class="form-check-label">Serif</div>
+                  </div> </label
+                ><label class="form-check">
+                  <div class="form-selectgroup-item">
+                    <input
+                      type="radio"
+                      name="theme-font"
+                      value="monospace"
+                      class="form-check-input"
+                    />
+                    <div class="form-check-label">Monospace</div>
+                  </div> </label
+                ><label class="form-check">
+                  <div class="form-selectgroup-item">
+                    <input
+                      type="radio"
+                      name="theme-font"
+                      value="comic"
+                      class="form-check-input"
+                    />
+                    <div class="form-check-label">Comic</div>
+                  </div>
+                </label>
+              </div>
+            </fieldset>
+
+            <fieldset class="border-0 p-0 mb-4">
+              <legend
+                class="form-label float-none mb-0"
+                style="font-size: inherit"
+              >
+                Theme base
+              </legend>
+              <p class="form-hint">Choose the gray shade for your app.</p>
+
+              <div>
+                <label class="form-check">
+                  <div class="form-selectgroup-item">
+                    <input
+                      type="radio"
+                      name="theme-base"
+                      value="slate"
+                      class="form-check-input"
+                    />
+                    <div class="form-check-label">Slate</div>
+                  </div> </label
+                ><label class="form-check">
+                  <div class="form-selectgroup-item">
+                    <input
+                      type="radio"
+                      name="theme-base"
+                      value="gray"
+                      class="form-check-input"
+                      checked
+                    />
+                    <div class="form-check-label">Gray</div>
+                  </div> </label
+                ><label class="form-check">
+                  <div class="form-selectgroup-item">
+                    <input
+                      type="radio"
+                      name="theme-base"
+                      value="zinc"
+                      class="form-check-input"
+                    />
+                    <div class="form-check-label">Zinc</div>
+                  </div> </label
+                ><label class="form-check">
+                  <div class="form-selectgroup-item">
+                    <input
+                      type="radio"
+                      name="theme-base"
+                      value="neutral"
+                      class="form-check-input"
+                    />
+                    <div class="form-check-label">Neutral</div>
+                  </div> </label
+                ><label class="form-check">
+                  <div class="form-selectgroup-item">
+                    <input
+                      type="radio"
+                      name="theme-base"
+                      value="stone"
+                      class="form-check-input"
+                    />
+                    <div class="form-check-label">Stone</div>
+                  </div>
+                </label>
+              </div>
+            </fieldset>
+
+            <fieldset class="border-0 p-0 mb-4">
+              <legend
+                class="form-label float-none mb-0"
+                style="font-size: inherit"
+              >
+                Corner Radius
+              </legend>
+              <p class="form-hint">
+                Choose the border radius factor for your app.
+              </p>
+
+              <div>
+                <label class="form-check">
+                  <div class="form-selectgroup-item">
+                    <input
+                      type="radio"
+                      name="theme-radius"
+                      value="0"
+                      class="form-check-input"
+                    />
+                    <div class="form-check-label">0</div>
+                  </div> </label
+                ><label class="form-check">
+                  <div class="form-selectgroup-item">
+                    <input
+                      type="radio"
+                      name="theme-radius"
+                      value="0.5"
+                      class="form-check-input"
+                    />
+                    <div class="form-check-label">0.5</div>
+                  </div> </label
+                ><label class="form-check">
+                  <div class="form-selectgroup-item">
+                    <input
+                      type="radio"
+                      name="theme-radius"
+                      value="1"
+                      class="form-check-input"
+                      checked
+                    />
+                    <div class="form-check-label">1</div>
+                  </div> </label
+                ><label class="form-check">
+                  <div class="form-selectgroup-item">
+                    <input
+                      type="radio"
+                      name="theme-radius"
+                      value="1.5"
+                      class="form-check-input"
+                    />
+                    <div class="form-check-label">1.5</div>
+                  </div> </label
+                ><label class="form-check">
+                  <div class="form-selectgroup-item">
+                    <input
+                      type="radio"
+                      name="theme-radius"
+                      value="2"
+                      class="form-check-input"
+                    />
+                    <div class="form-check-label">2</div>
+                  </div>
+                </label>
+              </div>
+            </fieldset>
+          </div>
+
+          <div class="mt-auto space-y">
+            <button type="button" class="btn w-100" id="reset-changes">
+              <!-- Download SVG icon from http://tabler.io/icons/icon/rotate -->
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="24"
+                height="24"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                aria-hidden="true"
+                focusable="false"
+                class="icon"
+              >
+                <path d="M19.95 11a8 8 0 1 0 -.5 4m.5 5v-5h-5" />
+              </svg>
+              Reset changes
+            </button>
+            <button
+              type="button"
+              class="btn btn-primary w-100"
+              data-bs-dismiss="offcanvas"
+            >
+              Save
+            </button>
+          </div>
+        </div>
+      </form>
+    </div>
+    <!-- END THEME SETTINGS -->
+
+    <!-- BEGIN GLOBAL MANDATORY SCRIPTS -->
+    <script src="./dist/js/tabler.js" defer></script>
+    <!-- END GLOBAL MANDATORY SCRIPTS -->
+
+    <script>
+      document.addEventListener("DOMContentLoaded", () => {
+        const toggle = document.getElementById("navbar-notifications-toggle");
+        const closeButton = document.querySelector(
+          "[data-navbar-notifications-close]",
+        );
+        const readAllButton = document.querySelector(
+          "[data-navbar-notifications-read-all]",
+        );
+        const clearButton = document.querySelector(
+          "[data-navbar-notifications-clear]",
+        );
+        const list = document.querySelector("[data-navbar-notifications-list]");
+        const badge = document.querySelector(
+          "[data-navbar-notifications-badge]",
+        );
+        let currentNotifications = [];
+
+        const escapeHtml = (value) =>
+          String(value || "").replace(
+            /[&<>'"]/g,
+            (char) =>
+              ({
+                "&": "&amp;",
+                "<": "&lt;",
+                ">": "&gt;",
+                "'": "&#39;",
+                '"': "&quot;",
+              })[char],
+          );
+
+        const dotClass = (type, status) => {
+          if (status === "read") return "status-dot d-block";
+          if (type === "error")
+            return "status-dot status-dot-animated bg-red d-block";
+          if (type === "success")
+            return "status-dot status-dot-animated bg-green d-block";
+          if (type === "warning")
+            return "status-dot status-dot-animated bg-yellow d-block";
+          return "status-dot status-dot-animated bg-blue d-block";
+        };
+
+        const renderNotifications = (notifications) => {
+          const items = Array.isArray(notifications)
+            ? notifications
+            : Array.isArray(notifications?.items)
+              ? notifications.items
+              : [];
+          currentNotifications = items;
+          const unread = items.filter((item) => item.status !== "read");
+
+          badge?.classList.toggle("d-none", unread.length === 0);
+          clearButton?.classList.toggle("d-none", items.length === 0);
+          readAllButton?.classList.toggle("d-none", unread.length === 0);
+
+          if (!items.length) {
+            list.innerHTML =
+              '<div class="list-group-item"><div class="text-secondary">Belum ada notifikasi.</div></div>';
+            return;
+          }
+
+          list.innerHTML = items
+            .slice(0, 8)
+            .map(
+              (item) => `
+          <div class="list-group-item ${item.type === 'feedback' ? 'cursor-pointer' : ''}" ${item.type === 'feedback' ? `data-feedback-notification="${escapeHtml(item.id)}"` : ''}>
+            <div class="row align-items-center">
+              <div class="col-auto">
+                <span class="${dotClass(item.type, item.status)}"><span class="visually-hidden">${item.status === "read" ? "Read" : "Unread"}</span></span>
+              </div>
+              <div class="col text-truncate">
+                <div class="text-body d-block text-truncate">${escapeHtml(item.title || "Notifikasi Sistem")}</div>
+                <div class="d-block text-secondary text-truncate mt-n1">${escapeHtml(item.message || item.created_at || "")}</div>
+              </div>
+            </div>
+          </div>
+        `,
+            )
+            .join("");
+        };
+
+        const loadNotifications = async () => {
+          try {
+            const request = window.KoiAuth?.apiRequest;
+            const response = request
+              ? await request("/notifications?panel=1")
+              : await fetch("/api/notifications?panel=1");
+            if (!response.ok) throw new Error("Notifikasi gagal dimuat");
+            renderNotifications(await response.json());
+          } catch {
+            badge?.classList.add("d-none");
+            list.innerHTML =
+              '<div class="list-group-item"><div class="text-danger">Notifikasi gagal dimuat.</div></div>';
+          }
+        };
+
+        closeButton?.addEventListener("click", () => {
+          window.tabler.bootstrap.Dropdown.getOrCreateInstance(toggle).hide();
+        });
+
+        readAllButton?.addEventListener("click", async () => {
+          try {
+            const request = window.KoiAuth?.apiRequest;
+            const response = request
+              ? await request("/notifications?panel=1")
+              : await fetch("/api/notifications?panel=1");
+            const payload = response.ok ? await response.json() : [];
+            const items = Array.isArray(payload)
+              ? payload
+              : Array.isArray(payload?.items)
+                ? payload.items
+                : [];
+            const unread = items.filter((item) => item.status !== "read");
+            await Promise.all(
+              unread.map((item) =>
+                request
+                  ? request(`/notifications/${item.id}/read`, {
+                      method: "PATCH",
+                    })
+                  : fetch(`/api/notifications/${item.id}/read`, {
+                      method: "PATCH",
+                    }),
+              ),
+            );
+            await loadNotifications();
+          } catch {
+            await loadNotifications();
+          }
+        });
+
+        clearButton?.addEventListener("click", async () => {
+          try {
+            const request = window.KoiAuth?.apiRequest;
+            const ids = currentNotifications
+              .map((item) => item.id)
+              .filter(Boolean);
+            if (!ids.length) return;
+
+            const options = {
+              method: "PATCH",
+              headers: { "content-type": "application/json" },
+              body: JSON.stringify({ ids }),
+            };
+
+            const response = request
+              ? await request("/notifications/clear", options)
+              : await fetch("/api/notifications/clear", options);
+            if (!response.ok) throw new Error("Notifikasi gagal dibersihkan");
+            await loadNotifications();
+          } catch {
+            await loadNotifications();
+          }
+        });
+
+        toggle?.addEventListener("shown.bs.dropdown", loadNotifications);
+        loadNotifications();
+      });
+    </script>
+
+    <!-- BEGIN PAGE SCRIPTS -->
+    <script>
+      document.addEventListener("DOMContentLoaded", function () {
+        var themeConfig = {
+          theme: "light",
+          "theme-base": "gray",
+          "theme-font": "sans-serif",
+          "theme-primary": "blue",
+          "theme-radius": "1",
+        };
+
+        var url = new URL(window.location);
+        var form = document.getElementById("offcanvas-settings");
+        var resetButton = document.getElementById("reset-changes");
+        if (!form || !resetButton) return;
+
+        var themeKeys = Object.keys(themeConfig);
+        var getAccountThemeKey = function () {
+          var session =
+            window.KoiAuth && window.KoiAuth.getSession
+              ? window.KoiAuth.getSession()
+              : JSON.parse(
+                  sessionStorage.getItem("koi-farm-auth-session") || "null",
+                );
+          return session && session.username
+            ? "koi-farm-theme-settings-" + session.username
+            : "koi-farm-theme-settings-guest";
+        };
+
+        var readAccountTheme = function () {
+          return (
+            JSON.parse(
+              window.localStorage.getItem(getAccountThemeKey()) || "null",
+            ) || {}
+          );
+        };
+
+        var writeAccountTheme = function (theme) {
+          window.localStorage.setItem(
+            getAccountThemeKey(),
+            JSON.stringify(theme),
+          );
+        };
+
+        var checkItems = function () {
+          var accountTheme = readAccountTheme();
+          for (var key in themeConfig) {
+            var value = accountTheme[key] || themeConfig[key];
+
+            if (!!value) {
+              var radios = form.querySelectorAll(`[name="${key}"]`);
+
+              if (!!radios) {
+                radios.forEach((radio) => {
+                  radio.checked = radio.value === value;
+                });
+              }
+            }
+          }
+        };
+
+        form.addEventListener("change", function (event) {
+          var target = event.target,
+            name = target.name,
+            value = target.value;
+
+          for (var key in themeConfig) {
+            if (name === key) {
+              var applied = value;
+              if (key === "theme" && value === "auto") {
+                applied = window.matchMedia("(prefers-color-scheme: dark)")
+                  .matches
+                  ? "dark"
+                  : "light";
+              }
+              if (applied !== themeConfig[key]) {
+                document.documentElement.setAttribute(
+                  "data-bs-" + key,
+                  applied,
+                );
+              } else {
+                document.documentElement.removeAttribute("data-bs-" + key);
+              }
+              window.localStorage.setItem("tabler-" + key, value);
+              var accountTheme = readAccountTheme();
+              accountTheme[key] = value;
+              writeAccountTheme(accountTheme);
+              url.searchParams.set(key, value);
+            }
+          }
+
+          window.history.pushState({}, "", url);
+        });
+
+        resetButton.addEventListener("click", function () {
+          var accountTheme = {};
+          for (var key in themeConfig) {
+            document.documentElement.removeAttribute("data-bs-" + key);
+            window.localStorage.removeItem("tabler-" + key);
+            url.searchParams.delete(key);
+          }
+          writeAccountTheme(accountTheme);
+
+          checkItems();
+
+          window.history.pushState({}, "", url);
+        });
+
+        document
+          .querySelectorAll(".js-theme-toggle[data-theme-value]")
+          .forEach(function (toggle) {
+            toggle.addEventListener("click", function (event) {
+              var value = toggle.getAttribute("data-theme-value");
+              if (!value) return;
+
+              event.preventDefault();
+
+              document.documentElement.setAttribute("data-bs-theme", value);
+              window.localStorage.setItem("tabler-theme", value);
+
+              var accountTheme = readAccountTheme();
+              accountTheme.theme = value;
+              writeAccountTheme(accountTheme);
+
+              url.searchParams.set("theme", value);
+              window.history.replaceState({}, "", url);
+            });
+          });
+
+        checkItems();
+      });
+    </script>
+    <!-- END PAGE SCRIPTS -->
+      <script src="./assets/archive-gallery.js?v=20261024b"></script>
+  </body>
+</html>

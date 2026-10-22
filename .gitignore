@@ -1,0 +1,29 @@
+node_modules/
+.wrangler/
+*.log
+tmp-build-check.log
+.DS_Store
+Thumbs.db
+
+# Runtime-generated data for the PHP+MySQL API — uploaded media and
+# database backups (the latter can contain password hashes / live
+# session ids) must never be committed.
+api-php/uploads/*
+!api-php/uploads/.gitkeep
+storage/backups/*
+!storage/backups/.gitkeep
+api-php/config.local.php
+
+deploy/.env
+
+# Farm data and backups must never be published
+backups/
+api/data/
+api/uploads/
+
+
+# Runtime of a clone (private database, downloaded PHP/MariaDB, logs)
+storage/mysql/
+storage/run/
+storage/logs/
+runtime/

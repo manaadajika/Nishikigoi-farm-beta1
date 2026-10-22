@@ -1,0 +1,2604 @@
+---
+import DefaultLayout from '@shared/layouts/DefaultLayout.astro'
+import Icon from '@shared/ui/Icon.astro'
+import icons from '@data/icons.json'
+
+const iconSvg = (name: string) => {
+  const icon = (icons as unknown as Record<string, { svg: Record<string, string> }>)[name]
+  let svg = icon?.svg?.outline ?? ''
+
+  svg = svg.replace(/<path stroke="none" d="M0 0h24v24H0z" fill="none"\s*\/>/, '')
+  svg = svg.replace(/class="[^"]+"/, 'aria-hidden="true" focusable="false" class="icon"')
+
+  return svg
+}
+
+const editIcon = iconSvg('edit')
+const printIcon = iconSvg('printer')
+const trashIcon = iconSvg('trash')
+const saveIcon = iconSvg('device-floppy')
+---
+
+<DefaultLayout title="Breeding" pageHeader="Breeding" pretitle="Management" pageMenu="farm-breeding" pageLibs={['litepicker']}>
+  <style is:global>
+    .breeding-parent-preview {
+      min-height: 0;
+    }
+
+    .breeding-parent-photo {
+      width: 72px;
+      aspect-ratio: 2 / 3;
+      flex: 0 0 auto;
+      border: 1px solid var(--tblr-border-color);
+      border-radius: 6px;
+      background: var(--tblr-bg-surface-secondary);
+      overflow: hidden;
+    }
+
+    .breeding-parent-photo img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .breeding-parent-photo-button {
+      border: 0;
+      padding: 0;
+      background: transparent;
+      cursor: zoom-in;
+    }
+
+    .breeding-parent-placeholder {
+      width: 100%;
+      height: 100%;
+      padding: 0.35rem;
+      color: var(--tblr-secondary);
+      font-size: 0.68rem;
+      line-height: 1.15;
+      text-align: center;
+    }
+
+    /* Detail Breeding (read-only, the fields are disabled): the unit next to a field (cm, g) takes the colour of that field, like in the form */
+    .input-group-flat .form-control:disabled + .input-group-text {
+      background-color: var(--tblr-bg-forms-disabled);
+    }
+
+    .breeding-parent-size {
+      max-width: none;
+    }
+
+    .breeding-parent-size .form-label {
+      display: block;
+      text-align: center;
+    }
+
+    .breeding-parent-size .form-control {
+      padding-right: 0.25rem;
+      padding-left: 0.25rem;
+      text-align: center;
+    }
+
+    .breeding-parent-size .form-control::-webkit-outer-spin-button,
+    .breeding-parent-size .form-control::-webkit-inner-spin-button {
+      margin: 0;
+      appearance: none;
+    }
+
+    .breeding-parent-size .form-control[type='number'] {
+      appearance: textfield;
+    }
+
+    .breeding-parent-search-wrap {
+      position: relative;
+    }
+
+    .breeding-parent-suggestions {
+      position: absolute;
+      top: calc(100% + 4px);
+      left: 0;
+      right: 0;
+      z-index: 1080;
+      max-height: 240px;
+      overflow-y: auto;
+      background: var(--tblr-bg-surface);
+      border: 1px solid var(--tblr-border-color);
+      border-radius: 6px;
+      box-shadow: var(--tblr-box-shadow-dropdown);
+    }
+
+    .breeding-parent-suggestion {
+      width: 100%;
+      border: 0;
+      border-bottom: 1px solid var(--tblr-border-color);
+      background: transparent;
+      color: inherit;
+      text-align: left;
+    }
+
+    .breeding-parent-suggestion:last-child {
+      border-bottom: 0;
+    }
+
+    .breeding-parent-suggestion:hover,
+    .breeding-parent-suggestion:focus {
+      background: var(--tblr-bg-surface-secondary);
+    }
+
+    [data-parent-entry='male'] {
+      border-top: 2px solid var(--tblr-border-color);
+      padding-top: 1rem;
+      margin-top: 0.75rem;
+    }
+
+    [data-parent-entry='male']:first-child {
+      border-top: 0;
+      padding-top: 0;
+    }
+
+    [data-pond-entry] {
+      border-top: 2px solid var(--tblr-border-color);
+      padding-top: 0.85rem;
+      margin-top: 0.85rem;
+    }
+
+    [data-pond-entry]:first-child {
+      border-top: 0;
+      padding-top: 0;
+      margin-top: 0;
+    }
+
+    .breeding-mention-wrap {
+      position: relative;
+    }
+
+    .breeding-zoom {
+      position: fixed;
+      inset: 0;
+      z-index: 2000;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 1rem;
+      background: rgba(15, 23, 42, 0.82);
+    }
+
+    .breeding-zoom img {
+      width: 100%;
+      height: 100%;
+      border-radius: 8px;
+      object-fit: contain;
+    }
+
+    .breeding-zoom-close {
+      position: fixed;
+      top: 1rem;
+      right: 1rem;
+      z-index: 2001;
+    }
+
+
+    .breeding-card {
+      border: 1px solid var(--tblr-border-color);
+            transition: border-color .15s ease;
+    }
+
+    .breeding-card:hover {
+      border-color: var(--tblr-primary);
+    }
+
+    .breeding-card .card-body {
+      padding: .75rem;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .breeding-card-actions {
+      display: flex;
+      gap: .5rem;
+      margin-top: auto;
+      padding-top: .75rem;
+    }
+
+    .breeding-card-actions .btn {
+      flex: 1 1 0;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: .35rem;
+      min-width: 0;
+    }
+
+    .breeding-card-photo {
+      position: relative;
+      display: block;
+      width: 100%;
+      aspect-ratio: 2 / 3;
+      min-height: 220px;
+      border-radius: 0;
+      background: var(--tblr-bg-surface-secondary);
+      overflow: hidden;
+      cursor: pointer;
+    }
+
+    .breeding-zoom-btn {
+      position: absolute;
+      top: .5rem;
+      right: .5rem;
+      z-index: 1;
+      background: rgba(15, 23, 42, .62);
+      border: 0;
+      color: #fff;
+    }
+
+    .breeding-card .card-body[data-breeding-id],
+    .breeding-card-head[data-breeding-id] {
+      cursor: pointer;
+    }
+
+    /* kode, nama sesi, status, and tanggal sit above the photo of the female parent */
+    .breeding-card-head {
+      padding: var(--tblr-card-spacer-y, 1rem) var(--tblr-card-spacer-x, 1rem) .75rem;
+      border-radius: calc(var(--tblr-card-border-radius, 8px) - 1px) calc(var(--tblr-card-border-radius, 8px) - 1px) 0 0;
+    }
+
+    .breeding-card-photo img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .breeding-card-title,
+    .breeding-card-cell {
+      min-width: 0;
+    }
+
+    .breeding-code-copy {
+
+      display: block;
+
+      max-width: 100%;
+
+      border: 0;
+
+      background: transparent;
+
+      color: inherit;
+
+      font: inherit;
+
+      font-weight: 600;
+
+      padding: 0;
+
+      text-align: left;
+
+      cursor: pointer;
+
+      user-select: none;
+
+    }
+
+
+    .breeding-code-copy:hover {
+
+      color: var(--tblr-primary);
+
+    }
+
+
+    .breeding-code-copy.is-copied {
+
+      color: var(--tblr-success);
+
+    }
+
+
+    .breeding-code-copy.is-copy-failed {
+
+      color: var(--tblr-danger);
+
+    }
+
+
+    .breeding-ellipsis {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .breeding-male-thumbs {
+      display: flex;
+      justify-content: center;
+      gap: .35rem;
+      margin-top: .15rem;
+    }
+    .breeding-male-thumb {
+      position: relative;
+      width: 100%;
+      min-width: 0;
+      flex: 0 0 calc((100% - 3 * .35rem) / 4);
+
+      aspect-ratio: 2 / 3;
+      padding: 0;
+      border: 1px solid var(--tblr-border-color);
+      border-radius: 6px;
+      background: var(--tblr-bg-surface-secondary);
+      overflow: hidden;
+      cursor: zoom-in;
+    }
+
+
+    .breeding-male-thumb-wide {
+      width: 100%;
+      max-width: none;
+    }
+
+    .breeding-male-thumb img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .breeding-male-code {
+      display: block;
+      padding: .2rem;
+      font-size: .6rem;
+      line-height: 1.1;
+      color: var(--tblr-secondary);
+      word-break: break-all;
+    }
+
+    .breeding-male-more {
+      cursor: pointer;
+    }
+
+    .breeding-male-more img {
+      filter: brightness(.45);
+    }
+
+    .breeding-male-more-count {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #fff;
+      font-weight: 700;
+      font-size: .95rem;
+    }
+
+    .breeding-table-wrap {
+      overflow: visible;
+    }
+
+    .breeding-actions-menu {
+      z-index: 1085;
+    }
+
+    @media (max-width: 991.98px) {
+      .breeding-table-wrap {
+        overflow-x: auto;
+        overflow-y: visible;
+        padding-bottom: 4.5rem;
+      }
+
+      .breeding-actions-dropdown .dropdown-menu.show {
+        position: fixed !important;
+        right: 1rem !important;
+        left: auto !important;
+        top: auto !important;
+        bottom: 1rem !important;
+        transform: none !important;
+        min-width: 150px;
+      }
+    }
+  
+    /* ---- Formulir Breeding: indukan row = photo | search, size and notes | delete ---- */
+    .breeding-parent-search-field { position: relative; }
+    .breeding-parent-size { max-width: none; }
+    .breeding-parent-search-wrap .breeding-parent-size .form-label { text-align: left; }
+    .breeding-parent-search-wrap .breeding-parent-size .form-control { padding-right: .5rem; padding-left: .75rem; text-align: left; }
+    .breeding-parent-flag { display: inline-block; margin-top: .15rem; padding: .05rem .4rem; border-radius: 999px; font-size: .66rem; font-weight: 600; color: var(--tblr-yellow, #f59f00); border: 1px solid currentColor; }
+  </style>
+
+  <script is:inline>
+  ;(function () {
+    var current = null
+    var sides = ['top', 'bottom', 'left', 'right']
+    function place(menu, toggle) {
+      if (window.innerWidth > 991.98) return
+      var r = toggle.getBoundingClientRect()
+      var mh = menu.offsetHeight
+      menu.style.setProperty('left', 'auto', 'important')
+      menu.style.setProperty('right', Math.max(8, window.innerWidth - r.right) + 'px', 'important')
+      if (r.bottom + 4 + mh > window.innerHeight - 8) {
+        menu.style.setProperty('top', 'auto', 'important')
+        menu.style.setProperty('bottom', window.innerHeight - r.top + 4 + 'px', 'important')
+      } else {
+        menu.style.setProperty('bottom', 'auto', 'important')
+        menu.style.setProperty('top', r.bottom + 4 + 'px', 'important')
+      }
+    }
+    document.addEventListener('shown.bs.dropdown', function (event) {
+      var dropdown = event.target.closest && event.target.closest('.breeding-actions-dropdown')
+      if (!dropdown) return
+      var menu = dropdown.querySelector('.dropdown-menu')
+      current = { menu: menu, toggle: event.target }
+      // Popper applies its own inset after this event; place on the next frames so ours wins.
+      requestAnimationFrame(function () {
+        place(menu, event.target)
+        requestAnimationFrame(function () { place(menu, event.target) })
+      })
+    })
+    document.addEventListener('hidden.bs.dropdown', function (event) {
+      var dropdown = event.target.closest && event.target.closest('.breeding-actions-dropdown')
+      if (!dropdown) return
+      var menu = dropdown.querySelector('.dropdown-menu')
+      sides.forEach(function (side) { menu.style.removeProperty(side) })
+      current = null
+    })
+    function reposition() {
+      if (!current) return
+      requestAnimationFrame(function () {
+        if (current) place(current.menu, current.toggle)
+      })
+    }
+    window.addEventListener('scroll', reposition, true)
+    window.addEventListener('resize', reposition)
+  })()
+</script>
+
+  <div class="modal modal-blur fade" id="breeding-modal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered" role="document">
+      <form class="modal-content" data-breeding-form>
+        <div class="modal-header">
+          <h5 class="modal-title" data-breeding-modal-title>Formulir Tambah Breeding</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Tutup"></button>
+        </div>
+        <div class="modal-body">
+          <div class="alert alert-danger d-none" data-breeding-error></div>
+          <input type="hidden" name="id" />
+          <div class="row g-3">
+            <div class="col-md-4">
+              <label class="form-label">Kode Batch</label>
+              <input class="form-control" name="batch_code" placeholder="Kosongkan untuk otomatis" />
+            </div>
+            <div class="col-md-4">
+              <label class="form-label">Nama Sesi Breeding</label>
+              <input class="form-control" name="session_name" placeholder="Contoh: Kohaku Januari" />
+            </div>
+            <div class="col-md-4">
+              <label class="form-label">Metode Pemijahan</label>
+              <div class="btn-group w-100" role="group" data-exclusive-group="spawning_method">
+                <input class="btn-check" type="checkbox" name="spawning_method" id="method-alami" value="alami" checked data-exclusive-option />
+                <label class="btn" for="method-alami">Alami</label>
+                <input class="btn-check" type="checkbox" name="spawning_method" id="method-stripping" value="stripping" data-exclusive-option />
+                <label class="btn" for="method-stripping">Stripping</label>
+              </div>
+            </div>
+            <div class="col-md-4">
+              <label class="form-label">Awal Pijah</label>
+              <input class="form-control" type="date" name="spawning_started_at" required />
+            </div>
+            <div class="col-md-4">
+              <label class="form-label">Akhir Pijah</label>
+              <input class="form-control" type="date" name="fish_separated_at" />
+            </div>
+            <div class="col-md-4">
+              <label class="form-label">Tanggal Release Larva</label>
+              <input class="form-control" type="date" name="larva_released_at" />
+            </div>
+            <input type="hidden" name="breeding_date" />
+            
+            <div class="col-12">
+              <label class="form-label">Status Hasil Breeding</label>
+              <div class="btn-group" role="group" data-exclusive-group="status">
+                <input class="btn-check" type="checkbox" name="status" id="status-planning" value="planning" checked data-exclusive-option />
+                <label class="btn" for="status-planning">Planning</label>
+                <input class="btn-check" type="checkbox" name="status" id="status-proses" value="proses" data-exclusive-option />
+                <label class="btn" for="status-proses">Proses</label>
+                <input class="btn-check" type="checkbox" name="status" id="status-completed" value="completed" data-exclusive-option />
+                <label class="btn" for="status-completed">Completed</label>
+                <input class="btn-check" type="checkbox" name="status" id="status-failed" value="failed" data-exclusive-option />
+                <label class="btn" for="status-failed">Failed</label>
+              </div>
+            </div>
+            <div class="col-md-8">
+              <label class="form-label">Petugas</label>
+              <input class="form-control" type="text" name="officer_name" maxlength="200" placeholder="Nama petugas (boleh dikosongkan)" autocomplete="off" />
+            </div>
+            <div class="col-md-4">
+              <label class="form-label">Update Terakhir</label>
+              <input class="form-control" type="date" name="last_update_date" />
+              <div class="form-hint">Terisi otomatis saat disimpan.</div>
+            </div>
+            <div class="col-12">
+              <div class="d-flex align-items-center justify-content-between mb-2">
+                <label class="form-label mb-0">Indukan Betina</label>
+              </div>
+              <div class="vstack gap-2" data-parent-list="female"></div>
+            </div>
+            <div class="col-12">
+              <div class="d-flex align-items-center justify-content-between mb-2">
+                <label class="form-label mb-0">Indukan Jantan</label>
+              </div>
+              <div class="vstack gap-2" data-parent-list="male"></div>
+              <button class="btn btn-sm btn-outline-primary mt-2" type="button" data-add-parent="male">Tambah Jantan</button>
+            </div>
+            <div class="col-12 border-top pt-3">
+              <label class="form-label">Kolam</label>
+              <div class="vstack gap-2" data-pond-list></div>
+              <button class="btn btn-sm btn-outline-primary mt-2" type="button" data-add-pond>Mention Kolam</button>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">Burayak</label>
+              <input class="form-control" type="number" min="0" step="1" name="fry_count" placeholder="0" />
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">Berat Telur (g)</label>
+              <div class="input-group input-group-flat">
+                <input class="form-control" type="number" min="0" step="0.01" name="egg_weight_g" placeholder="0" />
+                <span class="input-group-text">g</span>
+              </div>
+            </div>
+            <div class="col-12">
+              <label class="form-label">Catatan Utama</label>
+              <textarea class="form-control" name="notes" rows="3"></textarea>
+            </div>
+            <div class="col-12">
+              <label class="form-label">Dokumentasi Breeding</label>
+              <div class="d-flex flex-wrap gap-2">
+                <input class="form-control flex-grow-1" name="breeding_documentation_files" type="file" accept="image/*,video/mp4,video/webm" multiple data-documentation-input />
+                <button class="btn btn-outline-primary" type="button" data-documentation-paste>Paste Gambar</button>
+              </div>
+              <div class="form-hint">Bisa pilih lebih dari satu foto/video. Dokumentasi tersimpan di data breeding ini.</div><label class="form-check mt-2 mb-1"><input class="form-check-input" type="checkbox" name="show_in_gallery" checked /><span class="form-check-label">Tampilkan dokumentasi di Galeri</span></label><div class="form-hint">Dokumentasi ikut tampil di menu Galeri sebagai satu koleksi (file tidak digandakan). Setiap foto atau video memiliki ID sendiri.</div>
+              <div class="row g-2 mt-2" data-documentation-preview></div>
+              <div class="text-secondary mt-2" data-documentation-status></div>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-icon" data-bs-dismiss="modal" aria-label="Batal" title="Batal">
+            <Icon name="x" />
+          </button>
+          <button type="submit" class="btn btn-primary btn-icon" data-breeding-submit aria-label="Simpan breeding" title="Simpan breeding">
+            <Icon name="device-floppy" />
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div class="breeding-zoom d-none" data-breeding-zoom>
+    <button class="btn btn-light btn-icon breeding-zoom-close" type="button" data-close-breeding-zoom aria-label="Tutup preview">
+      <Icon name="x" />
+    </button>
+    <img data-breeding-zoom-image alt="Preview indukan" />
+  </div>
+
+  <div class="row row-deck row-cards">
+    <div class="col-12">
+      <div class="card">
+        <div class="card-header">
+          <h3 class="card-title">Daftar Breeding</h3>
+          <div class="card-actions">
+            <button class="btn btn-primary btn-icon d-none" type="button" data-add-breeding data-role-required="farm-operate" aria-label="Tambah breeding" title="Tambah breeding">
+              <Icon name="plus" />
+            </button>
+          </div>
+        </div>
+        <div class="card-body">
+          <div class="alert alert-warning d-none mb-3" role="alert" data-breeding-options-notice>
+            Daftar ikan belum termuat, jadi sebagian foto indukan dan formulir mungkin belum lengkap.
+            <button class="btn btn-sm btn-outline-warning ms-2" type="button" data-breeding-options-retry>Coba lagi</button>
+          </div>
+          <div class="row g-3" data-breeding-table>
+            <div class="col-12 text-secondary"><div class="d-flex flex-column align-items-center justify-content-center gap-2 py-5 text-secondary"><span class="spinner-border text-primary" role="status" aria-hidden="true"></span><span>Memuat data breeding...</span></div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <input class="d-none" id="breeding-search" name="breeding_search" type="search" data-breeding-search aria-hidden="true" tabindex="-1" autocomplete="off" />
+
+  <div class="koi-print-root" data-breeding-print-root aria-hidden="true"></div>
+
+  <style is:global>
+    .koi-print-root { display: none; }
+
+    @media print {
+      body.koi-printing {
+        background: #ffffff !important;
+      }
+
+      body.koi-printing > *:not(.koi-print-root) {
+        display: none !important;
+      }
+
+      body.koi-printing .koi-print-root {
+        display: block !important;
+        position: static !important;
+        width: 100% !important;
+        min-height: auto !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        background: #ffffff !important;
+        color: #172033 !important;
+      }
+    }
+  </style>
+
+
+  <script src="/assets/vendor/xlsx/xlsx.core.min.js" is:inline></script>
+  <script src="/assets/zip-kit.js?v=20261009g" is:inline></script>
+  <script src="/assets/koi-picker.js?v=20261020b" is:inline></script>
+
+  <script define:vars={{ editIcon, printIcon, trashIcon, saveIcon }}>
+    const apiUrl = '/api'
+    const table = document.querySelector('[data-breeding-table]')
+    const breedingSearchInput = document.querySelector('[data-breeding-search]')
+    // The search lives in the navbar; tell what it understands on this page
+    const navbarSearchBox = document.querySelector('#navbar-global-search')
+    if (navbarSearchBox) {
+      navbarSearchBox.setAttribute('placeholder', 'Kode, nama sesi, indukan, jantan:26HJ')
+      navbarSearchBox.setAttribute('title', 'Cari bebas: kode batch, nama sesi, indukan, kolam. Cari per kolom dengan kolom:isi, boleh digabung: jantan:26HJPO status:completed catatan:vat 03. Nama kolom boleh disingkat (misalnya bloo:isa). Kolom: kode, nama, tanggal, pemijahan, pemisahan, metode, status, betina, jantan, induk, kolam, burayak, telur, catatan.')
+    }
+    const form = document.querySelector('[data-breeding-form]')
+    const zoom = document.querySelector('[data-breeding-zoom]')
+    const zoomImage = document.querySelector('[data-breeding-zoom-image]')
+    const errorBox = document.querySelector('[data-breeding-error]')
+    const submitButton = document.querySelector('[data-breeding-submit]')
+    const modalElement = document.querySelector('#breeding-modal')
+    const modalTitle = document.querySelector('[data-breeding-modal-title]')
+    const addButton = document.querySelector('[data-add-breeding]')
+    const maleParentList = document.querySelector('[data-parent-list="male"]')
+    const femaleParentList = document.querySelector('[data-parent-list="female"]')
+    const pondList = document.querySelector('[data-pond-list]')
+    const addPondButton = document.querySelector('[data-add-pond]')
+    const documentationInput = document.querySelector('[data-documentation-input]')
+    const documentationPasteButton = document.querySelector('[data-documentation-paste]')
+    const documentationPreview = document.querySelector('[data-documentation-preview]')
+    const documentationStatus = document.querySelector('[data-documentation-status]')
+    const keepScroll = async (callback) => {
+      const scrollX = window.scrollX
+      const scrollY = window.scrollY
+      const result = await callback()
+      requestAnimationFrame(() => window.scrollTo(scrollX, scrollY))
+      return result
+    }
+    let documentationFiles = []
+    let breedingItems = []
+    let readonlyMode = false
+    let breedingRealtimeSignature = ''
+    const breedingCacheKey = 'nishikigoi-cache:farm-breeding'
+    let pondOptions = []
+    let pondById = new Map()
+    const koiById = {
+      // fish are not downloaded as a whole list: this reads what the server lookups / batch requests brought in (KoiPicker.cache)
+      get: (key) => window.KoiPicker.cache[String(key)],
+      has: (key) => Boolean(window.KoiPicker.cache[String(key)]),
+      values: () => Object.values(window.KoiPicker.cache),
+    }
+
+    // Parent photos come with the breeding list itself (item.parent_koi), so a failed or slow /koi
+    // request no longer turns every parent without a direct female/male join into "No foto".
+    const lookupKoi = (item, koiId) => {
+      if (!koiId) return null
+      const key = String(koiId)
+      return koiById.get(key) || (item && item.parent_koi && item.parent_koi[key]) || null
+    }
+
+
+    const labels = {
+      planning: { label: 'Planning', className: 'bg-secondary-lt' },
+      proses: { label: 'Proses', className: 'bg-blue-lt' },
+      completed: { label: 'Completed', className: 'bg-teal-lt' },
+      failed: { label: 'Failed', className: 'bg-red-lt' },
+    }
+    const methodLabels = {
+      alami: 'Alami',
+      stripping: 'Stripping',
+    }
+    const activeStatuses = new Set(['planning', 'proses'])
+    const text = (value) => value || '-'
+    const escapeHtml = (value) =>
+      String(value ?? '').replace(
+        /[&<>'"]/g,
+        (char) =>
+          ({
+            '&': '&amp;',
+            '<': '&lt;',
+            '>': '&gt;',
+            "'": '&#39;',
+            '"': '&quot;',
+          })[char],
+      )
+    const formatDate = (value) => (value ? window.KoiAuth.formatDate(value) : '-')
+    const koiLabel = (item) => [item.code || `ID ${item.id}`, item.name].filter(Boolean).join(' - ') || 'Tanpa nama'
+    const koiSearchText = (item) => [item.id, item.code, item.name, item.variety, item.bloodline, item.breeder].filter(Boolean).join(' ').toLowerCase()
+    const parseJson = (value, fallback = []) => {
+      try {
+        return value ? JSON.parse(value) : fallback
+      } catch {
+        return fallback
+      }
+    }
+    const normalizeSearch = (value) =>
+      String(value || '')
+        .toLowerCase()
+        .trim()
+    const parseEntries = (value, fallbackId, fallbackLabel) => {
+      try {
+        const parsed = typeof value === 'string' ? JSON.parse(value) : value
+        const entries = Array.isArray(parsed) ? parsed : []
+
+        return entries.length > 0 ? entries : fallbackId ? [{ koi_id: fallbackId, label: fallbackLabel || '', notes: '' }] : []
+      } catch (error) {
+        return fallbackId ? [{ koi_id: fallbackId, label: fallbackLabel || '', notes: '' }] : []
+      }
+    }
+    const parsePondEntries = (value, fallbackId, fallbackLabel) => {
+      try {
+        const parsed = typeof value === 'string' ? JSON.parse(value) : value
+        const entries = Array.isArray(parsed) ? parsed : []
+
+        return entries.length > 0 ? entries : fallbackId ? [{ pond_id: fallbackId, label: fallbackLabel || '', notes: '' }] : []
+      } catch (error) {
+        return fallbackId ? [{ pond_id: fallbackId, label: fallbackLabel || '', notes: '' }] : []
+      }
+    }
+
+    const getModalApi = () => window.tabler?.bootstrap?.Modal || window.bootstrap?.Modal
+
+    const openModal = () => {
+      const modalApi = getModalApi()
+
+      if (modalApi) {
+        modalApi.getOrCreateInstance(modalElement).show()
+        return
+      }
+
+      modalElement.classList.add('show')
+      modalElement.style.display = 'block'
+      modalElement.removeAttribute('aria-hidden')
+      modalElement.setAttribute('aria-modal', 'true')
+      modalElement.setAttribute('role', 'dialog')
+      document.body.classList.add('modal-open')
+
+      if (!document.querySelector('[data-fallback-modal-backdrop]')) {
+        const backdrop = document.createElement('div')
+        backdrop.className = 'modal-backdrop fade show'
+        backdrop.dataset.fallbackModalBackdrop = 'true'
+        document.body.appendChild(backdrop)
+      }
+    }
+
+    const closeModal = () => {
+      const modalApi = getModalApi()
+
+      if (modalApi) {
+        modalApi.getInstance(modalElement)?.hide()
+        return
+      }
+
+      modalElement.classList.remove('show')
+      modalElement.style.display = 'none'
+      modalElement.setAttribute('aria-hidden', 'true')
+      modalElement.removeAttribute('aria-modal')
+      modalElement.removeAttribute('role')
+      document.body.classList.remove('modal-open')
+      document.querySelector('[data-fallback-modal-backdrop]')?.remove()
+    }
+
+    // DEAD CODE (diperiksa 2026-10-14): getBreedingSearchText tidak dipanggil di mana pun. Aman dihapus; sengaja belum dihapus.
+    const getBreedingSearchText = (item) => {
+      const maleName = [item.male_koi_code, item.male_koi_name].filter(Boolean).join(' - ')
+      const femaleName = [item.female_koi_code, item.female_koi_name].filter(Boolean).join(' - ')
+      const maleEntries = parseEntries(item.male_parent_entries, item.male_koi_id, maleName)
+      const femaleEntries = parseEntries(item.female_parent_entries, item.female_koi_id, femaleName)
+      const pondEntries = parsePondEntries(item.pond_entries, item.pond_id, item.pond_name)
+      const parentText = [...maleEntries, ...femaleEntries]
+        .map((entry) => {
+          const koi = lookupKoi(item, entry.koi_id)
+          return [entry.koi_id, entry.label, entry.notes, koi?.id, koi?.code, koi?.name, koi?.variety, koi?.bloodline, koi?.breeder, koi?.farm_name].filter(Boolean).join(' ')
+        })
+        .join(' ')
+      const pondText = pondEntries.map((entry) => [entry.pond_id, entry.label, entry.notes].filter(Boolean).join(' ')).join(' ')
+
+      return normalizeSearch([item.id, item.batch_code, item.session_name, item.breeding_date, methodLabels[item.spawning_method], item.spawning_method, labels[item.status]?.label, item.status, item.notes, item.fry_count, item.egg_weight_g, parentText, pondText].join(' '))
+    }
+
+    // ---- search: plain words + "field:value" ----------------------------------------------------------------
+    // "jantan:26HJPO status:completed catatan:vat 03" -> every field:value must match (a value runs until the next
+    // field:). Plain words must all be found in kode batch, nama sesi, indukan, kolam, status or metode. A comma inside
+    // a text value means "or" (status:proses,planning). Catatan is only searched with catatan:.
+    const breedingFieldAliases = {
+      kode: 'batch_code', batch: 'batch_code', kodebatch: 'batch_code',
+      nama: 'session_name', sesi: 'session_name', namasesi: 'session_name',
+      tanggal: 'spawning_started_at', tgl: 'spawning_started_at', pemijahan: 'spawning_started_at', awal: 'spawning_started_at', awalpemijahan: 'spawning_started_at', awalpijah: 'spawning_started_at', larva: 'larva_released_at', release: 'larva_released_at', releaselarva: 'larva_released_at', tanggalreleaselarva: 'larva_released_at',
+      pemisahan: 'fish_separated_at', pemisahanikan: 'fish_separated_at', akhir: 'fish_separated_at', akhirpijah: 'fish_separated_at', pijah: 'fish_separated_at',
+      petugas: 'officer_name',
+      metode: 'spawning_method',
+      status: 'status',
+      induk: 'parent', indukan: 'parent',
+      betina: 'female', indukanbetina: 'female',
+      jantan: 'male', indukanjantan: 'male',
+      kolam: 'pond', lokasi: 'pond', pond: 'pond',
+      burayak: 'fry_count', fry: 'fry_count',
+      telur: 'egg_weight_g', berattelur: 'egg_weight_g',
+      catatan: 'notes', notes: 'notes',
+    }
+    // "bloo:isa" works too: a field name may be shortened to its first letters (2 or more). Exact names win, then the
+    // first name in the list above that starts with what was typed. Unknown names stay plain text.
+    const resolveSearchMarkers = (keyword, aliases) => {
+      const names = Object.keys(aliases)
+      const found = []
+      const pattern = /(?:^|[\s,])([a-z]+)\s*:/gi
+      let match
+      while ((match = pattern.exec(keyword))) {
+        const key = match[1].toLowerCase()
+        const name = aliases[key] ? key : (key.length >= 2 ? names.find((alias) => alias.startsWith(key)) : null)
+        if (name) {
+          const hit = [match[0], name]
+          hit.index = match.index
+          found.push(hit)
+        }
+      }
+      return found
+    }
+    const breedingNumberTest = (value) => {
+      const text = String(value || '').toLowerCase().replace(/\s|g$/g, '').replace(',', '.')
+      const compare = text.match(/^(>=|<=|>|<)(\d+(?:\.\d+)?)$/)
+      if (compare) {
+        const limit = Number(compare[2])
+        return { '>=': (n) => n >= limit, '<=': (n) => n <= limit, '>': (n) => n > limit, '<': (n) => n < limit }[compare[1]]
+      }
+      const range = text.match(/^(\d+(?:\.\d+)?)-(\d+(?:\.\d+)?)$/)
+      if (range) {
+        const [min, max] = [Math.min(Number(range[1]), Number(range[2])), Math.max(Number(range[1]), Number(range[2]))]
+        return (n) => n >= min && n <= max
+      }
+      return /^\d+(?:\.\d+)?$/.test(text) ? (n) => n === Number(text) : null
+    }
+    const breedingDateText = (value) => {
+      const match = String(value || '').trim().match(/^(\d{1,2})[/.-](\d{1,2})[/.-](\d{4})$/)
+      return match ? `${match[3]}-${match[2].padStart(2, '0')}-${match[1].padStart(2, '0')}` : String(value || '').trim()
+    }
+    const breedingParentText = (item, entries) => entries
+      .map((entry) => {
+        const koi = lookupKoi(item, entry.koi_id)
+        return [entry.label, koi?.code, koi?.name, koi?.variety, koi?.bloodline, koi?.breeder, koi?.farm_name].filter(Boolean).join(' ')
+      })
+      .join(' ')
+    const breedingSearchParts = (item) => {
+      const maleName = [item.male_koi_code, item.male_koi_name].filter(Boolean).join(' - ')
+      const femaleName = [item.female_koi_code, item.female_koi_name].filter(Boolean).join(' - ')
+      const male = breedingParentText(item, parseEntries(item.male_parent_entries, item.male_koi_id, maleName))
+      const female = breedingParentText(item, parseEntries(item.female_parent_entries, item.female_koi_id, femaleName))
+      const pond = parsePondEntries(item.pond_entries, item.pond_id, item.pond_name).map((entry) => entry.label).filter(Boolean).join(' ')
+      return { male: normalizeSearch(male), female: normalizeSearch(female), pond: normalizeSearch(pond) }
+    }
+
+    // true / false, or null while the value is still being typed (no filter yet)
+    const matchesBreedingField = (item, parts, field, rawValue) => {
+      const value = normalizeSearch(rawValue)
+      if (!value) return null
+
+      if (field === 'fry_count' || field === 'egg_weight_g') {
+        const test = breedingNumberTest(value)
+        const number = Number(item[field])
+        if (!test) return null
+        return item[field] !== null && item[field] !== undefined && item[field] !== '' && Number.isFinite(number) && test(number)
+      }
+      if (field === 'breeding_date' || field === 'spawning_started_at' || field === 'fish_separated_at' || field === 'larva_released_at') {
+        return String(item[field] || (field === 'spawning_started_at' ? item.breeding_date : '') || '').slice(0, 10).includes(breedingDateText(value))
+      }
+
+      const choices = value.split(',').map((part) => part.trim()).filter(Boolean)
+      return choices.some((choice) => {
+        if (field === 'status') {
+          return String(item.status || '').toLowerCase() === choice || normalizeSearch(labels[item.status]?.label).includes(choice)
+        }
+        if (field === 'spawning_method') {
+          return String(item.spawning_method || '').toLowerCase() === choice || normalizeSearch(methodLabels[item.spawning_method]).includes(choice)
+        }
+        if (field === 'male') return parts.male.includes(choice)
+        if (field === 'female') return parts.female.includes(choice)
+        if (field === 'parent') return `${parts.male} ${parts.female}`.includes(choice)
+        if (field === 'pond') return parts.pond.includes(choice)
+        return normalizeSearch(item[field]).includes(choice)
+      })
+    }
+
+    const matchesBreedingSearch = (item, keyword) => {
+      const markers = resolveSearchMarkers(keyword, breedingFieldAliases)
+      const plain = markers.length ? keyword.slice(0, markers[0].index) : keyword
+      const parts = breedingSearchParts(item)
+
+      for (let index = 0; index < markers.length; index += 1) {
+        const marker = markers[index]
+        const valueStart = marker.index + marker[0].length
+        const valueEnd = index + 1 < markers.length ? markers[index + 1].index : keyword.length
+        const result = matchesBreedingField(item, parts, breedingFieldAliases[marker[1].toLowerCase()], keyword.slice(valueStart, valueEnd))
+
+        if (result === false) {
+          return false
+        }
+      }
+
+      const alternatives = plain.split(',').map((part) => normalizeSearch(part).split(/\s+/).filter(Boolean)).filter((words) => words.length)
+
+      if (!alternatives.length) {
+        return true
+      }
+
+      const blob = normalizeSearch([item.batch_code, item.session_name, parts.male, parts.female, parts.pond, labels[item.status]?.label, item.status, methodLabels[item.spawning_method], item.spawning_method].join(' '))
+
+      return alternatives.some((words) => words.every((word) => blob.includes(word)))
+    }
+
+    const filteredBreedingItems = () => {
+      const keyword = String(breedingSearchInput?.value || '').trim()
+
+      return keyword ? breedingItems.filter((item) => matchesBreedingSearch(item, keyword)) : breedingItems
+    }
+
+    const setSummary = (items = breedingItems) => {
+      const summaryActive = document.querySelector('[data-summary="active"]')
+      const summaryMale = document.querySelector('[data-summary="male"]')
+      const summaryFemale = document.querySelector('[data-summary="female"]')
+      const summaryFry = document.querySelector('[data-summary="fry"]')
+
+      if (summaryActive) summaryActive.textContent = items.filter((item) => activeStatuses.has(item.status)).length
+      if (summaryMale) summaryMale.textContent = new Set(items.flatMap((item) => parseEntries(item.male_parent_entries, item.male_koi_id).map((entry) => entry.koi_id)).filter(Boolean)).size
+      if (summaryFemale) summaryFemale.textContent = new Set(items.flatMap((item) => parseEntries(item.female_parent_entries, item.female_koi_id).map((entry) => entry.koi_id)).filter(Boolean)).size
+      if (summaryFry) summaryFry.textContent = items.reduce((total, item) => total + Number(item.fry_count || 0), 0)
+    }
+    // Same copy-on-click as the fish code in Data Ikan.
+    const copyText = async (value) => {
+      const textValue = String(value || '')
+
+      if (!textValue || textValue === '-') {
+        return false
+      }
+
+      const textarea = document.createElement('textarea')
+      textarea.value = textValue
+      textarea.setAttribute('readonly', '')
+      textarea.style.cssText = 'position:fixed;top:0;left:0;width:1px;height:1px;opacity:0'
+      document.body.appendChild(textarea)
+      textarea.focus()
+      textarea.select()
+      textarea.setSelectionRange(0, textValue.length)
+
+      try {
+        const copied = document.execCommand('copy')
+        textarea.remove()
+
+        if (copied) {
+          return true
+        }
+      } catch {
+        textarea.remove()
+      }
+
+      try {
+        await navigator.clipboard?.writeText(textValue)
+        return true
+      } catch {
+        return false
+      }
+    }
+
+
+    const monthNames = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember']
+    // 26 - [9] September - 2026
+    const formatBreedingDate = (value) => (value ? window.KoiAuth.formatDate(value) : '-')
+
+    const maleParents = (item) => {
+      const maleName = [item.male_koi_code, item.male_koi_name].filter(Boolean).join(' - ')
+      return parseEntries(item.male_parent_entries, item.male_koi_id, maleName).map((entry) => {
+        const koi = lookupKoi(item, entry.koi_id)
+        const isPrimary = entry.koi_id && String(entry.koi_id) === String(item.male_koi_id)
+        return {
+          code: koi?.code || (isPrimary ? item.male_koi_code : '') || entry.label || '-',
+          image_url: koi?.image_url || (isPrimary ? item.male_koi_image_url : '') || '',
+        }
+      })
+    }
+
+    const maleThumbHtml = (male, extraClass = '') => `
+      <button class="breeding-male-thumb ${extraClass}" type="button" data-zoom-image="${escapeHtml(male.image_url)}" title="${escapeHtml(male.code)}" aria-label="Preview ${escapeHtml(male.code)}">
+        ${male.image_url ? `<img src="${escapeHtml(male.image_url)}" alt="${escapeHtml(male.code)}" loading="lazy" decoding="async" />` : `<span class="breeding-male-code">${escapeHtml(male.code)}</span>`}
+      </button>`
+
+    // Up to 4 small previews; with more than 4 the 4th tile becomes "+N" and opens the full list.
+    const renderMaleThumbs = (item) => {
+      const males = maleParents(item)
+      if (!males.length) return '<span class="text-secondary">-</span>'
+      if (males.length <= 4) return `<div class="breeding-male-thumbs">${males.map((male) => maleThumbHtml(male)).join('')}</div>`
+      const fourth = males[3]
+      return `<div class="breeding-male-thumbs">${males.slice(0, 3).map((male) => maleThumbHtml(male)).join('')}
+        <button class="breeding-male-thumb breeding-male-more" type="button" data-show-males="${escapeHtml(item.id)}" aria-label="Lihat semua ${males.length} indukan jantan" title="Lihat semua indukan jantan">
+          ${fourth.image_url ? `<img src="${escapeHtml(fourth.image_url)}" alt="" loading="lazy" decoding="async" />` : ''}
+          <span class="breeding-male-more-count">+${males.length - 3}</span>
+        </button></div>`
+    }
+
+    const showMalesPanel = (breedingId) => {
+      const item = breedingItems.find((entry) => String(entry.id) === String(breedingId))
+      if (!item) return
+      document.querySelector('[data-breeding-males-panel]')?.remove()
+      const males = maleParents(item)
+      const overlay = document.createElement('div')
+      overlay.setAttribute('data-breeding-males-panel', '')
+      overlay.style.cssText = 'position:fixed;inset:0;z-index:4900;display:flex;align-items:center;justify-content:center;padding:16px;background:rgba(0,0,0,.7)'
+      overlay.innerHTML = `
+        <div class="card" style="max-width:36rem;width:100%;max-height:90vh">
+          <div class="card-header">
+            <h3 class="card-title">Indukan Jantan ${escapeHtml(text(item.batch_code))} (${males.length})</h3>
+            <div class="card-actions"><button type="button" class="btn-close" data-close-males aria-label="Tutup"></button></div>
+          </div>
+          <div class="card-body" style="overflow:auto">
+            <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(5.5rem,1fr));gap:.75rem">
+              ${males.map((male) => `<div class="text-center">${maleThumbHtml(male, 'breeding-male-thumb-wide')}<div class="small text-secondary mt-1">${escapeHtml(male.code)}</div></div>`).join('')}
+            </div>
+          </div>
+        </div>`
+      overlay.addEventListener('click', (event) => {
+        if (event.target === overlay || event.target.closest('[data-close-males]')) overlay.remove()
+      })
+      document.body.appendChild(overlay)
+    }
+
+    document.addEventListener('keydown', (event) => {
+      if (event.key === 'Escape') document.querySelector('[data-breeding-males-panel]')?.remove()
+    })
+
+    const renderTable = () => {
+      const searchedItems = filteredBreedingItems()
+      dock.prune(breedingItems)
+      const visibleItems = dock.apply(searchedItems)
+
+      table.innerHTML =
+        visibleItems
+          .map((item) => {
+            const status = labels[item.status] || labels.planning
+            const femaleName = [item.female_koi_code, item.female_koi_name].filter(Boolean).join(' - ')
+            const femaleEntries = parseEntries(item.female_parent_entries, item.female_koi_id, femaleName)
+            const pondEntries = parsePondEntries(item.pond_entries, item.pond_id, item.pond_name)
+            const entry = femaleEntries[0]
+            const femaleFromOptions = lookupKoi(item, entry?.koi_id)
+            const female = {
+              code: item.female_koi_code || femaleFromOptions?.code || entry?.label,
+              image_url: item.female_koi_image_url || femaleFromOptions?.image_url,
+            }
+            const pondText = pondEntries.map((pond) => text(pond.label)).join(', ') || '-'
+            const femaleText = entry ? [text(female.code), entry.length_cm ? `${formatSizeCm(entry.length_cm)} cm` : ''].filter(Boolean).join(' · ') : '-'
+
+            return `
+        <div class="col-sm-6 col-lg-4 col-xl-3">
+          <div class="card h-100 breeding-card" data-dock-id="${escapeHtml(item.id)}">
+            <div class="breeding-card-head" role="button" tabindex="0" data-breeding-id="${escapeHtml(item.id)}">
+              <div class="d-flex align-items-start justify-content-between gap-2">
+                <div class="breeding-card-title">
+                  <div><button class="breeding-code-copy breeding-ellipsis" type="button" data-copy-breeding-code="${escapeHtml(text(item.batch_code))}" title="${escapeHtml(text(item.batch_code))}">${escapeHtml(text(item.batch_code))}</button></div>
+                  <div class="text-secondary small breeding-ellipsis" title="${escapeHtml(text(item.session_name))}">${escapeHtml(text(item.session_name))}</div>
+                </div>
+                <div class="d-flex align-items-center gap-1 flex-shrink-0">
+                  <span class="badge bg-blue text-blue-fg dock-selected-badge">Terpilih</span>
+                  <span class="badge ${status.className}">${status.label}</span>
+                </div>
+              </div>
+              <div class="small breeding-card-cell mt-2"><span class="text-secondary">Awal Pijah</span><div>${formatBreedingDate(item.spawning_started_at || item.breeding_date)}</div></div>
+            </div>
+            <div class="breeding-card-photo" data-dock-select title="Klik untuk memilih">
+              ${female.image_url ? `<img src="${escapeHtml(female.image_url)}" alt="${escapeHtml(text(female.code))}" loading="lazy" decoding="async" fetchpriority="low" />` : '<div class="breeding-parent-placeholder d-flex align-items-center justify-content-center">No foto</div>'}
+              ${female.image_url ? `<button class="btn btn-icon btn-sm breeding-zoom-btn" type="button" data-zoom-image="${escapeHtml(female.image_url)}" aria-label="Zoom foto indukan betina" title="Zoom foto">${window.KoiDock.icon('zoom-in')}</button>` : ''}
+            </div>
+            <div class="card-body" role="button" tabindex="0" data-breeding-id="${escapeHtml(item.id)}">
+              <div class="row g-2 small">
+                <div class="col-6 breeding-card-cell"><span class="text-secondary">Kolam</span><div class="breeding-ellipsis" title="${escapeHtml(pondText)}">${escapeHtml(pondText)}</div></div>
+                <div class="col-6 breeding-card-cell"><span class="text-secondary">Metode</span><div>${escapeHtml(methodLabels[item.spawning_method] || text(item.spawning_method))}</div></div>
+                <div class="col-12 breeding-card-cell"><span class="text-secondary">Indukan Betina</span><div>${escapeHtml(femaleText)}</div></div>
+                <div class="col-12 breeding-card-cell"><span class="text-secondary">Indukan Jantan</span>${renderMaleThumbs(item)}</div>
+              </div>
+              <div class="breeding-card-actions">
+                <button class="btn btn-sm" type="button" data-print-breeding="${escapeHtml(item.id)}">${printIcon} Print</button>
+                <button class="btn btn-sm" type="button" data-edit-breeding="${escapeHtml(item.id)}" data-role-required="farm-operate">${editIcon} Edit</button>
+                <button class="btn btn-sm btn-outline-danger" type="button" data-delete-breeding="${escapeHtml(item.id)}" data-role-required="farm-operate">${trashIcon} Hapus</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      `
+          })
+          .join('') || '<div class="col-12 text-secondary">Data breeding tidak ditemukan.</div>'
+      dock.refresh()
+      setSummary(visibleItems)
+    }
+    // ---- Excel export / import ------------------------------------------------------------------
+    const breedingExcelColumns = ['Kode Batch', 'Nama Sesi', 'Awal Pijah', 'Akhir Pijah', 'Tanggal Release Larva', 'Metode', 'Status', 'Indukan Betina', 'Ukuran Betina (cm)', 'Indukan Jantan', 'Kolam', 'Burayak', 'Berat Telur (g)', 'Catatan', 'Petugas', 'Update Terakhir', 'Galeri', 'ID Galeri']
+    const dateOnly = (value) => (value ? String(value).slice(0, 10) : '')
+    // 2026-01-26, 26/01/2026 and "26 - [1] Januari - 2026" all become 2026-01-26; anything else becomes ''.
+    const dateFromText = (value) => window.KoiAuth.dateFromText(value)
+
+    const exportBreedingZip = async (chosen, rows) => {
+      const progress = window.KoiZip.progress('Unduh ZIP Breeding')
+      try {
+        const result = await window.KoiZip.exportPackage({
+          sheetName: 'Breeding',
+          header: breedingExcelColumns,
+          rows,
+          keyHeader: 'Kode Batch',
+          xlsxName: 'data-breeding.xlsx',
+          docs: chosen.map((item) => ({ key: item.batch_code || String(item.id), media: parseJson(item.media_entries) })),
+          onProgress: (text) => progress.set(text),
+        })
+        window.KoiZip.download(result.blob, `zip-breeding-${window.KoiZip.today()}.zip`)
+        window.KoiDock.showResult('Unduh ZIP Breeding', `Selesai: ${chosen.length} sesi, ${result.photos} foto, ${result.videos} video.`, result.problems)
+      } catch (error) {
+        window.KoiDock.showResult('Unduh ZIP Breeding', error.message || 'ZIP gagal dibuat.')
+      } finally {
+        progress.close()
+      }
+    }
+
+    const exportBreedingExcel = (ids, zipMode = false) => {
+      if (!window.XLSX) {
+        window.KoiDock.showResult('Export Excel', 'Pustaka Excel belum termuat. Muat ulang halaman.')
+        return
+      }
+
+      const chosen = ids.length ? breedingItems.filter((item) => ids.includes(String(item.id))) : dock.apply(filteredBreedingItems())
+      if (!chosen.length) {
+        window.KoiDock.showResult('Export Excel', 'Belum ada data breeding untuk diexport.')
+        return
+      }
+
+      const rows = chosen.map((item) => {
+        const femaleName = [item.female_koi_code, item.female_koi_name].filter(Boolean).join(' - ')
+        const female = parseEntries(item.female_parent_entries, item.female_koi_id, femaleName)[0]
+        const femaleKoi = lookupKoi(item, female?.koi_id)
+        const ponds = parsePondEntries(item.pond_entries, item.pond_id, item.pond_name)
+        return [
+          item.batch_code || '',
+          item.session_name || '',
+          dateOnly(item.spawning_started_at || item.breeding_date),
+          dateOnly(item.fish_separated_at),
+          dateOnly(item.larva_released_at),
+          methodLabels[item.spawning_method] || item.spawning_method || '',
+          labels[item.status]?.label || item.status || '',
+          item.female_koi_code || femaleKoi?.code || female?.label || '',
+          female?.length_cm ?? '',
+          maleParents(item).map((male) => male.code).join(', '),
+          ponds.map((pond) => pondById.get(String(pond.pond_id))?.name || pond.label).filter(Boolean).join(', '),
+          item.fry_count ?? '',
+          item.egg_weight_g ?? '',
+          item.notes || '',
+          item.officer_name || '',
+          dateOnly(item.last_update_date),
+          item.gallery_id ? 'Ya' : 'Tidak',
+          item.gallery_id || '',
+        ]
+      })
+      if (zipMode) return exportBreedingZip(chosen, rows)
+      const sheet = XLSX.utils.aoa_to_sheet([breedingExcelColumns, ...rows])
+      sheet['!cols'] = breedingExcelColumns.map((column) => ({ wch: Math.max(14, column.length + 2) }))
+      const workbook = XLSX.utils.book_new()
+      XLSX.utils.book_append_sheet(workbook, sheet, 'Breeding')
+      const buffer = XLSX.write(workbook, { type: 'array', bookType: 'xlsx' })
+      const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' })
+      const link = document.createElement('a')
+      const objectUrl = URL.createObjectURL(blob)
+
+      link.href = objectUrl
+      link.download = `data-breeding-${new Date().toISOString().slice(0, 10)}.xlsx`
+      document.body.appendChild(link)
+      link.click()
+      link.remove()
+      setTimeout(() => URL.revokeObjectURL(objectUrl), 1000)
+    }
+
+    // Kode Batch empty = new session (code made automatically). Kode Batch that exists = that session is updated
+    // with the columns that are filled in. Parents are Kode Koi from Data Ikan, ponds are pond names.
+    // Mass input works in two passes: everything is checked first and shown as a preview (nothing is written),
+    // and only after "Lanjutkan" the rows are saved. A ZIP also brings the documentation (see zip-kit.js);
+    // the Galeri column (Ya/Tidak) decides whether it is shown in the Galeri (empty = Ya for new sessions).
+    const readBreedingRecords = async (file) => {
+      const workbook = XLSX.read(await file.arrayBuffer(), { type: 'array', cellDates: true, dateNF: 'yyyy-mm-dd' })
+      const rawRows = XLSX.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]], { defval: '', raw: false })
+      return rawRows.map((row) => Object.fromEntries(Object.entries(row).map(([key, value]) => [String(key).trim().toLowerCase(), String(value ?? '').trim().replace(/^[-–—]+$/, '')])))
+    }
+
+    const runBreedingImport = async (records, pkg, dryRun, progress) => {
+      const problems = []
+      let inserted = 0
+      let updated = 0
+      let docsAdded = 0
+      let docsSkipped = 0
+      let docsPlanned = 0
+      const parentCodes = records.flatMap((record) => [record['indukan betina'], ...String(record['indukan jantan'] || '').split(/[,;\n]+/)]).map((code) => String(code || '').trim()).filter(Boolean)
+      const koiByCode = new Map((await window.KoiPicker.byCodes(parentCodes, { scope: 'all' })).map((koi) => [String(koi.code || '').trim().toUpperCase(), koi]))
+      const pondByName = new Map([...pondById.values()].map((pond) => [String(pond.name || '').trim().toLowerCase(), pond]))
+      const splitList = (value) => String(value || '').split(/[,;\n]+/).map((part) => part.trim()).filter(Boolean)
+      const parentEntry = (koi, length) => ({ koi_id: String(koi.id), label: koiLabel(koi), length_cm: length !== '' && length != null ? length : (koi.current_length_cm ?? ''), notes: '' })
+      const methodFrom = (value) => ({ alami: 'alami', stripping: 'stripping' })[String(value || '').trim().toLowerCase()] || ''
+      const statusFrom = (value) => ({ planning: 'planning', proses: 'proses', completed: 'completed', selesai: 'completed', failed: 'failed', gagal: 'failed' })[String(value || '').trim().toLowerCase()] || ''
+      const newKeys = new Set()
+
+      for (const [index, record] of records.entries()) {
+        const line = index + 2
+        const code = (record['kode batch'] || '').toUpperCase()
+        if (pkg && code) pkg.markUsed(code)
+        const existing = code ? breedingItems.find((item) => String(item.batch_code || '').toUpperCase() === code) : null
+        const fields = {}
+        const bad = []
+
+        if (record['nama sesi']) fields.session_name = record['nama sesi']
+        const awalText = record['awal pijah'] || record['awal pemijahan'] || record.tanggal
+        const breedingDate = dateFromText(awalText)
+        if (awalText && !breedingDate) bad.push(`Awal Pijah "${awalText}" tidak valid`)
+        if (breedingDate) {
+          fields.breeding_date = breedingDate
+          fields.spawning_started_at = breedingDate
+        }
+        for (const [column, field] of [['akhir pijah', 'fish_separated_at'], ['pemisahan ikan', 'fish_separated_at'], ['tanggal release larva', 'larva_released_at'], ['release larva', 'larva_released_at']]) {
+          const value = dateFromText(record[column])
+          if (record[column] && !value) bad.push(`${column} "${record[column]}" tidak valid`)
+          if (value) fields[field] = value
+        }
+        if (record.metode) {
+          const method = methodFrom(record.metode)
+          if (method) fields.spawning_method = method
+          else bad.push(`Metode "${record.metode}" tidak dikenal (Alami atau Stripping)`)
+        }
+        if (record.status) {
+          const status = statusFrom(record.status)
+          if (status) fields.status = status
+          else bad.push(`Status "${record.status}" tidak dikenal (Planning, Proses, Completed, Failed)`)
+        }
+        if (record.burayak !== '') fields.fry_count = Math.max(0, Math.round(Number(record.burayak) || 0))
+        if (record['berat telur (g)'] !== '') fields.egg_weight_g = Math.max(0, Number(record['berat telur (g)']) || 0)
+        if (record.catatan) fields.notes = record.catatan
+        if (record.petugas) fields.officer_name = record.petugas;
+        const updatedOn = dateFromText(record['update terakhir']);
+        if (updatedOn) fields.last_update_date = updatedOn;
+        const galleryText = String(record.galeri || '').trim().toLowerCase()
+        if (['ya', 'y', 'yes', 'true', '1'].includes(galleryText)) fields.show_in_gallery = true
+        else if (['tidak', 't', 'no', 'false', '0'].includes(galleryText)) fields.show_in_gallery = false
+
+        if (record['indukan betina']) {
+          const female = koiByCode.get(record['indukan betina'].toUpperCase())
+          if (!female) bad.push(`Indukan betina "${record['indukan betina']}" tidak ada di Data Ikan`)
+          else {
+            fields.female_koi_id = female.id
+            fields.female_parent_entries = [parentEntry(female, record['ukuran betina (cm)'])]
+          }
+        }
+        if (record['indukan jantan']) {
+          const males = splitList(record['indukan jantan']).map((maleCode) => ({ maleCode, koi: koiByCode.get(maleCode.toUpperCase()) }))
+          const missing = males.filter((male) => !male.koi).map((male) => male.maleCode)
+          if (missing.length) bad.push(`Indukan jantan ${missing.join(', ')} tidak ada di Data Ikan`)
+          else {
+            fields.male_koi_id = males[0].koi.id
+            fields.male_parent_entries = males.map((male) => parentEntry(male.koi, ''))
+          }
+        }
+        if (record.kolam) {
+          const ponds = splitList(record.kolam).map((name) => ({ name, pond: pondByName.get(name.toLowerCase()) }))
+          const missing = ponds.filter((item) => !item.pond).map((item) => item.name)
+          if (missing.length) bad.push(`Kolam ${missing.join(', ')} tidak ditemukan`)
+          else {
+            fields.pond_id = ponds[0].pond.id
+            fields.pond_entries = ponds.map((item) => ({ pond_id: String(item.pond.id), label: item.pond.name, notes: '' }))
+          }
+        }
+
+        if (!existing && !fields.breeding_date) bad.push('Awal Pijah wajib diisi untuk sesi baru')
+        if (bad.length) {
+          problems.push(`Baris ${line}${code ? ` (${code})` : ''}: ${bad.join('; ')}`)
+          continue
+        }
+
+        // A new session that already exists under another code (same name and date) is not created a second time.
+        if (!existing) {
+          const sameKey = fields.session_name && fields.breeding_date ? `${fields.session_name.toLowerCase()}|${fields.breeding_date}` : ''
+          const twin = sameKey ? breedingItems.find((item) => String(item.session_name || '').trim().toLowerCase() === fields.session_name.toLowerCase() && dateOnly(item.breeding_date) === fields.breeding_date) : null
+          if (twin || (sameKey && newKeys.has(sameKey))) {
+            problems.push(`Baris ${line}${code ? ` (${code})` : ''}: sesi "${fields.session_name}" tanggal ${fields.breeding_date} sudah ada${twin ? ` (${twin.batch_code})` : ' di file ini'}, dilewati`)
+            continue
+          }
+          if (sameKey) newKeys.add(sameKey)
+        }
+
+        // Dokumentasi cell: folder(s) of the ZIP and/or @ID of media that is already in the Galeri
+        let docs = null
+        if (pkg) {
+          const found = await pkg.docsForRow(record.dokumentasi, code)
+          docs = found.docs
+          problems.push(...found.problems.map((message) => `Baris ${line}${code ? ` (${code})` : ''}: ${message}`))
+        }
+        if (docs && docs.length) docsPlanned += docs.length
+        if (existing && Object.keys(fields).length === 0 && !(docs && docs.length)) {
+          problems.push(`Baris ${line} (${code}): tidak ada kolom yang terisi untuk diperbarui`)
+          continue
+        }
+        if (dryRun) {
+          if (existing) updated += 1
+          else inserted += 1
+          continue
+        }
+
+        // Documentation from a ZIP: uploaded files (or media mentioned by ID Media) are added to the session's media;
+        // a file that is already there is not added again.
+        if (docs && docs.length) {
+          const knownEntries = existing ? parseJson(existing.media_entries) : []
+          progress?.set(`Baris ${line}: ${docs.length} dokumentasi`)
+          const uploaded = await window.KoiZip.uploadEntries(docs, { imagePrefix: 'breeding-doc', videoPrefix: 'breeding-video', existingUrls: knownEntries.map((entry) => entry.url) })
+          problems.push(...uploaded.problems.map((message) => `Baris ${line} (${code}): ${message}`))
+          docsAdded += uploaded.entries.length
+          docsSkipped += uploaded.duplicates
+          if (uploaded.entries.length) fields.media_entries = [...knownEntries, ...uploaded.entries]
+        }
+        if (existing && Object.keys(fields).length === 0) continue
+
+        try {
+          const response = existing
+            ? await fetch(`${apiUrl}/breeding/${existing.id}`, { method: 'PATCH', headers: { 'content-type': 'application/json' }, body: JSON.stringify(fields) })
+            : await fetch(`${apiUrl}/breeding`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ batch_code: code, spawning_method: 'alami', status: 'planning', ...fields }) })
+          if (response.ok) {
+            if (existing) updated += 1
+            else inserted += 1
+          } else {
+            const result = await response.json().catch(() => ({}))
+            problems.push(`Baris ${line}${code ? ` (${code})` : ''}: ${result.error || 'gagal disimpan'}`)
+          }
+        } catch {
+          problems.push(`Baris ${line}${code ? ` (${code})` : ''}: gagal disimpan`)
+        }
+      }
+
+      if (pkg) {
+        for (const key of pkg.unusedKeys()) problems.push(`Folder dokumentasi "${key}" tidak dipakai: tidak ada baris data yang memakainya`)
+      }
+      return { inserted, updated, docsAdded, docsSkipped, docsPlanned, problems }
+    }
+
+    const importBreedingExcel = async (file) => {
+      if (!window.XLSX) {
+        window.KoiDock.showResult('Import Excel', 'Pustaka Excel belum termuat. Muat ulang halaman.')
+        return
+      }
+
+      let progress = null
+      try {
+        progress = window.KoiZip.progress('Memeriksa file Breeding')
+        let pkg = null
+        const packageProblems = []
+        if (/\.zip$/i.test(file.name)) {
+          pkg = await window.KoiZip.readPackage(file)
+          file = pkg.xlsxFile
+          packageProblems.push(...pkg.problems)
+        } else {
+          pkg = await window.KoiZip.plainPackage()
+        }
+        const records = await readBreedingRecords(file)
+        if (!records.length) {
+          window.KoiDock.showResult('Import Excel', 'File tidak berisi data. Kolom yang dikenali: ' + breedingExcelColumns.join(', ') + '.')
+          return
+        }
+
+        // pass 1: check everything, write nothing
+        const plan = await runBreedingImport(records, pkg, true, progress)
+        progress.close()
+        progress = null
+        const planProblems = [...packageProblems, ...plan.problems]
+        if (!plan.inserted && !plan.updated) {
+          window.KoiDock.showResult('Import Excel Breeding', 'Tidak ada data yang bisa diimport.', planProblems)
+          return
+        }
+        const summary = `Sesi baru: ${plan.inserted}\nSesi diperbarui: ${plan.updated}` +
+          (pkg.isZip || plan.docsPlanned ? `\nDokumentasi: ${plan.docsPlanned} file (yang sudah ada dilewati otomatis)` : '') +
+          (planProblems.length ? '\nBaris atau file bermasalah dilewati.' : '')
+        const go = await window.KoiDock.showResult('Pratinjau import Breeding', summary, planProblems, { confirm: true, okLabel: planProblems.length ? 'Lanjutkan (lewati yang bermasalah)' : 'Lanjutkan' })
+        if (!go) return
+
+        // pass 2: write
+        progress = window.KoiZip.progress('Import Breeding')
+        const result = await runBreedingImport(records, pkg, false, progress)
+        const allProblems = [...packageProblems, ...result.problems]
+        window.KoiDock.showResult('Import Excel Breeding', `Baru ${result.inserted}, diperbarui ${result.updated}, bermasalah ${allProblems.length}.${pkg.isZip || result.docsPlanned ? ` Dokumentasi ditambahkan ${result.docsAdded}, sudah ada ${result.docsSkipped}.` : ''}`, allProblems)
+        await keepScroll(loadBreeding)
+      } catch (error) {
+        window.KoiDock.showResult('Import Excel Breeding', error.message || 'File tidak dapat dibaca.')
+      } finally {
+        progress?.close()
+      }
+    }
+
+    const breedingImportInput = document.createElement('input')
+    breedingImportInput.type = 'file'
+    breedingImportInput.accept = '.xlsx,.xls,.zip'
+    breedingImportInput.hidden = true
+    breedingImportInput.addEventListener('change', async () => {
+      const [file] = Array.from(breedingImportInput.files || [])
+      breedingImportInput.value = ''
+      if (file) await importBreedingExcel(file)
+    })
+    document.body.appendChild(breedingImportInput)
+
+    const deleteBreedingBatch = async (ids) => {
+      const names = ids.map((id) => breedingItems.find((entry) => String(entry.id) === String(id))?.batch_code).filter(Boolean)
+
+      if (!(await window.KoiDialog.confirm(`Hapus ${ids.length} breeding (${names.join(', ')})?`))) {
+        return
+      }
+
+      const failed = []
+
+      for (const id of ids) {
+        try {
+          const response = await fetch(`${apiUrl}/breeding/${id}`, { method: 'DELETE' })
+          if (!response.ok) failed.push(id)
+        } catch {
+          failed.push(id)
+        }
+      }
+
+      dock.clear()
+      await keepScroll(loadBreeding)
+
+      if (failed.length) {
+        alert(`${failed.length} breeding gagal dihapus.`)
+      }
+    }
+
+    // Floating action dock, the same one Data Kolam and Laporan use.
+    const dock = window.KoiDock.create({
+      root: table,
+      label: 'breeding',
+      idOf: (item) => String(item.id),
+      visibleItems: () => dock.apply(filteredBreedingItems()),
+      render: () => renderTable(),
+      actions: [
+        { key: 'edit', icon: 'edit', title: 'Edit breeding terpilih', role: 'farm-operate', show: (count) => count === 1, onClick: (ids) => openEditForm(ids[0]) },
+        {
+          key: 'copy',
+          icon: 'copy',
+          title: 'Salin kode batch terpilih',
+          onClick: async (ids, button) => {
+            const codes = ids.map((id) => breedingItems.find((entry) => String(entry.id) === String(id))?.batch_code).filter(Boolean)
+            const copied = await copyText(codes.join('\n'))
+            button.classList.toggle('btn-outline-primary', false)
+            button.classList.toggle(copied ? 'btn-success' : 'btn-danger', true)
+            button.setAttribute('title', copied ? 'Kode batch tersalin' : 'Kode batch gagal disalin')
+            window.setTimeout(() => {
+              button.classList.remove('btn-success', 'btn-danger')
+              button.classList.add('btn-outline-primary')
+              button.setAttribute('title', 'Salin kode batch terpilih')
+            }, 1200)
+          },
+        },
+        { key: 'print', icon: 'printer', variant: 'secondary', title: (count) => (count > 1 ? `Cetak ${count} breeding terpilih (satu halaman per sesi)` : 'Cetak breeding terpilih'), show: (count) => count >= 1, onClick: (ids) => (ids.length > 1 ? window.KoiPrint.printMany(ids, printBreeding, { title: `Breeding terpilih (${ids.length} sesi)` }) : printBreeding(ids[0])) },
+        { key: 'delete', icon: 'trash', variant: 'danger', title: (count) => `Hapus ${count} breeding terpilih`, role: 'farm-operate', onClick: (ids) => deleteBreedingBatch(ids) },
+        { key: 'export', icon: 'file-spreadsheet', variant: 'success', title: (count) => (count ? `Export Excel (${count} terpilih)` : 'Export Excel'), always: true, onClick: (ids) => exportBreedingExcel(ids) },
+        { key: 'zip', icon: 'file-zip', variant: 'success', title: (count) => (count ? `Unduh ZIP (${count} terpilih)` : 'Unduh ZIP (Excel + dokumentasi)'), always: true, onClick: (ids) => exportBreedingExcel(ids, true) },
+        { key: 'import', icon: 'upload', variant: 'success', title: 'Import Excel atau ZIP', role: 'farm-operate', always: true, show: (count) => count === 0, onClick: () => breedingImportInput.click() },
+      ],
+      add: { title: 'Tambah breeding', role: 'farm-operate', onClick: () => addButton.click() },
+    })
+
+
+    const readFileAsDataUrl = (file) =>
+      new Promise((resolve, reject) => {
+        const reader = new FileReader()
+        reader.addEventListener('load', () => resolve(reader.result))
+        reader.addEventListener('error', () => reject(new Error('File dokumentasi gagal dibaca')))
+        reader.readAsDataURL(file)
+      })
+
+    const loadImage = (src) =>
+      new Promise((resolve, reject) => {
+        const image = new Image()
+        image.addEventListener('load', () => resolve(image))
+        image.addEventListener('error', () => reject(new Error('Gambar dokumentasi gagal diproses')))
+        image.src = src
+      })
+
+    const compressImage = async (file) => {
+      const dataUrl = await readFileAsDataUrl(file)
+      const image = await loadImage(dataUrl)
+      const maxSize = 1600
+      const scale = Math.min(1, maxSize / Math.max(image.naturalWidth, image.naturalHeight))
+      const canvas = document.createElement('canvas')
+      canvas.width = Math.max(1, Math.round(image.naturalWidth * scale))
+      canvas.height = Math.max(1, Math.round(image.naturalHeight * scale))
+      canvas.getContext('2d').drawImage(image, 0, 0, canvas.width, canvas.height)
+      return canvas.toDataURL('image/jpeg', 0.76)
+    }
+
+    const createVideoThumbnail = (file) =>
+      new Promise((resolve) => {
+        const video = document.createElement('video')
+        const canvas = document.createElement('canvas')
+        const objectUrl = URL.createObjectURL(file)
+
+        video.muted = true
+        video.playsInline = true
+        video.preload = 'metadata'
+        video.addEventListener(
+          'loadeddata',
+          () => {
+            canvas.width = video.videoWidth || 640
+            canvas.height = video.videoHeight || 360
+            canvas.getContext('2d').drawImage(video, 0, 0, canvas.width, canvas.height)
+            URL.revokeObjectURL(objectUrl)
+            resolve(canvas.toDataURL('image/webp', 0.82))
+          },
+          { once: true },
+        )
+        video.addEventListener(
+          'error',
+          () => {
+            URL.revokeObjectURL(objectUrl)
+            resolve('')
+          },
+          { once: true },
+        )
+        video.src = objectUrl
+      })
+
+    const resetDocumentation = () => {
+      documentationFiles = []
+      documentationInput.value = ''
+      documentationPreview.innerHTML = ''
+      documentationStatus.textContent = ''
+    }
+
+    const renderDocumentationPreview = () => {
+      documentationPreview.innerHTML = documentationFiles
+        .map(
+          (item, index) => `
+        <div class="col-sm-6 col-md-4" data-documentation-item="${index}">
+          <div class="border rounded p-2">
+            ${item.type === 'video' ? `<video class="w-100 rounded border" controls preload="metadata" src="${escapeHtml(item.previewUrl)}"></video>` : `<img class="w-100 rounded border" src="${escapeHtml(item.previewUrl)}" alt="${escapeHtml(item.file?.name || item.name || 'Dokumentasi breeding')}" loading="lazy" decoding="async" fetchpriority="low" />`}
+            <input class="form-control mt-2" name="breeding_documentation_notes" data-documentation-notes placeholder="Catatan dokumentasi" autocomplete="off" value="${escapeHtml(item.notes || '')}" />
+            <button class="btn btn-sm btn-outline-danger mt-2" type="button" data-remove-documentation="${index}">Hapus</button>
+          </div>
+        </div>
+      `,
+        )
+        .join('')
+    }
+
+    const addDocumentationFiles = (files) => {
+      const acceptedFiles = [...files].filter((file) => file.type.startsWith('image/') || ['video/mp4', 'video/webm'].includes(file.type))
+      const tooLarge = acceptedFiles.find((file) => file.type.startsWith('video/') && file.size > 100 * 1024 * 1024)
+
+      if (tooLarge) {
+        documentationStatus.textContent = `Video ${tooLarge.name} melebihi 100 MB.`
+        return
+      }
+
+      documentationFiles.push(
+        ...acceptedFiles.map((file) => ({
+          file,
+          type: file.type.startsWith('video/') ? 'video' : 'image',
+          previewUrl: URL.createObjectURL(file),
+          url: '',
+          thumbnail_url: '',
+          name: file.name,
+          notes: '',
+        })),
+      )
+      renderDocumentationPreview()
+      documentationStatus.textContent = documentationFiles.length ? `${documentationFiles.length} file siap disimpan di breeding.` : ''
+    }
+
+    const pasteDocumentationImages = async () => {
+      try {
+        const clipboardItems = await navigator.clipboard.read()
+        const imageFiles = []
+
+        for (const item of clipboardItems) {
+          const imageType = item.types.find((type) => type.startsWith('image/'))
+          if (!imageType) continue
+          const blob = await item.getType(imageType)
+          imageFiles.push(new File([blob], `paste-breeding-${Date.now()}-${imageFiles.length + 1}.${imageType.split('/')[1] || 'png'}`, { type: imageType }))
+        }
+
+        if (!imageFiles.length) {
+          throw new Error('Clipboard tidak berisi gambar.')
+        }
+
+        addDocumentationFiles(imageFiles)
+      } catch (error) {
+        documentationStatus.textContent = error.message || 'Paste gambar gagal.'
+      }
+    }
+
+    const uploadDocumentationMedia = async () => {
+      documentationPreview.querySelectorAll('[data-documentation-item]').forEach((element) => {
+        const index = Number(element.dataset.documentationItem)
+        documentationFiles[index].notes = element.querySelector('[data-documentation-notes]').value.trim()
+      })
+
+      const mediaEntries = []
+      for (const [index, item] of documentationFiles.entries()) {
+        if (item.url) {
+          mediaEntries.push({ type: item.type || 'image', url: item.url, thumbnail_url: item.thumbnail_url || item.url, name: item.name || '', notes: item.notes || '' })
+          continue
+        }
+
+        documentationStatus.textContent = `Mengupload dokumentasi ${index + 1}/${documentationFiles.length}...`
+        if (item.type === 'video') {
+          const [videoData, thumbnailData] = await Promise.all([readFileAsDataUrl(item.file), createVideoThumbnail(item.file)])
+          const response = await fetch(`${apiUrl}/videos`, {
+            method: 'POST',
+            headers: { 'content-type': 'application/json' },
+            body: JSON.stringify({ prefix: 'breeding-doc-video', video_data: videoData, thumbnail_data: thumbnailData }),
+          })
+          const data = await response.json().catch(() => ({}))
+          if (!response.ok) throw new Error(data.error || data.detail || 'Video dokumentasi gagal diupload')
+          mediaEntries.push({ type: 'video', url: data.video_url, thumbnail_url: data.video_thumbnail_url, name: item.name || item.file?.name || '', notes: item.notes || '' })
+          continue
+        }
+
+        const response = await fetch(`${apiUrl}/images`, {
+          method: 'POST',
+          headers: { 'content-type': 'application/json' },
+          body: JSON.stringify({ prefix: 'breeding-doc-image', image_data: await compressImage(item.file) }),
+        })
+        const data = await response.json().catch(() => ({}))
+        if (!response.ok) throw new Error(data.error || data.detail || 'Gambar dokumentasi gagal diupload')
+        mediaEntries.push({ type: 'image', url: data.image_url, thumbnail_url: data.image_url, name: item.name || item.file?.name || '', notes: item.notes || '' })
+      }
+
+      documentationStatus.textContent = mediaEntries.length ? 'Dokumentasi siap disimpan.' : ''
+      return mediaEntries
+    }
+
+    const previewMarkup = (item) =>
+      item
+        ? `
+      <div class="breeding-parent-preview d-flex flex-column gap-1 align-items-center text-center" data-parent-preview>
+        <button class="breeding-parent-photo breeding-parent-photo-button d-flex align-items-center justify-content-center" type="button" data-zoom-image="${escapeHtml(item.image_url || '')}">
+          ${item.image_url ? `<img src="${escapeHtml(item.image_url)}" alt="${escapeHtml(koiLabel(item))}" loading="lazy" decoding="async" fetchpriority="low" />` : `<div class="breeding-parent-placeholder d-flex align-items-center justify-content-center">Belum ada foto</div>`}
+        </button>
+      </div>
+    `
+        : '<div class="breeding-parent-preview" data-parent-preview></div>'
+
+    const koiSizeValue = (item) => item?.current_length_cm ?? item?.latest_length_cm ?? item?.length_cm ?? item?.size_cm ?? item?.size ?? ''
+    const parentSizeValue = (entry, selectedItem) => entry.length_cm ?? koiSizeValue(selectedItem)
+
+    // Sizes like Data Ikan: at most one decimal (85, 45,5), never 85.00
+    const formatSizeCm = (value) => { const number = Number(value); return Number.isFinite(number) && String(value).trim() !== '' ? number.toLocaleString('id-ID', { maximumFractionDigits: 1 }) : String(value ?? '') }
+    const sizeInputValue = (value) => { const number = Number(value); return Number.isFinite(number) && String(value ?? '').trim() !== '' ? String(Math.round(number * 10) / 10) : '' }
+
+    const parentRowTemplate = (type, entry = {}) => {
+      const selectedItem = entry.koi_id ? koiById.get(String(entry.koi_id)) : null
+
+      return `
+        <div class="row g-2 align-items-start" data-parent-entry="${type}">
+          <div class="col-auto">
+            ${previewMarkup(selectedItem)}
+          </div>
+          <div class="col breeding-parent-search-wrap">
+            <label class="form-label mb-1">Ikan indukan</label>
+            <div class="breeding-parent-search-field">
+              <input class="form-control" name="breeding_parent_search" data-parent-search placeholder="Mention ID/nama/bloodline/breeder/variety" autocomplete="off" value="" />
+              <input type="hidden" name="breeding_parent_koi" data-parent-koi value="${escapeHtml(entry.koi_id || '')}" />
+              <div class="breeding-parent-suggestions d-none" data-parent-suggestions></div>
+            </div>
+            <div class="row g-2 mt-0">
+              <div class="col-5 col-sm-4 breeding-parent-size">
+                <label class="form-label mb-1">Size</label>
+                <div class="input-group input-group-flat">
+                  <input class="form-control" name="breeding_parent_length" type="number" min="0" step="0.1" data-parent-length data-no-clear placeholder="0" value="${escapeHtml(sizeInputValue(parentSizeValue(entry, selectedItem)))}" />
+                  <span class="input-group-text">cm</span>
+                </div>
+              </div>
+              <div class="col-7 col-sm-8">
+                <label class="form-label mb-1">Catatan indukan</label>
+                <input class="form-control" name="breeding_parent_notes" data-parent-notes placeholder="Catatan ikan ini" autocomplete="off" value="${escapeHtml(entry.notes || '')}" />
+              </div>
+            </div>
+          </div>
+          <div class="col-auto">
+            <button class="btn btn-outline-danger btn-icon" type="button" data-remove-parent aria-label="Hapus indukan" title="Hapus indukan">${trashIcon}</button>
+          </div>
+        </div>
+      `
+    }
+
+    const addParentRow = (type, entry = {}) => {
+      const list = type === 'male' ? maleParentList : femaleParentList
+      list.insertAdjacentHTML('beforeend', parentRowTemplate(type, entry))
+      const row = list.lastElementChild
+      row.querySelector('[data-parent-preview]').outerHTML = previewMarkup(entry.koi_id ? koiById.get(String(entry.koi_id)) : null)
+      row.querySelector('[data-remove-parent]').disabled = type === 'female'
+      row.querySelector('[data-parent-search]').value = entry.koi_id ? koiLabel(koiById.get(String(entry.koi_id)) || entry) : ''
+    }
+
+    let parentSuggestToken = 0
+    const matchingKoi = (type, query) => {
+      const selectedIds = [...form.querySelectorAll(`[data-parent-entry="${type}"] [data-parent-koi]`)].map((input) => input.value).filter(Boolean)
+      return window.KoiPicker.lookup(query.trim(), { limit: 8, gender: type === 'male' ? 'male' : 'female', exclude: selectedIds }).then((result) => result.items)
+    }
+
+    const suggestionMarkup = (items) =>
+      items
+        .map(
+          (item) => `
+      <button class="breeding-parent-suggestion p-2" type="button" data-parent-suggestion="${escapeHtml(item.id)}">
+        <div class="d-flex gap-2 align-items-center">
+          <div class="breeding-parent-photo d-flex align-items-center justify-content-center">
+            ${item.image_url ? `<img src="${escapeHtml(item.image_url)}" alt="${escapeHtml(koiLabel(item))}" loading="lazy" decoding="async" fetchpriority="low" />` : `<div class="breeding-parent-placeholder d-flex align-items-center justify-content-center">No foto</div>`}
+          </div>
+          <div class="min-w-0">
+            <div class="fw-medium text-truncate">${escapeHtml(koiLabel(item))}</div>
+            <div class="text-secondary small text-truncate">${escapeHtml([item.variety, item.bloodline, item.breeder].filter(Boolean).join(' / ') || '-')}</div>
+            ${item.parent_type !== 'indukan' ? '<span class="breeding-parent-flag">Ikan reguler: jadi indukan saat disimpan</span>' : ''}
+          </div>
+        </div>
+      </button>
+    `,
+        )
+        .join('') || '<div class="p-2 text-secondary small">Data ikan tidak ditemukan.</div>'
+
+    const suggestParentsLater = window.KoiPicker.debounce((row) => {
+      const mine = ++parentSuggestToken
+      matchingKoi(row.dataset.parentEntry, row.querySelector('[data-parent-search]').value).then((items) => {
+        if (mine !== parentSuggestToken) return
+        row.querySelector('[data-parent-suggestions]').innerHTML = suggestionMarkup(items)
+      }).catch(() => {})
+    }, 200)
+    const showSuggestions = (row) => {
+      const suggestions = row.querySelector('[data-parent-suggestions]')
+      if (!suggestions.innerHTML.trim()) suggestions.innerHTML = '<div class="p-2 text-secondary small">Mencari...</div>'
+      suggestions.classList.remove('d-none')
+      suggestParentsLater(row)
+    }
+
+    const hideSuggestions = (row) => {
+      row?.querySelector('[data-parent-suggestions]')?.classList.add('d-none')
+    }
+
+    const hasEmptyMaleRow = () => [...maleParentList.querySelectorAll('[data-parent-entry]')].some((row) => !row.querySelector('[data-parent-koi]').value)
+
+    const selectParent = (row, item) => {
+      const type = row.dataset.parentEntry
+      const duplicate = [...form.querySelectorAll(`[data-parent-entry="${type}"]`)].some((entryRow) => entryRow !== row && String(entryRow.querySelector('[data-parent-koi]').value) === String(item.id))
+
+      if (duplicate) {
+        row.querySelector('[data-parent-search]').value = ''
+        row.querySelector('[data-parent-koi]').value = ''
+        row.querySelector('[data-parent-preview]').outerHTML = previewMarkup(null)
+        hideSuggestions(row)
+        return
+      }
+
+      row.querySelector('[data-parent-koi]').value = item.id
+      row.querySelector('[data-parent-search]').value = koiLabel(item)
+      row.querySelector('[data-parent-length]').value = sizeInputValue(koiSizeValue(item))
+      row.querySelector('[data-parent-preview]').outerHTML = previewMarkup(item)
+      hideSuggestions(row)
+
+      if (type === 'male' && !hasEmptyMaleRow()) {
+        addParentRow('male')
+        maleParentList.lastElementChild.querySelector('[data-parent-search]').focus()
+      }
+    }
+
+    const pondLabel = (pond) => pond?.name || `Kolam ${pond?.id || ''}`
+    const pondSearchText = (pond) => [pond.name, pond.location].filter(Boolean).join(' ').toLowerCase()
+    const pondMatchRank = (pond, query) => {
+      const name = String(pond?.name || '').toLowerCase()
+      const location = String(pond?.location || '').toLowerCase()
+
+      if (name === query) return 0
+      if (name.startsWith(query)) return 1
+      if (name.includes(query)) return 2
+      if (location === query) return 3
+      if (location.startsWith(query)) return 4
+      return 5
+    }
+    const matchingPonds = (query) => {
+      const loweredQuery = query.trim().toLowerCase()
+      const selectedIds = new Set([...pondList.querySelectorAll('[data-pond-value]')].map((input) => input.value).filter(Boolean))
+      const matches = loweredQuery
+        ? pondOptions
+            .filter((pond) => pondSearchText(pond).includes(loweredQuery))
+            .sort((first, second) => pondMatchRank(first, loweredQuery) - pondMatchRank(second, loweredQuery) || pondLabel(first).localeCompare(pondLabel(second)))
+        : pondOptions
+
+      return matches.filter((pond) => !selectedIds.has(String(pond.id))).slice(0, 8)
+    }
+
+    const pondSuggestionsMarkup = (ponds) =>
+      ponds
+        .map(
+          (pond) => `
+      <button class="breeding-parent-suggestion p-2" type="button" data-pond-suggestion="${escapeHtml(pond.id)}">
+        <div class="fw-medium">${escapeHtml(pondLabel(pond))}</div>
+        <div class="text-secondary small">${escapeHtml([pond.location, pond.status].filter(Boolean).join(' / ') || '-')}</div>
+      </button>
+    `,
+        )
+        .join('') || '<div class="p-2 text-secondary small">Data kolam tidak ditemukan.</div>'
+
+    const pondRowTemplate = (entry = {}) => `
+      <div class="row g-2 align-items-start" data-pond-entry>
+        <div class="col-md-6 breeding-mention-wrap">
+          <input class="form-control" name="breeding_pond_search" data-pond-search placeholder="Mention nama kolam/area" autocomplete="off" value="${escapeHtml(entry.label || '')}" />
+          <input type="hidden" name="breeding_pond_id" data-pond-value value="${escapeHtml(entry.pond_id || '')}" />
+          <div class="breeding-parent-suggestions d-none" data-pond-suggestions></div>
+        </div>
+        <div class="col-md-5">
+          <input class="form-control" name="breeding_pond_notes" data-pond-notes placeholder="Catatan kolam ini" autocomplete="off" value="${escapeHtml(entry.notes || '')}" />
+        </div>
+        <div class="col-md-1">
+          <button class="btn btn-outline-danger btn-icon" type="button" data-remove-pond aria-label="Hapus kolam" title="Hapus kolam">${trashIcon}</button>
+        </div>
+      </div>
+    `
+
+    const addPondRow = (entry = {}) => {
+      pondList.insertAdjacentHTML('beforeend', pondRowTemplate(entry))
+    }
+
+    const resetPondRows = () => {
+      pondList.innerHTML = ''
+      addPondRow()
+    }
+
+    const showPondSuggestions = (row) => {
+      const suggestions = row.querySelector('[data-pond-suggestions]')
+      suggestions.innerHTML = pondSuggestionsMarkup(matchingPonds(row.querySelector('[data-pond-search]').value))
+      suggestions.classList.remove('d-none')
+    }
+
+    const hidePondSuggestions = (row) => {
+      row?.querySelector('[data-pond-suggestions]')?.classList.add('d-none')
+    }
+
+    const hasEmptyPondRow = () => [...pondList.querySelectorAll('[data-pond-entry]')].some((row) => !row.querySelector('[data-pond-value]').value)
+
+    const selectPond = (row, pond) => {
+      row.querySelector('[data-pond-value]').value = pond.id
+      row.querySelector('[data-pond-search]').value = pondLabel(pond)
+      hidePondSuggestions(row)
+
+      if (!hasEmptyPondRow()) {
+        addPondRow()
+      }
+    }
+
+    const resetParentRows = () => {
+      maleParentList.innerHTML = ''
+      femaleParentList.innerHTML = ''
+      addParentRow('male')
+      addParentRow('female')
+    }
+
+    const readParentEntries = (type) => {
+      const list = type === 'male' ? maleParentList : femaleParentList
+
+      return [...list.querySelectorAll('[data-parent-entry]')]
+        .map((row) => {
+          const koiId = row.querySelector('[data-parent-koi]').value
+          const item = koiById.get(String(koiId))
+
+          return {
+            koi_id: koiId,
+            label: item ? koiLabel(item) : row.querySelector('[data-parent-search]').value.trim(),
+            length_cm: row.querySelector('[data-parent-length]').value,
+            notes: row.querySelector('[data-parent-notes]').value.trim(),
+          }
+        })
+        .filter((entry) => entry.koi_id)
+    }
+
+    const readPondEntries = () =>
+      [...pondList.querySelectorAll('[data-pond-entry]')]
+        .map((row) => {
+          const pondId = row.querySelector('[data-pond-value]').value
+          const pond = pondById.get(String(pondId))
+
+          return {
+            pond_id: pondId,
+            label: pond ? pondLabel(pond) : row.querySelector('[data-pond-search]').value.trim(),
+            notes: row.querySelector('[data-pond-notes]').value.trim(),
+          }
+        })
+        .filter((entry) => entry.pond_id)
+
+    const optionsNotice = document.querySelector('[data-breeding-options-notice]')
+    document.querySelector('[data-breeding-options-retry]')?.addEventListener('click', () => loadOptions())
+
+    // Retry a few times: one dropped request used to leave the whole page without parent photos.
+    const fetchOptions = async () => {
+      let response = null
+      for (let attempt = 0; attempt < 3; attempt += 1) {
+        try {
+          response = await fetch(`${apiUrl}/ponds`)
+          if (response.ok || response.status === 401 || response.status === 403) return response
+        } catch {
+          response = null
+        }
+        if (attempt < 2) await new Promise((resolve) => setTimeout(resolve, 1000 * (attempt + 1)))
+      }
+      return response
+    }
+
+    // One load at a time: the retry button, the 30 s refresh and page start must not stack retry loops.
+    let optionsInFlight = null
+    const loadOptions = () => {
+      if (!optionsInFlight) optionsInFlight = loadOptionsRun().finally(() => { optionsInFlight = null })
+      return optionsInFlight
+    }
+
+    const parentKoiIds = () => [...new Set(breedingItems.flatMap((item) => [
+      item.female_koi_id,
+      item.male_koi_id,
+      ...parseEntries(item.female_parent_entries, item.female_koi_id, '').map((entry) => entry.koi_id),
+      ...parseEntries(item.male_parent_entries, item.male_koi_id, '').map((entry) => entry.koi_id),
+    ]).filter(Boolean).map(String))]
+    // only the parents named in the breeding list are fetched (by id), not the whole fish list
+    const ensureParentKoi = async () => {
+      const missing = parentKoiIds().filter((id) => !window.KoiPicker.cache[id])
+      if (!missing.length) return false
+      try {
+        await window.KoiPicker.byIds(missing, { scope: 'all' })
+        return true
+      } catch {
+        return false
+      }
+    }
+
+    const loadOptionsRun = async () => {
+      const pondsResponse = await fetchOptions()
+      const optionsFailed = !pondsResponse || !pondsResponse.ok
+      if (optionsNotice) optionsNotice.classList.toggle('d-none', !optionsFailed)
+      // Keep the last good list instead of blanking it when a refresh fails.
+      if (optionsFailed && pondById.size) return
+
+      const ponds = optionsFailed ? [] : await pondsResponse.json()
+      pondById = new Map(ponds.map((pond) => [String(pond.id), pond]))
+      pondOptions = ponds
+      resetParentRows()
+      resetPondRows()
+      await ensureParentKoi()
+      renderTable()
+    }
+
+    const loadBreeding = async (silent = false) => {
+      if (!silent) {
+        table.innerHTML = '<div class="col-12 text-secondary"><div class="d-flex flex-column align-items-center justify-content-center gap-2 py-5 text-secondary"><span class="spinner-border text-primary" role="status" aria-hidden="true"></span><span>Memuat data breeding...</span></div></div>'
+      }
+
+      try {
+        const response = await fetch(`${apiUrl}/breeding`)
+
+        if (!response.ok) {
+          throw new Error('Data breeding gagal dimuat')
+        }
+
+        const items = await response.json()
+        const signature = JSON.stringify(items)
+        if (silent && signature === breedingRealtimeSignature) {
+          return
+        }
+        breedingRealtimeSignature = signature
+        localStorage.setItem(breedingCacheKey, signature)
+        breedingItems = items
+        renderTable()
+        ensureParentKoi().then((changed) => { if (changed) renderTable() })
+      } catch (error) {
+        if (!silent) {
+          table.innerHTML = '<div class="col-12 text-danger">Data breeding gagal dimuat. Pastikan API berjalan.</div>'
+        }
+      }
+    }
+
+    const restoreBreedingCache = () => {
+      try {
+        const cached = JSON.parse(localStorage.getItem(breedingCacheKey) || '[]')
+        if (!Array.isArray(cached) || cached.length === 0) return false
+        breedingRealtimeSignature = JSON.stringify(cached)
+        breedingItems = cached
+        renderTable()
+        return true
+      } catch {
+        localStorage.removeItem(breedingCacheKey)
+        return false
+      }
+    }
+
+    const todayLocal = () => new Date(Date.now() - new Date().getTimezoneOffset() * 60000).toISOString().slice(0, 10);
+    const setFormValue = (name, value) => {
+      const field = form.querySelector(`[name="${name}"]`)
+
+      if (field && field.type !== 'checkbox' && field.type !== 'radio') {
+        field.value = value || ''
+      }
+    }
+
+    const setExclusiveValue = (name, value) => {
+      const group = form.querySelector(`[data-exclusive-group="${name}"]`)
+
+      group?.querySelectorAll('[data-exclusive-option]').forEach((input) => {
+        input.checked = input.value === value
+      })
+    }
+
+    const printImageUrl = (value) => {
+      const rawValue = String(value || '').trim()
+
+      if (!rawValue || rawValue.startsWith('data:') || rawValue.startsWith('blob:')) {
+        return rawValue
+      }
+
+      const apiResolved = window.KoiAuth?.apiUrl ? window.KoiAuth.apiUrl(rawValue) : rawValue
+
+      try {
+        return new URL(apiResolved, window.location.origin).href
+      } catch {
+        return apiResolved
+      }
+    }
+    const printParentRows = (entries, type, item) =>
+      entries.length
+        ? entries.map((entry) => {
+            const kp = window.KoiPrint
+            const koi = lookupKoi(item, entry?.koi_id)
+            const imageUrl = type === 'female' ? item.female_koi_image_url || koi?.image_url : koi?.image_url
+            const code = type === 'female' ? item.female_koi_code || koi?.code || entry.label : koi?.code || entry.label
+            const name = type === 'female' ? item.female_koi_name || koi?.name : koi?.name
+            const variety = type === 'female' ? item.female_koi_variety || koi?.variety : koi?.variety
+            const bloodline = type === 'female' ? item.female_koi_bloodline || koi?.bloodline : koi?.bloodline
+            return `<tr>
+                <td class="kp-center">${kp.photo(printImageUrl(imageUrl), code)}</td>
+                <td><strong>${escapeHtml(text(code))}</strong></td>
+                <td>${escapeHtml(text(name))}</td>
+                <td>${escapeHtml(text(variety))}</td>
+                <td>${escapeHtml(text(bloodline))}</td>
+                <td class="kp-num">${entry.length_cm ? `${kp.size(entry.length_cm)} cm` : '-'}</td>
+                <td>${escapeHtml(entry.notes || '-')}</td>
+              </tr>`
+          }).join('')
+        : '<tr><td colspan="7" class="kp-muted">Belum ada data.</td></tr>'
+
+    const printPondRows = (entries) =>
+      entries.length
+        ? entries.map((entry, index) => `<tr><td class="kp-center">${index + 1}</td><td><strong>${escapeHtml(text(entry.label))}</strong></td><td>${escapeHtml(entry.notes || '-')}</td></tr>`).join('')
+        : '<tr><td colspan="3" class="kp-muted">Belum ada data.</td></tr>'
+
+    const parentTableHead = '<thead><tr><th class="kp-center" style="width:48px">Foto</th><th style="width:13%">Kode</th><th>Nama</th><th style="width:15%">Variety</th><th style="width:13%">Bloodline</th><th class="kp-num" style="width:10%">Ukuran</th><th style="width:16%">Catatan</th></tr></thead>'
+
+    const printBreeding = (id) => {
+      const item = breedingItems.find((entry) => String(entry.id) === String(id))
+
+      if (!item) {
+        return
+      }
+
+      const maleName = [item.male_koi_code, item.male_koi_name].filter(Boolean).join(' - ')
+      const femaleName = [item.female_koi_code, item.female_koi_name].filter(Boolean).join(' - ')
+      const maleEntries = parseEntries(item.male_parent_entries, item.male_koi_id, maleName)
+      const femaleEntries = parseEntries(item.female_parent_entries, item.female_koi_id, femaleName)
+      const pondEntries = parsePondEntries(item.pond_entries, item.pond_id, item.pond_name)
+      const status = labels[item.status] || labels.planning
+
+      window.KoiPrint.print({
+        key: 'breeding-detail',
+        title: `Breeding ${text(item.batch_code)}`,
+        heading: 'Laporan Breeding',
+        subheading: item.session_name || '',
+        info: [
+          ['Kode Batch', item.batch_code],
+          ['Metode', methodLabels[item.spawning_method] || text(item.spawning_method)],
+          ['Awal Pijah', formatDate(item.spawning_started_at || item.breeding_date)],
+          ['Akhir Pijah', item.fish_separated_at ? formatDate(item.fish_separated_at) : '-'],
+          ['Tanggal Release Larva', item.larva_released_at ? formatDate(item.larva_released_at) : '-'],
+          ['Status', status.label],
+          ['Burayak', Number(item.fry_count || 0)],
+          ['Berat Telur', item.egg_weight_g ? `${item.egg_weight_g} g` : '-'],
+          ['Petugas', item.officer_name || '-'],
+          ['Update Terakhir', item.last_update_date ? formatDate(item.last_update_date) : '-'],
+        ],
+        notes: item.notes || '',
+        body: `
+          <section class="kp-section"><h2>Indukan Betina</h2><table class="kp-table">${parentTableHead}<tbody>${printParentRows(femaleEntries, 'female', item)}</tbody></table></section>
+          <section class="kp-section"><h2>Indukan Jantan</h2><table class="kp-table">${parentTableHead}<tbody>${printParentRows(maleEntries, 'male', item)}</tbody></table></section>
+          <section class="kp-section"><h2>Kolam</h2><table class="kp-table"><thead><tr><th class="kp-center" style="width:28px">No</th><th style="width:28%">Nama Kolam</th><th>Catatan</th></tr></thead><tbody>${printPondRows(pondEntries)}</tbody></table></section>
+        `,
+      })
+    }
+    const initBreedingDatepicker = () => {
+      // a native date field needs no calendar library
+      if (form.elements.breeding_date.type !== 'text' || !window.Litepicker || form.elements.breeding_date.dataset.breedingDatepickerReady) {
+        return false
+      }
+
+      new window.Litepicker({
+        element: form.elements.breeding_date,
+        format: 'YYYY-MM-DD',
+        singleMode: true,
+        autoApply: true,
+        dropdowns: {
+          minYear: 1990,
+          maxYear: new Date().getFullYear() + 5,
+          months: true,
+          years: true,
+        },
+      })
+      form.elements.breeding_date.dataset.breedingDatepickerReady = 'true'
+      return true
+    }
+
+    const openCreateForm = () => {
+      form.reset()
+      setFormValue('id', '')
+      setFormValue('breeding_date', new Date().toISOString().slice(0, 10))
+      setFormValue('spawning_started_at', new Date().toISOString().slice(0, 10))
+      setFormValue('officer_name', '');
+      setFormValue('last_update_date', todayLocal());
+      form.dataset.lastUpdateLoaded = todayLocal();
+      setExclusiveValue('spawning_method', 'alami')
+      setExclusiveValue('status', 'planning')
+      resetParentRows()
+      resetPondRows()
+      resetDocumentation()
+      errorBox.classList.add('d-none')
+      modalTitle.textContent = 'Formulir Tambah Breeding'
+      setBreedingReadonly(false)
+      openModal()
+    }
+
+    const setBreedingReadonly = (readonly) => {
+      readonlyMode = readonly
+      form.querySelectorAll('input,select,textarea').forEach((field) => { field.disabled = readonly })
+      form.querySelectorAll('[data-add-parent],[data-add-pond],[data-remove-parent],[data-remove-pond],[data-remove-documentation],[data-documentation-paste]').forEach((button) => { button.disabled = readonly })
+      submitButton.classList.toggle('d-none', readonly)
+    }
+
+    const openEditForm = (id, readonly = false) => {
+      const item = breedingItems.find((entry) => String(entry.id) === String(id))
+
+      if (!item) {
+        return
+      }
+
+      form.reset()
+      errorBox.classList.add('d-none')
+      modalTitle.textContent = readonly ? 'Detail Breeding' : 'Formulir Edit Breeding'
+      setFormValue('id', item.id)
+      setFormValue('batch_code', item.batch_code)
+      setFormValue('session_name', item.session_name)
+      setFormValue('breeding_date', item.breeding_date ? String(item.breeding_date).slice(0, 10) : '')
+      setFormValue('spawning_started_at', (item.spawning_started_at || item.breeding_date) ? String(item.spawning_started_at || item.breeding_date).slice(0, 10) : '')
+      setFormValue('fish_separated_at', item.fish_separated_at ? String(item.fish_separated_at).slice(0, 10) : '')
+      setFormValue('larva_released_at', item.larva_released_at ? String(item.larva_released_at).slice(0, 10) : '')
+      setFormValue('officer_name', item.officer_name);
+      setFormValue('last_update_date', item.last_update_date ? String(item.last_update_date).slice(0, 10) : '');
+      form.dataset.lastUpdateLoaded = form.elements.last_update_date.value;
+      setFormValue('status', item.status || 'planning')
+      setExclusiveValue('status', item.status || 'planning')
+      setExclusiveValue('spawning_method', item.spawning_method || 'alami')
+      setFormValue('fry_count', item.fry_count)
+      setFormValue('egg_weight_g', item.egg_weight_g)
+      setFormValue('notes', item.notes)
+      form.elements.show_in_gallery.checked = Boolean(item.gallery_id)
+      resetDocumentation()
+      documentationFiles = parseJson(item.media_entries).map((media) => ({
+        file: null,
+        type: media.type || media.media_type || 'image',
+        previewUrl: media.thumbnail_url || media.url || media.image_url || '',
+        url: media.url || media.image_url || '',
+        thumbnail_url: media.thumbnail_url || media.url || media.image_url || '',
+        name: media.name || '',
+        notes: media.notes || '',
+      }))
+      renderDocumentationPreview()
+      documentationStatus.textContent = documentationFiles.length ? `${documentationFiles.length} dokumentasi tersimpan di breeding.` : ''
+      maleParentList.innerHTML = ''
+      femaleParentList.innerHTML = ''
+      const maleName = [item.male_koi_code, item.male_koi_name].filter(Boolean).join(' - ')
+      const femaleName = [item.female_koi_code, item.female_koi_name].filter(Boolean).join(' - ')
+      const maleEntries = parseEntries(item.male_parent_entries, item.male_koi_id, maleName)
+      const femaleEntries = parseEntries(item.female_parent_entries, item.female_koi_id, femaleName)
+      ;(maleEntries.length ? maleEntries : [{}]).forEach((entry) => addParentRow('male', entry))
+      ;(femaleEntries.length ? femaleEntries.slice(0, 1) : [{}]).forEach((entry) => addParentRow('female', entry))
+      pondList.innerHTML = ''
+      const pondEntries = parsePondEntries(item.pond_entries, item.pond_id, item.pond_name)
+      ;(pondEntries.length ? pondEntries : [{}]).forEach((entry) => addPondRow(entry))
+      setBreedingReadonly(readonly)
+      openModal()
+    }
+
+    const showBreedingDetail = (id) => openEditForm(id, true)
+
+    const readPayload = () => ({
+      ...Object.fromEntries(new FormData(form).entries()),
+      breeding_date: String(form.elements.spawning_started_at.value || form.elements.breeding_date.value || ''),
+      show_in_gallery: Boolean(form.elements.show_in_gallery?.checked),
+      male_parent_entries: readParentEntries('male'),
+      female_parent_entries: readParentEntries('female').slice(0, 1),
+      pond_id: readPondEntries()[0]?.pond_id || '',
+      pond_entries: readPondEntries(),
+    })
+
+    // Drafts (Queue menu): save the form as a draft and continue it later, from any device.
+    const breedingDraftHost = document.createElement('div')
+    breedingDraftHost.className = 'me-auto'
+    form.querySelector('.modal-footer')?.prepend(breedingDraftHost)
+    const collectBreedingDraft = async () => {
+      const payload = readPayload()
+      delete payload.id
+      payload.media_entries = await uploadDocumentationMedia()
+      // photos are uploaded now; keep them as uploaded so saving again does not upload twice
+      documentationFiles = payload.media_entries.map((media) => ({ file: null, type: media.type || 'image', previewUrl: media.thumbnail_url || media.url, url: media.url, thumbnail_url: media.thumbnail_url || media.url, name: media.name || '', notes: media.notes || '' }))
+      renderDocumentationPreview()
+      return {
+        data: payload,
+        summary: [payload.batch_code, payload.session_name].filter(Boolean).join(' - ') || `Breeding ${payload.breeding_date || ''}`.trim(),
+        item_count: 1,
+      }
+    }
+    const applyBreedingDraft = (data) => {
+      form.reset()
+      errorBox.classList.add('d-none')
+      modalTitle.textContent = 'Formulir Tambah Breeding'
+      setFormValue('id', '')
+      ;['batch_code', 'session_name', 'fry_count', 'egg_weight_g', 'notes'].forEach((name) => setFormValue(name, data[name] ?? ''))
+      setFormValue('officer_name', data.officer_name ?? '');
+      setFormValue('last_update_date', data.last_update_date ? String(data.last_update_date).slice(0, 10) : todayLocal());
+      form.dataset.lastUpdateLoaded = form.elements.last_update_date.value;
+      setFormValue('breeding_date', data.breeding_date ? String(data.breeding_date).slice(0, 10) : new Date().toISOString().slice(0, 10))
+      setFormValue('spawning_started_at', (data.spawning_started_at || data.breeding_date) ? String(data.spawning_started_at || data.breeding_date).slice(0, 10) : new Date().toISOString().slice(0, 10))
+      setFormValue('fish_separated_at', data.fish_separated_at ? String(data.fish_separated_at).slice(0, 10) : '')
+      setFormValue('larva_released_at', data.larva_released_at ? String(data.larva_released_at).slice(0, 10) : '')
+      setExclusiveValue('status', data.status || 'planning')
+      setExclusiveValue('spawning_method', data.spawning_method || 'alami')
+      resetDocumentation()
+      documentationFiles = (Array.isArray(data.media_entries) ? data.media_entries : []).map((media) => ({ file: null, type: media.type || 'image', previewUrl: media.thumbnail_url || media.url || '', url: media.url || '', thumbnail_url: media.thumbnail_url || media.url || '', name: media.name || '', notes: media.notes || '' }))
+      renderDocumentationPreview()
+      documentationStatus.textContent = documentationFiles.length ? `${documentationFiles.length} dokumentasi dari draft.` : ''
+      maleParentList.innerHTML = ''
+      femaleParentList.innerHTML = ''
+      const maleEntries = parseEntries(data.male_parent_entries, '', '')
+      const femaleEntries = parseEntries(data.female_parent_entries, '', '')
+      ;(maleEntries.length ? maleEntries : [{}]).forEach((entry) => addParentRow('male', entry))
+      ;(femaleEntries.length ? femaleEntries.slice(0, 1) : [{}]).forEach((entry) => addParentRow('female', entry))
+      pondList.innerHTML = ''
+      const pondEntries = parsePondEntries(data.pond_entries, data.pond_id, '')
+      ;(pondEntries.length ? pondEntries : [{}]).forEach((entry) => addPondRow(entry))
+    }
+    const breedingDrafts = window.KoiDrafts?.attach({
+      type: 'breeding',
+      host: breedingDraftHost,
+      collect: collectBreedingDraft,
+      apply: applyBreedingDraft,
+      open: openCreateForm,
+      onError: (message) => {
+        errorBox.textContent = message
+        errorBox.classList.remove('d-none')
+      },
+      onInfo: (message) => {
+        documentationStatus.textContent = message
+      },
+    })
+    addButton.addEventListener('click', () => {
+      breedingDrafts?.reset()
+      openCreateForm()
+    })
+    breedingSearchInput?.addEventListener('input', renderTable)
+    addPondButton.addEventListener('click', () => addPondRow())
+    documentationInput.addEventListener('change', () => addDocumentationFiles(documentationInput.files))
+    documentationPasteButton.addEventListener('click', pasteDocumentationImages)
+    form.addEventListener('click', (event) => {
+      const addParentButton = event.target.closest('[data-add-parent]')
+      const removeParentButton = event.target.closest('[data-remove-parent]')
+      const removePondButton = event.target.closest('[data-remove-pond]')
+      const removeDocumentationButton = event.target.closest('[data-remove-documentation]')
+
+      if (addParentButton) {
+        addParentRow(addParentButton.dataset.addParent)
+      }
+
+      if (removeParentButton) {
+        const row = removeParentButton.closest('[data-parent-entry]')
+        const list = row.parentElement
+
+        row.remove()
+
+        if (!list.querySelector('[data-parent-entry]')) {
+          addParentRow(list.dataset.parentList)
+        }
+      }
+
+      if (removePondButton) {
+        const row = removePondButton.closest('[data-pond-entry]')
+        row.remove()
+
+        if (!pondList.querySelector('[data-pond-entry]')) {
+          addPondRow()
+        }
+      }
+
+      if (removeDocumentationButton) {
+        const index = Number(removeDocumentationButton.dataset.removeDocumentation)
+        const [removed] = documentationFiles.splice(index, 1)
+        if (removed?.previewUrl) URL.revokeObjectURL(removed.previewUrl)
+        renderDocumentationPreview()
+        documentationStatus.textContent = documentationFiles.length ? `${documentationFiles.length} file siap disimpan di breeding.` : ''
+      }
+    })
+    form.addEventListener('input', (event) => {
+      if (!event.target.matches('[data-parent-search]')) {
+        if (event.target.matches('[data-pond-search]')) {
+          const row = event.target.closest('[data-pond-entry]')
+          row.querySelector('[data-pond-value]').value = ''
+          showPondSuggestions(row)
+        }
+        return
+      }
+
+      const row = event.target.closest('[data-parent-entry]')
+      row.querySelector('[data-parent-koi]').value = ''
+      row.querySelector('[data-parent-preview]').outerHTML = previewMarkup(null)
+      showSuggestions(row)
+    })
+    form.addEventListener('focusin', (event) => {
+      if (event.target.matches('[data-parent-search]')) {
+        showSuggestions(event.target.closest('[data-parent-entry]'))
+      }
+      if (event.target.matches('[data-pond-search]')) {
+        showPondSuggestions(event.target.closest('[data-pond-entry]'))
+      }
+    })
+    form.addEventListener('change', (event) => {
+      if (event.target.matches('[data-exclusive-option]')) {
+        const group = event.target.closest('[data-exclusive-group]')
+
+        if (event.target.checked) {
+          group.querySelectorAll('[data-exclusive-option]').forEach((input) => {
+            input.checked = input === event.target
+          })
+        } else if (![...group.querySelectorAll('[data-exclusive-option]')].some((input) => input.checked)) {
+          event.target.checked = true
+        }
+      }
+    })
+    table.addEventListener('click', async (event) => {
+      const copyCodeButton = event.target.closest('[data-copy-breeding-code]')
+
+      if (copyCodeButton) {
+        event.preventDefault()
+        event.stopPropagation()
+        const originalText = copyCodeButton.textContent
+        const copied = await copyText(copyCodeButton.dataset.copyBreedingCode)
+        copyCodeButton.setAttribute('title', copied ? 'Kode Batch tersalin' : 'Kode Batch gagal disalin')
+        copyCodeButton.classList.toggle('is-copied', copied)
+        copyCodeButton.classList.toggle('is-copy-failed', !copied)
+        copyCodeButton.textContent = copied ? 'Tersalin' : 'Gagal'
+
+        window.setTimeout(() => {
+          copyCodeButton.textContent = originalText
+          copyCodeButton.classList.remove('is-copied', 'is-copy-failed')
+        }, 1000)
+        return
+      }
+
+      const printButton = event.target.closest('[data-print-breeding]')
+      const editButton = event.target.closest('[data-edit-breeding]')
+      const deleteButton = event.target.closest('[data-delete-breeding]')
+
+      if (printButton) {
+        printBreeding(printButton.dataset.printBreeding)
+        return
+      }
+
+      if (editButton) {
+        openEditForm(editButton.dataset.editBreeding)
+        return
+      }
+
+      if (deleteButton) {
+        const item = breedingItems.find((entry) => String(entry.id) === String(deleteButton.dataset.deleteBreeding))
+
+        if (!(await window.KoiDialog.confirm(`Hapus ${text(item?.batch_code)}?`))) {
+          return
+        }
+
+        deleteButton.disabled = true
+
+        try {
+          const response = await fetch(`${apiUrl}/breeding/${deleteButton.dataset.deleteBreeding}`, { method: 'DELETE' })
+
+          if (!response.ok) {
+            const result = await response.json().catch(() => ({}))
+            throw new Error(result.error || 'Breeding gagal dihapus')
+          }
+
+          await keepScroll(loadBreeding)
+        } catch (error) {
+          alert(error.message)
+          deleteButton.disabled = false
+        }
+        return
+      }
+      const selectArea = event.target.closest('[data-dock-select]')
+
+      if (selectArea && !event.target.closest('[data-zoom-image]')) {
+        dock.toggle(selectArea.closest('[data-dock-id]').dataset.dockId)
+        return
+      }
+
+
+      const malesButton = event.target.closest('[data-show-males]')
+
+      if (malesButton) {
+        showMalesPanel(malesButton.dataset.showMales)
+        return
+      }
+
+      if (event.target.closest('.dropdown') || event.target.closest('[data-zoom-image]')) {
+        return
+      }
+
+      const row = event.target.closest('[data-breeding-id]')
+
+      if (row) {
+        showBreedingDetail(row.dataset.breedingId)
+      }
+    })
+
+    table.addEventListener('keydown', (event) => {
+      if (event.key !== 'Enter' && event.key !== ' ') {
+        return
+      }
+
+      const row = event.target.closest('[data-breeding-id]')
+
+      if (row && event.target === row) {
+        event.preventDefault()
+        showBreedingDetail(row.dataset.breedingId)
+      }
+    })
+
+    document.addEventListener('click', (event) => {
+      const dismiss = event.target.closest('[data-bs-dismiss="modal"]')
+      const suggestion = event.target.closest('[data-parent-suggestion]')
+      const pondSuggestion = event.target.closest('[data-pond-suggestion]')
+      const zoomButton = event.target.closest('[data-zoom-image]')
+      const closeZoomButton = event.target.closest('[data-close-breeding-zoom]')
+
+      if (zoomButton) {
+        const imageUrl = zoomButton.dataset.zoomImage
+
+        if (imageUrl) {
+          {
+          const card = zoomButton.closest('[data-dock-id]')
+          const batch = card ? breedingItems.find((entry) => String(entry.id) === String(card.dataset.dockId)) : null
+          const lookupCode = [batch, ...breedingItems].flatMap((entry) => Object.values(entry?.parent_koi || {})).find((koi) => koi.image_url === imageUrl)?.code
+          const titleCode = zoomButton.getAttribute('title') === 'Zoom foto' ? '' : zoomButton.getAttribute('title')
+          const parentCode = zoomButton.dataset.zoomLabel || lookupCode || titleCode || ''
+          const extra = batch ? [`Breeding: ${[batch.batch_code, batch.session_name].filter(Boolean).join(' - ')}`] : []
+          window.KoiAuth.zoomKoiByCode(imageUrl, parentCode, extra)
+        }
+        }
+
+        return
+      }
+
+      if (closeZoomButton || event.target === zoom) {
+        zoom.classList.add('d-none')
+        zoomImage.removeAttribute('src')
+        return
+      }
+
+      if (suggestion) {
+        const row = suggestion.closest('[data-parent-entry]')
+        const item = koiById.get(String(suggestion.dataset.parentSuggestion))
+
+        if (item) {
+          selectParent(row, item)
+        }
+
+        return
+      }
+
+      if (pondSuggestion) {
+        const row = pondSuggestion.closest('[data-pond-entry]')
+        const pond = pondById.get(String(pondSuggestion.dataset.pondSuggestion))
+
+        if (pond) {
+          selectPond(row, pond)
+        }
+
+        return
+      }
+
+      if (dismiss && dismiss.closest('#breeding-modal')) {
+        closeModal()
+      }
+
+      if (!event.target.closest('[data-parent-entry]')) {
+        form.querySelectorAll('[data-parent-entry]').forEach(hideSuggestions)
+      }
+      if (!event.target.closest('[data-pond-entry]')) {
+        form.querySelectorAll('[data-pond-entry]').forEach(hidePondSuggestions)
+      }
+    })
+
+    document.addEventListener('keydown', (event) => {
+      if (event.key === 'Escape' && !zoom.classList.contains('d-none')) {
+        zoom.classList.add('d-none')
+        zoomImage.removeAttribute('src')
+      }
+    })
+
+    form.addEventListener('submit', async (event) => {
+      event.preventDefault()
+      errorBox.classList.add('d-none')
+      submitButton.disabled = true
+      submitButton.innerHTML = saveIcon
+
+      try {
+        {
+          const stamp = form.elements.last_update_date;
+          if (stamp && stamp.value === (form.dataset.lastUpdateLoaded || '')) stamp.value = todayLocal();
+        }
+        const payload = readPayload()
+        const id = payload.id
+        delete payload.id
+        payload.media_entries = await uploadDocumentationMedia()
+        const response = await fetch(id ? `${apiUrl}/breeding/${id}` : `${apiUrl}/breeding`, {
+          method: id ? 'PATCH' : 'POST',
+          headers: { 'content-type': 'application/json' },
+          body: JSON.stringify(payload),
+        })
+        const result = await response.json().catch(() => ({}))
+
+        if (!response.ok) {
+          throw new Error(result.error || 'Breeding gagal disimpan')
+        }
+
+        breedingDrafts?.consume()
+        if (id) {
+          // Editing keeps the form open (and its scroll position); the popup from auth.js says it worked.
+          // The photos are uploaded now; keep them as uploaded so saving again does not upload twice.
+          documentationFiles = payload.media_entries.map((media) => ({ file: null, type: media.type || 'image', previewUrl: media.thumbnail_url || media.url, url: media.url, thumbnail_url: media.thumbnail_url || media.url, name: media.name || '', notes: media.notes || '' }))
+          renderDocumentationPreview()
+          await keepScroll(loadBreeding)
+        } else {
+          closeModal()
+          await keepScroll(loadBreeding)
+        }
+      } catch (error) {
+        errorBox.textContent = error.message
+        errorBox.classList.remove('d-none')
+      } finally {
+        submitButton.disabled = false
+        submitButton.innerHTML = saveIcon
+      }
+    })
+
+    const hasCachedBreeding = restoreBreedingCache()
+    loadBreeding(hasCachedBreeding)
+    loadOptions()
+    window.KoiAuth?.registerRealtimeRefresh(() => {
+      if (!pondById.size) loadOptions()
+      return keepScroll(() => loadBreeding(true))
+    }, { intervalMs: 30000 })
+    if (!initBreedingDatepicker()) {
+      window.addEventListener('load', initBreedingDatepicker, { once: true })
+    }
+  </script>
+</DefaultLayout>
+

@@ -1,0 +1,1181 @@
+---
+import SettingsLayout from '@shared/layouts/SettingsLayout.astro'
+import ButtonList from '@ui/ButtonList.astro'
+import CardSubtitle from '@ui/CardSubtitle.astro'
+import CardTitle from '@ui/CardTitle.astro'
+import FormGroup from '@ui/FormGroup.astro'
+---
+
+<SettingsLayout active="settings-master-account" title="Master Akun">
+  <span class="d-none" data-page-role-required="master-admin"></span>
+  <div class="card-body">
+    <div class="d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-3 mb-4">
+      <div>
+        <h2 class="mb-1">Master Akun</h2>
+        <CardSubtitle>Menu ini khusus untuk role Master Admin.</CardSubtitle>
+      </div>
+      <button type="button" class="btn btn-primary" data-action="new-account">Tambah akun</button>
+    </div>
+
+    <div class="border rounded p-3 mb-4" id="program-identity" data-brand-settings-panel>
+      <div class="d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-3 mb-3">
+        <div>
+          <CardTitle>Identitas Program</CardTitle>
+          <CardSubtitle>Atur nama program dan icon yang tampil di header dan halaman login.</CardSubtitle>
+        </div>
+        <button type="button" class="btn btn-primary" data-action="save-brand-settings">Simpan Identitas</button>
+      </div>
+      <div class="alert alert-info d-none" data-brand-message></div>
+      <div class="row g-3 align-items-end">
+        <FormGroup label="Nama Program" for="brand-name" class="col-md-6">
+          <input type="text" class="form-control" id="brand-name" data-brand-name-input maxlength="80" placeholder="Nishikigoi" />
+        </FormGroup>
+        <div class="col-md-6">
+          <label class="form-label" for="brand-icon">Icon Program</label>
+          <div class="d-flex align-items-center gap-3">
+            <span class="avatar avatar-xl" data-brand-icon-preview>N</span>
+            <div class="btn-list">
+              <input type="file" class="d-none" id="brand-icon" data-brand-icon-input accept="image/*" />
+              <button type="button" class="btn" data-action="upload-brand-icon">Upload Icon</button>
+              <button type="button" class="btn btn-ghost-danger" data-action="remove-brand-icon">Hapus Icon</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="border rounded p-3 mb-4" id="system-backup" data-system-backup-panel>
+      <div class="d-flex flex-column gap-3">
+        <div>
+          <CardTitle>Backup & Restore Sistem</CardTitle>
+          <CardSubtitle>Backup mengunduh database dan file gambar/media sebagai ZIP yang bisa direstore lengkap oleh program. Backup sistem tidak memuat akun, setingan, dan tema: itu ada di Backup Akun. Satu tombol Restore mengenali kedua jenis ZIP.</CardSubtitle>
+          <div class="text-secondary small mt-2" data-system-backup-stamps>
+            <div>Terakhir backup: <strong data-system-stamp="last_backup_at">Memuat...</strong></div>
+            <div>Terakhir restore: <strong data-system-stamp="last_restore_at">Memuat...</strong></div>
+            <div>Terakhir backup akun: <strong data-system-stamp="last_account_backup_at">Memuat...</strong></div>
+            <div>Terakhir restore akun: <strong data-system-stamp="last_account_restore_at">Memuat...</strong></div>
+          </div>
+        </div>
+        <div class="btn-list">
+          <button type="button" class="btn btn-primary" data-action="download-system-backup">Buat Backup</button>
+          <button type="button" class="btn btn-primary" data-action="download-account-backup" title="Mengunduh semua akun terdaftar, setingan program, dan tema (terpisah dari backup sistem)">Backup Akun</button>
+          <input type="file" class="d-none" accept=".zip,application/zip" data-system-restore-input />
+          <button type="button" class="btn" data-action="pick-system-restore">Restore</button>
+          <button type="button" class="btn" data-action="cleanup-unused-files">Bersihkan File Tidak Terpakai</button>
+          <button type="button" class="btn btn-outline-danger" data-action="clear-system-data">Hapus Semua Data</button>
+        </div>
+      </div>
+      <div class="alert alert-info d-none mt-3 mb-0" data-system-backup-message></div>
+      <div class="progress progress-sm d-none mt-3" data-system-backup-progress>
+        <div class="progress-bar progress-bar-indeterminate"></div>
+      </div>
+    </div>
+    <CardTitle>Daftar Akun</CardTitle>
+
+    <div class="table-responsive mb-4">
+      <table class="table card-table table-vcenter">
+        <thead>
+          <tr>
+            <th>Photo Profile</th>
+            <th>Nama</th>
+            <th>Username</th>
+            <th>Email</th>
+<th>Telepon</th>
+            <th>Role</th>
+            <th>Status</th>
+            <th class="w-1"></th>
+          </tr>
+        </thead>
+        <tbody data-accounts-table>
+          <tr><td colspan="8" class="text-secondary"><div class="d-flex flex-column align-items-center justify-content-center gap-2 py-5 text-secondary"><span class="spinner-border text-primary" role="status" aria-hidden="true"></span><span>Memuat data akun...</span></div></td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-3 mb-3">
+      <CardTitle>Akun yang Sedang Login</CardTitle>
+      <button type="button" class="btn" data-action="refresh-account-sessions">Refresh Sesi</button>
+    </div>
+
+    <div class="table-responsive mb-4">
+      <table class="table card-table table-vcenter">
+        <thead>
+          <tr>
+            <th>Akun</th>
+            <th>Role</th>
+            <th>Status</th>
+            <th>Login</th>
+            <th>Aktivitas Terakhir</th>
+            <th>Remember</th>
+            <th>Perangkat</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody data-account-sessions-table>
+          <tr><td colspan="8" class="text-secondary"><div class="d-flex flex-column align-items-center justify-content-center gap-2 py-5 text-secondary"><span class="spinner-border text-primary" role="status" aria-hidden="true"></span><span>Memuat sesi login...</span></div></td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-3 mb-3">
+      <CardTitle>Riwayat Login</CardTitle>
+      <div class="btn-list">
+        <button type="button" class="btn btn-outline-danger" data-action="delete-login-history" data-login-delete-selected disabled>Hapus Terpilih</button>
+        <button type="button" class="btn btn-outline-danger" data-action="clear-login-history">Hapus Semua</button>
+        <button type="button" class="btn" data-action="refresh-login-history">Refresh Riwayat</button>
+      </div>
+    </div>
+
+    <div class="table-responsive mb-4">
+      <table class="table card-table table-vcenter">
+        <thead>
+          <tr>
+            <th style="width:36px"><input class="form-check-input" type="checkbox" data-login-check-all aria-label="Pilih semua riwayat" /></th>
+            <th>Waktu</th>
+            <th>Akun</th>
+            <th>Hasil</th>
+            <th>Alamat IP</th>
+            <th>Perangkat</th>
+          </tr>
+        </thead>
+        <tbody data-login-history-table>
+          <tr><td colspan="6" class="text-secondary"><div class="d-flex flex-column align-items-center justify-content-center gap-2 py-5 text-secondary"><span class="spinner-border text-primary" role="status" aria-hidden="true"></span><span>Memuat riwayat login...</span></div></td></tr>
+        </tbody>
+      </table>
+    </div>
+
+  </div>
+
+  <div class="modal modal-blur fade" id="account-modal" tabindex="-1" aria-hidden="true" data-account-modal>
+    <div class="modal-dialog modal-lg modal-dialog-centered" role="document">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" data-account-form-title>Tambah Akun</h5>
+          <button type="button" class="btn-close" data-action="cancel-account" aria-label="Tutup"></button>
+        </div>
+        <div class="modal-body">
+          <div class="alert alert-success d-none mb-3" role="alert" data-master-account-message></div>
+          <div class="row g-3" data-account-form>
+            <div class="col-12">
+              <label class="form-label" for="account-avatar">Photo Profile</label>
+              <div class="d-flex align-items-center gap-3">
+                <span class="avatar avatar-xl" data-account-avatar-preview>HA</span>
+                <div class="btn-list">
+                  <input type="file" class="d-none" id="account-avatar" accept="image/*" />
+                  <button type="button" class="btn" data-action="upload-avatar">Upload Photo Profile</button>
+                  <button type="button" class="btn btn-ghost-danger" data-action="remove-avatar">Hapus Photo Profile</button>
+                </div>
+              </div>
+            </div>
+
+            <FormGroup label="Nama" for="account-name" class="col-md-6">
+              <input type="text" class="form-control" id="account-name" name="account-name" />
+            </FormGroup>
+            <div class="col-md-6">
+              <label class="form-label" for="account-username">Username untuk login</label>
+              <input type="text" class="form-control" id="account-username" name="account-username" autocomplete="username" placeholder="contoh: admin" />
+              <div class="form-hint">Username ini dipakai saat akun masuk ke aplikasi.</div>
+            </div>
+            <FormGroup label="Password" for="account-password" class="col-md-6">
+              <input type="password" class="form-control" id="account-password" name="account-password" autocomplete="new-password" />
+              <div class="form-hint" data-password-hint>Kosongkan saat edit jika password tidak diubah.</div>
+            </FormGroup>
+            <FormGroup label="Email (opsional)" for="account-email" class="col-md-6">
+              <input type="email" class="form-control" id="account-email" name="account-email" />
+            </FormGroup>
+            <FormGroup label="Nomor telepon (opsional)" for="account-phone" class="col-md-6">
+              <input type="tel" class="form-control" id="account-phone" name="account-phone" inputmode="tel" />
+            </FormGroup>
+            <FormGroup label="Role" for="account-role" class="col-md-6">
+              <select class="form-select" id="account-role" name="account-role">
+                <option>Master Admin</option>
+                <option>Admin</option>
+                <option>Operator</option>
+                <option>Viewer</option>
+              </select>
+            </FormGroup>
+            <FormGroup label="Status" for="account-status" class="col-md-6">
+              <select class="form-select" id="account-status" name="account-status">
+                <option>Active</option>
+                <option>Inactive</option>
+              </select>
+            </FormGroup>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <ButtonList class="justify-content-end">
+            <button type="button" class="btn" data-action="cancel-account">Cancel</button>
+            <button type="button" class="btn btn-primary" data-action="save-account">Submit</button>
+          </ButtonList>
+        </div>
+      </div>
+    </div>
+  </div>
+
+<script is:inline src="/assets/brand-slots.js?v=20261014a"></script>
+<script is:inline>
+    // @ts-nocheck
+    document.addEventListener('DOMContentLoaded', () => {
+      const brandFields = {
+        name: document.querySelector('[data-brand-name-input]'),
+        icon: document.querySelector('[data-brand-icon-input]'),
+        preview: document.querySelector('[data-brand-icon-preview]'),
+      }
+      let brandIconValue = ''
+
+      const showBrandMessage = (message, variant = 'info') => {
+        const element = document.querySelector('[data-brand-message]')
+        if (!element) return
+        element.textContent = message
+        element.className = `alert alert-${variant}`
+      }
+
+      const setBrandPreview = (icon, name) => {
+        brandIconValue = icon || ''
+        if (!brandFields.preview) return
+        if (brandIconValue) {
+          brandFields.preview.style.backgroundImage = `url(${brandIconValue})`
+          brandFields.preview.textContent = ''
+        } else {
+          brandFields.preview.style.backgroundImage = ''
+          brandFields.preview.textContent = String(name || 'Nishikigoi').trim().charAt(0).toUpperCase() || 'N'
+        }
+        if (brandFields.icon) brandFields.icon.value = ''
+      }
+
+      const loadBrandSettings = async () => {
+        const settings = await window.KoiAuth.loadAppSettings()
+        if (brandFields.name) brandFields.name.value = settings.brand_name || 'Nishikigoi'
+        setBrandPreview(settings.brand_icon || '', settings.brand_name || 'Nishikigoi')
+      }
+
+      const saveBrandSettings = async () => {
+        showBrandMessage('Identitas program sedang disimpan.', 'info')
+        const settings = await window.KoiAuth.saveAppSettings({
+          brand_name: brandFields.name?.value || 'Nishikigoi',
+          brand_icon: brandIconValue,
+        })
+        if (brandFields.name) brandFields.name.value = settings.brand_name || 'Nishikigoi'
+        setBrandPreview(settings.brand_icon || '', settings.brand_name || 'Nishikigoi')
+        showBrandMessage('Identitas program berhasil disimpan.', 'success')
+      }
+
+      const backupStampNodes = {
+        last_backup_at: document.querySelector('[data-system-stamp="last_backup_at"]'),
+        last_restore_at: document.querySelector('[data-system-stamp="last_restore_at"]'),
+      
+        last_account_backup_at: document.querySelector('[data-system-stamp="last_account_backup_at"]'),
+        last_account_restore_at: document.querySelector('[data-system-stamp="last_account_restore_at"]'),}
+      const stampDay = new Intl.DateTimeFormat('id-ID', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })
+      const stampTime = new Intl.DateTimeFormat('id-ID', { hour: '2-digit', minute: '2-digit', hour12: false })
+      const stampText = (value) => {
+        const date = value ? new Date(value) : null
+        if (!date || Number.isNaN(date.getTime())) return 'Belum pernah'
+        return `${window.KoiAuth.formatDate(date, { weekday: true })}, pukul ${stampTime.format(date).replace(':', '.')}`
+      }
+      const loadBackupStamps = async () => {
+        try {
+          const response = await fetch(window.KoiAuth.apiUrl('/api/maintenance/status'), { headers: systemJobHeaders() })
+          const data = await response.json().catch(() => ({}))
+          if (!response.ok) throw new Error('status')
+          Object.keys(backupStampNodes).forEach((key) => { if (backupStampNodes[key]) backupStampNodes[key].textContent = stampText(data[key]) })
+        } catch (error) {
+          Object.values(backupStampNodes).forEach((node) => { if (node) node.textContent = 'Tidak terbaca' })
+        }
+      }
+
+      const backupMessage = document.querySelector('[data-system-backup-message]')
+      const backupProgress = document.querySelector('[data-system-backup-progress]')
+      const restoreInput = document.querySelector('[data-system-restore-input]')
+
+      const showBackupMessage = (message, variant = 'info') => {
+        if (!backupMessage) return
+        backupMessage.textContent = message
+        backupMessage.className = `alert alert-${variant} mt-3 mb-0`
+        if (variant === 'success') loadBackupStamps()
+      }
+
+      const setBackupBusy = (busy) => {
+        backupProgress?.classList.toggle('d-none', !busy)
+        if (busy) setBackupProgress(null)
+      }
+
+      // A number 0-100 fills the bar (percent of the current stage); null = no countable steps right now (moving stripes).
+      const backupBar = backupProgress?.querySelector('.progress-bar')
+      const setBackupProgress = (percent) => {
+        if (!backupBar) return
+        if (percent === null || percent === undefined) {
+          backupBar.classList.add('progress-bar-indeterminate')
+          backupBar.style.width = ''
+          return
+        }
+        backupBar.classList.remove('progress-bar-indeterminate')
+        backupBar.style.width = `${Math.max(0, Math.min(100, Math.floor(percent)))}%`
+      }
+      const megabytesLabel = (bytes) => (Number(bytes || 0) / 1048576).toFixed(1).replace('.', ',')
+      const numberLabel = (value) => Number(value || 0).toLocaleString('id-ID')
+      const stopwatch = () => {
+        const startedAt = Date.now()
+        return () => {
+          const seconds = Math.floor((Date.now() - startedAt) / 1000)
+          return `${String(Math.floor(seconds / 60)).padStart(2, '0')}:${String(seconds % 60).padStart(2, '0')}`
+        }
+      }
+      // "120 dari 450 file" in a job message -> { done, total, percent }
+      const countedFiles = (job) => {
+        // the server message carries the size handled so far: "12,3 dari 45,6 MB (120 dari 450 file)"; the percent is of that size
+        const match = String(job?.message || '').match(/([\d.,]+) dari ([\d.,]+) MB/)
+        if (!match) return null
+        const files = String(job?.message || '').match(/(\d+) dari (\d+) file/)
+        return { done: match[1], total: match[2], filesDone: files ? files[1] : '', filesTotal: files ? files[2] : '', percent: Math.max(0, Math.min(100, Math.floor(Number(job?.progress) || 0))) }
+      }
+
+      window.setTimeout(loadBackupStamps, 0)
+
+      const downloadBlob = (blob, filename) => {
+        const url = URL.createObjectURL(blob)
+        const link = document.createElement('a')
+        link.href = url
+        link.download = filename
+        document.body.appendChild(link)
+        link.click()
+        link.remove()
+        URL.revokeObjectURL(url)
+      }
+
+      const readFileAsDataUrl = (file) => new Promise((resolve, reject) => {
+        const reader = new FileReader()
+        reader.onload = () => resolve(reader.result)
+        reader.onerror = () => reject(reader.error || new Error('File backup gagal dibaca.'))
+        reader.readAsDataURL(file)
+      })
+
+      const systemJobHeaders = (extra = {}) => ({
+        'x-koi-role': window.KoiAuth.getSession()?.role || '',
+        'x-koi-user': window.KoiAuth.getSession()?.username || '',
+        ...extra,
+      })
+
+      // Heavy work runs in the background (the server starts a worker process): start it, then follow its progress.
+      // If the server could not start a worker, the page asks it to run the job inside one request instead.
+      const runSystemJob = async (payload, onProgress) => {
+        const response = await fetch(window.KoiAuth.apiUrl('/api/jobs'), {
+          method: 'POST',
+          headers: systemJobHeaders({ 'content-type': 'application/json' }),
+          body: JSON.stringify(payload),
+        })
+        const started = await response.json().catch(() => ({}))
+        if (!response.ok) throw new Error(started.detail || started.error || 'Pekerjaan gagal dimulai.')
+        const begun = Date.now()
+        let askedToRun = false
+        while (true) {
+          await new Promise((resolve) => window.setTimeout(resolve, 1000))
+          const poll = await fetch(window.KoiAuth.apiUrl(`/api/jobs/${started.id}`), { headers: systemJobHeaders() })
+          const job = await poll.json().catch(() => ({}))
+          if (!poll.ok) throw new Error(job.detail || job.error || 'Status pekerjaan tidak terbaca.')
+          if (onProgress) onProgress(job)
+          if (job.status === 'completed') return job
+          if (job.status === 'failed') throw new Error(job.message || 'Pekerjaan gagal.')
+          if (job.status === 'queued' && !askedToRun && Date.now() - begun > 6000) {
+            askedToRun = true
+            fetch(window.KoiAuth.apiUrl(`/api/jobs/${started.id}/run`), { method: 'POST', headers: systemJobHeaders() }).catch(() => {})
+          }
+        }
+      }
+
+      const downloadSystemBackup = async (button, kind = 'system') => {
+        const accounts = kind === 'accounts'
+        const idleLabel = button.textContent
+        button.disabled = true
+        button.textContent = 'Membuat...'
+        setBackupBusy(true)
+
+        const elapsedLabel = stopwatch()
+        // the status line says the stage, the packages counted so far and the percent of that stage
+        let stageLabel = 'Tahap 1/3: menyiapkan data...'
+        const renderBackupStatus = () => {
+          showBackupMessage(`${accounts ? 'Backup akun sedang dibuat.' : 'Backup sistem sedang dibuat.'} ${stageLabel} (${elapsedLabel()})`, 'info')
+        }
+        renderBackupStatus()
+        const elapsedTimer = window.setInterval(renderBackupStatus, 1000)
+
+        try {
+          const job = await runSystemJob({ type: accounts ? 'backup-accounts' : 'backup' }, (current) => {
+            const counted = countedFiles(current)
+            if (counted) {
+              setBackupProgress(counted.percent)
+              stageLabel = `Tahap 1/3: mengumpulkan ${accounts ? 'foto dan logo akun' : 'file media'} ${counted.done} dari ${counted.total} MB${counted.filesTotal ? `, ${counted.filesDone} dari ${counted.filesTotal} file` : ''} (${counted.percent}%)`
+            } else if (current.progress >= 95) {
+              setBackupProgress(null)
+              stageLabel = 'Tahap 2/3: menyusun file ZIP...'
+            } else {
+              setBackupProgress(null)
+              stageLabel = 'Tahap 1/3: menyiapkan data...'
+            }
+            renderBackupStatus()
+          })
+          setBackupProgress(0)
+          const mediaCount = Number(job.result?.media_files || 0)
+          const mediaSuffix = mediaCount ? `, isi ${mediaCount} file media` : ''
+          stageLabel = `Tahap 3/3: mengunduh${mediaSuffix}...`
+          renderBackupStatus()
+          const response = await fetch(window.KoiAuth.apiUrl(`/api/jobs/${job.id}/file`), { headers: systemJobHeaders() })
+          if (!response.ok) {
+            const data = await response.json().catch(() => ({}))
+            throw new Error(data.detail || data.error || 'Backup gagal diunduh.')
+          }
+          const totalBytes = Number(job.result?.size_bytes || response.headers.get('content-length') || 0)
+          let blob
+          if (response.body?.getReader) {
+            const reader = response.body.getReader()
+            const chunks = []
+            let loaded = 0
+            while (true) {
+              const { done, value } = await reader.read()
+              if (done) break
+              chunks.push(value)
+              loaded += value.length
+              if (totalBytes > 0) {
+                const percent = Math.min(100, Math.floor(100 * loaded / totalBytes))
+                setBackupProgress(percent)
+                stageLabel = `Tahap 3/3: mengunduh ${megabytesLabel(loaded)} dari ${megabytesLabel(totalBytes)} MB (${percent}%)${mediaSuffix}`
+              } else {
+                setBackupProgress(null)
+                stageLabel = `Tahap 3/3: mengunduh ${megabytesLabel(loaded)} MB${mediaSuffix}`
+              }
+              renderBackupStatus()
+            }
+            blob = new Blob(chunks, { type: 'application/zip' })
+          } else {
+            blob = await response.blob()
+          }
+          setBackupProgress(100)
+          downloadBlob(blob, job.result?.file || (accounts ? 'nishikigoi-backup-akun.zip' : 'nishikigoi-backup.zip'))
+          showBackupMessage(`${accounts ? `Backup akun berhasil dibuat dan diunduh: ${numberLabel(job.result?.accounts)} akun, ${numberLabel(job.result?.settings)} setingan dan tema (${megabytesLabel(blob.size)} MB).` : `Backup lengkap berhasil dibuat dan diunduh (${megabytesLabel(blob.size)} MB).`} (${elapsedLabel()})`, 'success')
+        } catch (error) {
+          showBackupMessage(error.message || 'Backup gagal dibuat.', 'danger')
+        } finally {
+          window.clearInterval(elapsedTimer)
+          button.disabled = false
+          button.textContent = idleLabel
+          setBackupBusy(false)
+        }
+      }
+
+      const detectBackupKind = async (file) => {
+        // a ZIP lists its file names at the end of the file: look there for the marker file of each kind
+        try {
+          const tail = await file.slice(Math.max(0, file.size - 8 * 1024 * 1024)).arrayBuffer()
+          const text = new TextDecoder('latin1').decode(tail)
+          if (text.includes('nishikigoi-account-backup.json')) return 'accounts'
+          if (text.includes('nishikigoi-backup.json')) return 'system'
+        } catch (error) { /* unreadable: the server decides */ }
+        return 'unknown'
+      }
+
+      const restoreSystemBackup = async (file) => {
+        if (!file) return
+        const kind = await detectBackupKind(file)
+        if (kind === 'unknown') {
+          showBackupMessage('File ini bukan backup Nishikigoi (berkas penanda tidak ada di dalam ZIP).', 'danger')
+          restoreInput.value = ''
+          return
+        }
+        const accounts = kind === 'accounts'
+        const confirmed = await window.KoiDialog.confirm(accounts
+          ? { title: 'Restore AKUN dan setingan?', message: 'Ini backup akun. Restore akan mengganti SEMUA akun yang terdaftar, setingan program, dan tema dengan isi backup ini. Data ikan dan media tidak berubah. Anda mungkin perlu masuk ulang setelahnya.', confirmText: 'Ya, restore akun', danger: true }
+          : { title: 'Restore data sistem?', message: 'Restore akan mengganti data ikan, kolam, breeding, laporan, gallery, metadata media, dan file gambar/media saat ini. Akun, setingan program, dan tema TIDAK ikut berubah. Lanjutkan?', confirmText: 'Ya, restore', danger: true })
+        if (!confirmed) {
+          restoreInput.value = ''
+          return
+        }
+        setBackupBusy(true)
+
+        const elapsedLabel = stopwatch()
+        let stageLabel = 'Tahap 1/3: mengunggah file backup...'
+        const renderRestoreStatus = () => {
+          showBackupMessage(`${accounts ? 'Restore akun sedang berjalan.' : 'Restore backup sedang berjalan.'} ${stageLabel} (${elapsedLabel()})`, 'info')
+        }
+        renderRestoreStatus()
+        const elapsedTimer = window.setInterval(renderRestoreStatus, 1000)
+
+        // the file itself is sent as the request body (no base64, nothing is held in memory); XMLHttpRequest reports how much went up
+        const uploadBackupFile = (backupFile) => new Promise((resolve, reject) => {
+          const request = new XMLHttpRequest()
+          request.open('POST', window.KoiAuth.apiUrl('/api/jobs/upload'))
+          Object.entries(systemJobHeaders({ 'content-type': 'application/zip' })).forEach(([name, value]) => request.setRequestHeader(name, value))
+          // fetch() gets the session id from auth.js on its own; a XMLHttpRequest has to send it itself
+          request.setRequestHeader('x-koi-session', window.KoiAuth.getSession()?.sessionId || '')
+          request.upload.onprogress = (event) => {
+            if (!event.lengthComputable) return
+            const percent = Math.min(100, Math.floor(100 * event.loaded / event.total))
+            setBackupProgress(percent)
+            stageLabel = `Tahap 1/3: mengunggah file backup ${megabytesLabel(event.loaded)} dari ${megabytesLabel(event.total)} MB (${percent}%)`
+            renderRestoreStatus()
+          }
+          request.onload = () => {
+            let data = {}
+            try { data = JSON.parse(request.responseText) } catch (error) { data = {} }
+            if (request.status >= 200 && request.status < 300) resolve(data)
+            else reject(new Error(data.detail || data.error || 'File backup gagal diunggah.'))
+          }
+          request.onerror = () => reject(new Error('File backup gagal diunggah.'))
+          request.send(backupFile)
+        })
+
+        try {
+          const uploaded = await uploadBackupFile(file)
+          setBackupProgress(null)
+          stageLabel = 'Tahap 2/3: memulihkan data tabel...'
+          renderRestoreStatus()
+          const job = await runSystemJob({ type: accounts ? 'restore-accounts' : 'restore', upload: uploaded.upload }, (current) => {
+            const counted = countedFiles(current)
+            if (counted) {
+              setBackupProgress(counted.percent)
+              stageLabel = `Tahap 3/3: memulihkan ${accounts ? 'foto dan logo akun' : 'file media'} ${counted.done} dari ${counted.total} MB${counted.filesTotal ? `, ${counted.filesDone} dari ${counted.filesTotal} file` : ''} (${counted.percent}%)`
+            } else {
+              setBackupProgress(null)
+              stageLabel = 'Tahap 2/3: memulihkan data tabel...'
+            }
+            renderRestoreStatus()
+          })
+          setBackupProgress(100)
+          const restoredFiles = Number(job.result?.restored_files || 0)
+          showBackupMessage((accounts ? `Restore akun selesai: ${numberLabel(job.result?.restored_accounts)} akun, ${numberLabel(job.result?.restored_settings)} setingan dan tema dipulihkan. Muat ulang halaman; bila diminta, masuk ulang. (${elapsedLabel()})` : `Restore selesai. ${restoredFiles} file gambar/media dipulihkan. Refresh halaman/menu untuk memuat data terbaru. (${elapsedLabel()})`), 'success')
+        } catch (error) {
+          showBackupMessage(error.message || 'Restore gagal dijalankan.', 'danger')
+        } finally {
+          window.clearInterval(elapsedTimer)
+          restoreInput.value = ''
+          setBackupBusy(false)
+        }
+      }
+
+      const cleanupUnusedFiles = async (button) => {
+        const post = async (payload) => {
+          const job = await runSystemJob({ type: 'cleanup', ...payload }, (current) => {
+            const match = String(current.message || '').match(/(\d+) dari (\d+) file/)
+            if (match) showBackupMessage(`${payload.dry_run ? 'Memeriksa' : 'Membersihkan'} file... (${match[1]}/${match[2]})`, 'info')
+          })
+          return job.result || {}
+        }
+        const megabytes = (bytes) => (Number(bytes || 0) / 1048576).toFixed(1).replace('.', ',')
+        button.disabled = true
+        setBackupBusy(true)
+        showBackupMessage('Memeriksa file yang tidak terpakai...', 'info')
+        try {
+          const check = await post({ dry_run: true })
+          if (!check.unused) {
+            showBackupMessage(`Tidak ada file yang tidak terpakai. Semua ${check.total_files} file dipakai oleh data.`, 'success')
+            return
+          }
+          const list = (check.samples || []).map((name) => `- ${name}`).join('\n')
+          const more = check.unused > (check.samples || []).length ? `\n... dan ${check.unused - check.samples.length} file lainnya` : ''
+          const ok = (await window.KoiDialog.confirm(`Ditemukan ${check.unused} file (${megabytes(check.unused_bytes)} MB) yang TIDAK dipakai oleh data apa pun: bukan foto utama, riwayat/progress foto ikan, dokumentasi kolam, laporan, galeri, draft, maupun ikon.\n\nContoh:\n${list}${more}\n\nHapus file-file ini dari server? Foto yang masih dipakai tidak disentuh.`))
+          if (!ok) {
+            showBackupMessage(`Dibatalkan. ${check.unused} file tidak terpakai (${megabytes(check.unused_bytes)} MB) tidak dihapus.`, 'warning')
+            return
+          }
+          showBackupMessage('Menghapus file yang tidak terpakai...', 'info')
+          const result = await post({})
+          showBackupMessage(`Selesai. ${result.removed} file tidak terpakai (${megabytes(check.unused_bytes)} MB) dihapus. ${result.referenced} foto/media yang dipakai data tetap aman.`, 'success')
+        } catch (error) {
+          showBackupMessage(error.message || 'Pembersihan file gagal.', 'danger')
+        } finally {
+          button.disabled = false
+          setBackupBusy(false)
+        }
+      }
+
+      const clearSystemData = async (button) => {
+        const typed = (await window.KoiDialog.prompt('Ini akan menghapus SEMUA data ikan, kolam, breeding, laporan, galeri, notifikasi, dan draft. Akun, setingan program, tema, dan histori Queue tetap ada, file foto/video di server tidak ikut terhapus. Sebaiknya Buat Backup dulu sebelum lanjut.\n\nKetik HAPUS untuk konfirmasi.'))
+        if (typed === null) return
+        if (typed.trim().toUpperCase() !== 'HAPUS') {
+          window.alert('Belum dihapus: ketik HAPUS untuk konfirmasi.')
+          return
+        }
+        button.disabled = true
+        button.textContent = 'Menghapus...'
+        setBackupBusy(true)
+        showBackupMessage('Clear data sedang berjalan.', 'info')
+        try {
+          const response = await fetch(window.KoiAuth.apiUrl('/api/maintenance/clear-data'), {
+            method: 'POST',
+            headers: {
+              'x-koi-role': window.KoiAuth.getSession()?.role || '',
+              'x-koi-user': window.KoiAuth.getSession()?.username || '',
+            },
+          })
+          const data = await response.json().catch(() => ({}))
+          if (!response.ok) {
+            throw new Error(data.detail || data.error || 'Clear data gagal dijalankan.')
+          }
+          showBackupMessage('Clear data selesai. Memuat ulang halaman...', 'success')
+          window.setTimeout(() => window.location.reload(), 1200)
+        } catch (error) {
+          showBackupMessage(error.message || 'Clear data gagal dijalankan.', 'danger')
+          button.disabled = false
+          button.textContent = 'Hapus Semua Data'
+          setBackupBusy(false)
+        }
+      }
+      const storageKey = 'koi-farm-master-accounts'
+      const defaultAccounts = []
+      const normalizeAccounts = (items) => {
+      const list = Array.isArray(items) && items.length > 0 ? items : defaultAccounts
+      const normalized = list.map((account, index) => ({
+        id: account.id || index + 1,
+        username: account.username || String(account.name || account.email || `user${index + 1}`).toLowerCase().replaceAll(' ', ''),
+        name: account.name || account.username || `User ${index + 1}`,
+        email: account.email || '',
+        phone: account.phone || "",
+        location: account.location || '',
+        password: account.password || '',
+        role: account.role || 'Viewer',
+        status: account.status || 'Active',
+        avatar: account.avatar || '',
+      }))
+
+      return normalized
+    }
+      let accountList = []
+      let accountSessions = []
+      let editingAccountId = null
+
+      const fields = {
+      modal: document.querySelector('[data-account-modal]'),
+      avatar: document.getElementById('account-avatar'),
+      avatarPreview: document.querySelector('[data-account-avatar-preview]'),
+      name: document.getElementById('account-name'),
+      username: document.getElementById('account-username'),
+      password: document.getElementById('account-password'),
+      email: document.getElementById('account-email'),
+      phone: document.getElementById("account-phone"),
+      role: document.getElementById('account-role'),
+      status: document.getElementById('account-status'),
+    }
+
+      const showMessage = (message, variant = 'success') => {
+      const messageEl = document.querySelector('[data-master-account-message]')
+      if (!messageEl) return
+      messageEl.textContent = message
+      messageEl.className = `alert alert-${variant} mb-3`
+    }
+
+      const loadAccounts = async () => {
+      accountList = normalizeAccounts(await window.KoiAuth.getRemoteAccounts())
+      if (accountList.length === 0) {
+        const localAccounts = normalizeAccounts(JSON.parse(localStorage.getItem(storageKey) || 'null'))
+        if (localAccounts.length > 0) {
+          await Promise.all(localAccounts.map((account) => window.KoiAuth.saveRemoteAccount(account).catch(() => null)))
+          accountList = normalizeAccounts(await window.KoiAuth.getRemoteAccounts())
+        }
+      }
+      renderAccounts()
+    }
+
+      const formatDateTime = (value) => {
+        if (!value) return '-'
+        const date = new Date(String(value).replace(' ', 'T'))
+        if (Number.isNaN(date.getTime())) return value
+        return window.KoiAuth.formatDateTime(date)
+      }
+
+      const compactDevice = (value) => {
+      const device = String(value || '').trim()
+      if (!device) return '-'
+      if (/Android/i.test(device)) return 'Android'
+      if (/iPhone|iPad/i.test(device)) return 'iPhone/iPad'
+      if (/Windows/i.test(device)) return 'Windows'
+      if (/Macintosh|Mac OS/i.test(device)) return 'Mac'
+      return device.slice(0, 42)
+    }
+
+      const sessionBadge = (presence) => {
+      if (presence === 'online') return '<span class="badge bg-green-lt">Online</span>'
+      if (presence === 'active') return '<span class="badge bg-blue-lt">Diam</span>'
+      return '<span class="badge bg-secondary-lt">Selesai</span>'
+    }
+
+      const renderAccountSessions = () => {
+      const table = document.querySelector('[data-account-sessions-table]')
+      if (!table) return
+      const loggedIn = accountSessions
+        .filter((session) => (session.presence === 'online' || session.presence === 'active') && Number(session.idle_minutes) <= 30)
+        .sort((first, second) => (first.presence === second.presence ? 0 : first.presence === 'online' ? -1 : 1))
+      table.innerHTML = loggedIn.map((session) => `
+        <tr>
+          <td>
+            <div class="fw-semibold">${escapeHtml(session.name || session.username)}</div>
+            <div class="text-secondary">${escapeHtml(session.username || '-')}</div>
+          </td>
+          <td><span class="badge bg-${roleBadge(session.role)}-lt">${escapeHtml(session.role || '-')}</span></td>
+          <td>${sessionBadge(session.presence)}</td>
+          <td class="text-secondary">${escapeHtml(formatDateTime(session.created_at))}</td>
+          <td class="text-secondary">${escapeHtml(formatDateTime(session.last_seen_at))}</td>
+          <td>${Number(session.remember_device || 0) ? '<span class="badge bg-azure-lt">7 hari</span>' : '<span class="text-secondary">Tidak</span>'}</td>
+          <td class="text-secondary">${escapeHtml(compactDevice(session.user_agent))}</td>
+          <td class="text-end"><button type="button" class="btn btn-sm btn-outline-danger" data-action="end-session" data-session-id="${escapeHtml(session.id)}">Akhiri</button></td>
+        </tr>
+      `).join('') || '<tr><td colspan="8" class="text-secondary">Tidak ada akun yang sedang login.</td></tr>'
+    }
+
+      const loadAccountSessions = async () => {
+      accountSessions = window.KoiAuth?.getRemoteAccountSessions ? await window.KoiAuth.getRemoteAccountSessions() : []
+      renderAccountSessions()
+    }
+
+      const renderLoginHistory = (rows) => {
+      const table = document.querySelector('[data-login-history-table]')
+      if (!table) return
+      table.innerHTML = rows.map((row) => `
+        <tr>
+          <td><input class="form-check-input" type="checkbox" data-login-check value="${escapeHtml(row.id)}" aria-label="Pilih riwayat ini" /></td>
+          <td class="text-secondary">${escapeHtml(formatDateTime(row.created_at))}</td>
+          <td>${escapeHtml(row.username || '-')}</td>
+          <td>${Number(row.success) ? '<span class="badge bg-green-lt">Berhasil</span>' : '<span class="badge bg-red-lt">Gagal</span>'}</td>
+          <td class="text-secondary">${escapeHtml(row.ip_address || '-')}</td>
+          <td class="text-secondary">${escapeHtml(compactDevice(row.user_agent))}</td>
+        </tr>
+      `).join('') || '<tr><td colspan="6" class="text-secondary">Belum ada riwayat login.</td></tr>'
+      updateLoginSelection()
+    }
+
+      const loadLoginHistory = async () => {
+      try {
+        const response = await fetch(window.KoiAuth.apiUrl('/api/login-history'))
+        renderLoginHistory(response.ok ? await response.json() : [])
+      } catch (error) {
+        renderLoginHistory([])
+      }
+    }
+
+      const loginHistoryChecked = () => [...document.querySelectorAll('[data-login-check]:checked')].map((box) => box.value)
+
+      const updateLoginSelection = () => {
+        const ids = loginHistoryChecked()
+        const boxes = document.querySelectorAll('[data-login-check]')
+        const deleteButton = document.querySelector('[data-login-delete-selected]')
+        const all = document.querySelector('[data-login-check-all]')
+        if (deleteButton) {
+          deleteButton.disabled = ids.length === 0
+          deleteButton.textContent = ids.length ? 'Hapus Terpilih (' + ids.length + ')' : 'Hapus Terpilih'
+        }
+        if (all) {
+          all.checked = boxes.length > 0 && ids.length === boxes.length
+          all.indeterminate = ids.length > 0 && ids.length < boxes.length
+        }
+      }
+
+      const removeLoginHistory = async (ids) => {
+        const path = ids ? '/api/login-history?ids=' + ids.join(',') : '/api/login-history?all=1'
+        const response = await fetch(window.KoiAuth.apiUrl(path), { method: 'DELETE' })
+        if (!response.ok) throw new Error('Riwayat login gagal dihapus.')
+        await loadLoginHistory()
+      }
+
+      document.addEventListener('change', (event) => {
+        if (event.target.matches('[data-login-check-all]')) {
+          document.querySelectorAll('[data-login-check]').forEach((box) => { box.checked = event.target.checked })
+          updateLoginSelection()
+        } else if (event.target.matches('[data-login-check]')) {
+          updateLoginSelection()
+        }
+      })
+
+      const endSession = async (sessionId) => {
+      const response = await fetch(window.KoiAuth.apiUrl('/api/account-sessions/' + encodeURIComponent(sessionId)), { method: 'DELETE' })
+      if (!response.ok) throw new Error('Sesi gagal diakhiri.')
+      await loadAccountSessions()
+    }
+
+      const persist = async (account) => {
+      if (window.KoiAuth?.saveRemoteAccount) {
+        await window.KoiAuth.saveRemoteAccount(account)
+        await loadAccounts()
+        return
+      }
+
+      localStorage.setItem(storageKey, JSON.stringify(accountList))
+    }
+
+      const getModalApi = () => window.tabler?.bootstrap?.Modal || window.bootstrap?.Modal
+
+      const showForm = () => {
+      const modalApi = getModalApi()
+      if (modalApi) {
+        modalApi.getOrCreateInstance(fields.modal).show()
+      } else {
+        fields.modal.classList.add('show')
+        fields.modal.style.display = 'block'
+        fields.modal.removeAttribute('aria-hidden')
+        fields.modal.setAttribute('aria-modal', 'true')
+        fields.modal.setAttribute('role', 'dialog')
+        document.body.classList.add('modal-open')
+        if (!document.querySelector('[data-account-modal-backdrop]')) {
+          const backdrop = document.createElement('div')
+          backdrop.className = 'modal-backdrop fade show'
+          backdrop.dataset.accountModalBackdrop = 'true'
+          document.body.appendChild(backdrop)
+        }
+      }
+      fields.name.focus()
+    }
+
+      const hideForm = () => {
+      const modalApi = getModalApi()
+      if (modalApi) {
+        modalApi.getInstance(fields.modal)?.hide()
+      } else {
+        fields.modal.classList.remove('show')
+        fields.modal.style.display = 'none'
+        fields.modal.setAttribute('aria-hidden', 'true')
+        fields.modal.removeAttribute('aria-modal')
+        fields.modal.removeAttribute('role')
+        document.body.classList.remove('modal-open')
+        document.querySelector('[data-account-modal-backdrop]')?.remove()
+      }
+    }
+
+      const clearForm = () => {
+      editingAccountId = null
+      setAvatarPreview('')
+      fields.name.value = ''
+      fields.username.value = ''
+      fields.password.value = ''
+      fields.email.value = ''
+      fields.phone.value = "";
+      fields.role.value = 'Viewer'
+      fields.status.value = 'Active'
+      document.querySelector('[data-account-form-title]').textContent = 'Tambah Akun'
+      document.querySelector('[data-password-hint]').textContent = 'Password wajib diisi untuk akun baru.'
+    }
+
+      const roleBadge = (role) => role === 'Master Admin' ? 'purple' : role === 'Admin' ? 'blue' : role === 'Operator' ? 'teal' : 'secondary'
+      const statusBadge = (status) => status === 'Active' ? 'green' : 'secondary'
+      const initials = (account) => String(account.name || account.username || 'User').split(/\s+/).filter(Boolean).slice(0, 2).map((part) => part.charAt(0).toUpperCase()).join('') || 'U'
+      const avatarHtml = (account, size = 'sm') => account.avatar
+      ? `<span class="avatar avatar-${size}" style="background-image: url(${account.avatar})"></span>`
+      : `<span class="avatar avatar-${size}">${escapeHtml(initials(account))}</span>`
+      const escapeHtml = (value) => String(value).replace(/[&<>"']/g, (char) => ({
+      '&': '&amp;',
+      '<': '&lt;',
+      '>': '&gt;',
+      '"': '&quot;',
+      "'": '&#39;',
+    }[char]))
+
+      const renderAccounts = () => {
+      const table = document.querySelector('[data-accounts-table]')
+      if (!table) return
+      table.innerHTML = accountList.map((account) => `
+        <tr>
+          <td><span data-profile-id="${account.id}" title="Lihat profil">${avatarHtml(account)}</span></td>
+          <td><span class="koi-profile-link" data-profile-id="${account.id}" title="Lihat profil">${escapeHtml(account.name)}</span></td>
+          <td class="text-secondary">${escapeHtml(account.username)}</td>
+          <td class="text-secondary">${escapeHtml(account.email || '-')}</td>
+          <td class="text-secondary">${escapeHtml(account.phone || "-")}</td>
+          <td><span class="badge bg-${roleBadge(account.role)}-lt">${escapeHtml(account.role)}</span></td>
+          <td><span class="badge bg-${statusBadge(account.status)}-lt">${escapeHtml(account.status)}</span></td>
+          <td class="text-end">
+            <div class="btn-list flex-nowrap">
+              <button type="button" class="btn btn-sm" data-action="edit-account" data-account-id="${account.id}">Edit</button>
+              <button type="button" class="btn btn-sm btn-ghost-danger" data-action="delete-account" data-account-id="${account.id}">Delete</button>
+            </div>
+          </td>
+        </tr>
+      `).join('') || '<tr><td colspan="8" class="text-secondary">Belum ada akun.</td></tr>'
+    }
+
+      const setAvatarPreview = (avatar) => {
+      fields.avatarPreview.dataset.avatar = avatar || ''
+      fields.avatarPreview.style.backgroundImage = avatar ? `url(${avatar})` : ''
+      fields.avatarPreview.textContent = avatar ? '' : initials({ name: fields.name.value, username: fields.username.value })
+      if (fields.avatar) fields.avatar.value = ''
+    }
+
+      const editAccount = (id) => {
+      const account = accountList.find((item) => item.id === id)
+      if (!account) return
+      editingAccountId = id
+      fields.name.value = account.name
+      setAvatarPreview(account.avatar || '')
+      fields.username.value = account.username
+      fields.password.value = account.password || ''
+      fields.email.value = account.email
+      fields.phone.value = account.phone || "";
+      fields.role.value = account.role
+      fields.status.value = account.status
+      document.querySelector('[data-account-form-title]').textContent = 'Edit Akun'
+      document.querySelector('[data-password-hint]').textContent = 'Kosongkan jika password tidak diubah.'
+      showForm()
+    }
+
+      document.addEventListener('click', async (event) => {
+      const button = event.target.closest('[data-action]')
+      if (!button) return
+
+      const action = button.getAttribute('data-action')
+      const accountId = Number(button.getAttribute('data-account-id'))
+
+      if (action === 'upload-brand-icon') {
+        brandFields.icon?.click()
+      }
+
+      if (action === 'remove-brand-icon') {
+        setBrandPreview('', brandFields.name?.value || 'Nishikigoi')
+        showBrandMessage('Icon program dihapus. Klik Simpan Identitas untuk menyimpan.', 'warning')
+      }
+
+      if (action === 'save-brand-settings') {
+        try {
+          await saveBrandSettings()
+        } catch (error) {
+          showBrandMessage(error.message || 'Identitas program gagal disimpan.', 'danger')
+        }
+      }
+
+      if (action === 'download-system-backup') {
+        await downloadSystemBackup(button)
+      }
+
+      if (action === 'download-account-backup') {
+        await downloadSystemBackup(button, 'accounts')
+      }
+
+      if (action === 'pick-system-restore') {
+        restoreInput?.click()
+      }
+
+      if (action === 'cleanup-unused-files') {
+        await cleanupUnusedFiles(button)
+      }
+
+      if (action === 'clear-system-data') {
+        await clearSystemData(button)
+      }
+
+      if (action === 'new-account') {
+        clearForm()
+        showForm()
+        showMessage('Form akun baru siap diisi.')
+      }
+
+      if (action === 'refresh-account-sessions') {
+        await loadAccountSessions()
+      }
+
+      if (action === 'refresh-login-history') {
+        await loadLoginHistory()
+      }
+
+      if (action === 'delete-login-history') {
+        const ids = loginHistoryChecked()
+        if (ids.length && (await window.KoiDialog.confirm('Hapus ' + ids.length + ' riwayat login yang dipilih?'))) {
+          try {
+            await removeLoginHistory(ids)
+          } catch (error) {
+            window.alert(error.message || 'Riwayat login gagal dihapus.')
+          }
+        }
+      }
+
+      if (action === 'clear-login-history') {
+        if ((await window.KoiDialog.confirm('Hapus SEMUA riwayat login, termasuk yang tidak tampil di daftar? Percobaan login gagal yang sedang menghitung penguncian juga ikut hilang.'))) {
+          try {
+            await removeLoginHistory(null)
+          } catch (error) {
+            window.alert(error.message || 'Riwayat login gagal dihapus.')
+          }
+        }
+      }
+
+      if (action === 'end-session') {
+        try {
+          await endSession(button.getAttribute('data-session-id'))
+        } catch (error) {
+          window.alert(error.message || 'Sesi gagal diakhiri.')
+        }
+      }
+
+      if (action === 'cancel-account') {
+        clearForm()
+        hideForm()
+      }
+
+      if (action === 'edit-account') {
+        editAccount(accountId)
+      }
+
+      if (action === 'upload-avatar') {
+        fields.avatar.click()
+      }
+
+      if (action === 'remove-avatar') {
+        setAvatarPreview('')
+        showMessage('Photo Profile akun dihapus. Klik Submit untuk menyimpan.')
+      }
+
+      if (action === 'delete-account') {
+        const deletedAccount = accountList.find((account) => account.id === accountId)
+        accountList = accountList.filter((account) => account.id !== accountId)
+        if (window.KoiAuth?.deleteRemoteAccount) {
+          await window.KoiAuth.deleteRemoteAccount(accountId)
+          await loadAccounts()
+        } else {
+          persist()
+          renderAccounts()
+        }
+        clearForm()
+        hideForm()
+        showMessage('Akun berhasil dihapus.')
+
+        if (deletedAccount?.username === window.KoiAuth?.getSession()?.username) {
+          window.KoiAuth.logout()
+        }
+      }
+
+      if (action === 'save-account') {
+        const previousAccount = accountList.find((item) => item.id === editingAccountId)
+        const account = {
+          id: editingAccountId || 0,
+          avatar: fields.avatarPreview.dataset.avatar || '',
+          name: fields.name.value.trim(),
+          username: fields.username.value.trim().toLowerCase(),
+          password: fields.password.value,
+          email: fields.email.value.trim(),
+          phone: fields.phone.value.trim(),
+          role: fields.role.value,
+          status: fields.status.value,
+        }
+
+        if (!account.name || !account.username || (!editingAccountId && !account.password)) {
+          showMessage(editingAccountId ? 'Nama dan username wajib diisi.' : 'Nama, username, dan password wajib diisi.', 'danger')
+          return
+        }
+
+        const usernameUsed = accountList.some((item) => item.username === account.username && item.id !== editingAccountId)
+        if (usernameUsed) {
+          showMessage('Username sudah digunakan.', 'danger')
+          return
+        }
+
+        if (editingAccountId) {
+          accountList = accountList.map((item) => item.id === editingAccountId ? account : item)
+        } else {
+          accountList = [account, ...accountList]
+        }
+
+        try {
+          await persist(account)
+        } catch (error) {
+          showMessage(error.message || 'Akun gagal disimpan.', 'danger')
+          return
+        }
+        clearForm()
+        hideForm()
+        if (window.KoiAuth?.getSession()?.username === account.username || window.KoiAuth?.getSession()?.username === previousAccount?.username) {
+          window.KoiAuth.updateStoredSession?.({
+            username: account.username,
+            name: account.name,
+            role: account.role,
+            avatar: account.avatar,
+            loggedInAt: new Date().toISOString(),
+          })
+          window.KoiAuth.updateUserMenu()
+          window.KoiAuth.applyRoleAccess()
+        }
+        showMessage('Akun berhasil disimpan.')
+      }
+    })
+
+
+      brandFields.icon?.addEventListener('change', (event) => {
+        const file = event.target.files?.[0]
+        if (!file) return
+        if (!file.type.startsWith('image/')) {
+          showBrandMessage('Icon harus berupa gambar.', 'danger')
+          return
+        }
+        const reader = new FileReader()
+        reader.addEventListener('load', () => {
+          setBrandPreview(String(reader.result || ''), brandFields.name?.value || 'Nishikigoi')
+          showBrandMessage('Icon siap disimpan. Klik Simpan Identitas.', 'info')
+        })
+        reader.readAsDataURL(file)
+      })
+
+      brandFields.name?.addEventListener('input', () => {
+        if (!brandIconValue) setBrandPreview('', brandFields.name?.value || 'Nishikigoi')
+      })
+
+      restoreInput?.addEventListener('change', () => {
+        restoreSystemBackup(restoreInput.files?.[0])
+      })
+
+      const systemBackupPanel = document.querySelector('[data-system-backup-panel]')
+      const hasDraggedFiles = (event) => [...(event.dataTransfer?.types || [])].includes('Files')
+      systemBackupPanel?.addEventListener('dragover', (event) => {
+        if (!hasDraggedFiles(event)) return
+        event.preventDefault()
+        event.dataTransfer.dropEffect = 'copy'
+        systemBackupPanel.classList.add('is-dragover')
+      })
+      systemBackupPanel?.addEventListener('dragleave', (event) => {
+        if (event.target === systemBackupPanel || !systemBackupPanel.contains(event.relatedTarget)) {
+          systemBackupPanel.classList.remove('is-dragover')
+        }
+      })
+      systemBackupPanel?.addEventListener('drop', (event) => {
+        systemBackupPanel.classList.remove('is-dragover')
+        if (!hasDraggedFiles(event)) return
+        event.preventDefault()
+        const file = [...(event.dataTransfer.files || [])].find((item) => item.name.toLowerCase().endsWith('.zip'))
+        if (!file) {
+          showBackupMessage('Tarik file backup .zip untuk restore.', 'warning')
+          return
+        }
+        restoreSystemBackup(file)
+      })
+
+      fields.avatar?.addEventListener('change', (event) => {
+      const file = event.target.files?.[0]
+      if (!file) return
+      const reader = new FileReader()
+      reader.addEventListener('load', () => setAvatarPreview(String(reader.result || '')))
+      reader.readAsDataURL(file)
+    })
+
+      ;[fields.name, fields.username].forEach((field) => {
+      field?.addEventListener('input', () => {
+        if (!fields.avatarPreview.dataset.avatar) {
+          fields.avatarPreview.textContent = initials({ name: fields.name.value, username: fields.username.value })
+        }
+      })
+    })
+
+loadBrandSettings().catch(() => showBrandMessage('Identitas program gagal dimuat.', 'danger'))
+      loadAccounts().catch((error) => {
+      showMessage(error.message || 'Akun gagal dimuat.', 'danger')
+      accountList = normalizeAccounts(JSON.parse(localStorage.getItem(storageKey) || 'null'))
+      renderAccounts()
+    })
+      loadAccountSessions().catch(() => {
+      accountSessions = []
+      renderAccountSessions()
+    })
+      loadLoginHistory()
+      clearForm()
+    })
+  </script>
+</SettingsLayout>
+
+<style>
+  #system-backup.is-dragover {
+    border-color: var(--tblr-primary) !important;
+    background: rgba(var(--tblr-primary-rgb), .06);
+  }
+</style>
+
+
+

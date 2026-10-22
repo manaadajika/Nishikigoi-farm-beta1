@@ -1,0 +1,783 @@
+---
+import DefaultLayout from '@shared/layouts/DefaultLayout.astro'
+---
+
+<DefaultLayout title="Laporan" pageHeader="Laporan" pretitle="Management" pageMenu="farm-reports">
+  <style is:global>
+    .report-spectrum-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(132px,1fr));gap:.5rem}
+    .report-spectrum-grid.is-empty{display:none}
+    .report-spectrum-item{border:1px solid var(--tblr-border-color);border-radius:.5rem;padding:.65rem .75rem;background:var(--tblr-bg-surface);color:var(--tblr-body-color);display:flex;align-items:center;justify-content:space-between;gap:.75rem}
+    .report-spectrum-label{font-size:.75rem;font-weight:700;line-height:1.2;color:var(--tblr-secondary)}
+    .report-spectrum-count{font-weight:700;white-space:nowrap}
+    .report-media-preview{width:96px;aspect-ratio:2/3;height:auto;object-fit:cover;cursor:zoom-in}.report-token-list{min-height:2.25rem}
+    .report-form-section{border:1px solid var(--tblr-border-color);border-radius:.55rem;background:rgba(var(--tblr-body-color-rgb),.015);padding:1rem;margin-top:1rem}
+    .report-form-section>h4:first-child,.report-form-section .section-title{margin-top:0}
+    .report-linked-card{border:1px solid var(--tblr-border-color);border-radius:.5rem;background:var(--tblr-bg-surface);padding:.75rem}
+    .report-linked-main{display:grid;grid-template-columns:76px 1fr auto;gap:.75rem;align-items:start}
+    .report-linked-main.is-breeding{grid-template-columns:1fr auto}
+    .report-linked-preview{width:76px;aspect-ratio:2/3;border-radius:.5rem;overflow:hidden;border:1px solid var(--tblr-border-color);background:var(--tblr-bg-surface-secondary);display:flex;align-items:center;justify-content:center;color:var(--tblr-secondary);font-size:.7rem;text-align:center;cursor:zoom-in;padding:0}
+    .report-linked-preview img{width:100%;height:100%;object-fit:contain;display:block}
+    .report-linked-title{font-weight:700}.report-linked-meta{font-size:.75rem;color:var(--tblr-secondary)}
+    .report-linked-details{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:.25rem .75rem;margin-top:.4rem;font-size:.75rem;color:var(--tblr-secondary)}
+    .report-linked-details strong{display:block;color:var(--tblr-body-color);font-size:.82rem}
+    .report-parent-list{display:grid;gap:.5rem;margin-top:.6rem}.report-parent-chip{display:grid;grid-template-columns:44px 1fr;gap:.6rem;align-items:start;border:1px solid var(--tblr-border-color);border-radius:.45rem;background:var(--tblr-bg-surface-secondary);padding:.5rem}.report-parent-chip img,.report-parent-chip span:first-child{width:44px;aspect-ratio:2/3;border-radius:.35rem;object-fit:cover;background:var(--tblr-bg-surface);display:flex;align-items:center;justify-content:center;color:var(--tblr-secondary);font-size:.65rem}.report-parent-control{display:grid;grid-template-columns:max-content minmax(0,1fr);gap:.5rem;align-items:center;margin-top:.45rem}
+    .report-linked-controls{display:grid;grid-template-columns:minmax(140px,max-content) minmax(0,1fr);gap:.5rem;align-items:center;margin-top:.6rem}
+    .report-linked-controls.has-role{grid-template-columns:minmax(140px,max-content) 170px minmax(0,1fr)}
+    .report-preview-lightbox{position:fixed;inset:0;z-index:1085;background:rgba(5,10,20,.86);display:flex;align-items:center;justify-content:center;padding:1.5rem}.report-preview-lightbox img,.report-preview-lightbox video{width:100%;height:100%;object-fit:contain;border-radius:.5rem}.report-preview-close{position:absolute;top:1rem;right:1rem}
+    .report-search-wrap{position:relative}
+    .report-search-menu{position:absolute;top:calc(100% + .25rem);left:0;right:0;z-index:30;max-height:280px;overflow:auto;border:1px solid var(--tblr-border-color);border-radius:var(--tblr-border-radius);background:var(--tblr-bg-surface);box-shadow:var(--tblr-shadow-dropdown)}
+    .report-search-item{width:100%;border:0;border-bottom:1px solid var(--tblr-border-color);padding:.6rem .75rem;background:transparent;color:var(--tblr-body-color);text-align:left;display:flex;align-items:center;gap:.65rem}
+    .report-search-item:last-child{border-bottom:0}
+    .report-search-item:hover,.report-search-item:focus{background:var(--tblr-bg-surface-secondary);color:var(--tblr-primary);outline:0}
+    .report-search-thumb{width:42px;height:52px;flex:0 0 42px;border:1px solid var(--tblr-border-color);border-radius:var(--tblr-border-radius);object-fit:cover;background:var(--tblr-bg-surface-secondary);display:flex;align-items:center;justify-content:center;color:var(--tblr-secondary);font-size:.7rem;font-weight:700}
+    .report-search-copy{min-width:0}
+    .report-table-wrap{overflow:visible}
+    .report-actions-cell{position:relative;white-space:nowrap}
+    .report-actions-menu{z-index:1040}
+    @media (max-width: 767.98px){
+      .report-table-wrap{overflow-x:auto;overflow-y:visible;padding-bottom:5rem}
+      .report-actions-dropdown .dropdown-menu.show{position:fixed!important;right:1rem!important;left:auto!important;top:auto!important;bottom:1rem!important;transform:none!important;min-width:150px}
+    }
+    .report-search-title{font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.report-search-meta{font-size:.75rem;color:var(--tblr-secondary);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    @media (max-width:575.98px){.report-linked-main{grid-template-columns:64px 1fr}.report-linked-main .btn{grid-column:2;justify-self:start}.report-linked-preview{width:64px}.report-linked-controls,.report-linked-controls.has-role,.report-linked-details{grid-template-columns:1fr}}
+      [data-report-tools]>.dropdown{display:none!important}.report-card-top{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:.4rem;min-height:6rem;padding:.75rem;border-radius: calc(var(--tblr-card-border-radius, 8px) - 1px) calc(var(--tblr-card-border-radius, 8px) - 1px) 0 0;background:var(--tblr-bg-surface-secondary);text-align:center;cursor:pointer}.report-card-date{font-weight:700;font-size:1rem;line-height:1.25}.report-card .card-body{padding:.75rem;display:flex;flex-direction:column}.report-card .card-body[data-report-id]{cursor:pointer}.report-card-code{min-width:0}.report-card-title{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}.report-card-cell{min-width:0}.report-card-ellipsis{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.report-card-actions{display:flex;gap:.5rem;margin-top:auto;padding-top:.75rem}.report-card-actions .btn{flex:1 1 0;display:inline-flex;align-items:center;justify-content:center;gap:.35rem;min-width:0}
+  </style>
+
+  <div class="modal modal-blur fade" tabindex="-1" aria-hidden="true" data-report-modal>
+    <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
+      <form class="modal-content" data-report-form>
+        <div class="modal-header">
+          <h5 class="modal-title" data-report-modal-title>Formulir Tambah Laporan</h5>
+          <button type="button" class="btn-close" aria-label="Tutup" data-report-cancel></button>
+        </div>
+        <div class="modal-body">
+          <div class="alert alert-danger d-none" data-report-error></div>
+          <div class="alert alert-success d-none" data-report-success></div>
+          <div class="report-form-section mt-0">
+            <label class="form-label required">Jenis Laporan</label>
+            <div class="form-selectgroup form-selectgroup-boxes d-flex flex-column flex-md-row">
+              <label class="form-selectgroup-item flex-fill"><input type="radio" name="report_type" value="data_ulang" class="form-selectgroup-input" checked /><span class="form-selectgroup-label d-flex align-items-center p-3"><span class="me-3"><span class="form-selectgroup-check"></span></span><span><span class="form-selectgroup-title strong mb-1">Data Ulang</span><span class="d-block text-secondary">Isi field laporan sama dengan panen.</span></span></span></label>
+              <label class="form-selectgroup-item flex-fill"><input type="radio" name="report_type" value="panen" class="form-selectgroup-input" /><span class="form-selectgroup-label d-flex align-items-center p-3"><span class="me-3"><span class="form-selectgroup-check"></span></span><span><span class="form-selectgroup-title strong mb-1">Panen</span><span class="d-block text-secondary">Isi field laporan sama dengan data ulang.</span></span></span></label>
+            </div>
+          </div>
+          <div class="report-form-section"><div class="row g-3">
+            <div class="col-md-3"><label class="form-label required">Tanggal</label><input class="form-control" type="date" name="report_date" required data-report-date /></div>
+            <div class="col-md-3"><label class="form-label">Kode Batch</label><input class="form-control" name="batch_code" readonly data-batch-code placeholder="Otomatis" /></div>
+            <div class="col-md-3"><label class="form-label">Judul Laporan</label><input class="form-control" name="report_title" placeholder="Contoh: Data ulang kolam A" /></div><div class="col-md-3"><label class="form-label">Varietas Dominan</label><div class="report-search-wrap"><input class="form-control" name="dominant_variety" placeholder="Contoh: Kohaku, Showa, Sanke" autocomplete="off" data-dominant-variety-search /><div class="report-search-menu d-none" data-dominant-variety-search-menu></div></div></div>
+            <div class="col-md-6"><label class="form-label">Lokasi Asal</label><input class="form-control" list="pond-options" name="origin_location" placeholder="Contoh: Karantina" autocomplete="off" /></div>
+            <div class="col-md-6"><label class="form-label">Lokasi Tujuan</label><input class="form-control" list="pond-options" name="destination_location" placeholder="Contoh: Mudpond 04" autocomplete="off" /></div>
+          </div></div>
+          <div class="report-form-section">
+            <div class="d-flex align-items-center justify-content-between gap-2 mb-2"><h4 class="mb-0">Lokasi Kolam</h4><button class="btn btn-sm" type="button" data-add-pond-entry>Tambah Lokasi</button></div>
+            <div class="form-hint mb-2">Opsional. Bisa lebih dari satu. Isi lokasi, hasil, ukuran rata-rata, dan catatan masing-masing.</div>
+            <datalist id="pond-options"></datalist><div class="vstack gap-2" data-pond-entry-list></div>
+          </div>
+          <div class="report-form-section">
+            <div class="d-flex align-items-center justify-content-between gap-2 mb-2"><h4 class="mb-0">Kondisi / Reject</h4><button class="btn btn-sm" type="button" data-add-condition-entry>Tambah Kondisi</button></div>
+            <div class="form-hint mb-2">Opsional. Contoh: Ikan Reject (Cacat / Kurang Layak).</div>
+            <div class="vstack gap-2" data-condition-entry-list></div>
+          </div>
+          <div class="report-form-section">
+            <div class="d-flex align-items-center justify-content-between gap-2 mb-2"><h4 class="mb-0">Detail Sortir Ikan (Pemindahan Kolam)</h4><button class="btn btn-sm" type="button" data-add-sorting-entry>Tambah Sortir</button></div>
+            <div class="form-hint mb-2">Opsional. Kategori, kolam tujuan, keterangan, dan jumlah ekor per baris.</div>
+            <div class="vstack gap-2" data-sorting-entry-list></div>
+          </div>
+          <div class="report-form-section">
+            <h4>Kategori Ukuran (Spectrum Variance)</h4>
+            <label class="form-label">Input Deret Ukuran Ikan (cm, pisah dengan spasi, koma, titik koma, atau baris baru - Opsional)</label>
+            <textarea class="form-control" name="report_spectrum_input" rows="2" placeholder="Contoh: 12 19 24.5 101 atau 12, 19, 24.5" data-spectrum-input></textarea>
+            <div class="report-spectrum-grid mt-3 is-empty" data-spectrum-grid></div>
+            <div class="row g-3 mt-1"><div class="col-md-4"><label class="form-label">Rata-rata Ukuran (cm)</label><input class="form-control" type="number" min="0" step="0.1" name="average_length_cm" placeholder="Opsional" /></div></div>
+          </div>
+          <div class="report-form-section"><div class="row g-3">
+            <div class="col-lg-6"><h4>Hubungkan Sesi Breeding</h4><div class="input-group mb-2 report-search-wrap"><input class="form-control" name="report_breeding_search" placeholder="Cari kode/nama sesi breeding" autocomplete="off" data-breeding-search /><button class="btn" type="button" data-add-breeding-entry>Tambah</button><div class="report-search-menu d-none" data-breeding-search-menu></div></div><div class="vstack gap-2" data-breeding-entry-list></div></div>
+            <div class="col-lg-6"><h4>Mention Ikan</h4><div class="input-group mb-2 report-search-wrap"><input class="form-control" name="report_koi_search" placeholder="Cari kode/nama ikan" autocomplete="off" data-koi-search /><button class="btn" type="button" data-add-koi-entry>Tambah</button><div class="report-search-menu d-none" data-koi-search-menu></div></div><div class="vstack gap-2" data-koi-entry-list></div></div>
+          </div></div>
+          <div class="report-form-section"><div class="row g-3">
+            <div class="col-lg-6"><h4>Petugas</h4><div class="input-group mb-2 report-search-wrap"><input class="form-control" name="report_account_search" placeholder="Cari nama / username" autocomplete="off" data-account-search /><button class="btn" type="button" data-add-account-entry>Tambah</button><div class="report-search-menu d-none" data-account-search-menu></div></div><div class="report-token-list d-flex flex-wrap gap-2" data-account-entry-list></div></div>
+            <div class="col-lg-6"><h4>Checklist Validasi Website</h4><div class="form-selectgroup form-selectgroup-boxes d-flex flex-column"><label class="form-selectgroup-item flex-fill"><input type="checkbox" name="report_validation_check" value="ikan_di_foto" class="form-selectgroup-input" data-validation-check /><span class="form-selectgroup-label">Ikan di foto</span></label><label class="form-selectgroup-item flex-fill"><input type="checkbox" name="report_validation_check" value="ikan_masuk_web" class="form-selectgroup-input" data-validation-check /><span class="form-selectgroup-label">Ikan masuk web</span></label><label class="form-selectgroup-item flex-fill"><input type="checkbox" name="report_validation_check" value="ikan_di_pindah" class="form-selectgroup-input" data-validation-check /><span class="form-selectgroup-label">Ikan di pindah</span></label></div></div>
+          </div></div>
+          <div class="report-form-section"><h4>Media Laporan</h4><div class="d-flex flex-wrap gap-2"><input class="form-control flex-grow-1" name="report_media_files" type="file" accept="image/*,video/mp4,video/webm" multiple data-media-input /><button class="btn btn-outline-primary" type="button" data-media-paste>Paste Gambar</button></div><div class="form-hint">Bisa upload gambar atau video. Video maksimal 100 MB, format mp4/webm.</div><div class="row g-2 mt-2" data-media-preview-list></div><div class="mt-2 text-secondary" data-media-status></div><label class="form-check mt-3 mb-1"><input class="form-check-input" type="checkbox" name="show_in_gallery" checked data-report-gallery /><span class="form-check-label">Tampilkan media di Galeri</span></label><div class="form-hint">Media laporan ini ikut tampil di menu Galeri sebagai satu koleksi (file tidak digandakan). Kalau laporan diedit, koleksinya ikut menyesuaikan. Lepas centang atau hapus laporan untuk menghapusnya dari Galeri.</div></div>
+          <div class="report-form-section"><label class="form-label">Catatan Laporan</label><textarea class="form-control" name="notes" rows="4" placeholder="Keterangan umum laporan. Opsional."></textarea></div>
+        </div>
+        <div class="modal-footer"><button class="btn" type="button" data-report-cancel>Batal</button><button class="btn btn-primary" type="submit" data-report-submit>Simpan Laporan</button></div>
+      </form>
+    </div>
+  </div>
+  <div class="row row-cards"><div class="col-12"><div class="card"><div class="card-header"><h3 class="card-title">Riwayat Laporan</h3><div class="card-actions" data-report-tools><button class="btn btn-primary" type="button" data-report-open data-role-required="farm-operate">Tambah Laporan</button></div></div><div class="card-body"><input class="d-none" type="search" data-report-search aria-hidden="true" tabindex="-1" autocomplete="off" /><div class="row g-3" data-report-table><div class="col-12 text-secondary"><span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>Memuat laporan...</div></div></div></div></div></div>
+  <script src="/assets/vendor/xlsx/xlsx.core.min.js" is:inline></script>
+  <script src="/assets/zip-kit.js?v=20261009g" is:inline></script>
+  <script src="/assets/koi-picker.js?v=20261020b" is:inline></script>
+  <script>
+    const apiUrl='/api'
+    const form=document.querySelector('[data-report-form]')
+    const reportModalElement=document.querySelector('[data-report-modal]')
+    const getReportModalApi=()=>(window.tabler&&window.tabler.bootstrap&&window.tabler.bootstrap.Modal)||(window.bootstrap&&window.bootstrap.Modal)
+    const modalTitle=document.querySelector('[data-report-modal-title]')
+    const errorBox=document.querySelector('[data-report-error]')
+    const successBox=document.querySelector('[data-report-success]')
+    const submitButton=document.querySelector('[data-report-submit]')
+    const reportDate=document.querySelector('[data-report-date]')
+    const batchCodeInput=document.querySelector('[data-batch-code]')
+    const reportTable=document.querySelector('[data-report-table]')
+    const pondEntryList=document.querySelector('[data-pond-entry-list]')
+    const conditionEntryList=document.querySelector('[data-condition-entry-list]')
+    const sortingEntryList=document.querySelector('[data-sorting-entry-list]')
+    const breedingEntryList=document.querySelector('[data-breeding-entry-list]')
+    const koiEntryList=document.querySelector('[data-koi-entry-list]')
+    const accountEntryList=document.querySelector('[data-account-entry-list]')
+    const mediaPreviewList=document.querySelector('[data-media-preview-list]')
+    const mediaStatus=document.querySelector('[data-media-status]')
+    const spectrumInput=document.querySelector('[data-spectrum-input]')
+    const spectrumGrid=document.querySelector('[data-spectrum-grid]')
+    const labels={data_ulang:'Data Ulang',panen:'Panen'}
+    const spectrumRanges=[['up_to_12','UP TO 12 CM',0,12],['13_15','13 - 15 CM',13,15],['16_20','16 - 20 CM',16,20],['21_25','21 - 25 CM',21,25],['26_30','26 - 30 CM',26,30],['31_35','31 - 35 CM',31,35],['36_40','36 - 40 CM',36,40],['41_45','41 - 45 CM',41,45],['46_50','46 - 50 CM',46,50],['51_55','51 - 55 CM',51,55],['56_60','56 - 60 CM',56,60],['61_65','61 - 65 CM',61,65],['66_70','66 - 70 CM',66,70],['71_75','71 - 75 CM',71,75],['76_80','76 - 80 CM',76,80],['81_85','81 - 85 CM',81,85],['86_90','86 - 90 CM',86,90],['91_95','91 - 95 CM',91,95],['96_99','96 - 99 CM',96,99],['over_100','OVER 100 CM',100,Infinity]]
+    let ponds=[],koiFacets={},breedingItems=[],accountItems=[],reportItems=[],mediaEntries=[],readonlyMode=false,editingReportId=null,reportRealtimeSignature=''
+    const reportCacheKey='nishikigoi-cache:farm-reports'
+    const escapeHtml=(value)=>String(value??'').replace(/[&<>'"]/g,(char)=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[char]))
+    const parseJson=(value,fallback=[])=>{try{return value?JSON.parse(value):fallback}catch{return fallback}}
+    const reportMonths=['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember']
+    const formatLongDate=(value)=>window.KoiAuth.formatDate(value)
+    const formatDate=(value)=>value?window.KoiAuth.formatDate(String(value).slice(0,10)):'-'
+    const loadNextReportBatchCode=async()=>{if(editingReportId)return;const date=reportDate.value;if(!date){batchCodeInput.value='';return}try{const response=await fetch(`${apiUrl}/farm-report-next-code?date=${encodeURIComponent(date)}`);const data=await response.json();batchCodeInput.value=data.batch_code||''}catch{batchCodeInput.value=''}}
+    const showForm=()=>{const api=getReportModalApi();api?api.getOrCreateInstance(reportModalElement).show():(reportModalElement.classList.add('show'),reportModalElement.style.display='block')}
+    const hideForm=()=>{const api=getReportModalApi();api?api.getInstance(reportModalElement)?.hide():(reportModalElement.classList.remove('show'),reportModalElement.style.display='none')}
+    const findBySearch=(items,query,labeler)=>{const value=String(query||'').toLowerCase().trim();return items.find((item)=>labeler(item).toLowerCase()===value)||items.find((item)=>labeler(item).toLowerCase().includes(value))}
+    const closeReportSearchMenus=(except=null)=>document.querySelectorAll('[data-koi-search-menu],[data-breeding-search-menu],[data-account-search-menu],[data-dominant-variety-search-menu]').forEach((menu)=>{if(menu!==except){menu.classList.add('d-none');menu.innerHTML=''}})
+    const koiLabel=(item)=>[item.code,item.name,item.variety].filter(Boolean).join(' - ')
+    const breedingLabel=(item)=>[item.batch_code,item.session_name].filter(Boolean).join(' - ')
+    const accountLabel=(item)=>`${item.name||item.username} @${item.username}`
+    const breedingRoleLabels={both:'Female & Male',female:'Female',male:'Male',none:'Tidak ditentukan'}
+    const resolveMediaUrl=(value)=>{const raw=String(value||'').trim();if(!raw)return'';const resolved=window.KoiAuth?.apiUrl?window.KoiAuth.apiUrl(raw):raw;try{return new URL(resolved,window.location.origin).href}catch{return resolved}}
+    const linkedPreviewUrl=(item={})=>item.image_url||item.photo_url||item.thumbnail_url||item.avatar||item.female_image_url||item.male_image_url||item.female_photo_url||item.male_photo_url||''
+    const linkedMeta=(item={},type)=>type==='breeding'?[item.spawning_method,item.method,item.status,item.pond_name,item.pond_label].filter(Boolean).join(' - '):[item.variety,item.gender,item.current_length_cm?`${item.current_length_cm} cm`:item.size_cm?`${item.size_cm} cm`:item.size].filter(Boolean).join(' - ')
+    const normalizeGender=(value)=>{const raw=String(value||'').toLowerCase();if(raw.includes('female')||raw.includes('betina'))return'Female';if(raw.includes('male')||raw.includes('jantan'))return'Male';return value||'Unknown'}
+    const koiDetails=(item={})=>[{label:'ID',value:item.code||item.kode||item.id||'-'},{label:'Variety',value:item.variety||item.varietas||'-'},{label:'Gender',value:normalizeGender(item.gender||item.sex)},{label:'Nama',value:item.name||item.nama||'-'}]
+    const parseParentEntries=(value,fallbackId,fallbackLabel)=>{try{const parsed=typeof value==='string'?JSON.parse(value):value;const entries=Array.isArray(parsed)?parsed:[];return entries.length?entries:(fallbackId?[{koi_id:fallbackId,label:fallbackLabel||'',notes:''}]:[])}catch{return fallbackId?[{koi_id:fallbackId,label:fallbackLabel||'',notes:''}]:[]}}
+    const parentFromEntry=(entry,gender)=>{const koi=entry?.koi_id?window.KoiPicker.cache[String(entry.koi_id)]:null;const labelParts=String(entry?.label||'').split(' - ').map((part)=>part.trim()).filter(Boolean);const code=koi?.code||entry?.code||labelParts[0]||entry?.koi_id||'-';const name=koi?.name||entry?.name||labelParts[1]||'-';return{id:entry?.koi_id||code,code,name,variety:koi?.variety||entry?.variety||'-',gender:koi?.gender?normalizeGender(koi.gender):gender,bloodline:koi?.bloodline||entry?.bloodline||'',image_url:koi?.image_url||entry?.image_url||'',notes:entry?.notes||'',length_cm:entry?.length_cm||koi?.current_length_cm||''}}
+    const breedingParents=(item={})=>{const femaleName=[item.female_koi_code,item.female_koi_name].filter(Boolean).join(' - ');const maleName=[item.male_koi_code,item.male_koi_name].filter(Boolean).join(' - ');return[...parseParentEntries(item.female_parent_entries,item.female_koi_id,femaleName).map((entry)=>parentFromEntry(entry,'Female')),...parseParentEntries(item.male_parent_entries,item.male_koi_id,maleName).map((entry)=>parentFromEntry(entry,'Male'))]}
+    const linkedDetails=(item={},type)=>type==='breeding'?[{label:'ID',value:item.batch_code||item.id||'-'},{label:'Variety',value:breedingParents(item).map((parent)=>parent.variety).filter((value)=>value&&value!=='-').join(', ')||'-'},{label:'Gender',value:breedingParents(item).map((parent)=>parent.gender).join(' & ')||'-'},{label:'Nama',value:item.session_name||item.name||'-'}]:koiDetails(item)
+    const detailsHtml=(details=[])=>`<div class="report-linked-details">${details.map((detail)=>`<span><strong>${escapeHtml(detail.value||'-')}</strong>${escapeHtml(detail.label)}</span>`).join('')}</div>`
+    const parentListHtml=(parents=[])=>parents.length?`<div class="report-parent-list">${parents.map((parent,index)=>{const image=resolveMediaUrl(parent.image_url);return `<div class="report-parent-chip" data-report-parent-index="${index}">${image?`<img src="${escapeHtml(image)}" alt="${escapeHtml(parent.code)}" />`:`<span>No foto</span>`}<div><div class="report-linked-title">${escapeHtml(parent.code||'-')}</div><div class="report-linked-meta">${escapeHtml([parent.variety,parent.gender,parent.name].filter(Boolean).join(' - ')||'-')}</div><div class="report-parent-control"><label class="form-check mb-0"><input class="form-check-input" name="report_parent_show_print" type="checkbox" data-parent-show-print ${parent.show_on_print===false?'':'checked'} /><span class="form-check-label">Pilih</span></label><input class="form-control form-control-sm" name="report_parent_notes" data-parent-notes placeholder="Catatan indukan ini" autocomplete="off" value="${escapeHtml(parent.notes||'')}" /></div></div></div>`}).join('')}</div>`:''
+    const searchKeywords=(item,type)=>[type==='breeding'?breedingLabel(item):koiLabel(item),linkedMeta(item,type),...linkedDetails(item,type).map((detail)=>detail.value),...breedingParents(item).flatMap((parent)=>[parent.code,parent.variety,parent.gender,parent.name])].join(' ').toLowerCase()
+    const paintReportSearchMenu=(type,items,menu)=>{const labeler=type==='breeding'?breedingLabel:koiLabel;closeReportSearchMenus(menu);if(!items.length){menu.innerHTML='<div class="report-search-item text-secondary">Tidak ada data cocok.</div>';menu.classList.remove('d-none');return}menu.innerHTML=items.map((item)=>{const preview=resolveMediaUrl(linkedPreviewUrl(item));const meta=[linkedMeta(item,type),linkedDetails(item,type).map((detail)=>detail.value).filter((value)=>value&&value!=='-').join(' | ')].filter(Boolean).join(' - ')||'-';return `<button class="report-search-item" type="button" data-report-search-pick="${escapeHtml(type)}" data-report-search-id="${escapeHtml(item.id)}">${preview?`<img class="report-search-thumb" src="${escapeHtml(preview)}" alt="${escapeHtml(labeler(item))}" />`:`<span class="report-search-thumb">${type==='breeding'?'BR':'KOI'}</span>`}<span class="report-search-copy"><span class="report-search-title">${escapeHtml(labeler(item)||'-')}</span><span class="report-search-meta">${escapeHtml(meta)}</span></span></button>`}).join('');menu.classList.remove('d-none')}
+    let koiSearchToken=0
+    const koiSearchLater=window.KoiPicker.debounce(()=>{const input=document.querySelector('[data-koi-search]');const menu=document.querySelector('[data-koi-search-menu]');if(!input||!menu)return;const mine=++koiSearchToken;window.KoiPicker.lookup(input.value.trim(),{limit:8}).then((result)=>{if(mine===koiSearchToken)paintReportSearchMenu('koi',result.items,menu)}).catch(()=>{})},220)
+    const renderReportSearchMenu=(type)=>{const input=document.querySelector(type==='breeding'?'[data-breeding-search]':'[data-koi-search]');const menu=document.querySelector(type==='breeding'?'[data-breeding-search-menu]':'[data-koi-search-menu]');if(!input||!menu)return;if(type!=='breeding'){koiSearchLater();return}const query=input.value.toLowerCase().trim();paintReportSearchMenu(type,breedingItems.filter((item)=>searchKeywords(item,type).includes(query)).slice(0,8),menu)}
+    const reportVarietyOptions=()=>[...new Set((koiFacets.variety||[]).map((value)=>String(value||'').trim()).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'id',{sensitivity:'base'}))
+    const splitReportVarieties=(value)=>String(value||'').split(',').map((item)=>item.trim()).filter(Boolean)
+    const renderDominantVarietyMenu=()=>{const input=document.querySelector('[data-dominant-variety-search]');const menu=document.querySelector('[data-dominant-variety-search-menu]');if(!input||!menu)return;const selected=splitReportVarieties(input.value).map((item)=>item.toLowerCase());const terms=String(input.value||'').split(',').pop().toLowerCase().split(/\s+/).map((term)=>term.trim()).filter(Boolean);const items=reportVarietyOptions().filter((item)=>terms.length===0||terms.every((term)=>item.toLowerCase().includes(term))).slice(0,18);closeReportSearchMenus(menu);menu.innerHTML=items.length?items.map((item)=>`<button class="report-search-item" type="button" data-dominant-variety-pick="${escapeHtml(item)}"><span class="report-search-copy"><span class="report-search-title">${selected.includes(item.toLowerCase())?'Dipilih - ':''}${escapeHtml(item)}</span><span class="report-search-meta">${selected.includes(item.toLowerCase())?'Sudah dipilih':'Klik untuk tambah/hapus'}</span></span></button>`).join(''):'<div class="report-search-item text-secondary">Tidak ada variety cocok.</div>';menu.classList.remove('d-none')}
+    const pickDominantVariety=(value)=>{const input=document.querySelector('[data-dominant-variety-search]');if(!input)return;const picked=String(value||'').trim();const chunks=String(input.value||'').split(',');const active=String(chunks.pop()||'').trim();const known=reportVarietyOptions().map((item)=>item.toLowerCase());const values=chunks.map((item)=>item.trim()).filter(Boolean);if(active&&known.includes(active.toLowerCase()))values.push(active);const exists=values.findIndex((item)=>item.toLowerCase()===picked.toLowerCase());if(exists>=0){values.splice(exists,1)}else if(picked){values.push(picked)}input.value=[...new Map(values.map((item)=>[item.toLowerCase(),item])).values()].join(', ');renderDominantVarietyMenu();input.focus()}
+    const renderAccountSearchMenu=()=>{const input=document.querySelector('[data-account-search]');const menu=document.querySelector('[data-account-search-menu]');if(!input||!menu)return;const query=String(input.value||'').toLowerCase().trim();const items=accountItems.filter((item)=>accountLabel(item).toLowerCase().includes(query)).slice(0,10);closeReportSearchMenus(menu);menu.innerHTML=items.length?items.map((item)=>`<button class="report-search-item" type="button" data-account-search-pick="${escapeHtml(item.id)}"><span class="report-search-copy"><span class="report-search-title">${escapeHtml(item.name||item.username||'-')}</span><span class="report-search-meta">${escapeHtml(item.username?`@${item.username}`:'Tanpa username')}</span></span></button>`).join(''):'<div class="report-search-item text-secondary">Tidak ada petugas cocok.</div>';menu.classList.remove('d-none')}
+    const linkedEntryFromItem=(item,type)=>({id:item.id,label:type==='breeding'?breedingLabel(item):koiLabel(item),notes:'',show_on_print:true,parent_role:type==='breeding'?'both':'',image_url:linkedPreviewUrl(item),meta:linkedMeta(item,type),details:linkedDetails(item,type),parents:type==='breeding'?breedingParents(item):[]})
+    const openReportPreviewZoom=(url,label='Preview')=>{const resolved=resolveMediaUrl(url);if(!resolved)return;window.KoiAuth.zoomPhoto(resolved,label)}
+    const getSpectrumSizes=()=>[...String(spectrumInput.value||'').matchAll(/\\d+(?:\\.\\d+)?/g)].map((match)=>Math.round(Number(match[0])*10)/10).filter((size)=>Number.isFinite(size)&&size>=0)
+    const getSpectrumSummary=()=>{const sizes=getSpectrumSizes();return Object.fromEntries(spectrumRanges.map(([key,,min,max])=>[key,sizes.filter((size)=>size>=min&&size<=max).length]))}
+    const renderSpectrum=()=>{const summary=getSpectrumSummary();const visibleRanges=spectrumRanges.filter(([key])=>Number(summary[key]||0)>0);spectrumGrid.classList.toggle('is-empty',visibleRanges.length===0);spectrumGrid.innerHTML=visibleRanges.map(([key,label])=>`<div class="report-spectrum-item"><div class="report-spectrum-label">${label}</div><div class="report-spectrum-count">${summary[key]} ekor</div></div>`).join('')}
+    const pondLabel=(pond)=>[pond.name,pond.location].filter(Boolean).join(' - ')
+    const getPondSearchValue=(entry={})=>entry.pond_label||entry.pond_name||entry.origin_location||''
+    const findPondBySearch=(value)=>findBySearch(ponds,value,pondLabel)
+    const addPondEntry=(entry={})=>{const row=document.createElement('div');row.className='card';row.innerHTML=`<div class="card-body"><div class="row g-2 align-items-end"><div class="col-md-3"><label class="form-label">Asal lokasi</label><input class="form-control" name="report_pond_search" list="pond-options" data-pond-search value="${escapeHtml(getPondSearchValue(entry))}" placeholder="Cari asal lokasi" autocomplete="off" /></div><div class="col-md-3"><label class="form-label">Di Pindah ke</label><input class="form-control" name="report_pond_location" list="pond-options" data-location value="${escapeHtml(entry.location)}" placeholder="Cari lokasi tujuan" autocomplete="off" /></div><div class="col-md-2"><label class="form-label">Hasil</label><input class="form-control" name="report_result_qty" type="number" min="0" step="1" data-result-qty value="${escapeHtml(entry.result_qty)}" placeholder="0" /></div><div class="col-md-2"><label class="form-label">Rata-rata Panjang (cm)</label><input class="form-control" name="report_average_length_cm" type="number" min="0" step="0.1" data-average-length value="${escapeHtml(entry.average_length_cm)}" /></div><div class="col-12"><label class="form-label">Catatan Lokasi</label><textarea class="form-control" name="report_pond_notes" rows="2" data-notes>${escapeHtml(entry.notes)}</textarea></div><div class="col-12 text-end"><button class="btn btn-sm" type="button" data-remove-entry>Hapus</button></div></div></div>`;pondEntryList.append(row);row.querySelector('[data-remove-entry]').addEventListener('click',()=>row.remove());if(readonlyMode)row.querySelectorAll('input,select,textarea,button').forEach((field)=>field.disabled=true)}
+    const getPondEntries=()=>[...pondEntryList.children].map((row)=>{const originValue=row.querySelector('[data-pond-search]').value.trim();const pond=findPondBySearch(originValue);return{pond_id:pond?.id||'',pond_name:pond?.name||originValue,pond_label:originValue,location:row.querySelector('[data-location]').value.trim(),result_qty:row.querySelector('[data-result-qty]').value,average_length_cm:row.querySelector('[data-average-length]').value,notes:row.querySelector('[data-notes]').value.trim()}}).filter((entry)=>entry.pond_id||entry.pond_name||entry.location||entry.result_qty||entry.average_length_cm||entry.notes)
+    const addConditionEntry=(entry={})=>{const row=document.createElement('div');row.className='card';row.innerHTML=`<div class="card-body"><div class="row g-2 align-items-end"><div class="col-md-8"><label class="form-label">Metrik Kondisi</label><input class="form-control" data-metric value="${escapeHtml(entry.metric)}" placeholder="Contoh: Ikan Reject (Cacat / Kurang Layak)" /></div><div class="col-md-3"><label class="form-label">Jumlah (ekor)</label><input class="form-control" type="number" min="0" step="1" data-qty value="${escapeHtml(entry.qty)}" /></div><div class="col-md-1 text-end"><button class="btn btn-sm" type="button" data-remove-entry>Hapus</button></div></div></div>`;conditionEntryList.append(row);row.querySelector('[data-remove-entry]').addEventListener('click',()=>row.remove());if(readonlyMode)row.querySelectorAll('input,select,textarea,button').forEach((field)=>field.disabled=true)}
+    const getConditionEntries=()=>[...conditionEntryList.children].map((row)=>({metric:row.querySelector('[data-metric]').value.trim(),qty:row.querySelector('[data-qty]').value})).filter((entry)=>entry.metric||entry.qty)
+    const addSortingEntry=(entry={})=>{const row=document.createElement('div');row.className='card';row.innerHTML=`<div class="card-body"><div class="row g-2 align-items-end"><div class="col-md-3"><label class="form-label">Kategori</label><input class="form-control" data-category value="${escapeHtml(entry.category)}" placeholder="Contoh: Mudpond, Burayak" /></div><div class="col-md-3"><label class="form-label">Kolam Tujuan</label><input class="form-control" list="pond-options" data-destination value="${escapeHtml(entry.destination)}" autocomplete="off" /></div><div class="col-md-4"><label class="form-label">Keterangan</label><input class="form-control" data-description value="${escapeHtml(entry.description)}" placeholder="Contoh: ochiba mix koyo" /></div><div class="col-md-1"><label class="form-label">Ekor</label><input class="form-control" type="number" min="0" step="1" data-qty value="${escapeHtml(entry.qty)}" /></div><div class="col-md-1 text-end"><button class="btn btn-sm" type="button" data-remove-entry>Hapus</button></div></div></div>`;sortingEntryList.append(row);row.querySelector('[data-remove-entry]').addEventListener('click',()=>row.remove());if(readonlyMode)row.querySelectorAll('input,select,textarea,button').forEach((field)=>field.disabled=true)}
+    const getSortingEntries=()=>[...sortingEntryList.children].map((row)=>({category:row.querySelector('[data-category]').value.trim(),destination:row.querySelector('[data-destination]').value.trim(),description:row.querySelector('[data-description]').value.trim(),qty:row.querySelector('[data-qty]').value})).filter((entry)=>entry.category||entry.destination||entry.description||entry.qty)
+    const addLinkedEntry=(list,entry,type)=>{if(entry.id&&[...list.children].some((item)=>item.dataset.entryId===String(entry.id)))return;const source=(type==='breeding'?breedingItems.find((item)=>String(item.id)===String(entry.id)):window.KoiPicker.cache[String(entry.id)])||{};const enriched={...linkedEntryFromItem(source,type),...entry};const row=document.createElement('div');row.className='report-linked-card';row.dataset.entryId=enriched.id||'';row.dataset.imageUrl=enriched.image_url||'';row.dataset.entryMeta=enriched.meta||'';row.dataset.entryDetails=JSON.stringify(enriched.details||[]);row.dataset.entryParents=JSON.stringify(enriched.parents||[]);const imageUrl=resolveMediaUrl(enriched.image_url);const preview=imageUrl?`<img src="${escapeHtml(imageUrl)}" alt="${escapeHtml(enriched.label||'Preview')}" />`:'<span>No foto</span>';const mainHtml=type==='breeding'?`<div class="report-linked-main is-breeding"><div><div class="report-linked-title" data-entry-label>${escapeHtml(enriched.label||'-')}</div><div class="report-linked-meta">${escapeHtml(enriched.meta||'-')}</div>${parentListHtml(enriched.parents||[])}</div><button class="btn btn-sm" type="button" data-remove-entry>Hapus</button></div>`:`<div class="report-linked-main"><button class="report-linked-preview" type="button" data-preview-zoom="${escapeHtml(enriched.image_url||'')}" aria-label="Preview ${escapeHtml(enriched.label||'media')}">${preview}</button><div><div class="report-linked-title" data-entry-label>${escapeHtml(enriched.label||'-')}</div><div class="report-linked-meta">${escapeHtml(enriched.meta||'-')}</div>${detailsHtml(enriched.details||[])}</div><button class="btn btn-sm" type="button" data-remove-entry>Hapus</button></div>`;row.innerHTML=type==='breeding'?mainHtml:`${mainHtml}<div class="report-linked-controls"><label class="form-check mb-0"><input class="form-check-input" name="report_show_print" type="checkbox" data-show-print ${enriched.show_on_print===false?'':'checked'} /><span class="form-check-label">Pilih</span></label><input class="form-control form-control-sm" name="report_linked_notes" data-notes placeholder="Catatan masing-masing" autocomplete="off" value="${escapeHtml(enriched.notes)}" /></div>`;list.append(row);row.querySelector('[data-remove-entry]').addEventListener('click',()=>row.remove());row.querySelector('[data-preview-zoom]')?.addEventListener('click',()=>openReportPreviewZoom(enriched.image_url,enriched.label));if(readonlyMode)row.querySelectorAll('input,select,button:not([data-preview-zoom])').forEach((field)=>field.disabled=true)}
+    const getLinkedEntries=(list,type)=>[...list.children].map((row)=>{const parentSource=parseJson(row.dataset.entryParents);const parents=type==='breeding'?parentSource.map((parent,index)=>{const parentRow=row.querySelector(`[data-report-parent-index="${index}"]`);return{...parent,show_on_print:!!parentRow?.querySelector('[data-parent-show-print]')?.checked,notes:parentRow?.querySelector('[data-parent-notes]')?.value.trim()||''}}):parentSource;return{id:row.dataset.entryId,label:row.querySelector('[data-entry-label]')?.textContent||'',notes:row.querySelector('[data-notes]')?.value.trim()||'',show_on_print:type==='breeding'?parents.some((parent)=>parent.show_on_print!==false):!!row.querySelector('[data-show-print]')?.checked,image_url:row.dataset.imageUrl||'',meta:row.dataset.entryMeta||'',details:parseJson(row.dataset.entryDetails),parents,parent_role:type==='breeding'?'parents':''}})
+    const addAccountEntry=(entry)=>{if([...accountEntryList.children].some((item)=>item.dataset.entryId===String(entry.id)))return;const badge=document.createElement('span');badge.className='badge bg-blue-lt p-2';badge.dataset.entryId=entry.id;badge.dataset.username=entry.username||'';badge.dataset.name=entry.name||'';badge.innerHTML=`${escapeHtml(entry.label||accountLabel(entry))} <button class="btn-close btn-close-sm ms-2" type="button" aria-label="Hapus"></button>`;badge.querySelector('button').addEventListener('click',()=>badge.remove());accountEntryList.append(badge);if(readonlyMode)badge.querySelector('button').disabled=true}
+    const getAccountEntries=()=>[...accountEntryList.children].map((item)=>({id:item.dataset.entryId,username:item.dataset.username,name:item.dataset.name,label:item.textContent.trim()}))
+    const readFileAsDataUrl=(file)=>new Promise((resolve,reject)=>{const reader=new FileReader();reader.addEventListener('load',()=>resolve(reader.result));reader.addEventListener('error',()=>reject(new Error('File gagal dibaca')));reader.readAsDataURL(file)})
+    const compressReportImage=async(file)=>{if(!file||file.type==='image/gif')return await readFileAsDataUrl(file);const dataUrl=await readFileAsDataUrl(file);const image=await new Promise((resolve,reject)=>{const img=new Image();img.addEventListener('load',()=>resolve(img));img.addEventListener('error',()=>reject(new Error('Gambar gagal diproses')));img.src=dataUrl});const maxSide=1600;const ratio=Math.min(1,maxSide/Math.max(image.naturalWidth,image.naturalHeight));const canvas=document.createElement('canvas');canvas.width=Math.max(1,Math.round(image.naturalWidth*ratio));canvas.height=Math.max(1,Math.round(image.naturalHeight*ratio));canvas.getContext('2d').drawImage(image,0,0,canvas.width,canvas.height);return canvas.toDataURL('image/jpeg',.76)}
+    const createVideoThumbnail=(file)=>new Promise((resolve)=>{const video=document.createElement('video');const canvas=document.createElement('canvas');const objectUrl=URL.createObjectURL(file);video.muted=true;video.preload='metadata';video.addEventListener('loadeddata',()=>{canvas.width=video.videoWidth||640;canvas.height=video.videoHeight||360;canvas.getContext('2d').drawImage(video,0,0,canvas.width,canvas.height);URL.revokeObjectURL(objectUrl);resolve(canvas.toDataURL('image/webp',.82))},{once:true});video.addEventListener('error',()=>{URL.revokeObjectURL(objectUrl);resolve('')},{once:true});video.src=objectUrl})
+    const renderMediaEntries=()=>{mediaPreviewList.innerHTML=mediaEntries.map((media,index)=>`<div class="col-auto"><div class="card"><div class="card-body p-2">${media.type==='video'?`<button class="report-media-preview rounded border" type="button" data-media-zoom="${index}"><video muted src="${escapeHtml(media.url)}"></video></button>`:`<img class="report-media-preview rounded border" src="${escapeHtml(media.url)}" alt="Media laporan" data-media-zoom="${index}" />`}<div class="small text-secondary mt-1">${media.type==='video'?'Video':'Gambar'}</div><input class="form-control form-control-sm mt-2" name="report_media_note" data-media-note="${index}" placeholder="Catatan media" autocomplete="off" value="${escapeHtml(media.notes)}" /><button class="btn btn-sm w-100 mt-1" type="button" data-remove-media="${index}">Hapus</button></div></div></div>`).join('');mediaPreviewList.querySelectorAll('[data-media-zoom]').forEach((image)=>image.addEventListener('click',()=>openReportPreviewZoom(mediaEntries[Number(image.dataset.mediaZoom)]?.url,'Media laporan')));mediaPreviewList.querySelectorAll('[data-media-note]').forEach((input)=>input.addEventListener('input',()=>{mediaEntries[Number(input.dataset.mediaNote)].notes=input.value}));mediaPreviewList.querySelectorAll('[data-remove-media]').forEach((button)=>button.addEventListener('click',()=>{mediaEntries.splice(Number(button.dataset.removeMedia),1);renderMediaEntries()}));if(readonlyMode)mediaPreviewList.querySelectorAll('input,button:not([data-media-zoom])').forEach((field)=>field.disabled=true)}
+    const collectMediaEntries=()=>{mediaPreviewList.querySelectorAll('[data-media-note]').forEach((input)=>{if(mediaEntries[Number(input.dataset.mediaNote)])mediaEntries[Number(input.dataset.mediaNote)].notes=input.value.trim()});return mediaEntries}
+    const uploadMediaFiles=async(files)=>{for(const file of files){mediaStatus.innerHTML=`<div class="small text-secondary mb-1">Mengompres/mengupload ${file.name}</div><div class="progress progress-sm"><div class="progress-bar progress-bar-indeterminate"></div></div>`;if(file.type.startsWith('image/')){const response=await fetch(`${apiUrl}/images`,{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({prefix:'report-image',image_data:await compressReportImage(file)})});const data=await response.json().catch(()=>({}));if(!response.ok)throw new Error(data.error||data.detail||'Gambar gagal diupload');mediaEntries.push({type:'image',url:data.image_url,thumbnail_url:data.image_url,name:file.name,notes:''})}else if(['video/mp4','video/webm'].includes(file.type)){if(file.size>100*1024*1024)throw new Error('Ukuran video maksimal 100 MB');const [videoData,thumbnailData]=await Promise.all([readFileAsDataUrl(file),createVideoThumbnail(file)]);const response=await fetch(`${apiUrl}/videos`,{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({prefix:'report-video',video_data:videoData,thumbnail_data:thumbnailData})});const data=await response.json().catch(()=>({}));if(!response.ok)throw new Error(data.error||data.detail||'Video gagal diupload');mediaEntries.push({type:'video',url:data.video_url,thumbnail_url:data.video_thumbnail_url,name:file.name,notes:''})}else{throw new Error('Format media harus gambar, mp4, atau webm')}}mediaStatus.textContent='Media siap disimpan.';renderMediaEntries()}
+    const pasteReportImages=async()=>{try{const items=await navigator.clipboard.read();const files=[];for(const item of items){const imageType=item.types.find((type)=>type.startsWith('image/'));if(!imageType)continue;const blob=await item.getType(imageType);files.push(new File([blob],`paste-laporan-${Date.now()}-${files.length+1}.${imageType.split('/')[1]||'png'}`,{type:imageType}))}if(!files.length)throw new Error('Clipboard tidak berisi gambar.');await uploadMediaFiles(files)}catch(error){mediaStatus.textContent=error.message||'Paste gambar gagal.'}}
+    const setReadonly=(readonly)=>{readonlyMode=readonly;form.querySelectorAll('input,select,textarea').forEach((field)=>field.disabled=readonly);form.querySelectorAll('[data-add-pond-entry],[data-add-condition-entry],[data-add-sorting-entry],[data-add-breeding-entry],[data-add-koi-entry],[data-add-account-entry],[data-remove-entry],[data-remove-media]').forEach((button)=>button.disabled=readonly);submitButton.classList.toggle('d-none',readonly)}
+    const resetForm=()=>{editingReportId=null;setReadonly(false);submitButton.textContent='Simpan Laporan';form.reset();pondEntryList.innerHTML='';conditionEntryList.innerHTML='';sortingEntryList.innerHTML='';breedingEntryList.innerHTML='';koiEntryList.innerHTML='';accountEntryList.innerHTML='';mediaEntries=[];mediaStatus.textContent='';errorBox.classList.add('d-none');successBox.classList.add('d-none');reportDate.valueAsDate=new Date();batchCodeInput.value="";loadNextReportBatchCode();renderMediaEntries();renderSpectrum()}
+    const showNewForm=()=>{modalTitle.textContent='Formulir Tambah Laporan';resetForm();showForm()}
+    const fillReportForm=(report)=>{form.elements.report_type.value=report.report_type||'data_ulang';form.elements.report_date.value=String(report.report_date||'').split('T')[0];form.elements.batch_code.value=report.batch_code||'';form.elements.report_title.value=report.report_title||'';form.elements.dominant_variety.value=report.dominant_variety||'';form.elements.origin_location.value=report.origin_location||'';form.elements.destination_location.value=report.destination_location||'';form.elements.average_length_cm.value=report.average_length_cm||'';form.elements.notes.value=report.notes||'';parseJson(report.pond_entries).forEach(addPondEntry);parseJson(report.condition_entries).forEach(addConditionEntry);parseJson(report.sorting_entries).forEach(addSortingEntry);parseJson(report.breeding_entries).forEach((entry)=>addLinkedEntry(breedingEntryList,entry,'breeding'));parseJson(report.koi_entries).forEach((entry)=>addLinkedEntry(koiEntryList,entry,'koi'));parseJson(report.reporter_entries).forEach((entry)=>addAccountEntry(entry));mediaEntries=parseJson(report.media_entries);spectrumInput.value=parseJson(report.spectrum_sizes).join(', ');parseJson(report.validation_checks).forEach((check)=>{const checkbox=document.querySelector(`[data-validation-check][value="${check}"]`);if(checkbox)checkbox.checked=true});if(form.elements.show_in_gallery)form.elements.show_in_gallery.checked=Boolean(report.gallery_id||report.show_in_gallery===true);renderMediaEntries();renderSpectrum()}
+    const showReportDetail=(report)=>{resetForm();modalTitle.textContent='Detail Laporan';fillReportForm(report);setReadonly(true);showForm()}
+    const showReportEdit=(report)=>{resetForm();editingReportId=report.id;modalTitle.textContent='Formulir Edit Laporan';fillReportForm(report);setReadonly(false);submitButton.textContent='Simpan Perubahan';showForm()}
+// ---- Laporan search: plain words + "field:value" ---------------------------------------------------------
+    // "jenis:panen kolam:mudpond catatan:habis" -> every field:value must match (a value runs until the next field:).
+    // Plain words must all be found in kode, judul, jenis, varietas, asal, tujuan, kolam, breeding, petugas. A comma
+    // inside a text value means "or" (jenis:panen,data ulang). Catatan is only searched with catatan:.
+    var rdReportSearch = ''
+    var rdReportAliases = {
+      kode: 'batch_code', batch: 'batch_code', kodebatch: 'batch_code',
+      judul: 'report_title', nama: 'report_title',
+      jenis: 'type', tipe: 'type', type: 'type',
+      tanggal: 'report_date', tgl: 'report_date',
+      varietas: 'dominant_variety', variety: 'dominant_variety', dominan: 'dominant_variety',
+      asal: 'origin_location', tujuan: 'destination_location',
+      kolam: 'pond', lokasi: 'pond', pond: 'pond',
+      breeding: 'breeding',
+      petugas: 'reporter',
+      ukuran: 'average_length_cm', size: 'average_length_cm',
+      catatan: 'notes', notes: 'notes',
+      galeri: 'gallery_id',
+    }
+    // "bloo:isa" works too: a field name may be shortened to its first letters (2 or more). Exact names win, then the
+    // first name in the alias list that starts with what was typed. Unknown names stay plain text.
+    function rdReportResolveMarkers(keyword, aliases) {
+      var names = Object.keys(aliases)
+      var found = []
+      var pattern = /(?:^|[\s,])([a-z]+)\s*:/gi
+      var match
+      while ((match = pattern.exec(keyword))) {
+        var key = match[1].toLowerCase()
+        var name = aliases[key] ? key : (key.length >= 2 ? names.find(function (alias) { return alias.indexOf(key) === 0 }) : null)
+        if (name) {
+          var hit = [match[0], name]
+          hit.index = match.index
+          found.push(hit)
+        }
+      }
+      return found
+    }
+    var rdReportTypeNames = { panen: 'Panen', data_ulang: 'Data Ulang', kegiatan: 'Kegiatan', ikan_datang: 'Ikan Datang' }
+    
+    function rdReportNorm(value) {
+      return String(value === null || value === undefined ? '' : value).toLowerCase().trim()
+    }
+    
+    function rdReportList(value) {
+      try { var parsed = typeof value === 'string' ? JSON.parse(value || '[]') : value; return Array.isArray(parsed) ? parsed : [] } catch (error) { return [] }
+    }
+    
+    function rdReportParts(item) {
+      var pond = rdReportList(item.pond_entries).map(function (entry) { return [entry.pond_name, entry.location, entry.label].filter(Boolean).join(' ') }).join(' ') + ' ' + (item.pond_name || '')
+      var breeding = rdReportList(item.breeding_entries).map(function (entry) { return entry.label || '' }).join(' ')
+      var reporter = rdReportList(item.reporter_entries).map(function (entry) { return [entry.label, entry.username, entry.name].filter(Boolean).join(' ') }).join(' ') + ' ' + (item.reporter || '')
+      var typeName = rdReportTypeNames[item.report_type] || String(item.report_type || '').replace(/_/g, ' ')
+      return { pond: rdReportNorm(pond), breeding: rdReportNorm(breeding), reporter: rdReportNorm(reporter), type: rdReportNorm(typeName + ' ' + String(item.report_type || '').replace(/_/g, ' ') + (item.report_type === 'panen' || item.report_type === 'data_ulang' ? ' perikanan' : '')) }
+    }
+    
+    function rdReportNumberTest(value) {
+      var text = String(value || '').toLowerCase().replace(/\s|cm/g, '').replace(',', '.')
+      var compare = text.match(/^(>=|<=|>|<)(\d+(?:\.\d+)?)$/)
+      if (compare) {
+        var limit = Number(compare[2])
+        return { '>=': function (n) { return n >= limit }, '<=': function (n) { return n <= limit }, '>': function (n) { return n > limit }, '<': function (n) { return n < limit } }[compare[1]]
+      }
+      var range = text.match(/^(\d+(?:\.\d+)?)-(\d+(?:\.\d+)?)$/)
+      if (range) {
+        var min = Math.min(Number(range[1]), Number(range[2]))
+        var max = Math.max(Number(range[1]), Number(range[2]))
+        return function (n) { return n >= min && n <= max }
+      }
+      return /^\d+(?:\.\d+)?$/.test(text) ? function (n) { return n === Number(text) } : null
+    }
+    
+    function rdReportDateText(value) {
+      var match = String(value || '').trim().match(/^(\d{1,2})[/.-](\d{1,2})[/.-](\d{4})$/)
+      return match ? match[3] + '-' + match[2].padStart(2, '0') + '-' + match[1].padStart(2, '0') : String(value || '').trim()
+    }
+    
+    // true / false, or null while the value is still being typed
+    function rdReportField(item, parts, field, rawValue) {
+      var value = rdReportNorm(rawValue)
+      if (!value) return null
+      if (field === 'average_length_cm') {
+        var test = rdReportNumberTest(value)
+        var number = Number(item.average_length_cm)
+        if (!test) return null
+        return item.average_length_cm !== null && item.average_length_cm !== undefined && item.average_length_cm !== '' && Number.isFinite(number) && test(number)
+      }
+      if (field === 'report_date') return String(item.report_date || '').slice(0, 10).includes(rdReportDateText(value))
+      if (field === 'gallery_id') return String(item.gallery_id || '') === value.replace(/^#/, '')
+      return value.split(',').map(function (part) { return part.trim() }).filter(Boolean).some(function (choice) {
+        if (field === 'type') return parts.type.includes(choice.replace(/_/g, ' '))
+        if (field === 'pond') return parts.pond.includes(choice)
+        if (field === 'breeding') return parts.breeding.includes(choice)
+        if (field === 'reporter') return parts.reporter.includes(choice)
+        return rdReportNorm(item[field]).includes(choice)
+      })
+    }
+    
+    function rdReportMatches(item) {
+      var keyword = String(rdReportSearch || '').trim()
+      if (!keyword) return true
+      var markers = rdReportResolveMarkers(keyword, rdReportAliases)
+      var plain = markers.length ? keyword.slice(0, markers[0].index) : keyword
+      var parts = rdReportParts(item)
+      for (var index = 0; index < markers.length; index += 1) {
+        var marker = markers[index]
+        var valueStart = marker.index + marker[0].length
+        var valueEnd = index + 1 < markers.length ? markers[index + 1].index : keyword.length
+        if (rdReportField(item, parts, rdReportAliases[marker[1].toLowerCase()], keyword.slice(valueStart, valueEnd)) === false) return false
+      }
+      var alternatives = plain.split(',').map(function (part) { return rdReportNorm(part).split(/\s+/).filter(Boolean) }).filter(function (words) { return words.length })
+      if (!alternatives.length) return true
+      var blob = rdReportNorm([item.batch_code, item.report_title, parts.type, item.dominant_variety, item.origin_location, item.destination_location, parts.pond, parts.breeding, parts.reporter].join(' '))
+      return alternatives.some(function (words) { return words.every(function (word) { return blob.includes(word) }) })
+    }
+    
+    const renderReports=(reports)=>{reportItems=reports;dock.prune(reports);const shown=dock.apply(reports.filter(rdReportMatches));reportTable.innerHTML=shown.map((item)=>{const pondEntries=parseJson(item.pond_entries);const breedingEntries=parseJson(item.breeding_entries);const locText=pondEntries.map((entry)=>[entry.pond_name,entry.location].filter(Boolean).join(' -> ')).filter(Boolean).join(', ')||item.pond_name||'-';const breedText=breedingEntries.map((entry)=>entry.label).join(', ')||'-';return `<div class="col-sm-6 col-lg-4 col-xl-3"><div class="card h-100 report-card" data-dock-id="${escapeHtml(item.id)}"><div class="report-card-top" data-dock-select title="Klik untuk memilih"><span class="badge ${item.report_type==='panen'?'bg-green-lt':'bg-blue-lt'}">${escapeHtml(labels[item.report_type]||item.report_type||'-')}</span><div class="report-card-date">${escapeHtml(formatLongDate(item.report_date))}</div></div><div class="card-body" role="button" tabindex="0" data-report-id="${escapeHtml(item.id)}"><div class="d-flex align-items-start justify-content-between gap-2 mb-1"><div class="report-card-code"><button class="dock-code-copy" type="button" data-copy-report-code="${escapeHtml(item.batch_code||'-')}" title="${escapeHtml(item.batch_code||'-')}">${escapeHtml(item.batch_code||'-')}</button></div><span class="badge bg-blue text-blue-fg dock-selected-badge">Terpilih</span></div><div class="fw-semibold report-card-title">${escapeHtml(item.report_title||'-')}</div>${item.gallery_id?`<a class="badge bg-purple-lt text-decoration-none mt-1" href="./farm-gallery.html?id=${escapeHtml(item.gallery_id)}" onclick="event.stopPropagation()" title="Buka koleksi ini di Galeri">Galeri #${escapeHtml(item.gallery_id)}</a>`:''}<div class="row g-2 small mt-1"><div class="col-12 report-card-cell"><span class="text-secondary">Lokasi</span><div class="report-card-ellipsis" title="${escapeHtml(locText)}">${escapeHtml(locText)}</div></div><div class="col-12 report-card-cell"><span class="text-secondary">Breeding</span><div class="report-card-ellipsis" title="${escapeHtml(breedText)}">${escapeHtml(breedText)}</div></div></div><div class="report-card-actions"><button class="btn btn-sm" type="button" data-print-report="${escapeHtml(item.id)}">${window.KoiDock.icon('printer')} Print</button><button class="btn btn-sm" type="button" data-edit-report="${escapeHtml(item.id)}" data-role-required="farm-operate">${window.KoiDock.icon('edit')} Edit</button><button class="btn btn-sm btn-outline-danger" type="button" data-delete-report="${escapeHtml(item.id)}" data-role-required="farm-operate">${window.KoiDock.icon('trash')} Hapus</button></div></div></div></div>`}).join('')||`<div class="col-12 text-secondary">${rdReportSearch?'Laporan tidak ditemukan.':'Belum ada laporan tersimpan.'}</div>`;dock.refresh()}
+    const loadReports=(silent=false)=>fetch(`${apiUrl}/farm-reports`).then((response)=>response.json()).then((reports)=>{const signature=JSON.stringify(reports);if(silent&&signature===reportRealtimeSignature)return;reportRealtimeSignature=signature;localStorage.setItem(reportCacheKey,signature);renderReports(reports)}).catch(()=>{if(!silent)reportTable.innerHTML='<div class="col-12 text-danger">Laporan gagal dimuat.</div>'})
+    const restoreReportCache=()=>{try{const cached=JSON.parse(localStorage.getItem(reportCacheKey)||'[]');if(!Array.isArray(cached)||!cached.length)return;reportRealtimeSignature=JSON.stringify(cached);renderReports(cached)}catch{localStorage.removeItem(reportCacheKey)}}
+    const loadOptions=async()=>{const [pondsResponse,breedingResponse,accountResponse,facetsResponse]=await Promise.all([fetch(`${apiUrl}/ponds`),fetch(`${apiUrl}/breeding`),fetch(`${apiUrl}/accounts`),fetch(`${apiUrl}/koi/facets?archived=all&fields=variety`)]);ponds=await pondsResponse.json();breedingItems=await breedingResponse.json();accountItems=await accountResponse.json();koiFacets=facetsResponse.ok?await facetsResponse.json():{};const parentIds=[...new Set(breedingItems.flatMap((item)=>[...parseParentEntries(item.female_parent_entries,item.female_koi_id,''),...parseParentEntries(item.male_parent_entries,item.male_koi_id,'')].map((entry)=>entry?.koi_id)).filter(Boolean).map(String))];if(parentIds.length){try{await window.KoiPicker.byIds(parentIds,{scope:'all'})}catch{}}document.querySelector('#pond-options').innerHTML=ponds.map((item)=>`<option value="${escapeHtml(pondLabel(item))}"></option>`).join('')}
+    document.querySelector('[data-add-pond-entry]').addEventListener('click',()=>addPondEntry())
+    document.querySelector('[data-add-condition-entry]').addEventListener('click',()=>addConditionEntry())
+    document.querySelector('[data-add-sorting-entry]').addEventListener('click',()=>addSortingEntry())
+    document.querySelector('[data-add-breeding-entry]').addEventListener('click',()=>{const input=document.querySelector('[data-breeding-search]');const item=findBySearch(breedingItems,input.value,breedingLabel);if(item)addLinkedEntry(breedingEntryList,linkedEntryFromItem(item,'breeding'),'breeding');input.value=''})
+    document.querySelector('[data-add-koi-entry]').addEventListener('click',()=>{const input=document.querySelector('[data-koi-search]');const text=input.value;input.value='';window.KoiPicker.lookup(text.trim(),{limit:20}).then((result)=>{const item=findBySearch(result.items,text,koiLabel);if(item)addLinkedEntry(koiEntryList,linkedEntryFromItem(item,'koi'),'koi')}).catch(()=>{})})
+    document.querySelector('[data-add-account-entry]').addEventListener('click',()=>{const input=document.querySelector('[data-account-search]');const item=findBySearch(accountItems,input.value,accountLabel);if(item)addAccountEntry(item);input.value='';closeReportSearchMenus()})
+    document.querySelector('[data-breeding-search]').addEventListener('input',()=>renderReportSearchMenu('breeding'))
+    document.querySelector('[data-breeding-search]').addEventListener('focus',()=>renderReportSearchMenu('breeding'))
+    document.querySelector('[data-koi-search]').addEventListener('input',()=>renderReportSearchMenu('koi'))
+    document.querySelector('[data-koi-search]').addEventListener('focus',()=>renderReportSearchMenu('koi'))
+    document.querySelector('[data-dominant-variety-search]').addEventListener('input',renderDominantVarietyMenu)
+    document.querySelector('[data-dominant-variety-search]').addEventListener('focus',renderDominantVarietyMenu)
+    document.querySelector('[data-account-search]').addEventListener('input',renderAccountSearchMenu)
+    document.querySelector('[data-account-search]').addEventListener('focus',renderAccountSearchMenu)
+    document.addEventListener('click',(event)=>{const pick=event.target.closest('[data-report-search-pick]');const varietyPick=event.target.closest('[data-dominant-variety-pick]');const accountPick=event.target.closest('[data-account-search-pick]');if(pick){const type=pick.dataset.reportSearchPick;const item=type==='breeding'?breedingItems.find((entry)=>String(entry.id)===String(pick.dataset.reportSearchId)):window.KoiPicker.cache[String(pick.dataset.reportSearchId)];if(item){const input=document.querySelector(type==='breeding'?'[data-breeding-search]':'[data-koi-search]');input.value=type==='breeding'?breedingLabel(item):koiLabel(item);addLinkedEntry(type==='breeding'?breedingEntryList:koiEntryList,linkedEntryFromItem(item,type),type);input.value=''}closeReportSearchMenus();return}if(varietyPick){pickDominantVariety(varietyPick.dataset.dominantVarietyPick);return}if(accountPick){const item=accountItems.find((entry)=>String(entry.id)===String(accountPick.dataset.accountSearchPick));if(item){addAccountEntry(item);const input=document.querySelector('[data-account-search]');input.value=''}closeReportSearchMenus();return}if(!event.target.closest('.report-search-wrap'))closeReportSearchMenus()})
+    document.querySelector('[data-media-input]').addEventListener('change',(event)=>uploadMediaFiles([...event.target.files]).catch((error)=>{mediaStatus.textContent=error.message}).finally(()=>{event.target.value=''}))
+    document.querySelector('[data-media-paste]').addEventListener('click',pasteReportImages)
+    spectrumInput.addEventListener('input',renderSpectrum)
+    reportDate.addEventListener('change',loadNextReportBatchCode)
+    // Drafts (Queue menu): media is uploaded when picked, so a draft only keeps the addresses.
+    const reportDraftHost=document.createElement('div');reportDraftHost.className='me-auto';form.querySelector('.modal-footer')?.prepend(reportDraftHost)
+    const collectReportDraft=()=>{const data={report_type:new FormData(form).get('report_type'),report_date:form.elements.report_date.value,batch_code:form.elements.batch_code.value,report_title:form.elements.report_title.value,dominant_variety:form.elements.dominant_variety.value,origin_location:form.elements.origin_location.value,destination_location:form.elements.destination_location.value,average_length_cm:form.elements.average_length_cm.value,notes:form.elements.notes.value,pond_entries:JSON.stringify(getPondEntries()),condition_entries:JSON.stringify(getConditionEntries()),sorting_entries:JSON.stringify(getSortingEntries()),breeding_entries:JSON.stringify(getLinkedEntries(breedingEntryList,'breeding')),koi_entries:JSON.stringify(getLinkedEntries(koiEntryList,'koi')),reporter_entries:JSON.stringify(getAccountEntries()),media_entries:JSON.stringify(collectMediaEntries()),spectrum_sizes:JSON.stringify(getSpectrumSizes()),validation_checks:JSON.stringify([...document.querySelectorAll('[data-validation-check]:checked')].map((item)=>item.value)),show_in_gallery:Boolean(form.elements.show_in_gallery?.checked)};return{data,summary:[data.report_title,data.report_date].filter(Boolean).join(' - ')||'Laporan tanpa judul',item_count:1}}
+    // batch code is taken fresh on load so it never clashes with a report saved meanwhile
+    const applyReportDraft=(data)=>{modalTitle.textContent='Formulir Tambah Laporan';resetForm();fillReportForm(data);loadNextReportBatchCode()}
+    const reportDrafts=window.KoiDrafts?.attach({type:'report',host:reportDraftHost,collect:collectReportDraft,apply:applyReportDraft,open:showNewForm,onError:(message)=>{errorBox.textContent=message;errorBox.classList.remove('d-none')},onInfo:(message)=>{mediaStatus.textContent=message}})
+    document.querySelector('[data-report-open]').addEventListener('click',()=>{reportDrafts?.reset();showNewForm()})
+    document.querySelectorAll('[data-report-cancel]').forEach((button)=>button.addEventListener('click',()=>{hideForm();resetForm()}))
+    reportModalElement.addEventListener('dblclick',(event)=>{if(event.target===reportModalElement){hideForm();resetForm()}})
+    const linkedPrintText=(entry,type)=>{const role=type==='breeding'&&entry.parent_role&&entry.parent_role!=='none'?` (${breedingRoleLabels[entry.parent_role]||entry.parent_role})`:'';const details=Array.isArray(entry.details)?entry.details.map((detail)=>`${detail.label}: ${detail.value||'-'}`).join(', '):'';const parents=Array.isArray(entry.parents)&&entry.parents.length?` | Indukan: ${entry.parents.map((parent)=>`${parent.code||parent.id||'-'} ${parent.variety||'-'} ${parent.gender||'-'} ${parent.name||'-'}`).join('; ')}`:'';return `${entry.label||'-'}${role}${details?' - '+details:''}${parents}${entry.notes?' - '+entry.notes:''}`}
+    const rpImg=(value)=>window.KoiPrint.photo(resolveMediaUrl(value))
+    const rpParentsText=(parents=[])=>{const shown=Array.isArray(parents)?parents.filter((parent)=>parent.show_on_print!==false):[];return shown.length?shown.map((parent)=>`${parent.code||parent.id||'-'} (${[parent.variety,parent.gender,parent.name].filter(Boolean).join(' - ')||'-'})`).join('; '):'-'}
+    const rpBreedingRows=(entries)=>entries.length?entries.map((entry)=>`<tr><td><strong>${escapeHtml(entry.label||'-')}</strong></td><td>${escapeHtml(entry.meta||'-')}</td><td>${escapeHtml(rpParentsText(entry.parents||[]))}</td><td>${escapeHtml(entry.notes||'-')}</td></tr>`).join(''):'<tr><td colspan="4" class="kp-muted">Belum ada data dipilih.</td></tr>'
+    const rpKoiRows=(entries)=>entries.length?entries.map((entry)=>`<tr><td class="kp-center">${rpImg(entry.image_url)}</td><td><strong>${escapeHtml(entry.label||'-')}</strong></td><td>${escapeHtml(entry.meta||'-')}</td><td>${Array.isArray(entry.details)&&entry.details.length?escapeHtml(entry.details.map((detail)=>`${detail.label}: ${detail.value||'-'}`).join(', ')):'-'}</td><td>${escapeHtml(entry.notes||'-')}</td></tr>`).join(''):'<tr><td colspan="5" class="kp-muted">Belum ada data dipilih.</td></tr>'
+    const rpPondRows=(entries)=>entries.length?entries.map((entry)=>`<tr><td><strong>${escapeHtml([entry.pond_name||entry.pond_label,entry.location].filter(Boolean).join(' -> ')||'-')}</strong></td><td class="kp-num">${entry.result_qty?`${entry.result_qty} ekor`:'-'}</td><td class="kp-num">${entry.average_length_cm?`${entry.average_length_cm} cm`:'-'}</td><td>${escapeHtml(entry.notes||'-')}</td></tr>`).join(''):'<tr><td colspan="4" class="kp-muted">Belum ada lokasi.</td></tr>'
+    const rpReporterRows=(entries)=>entries.length?entries.map((entry)=>`<tr><td><strong>${escapeHtml(entry.label||entry.name||entry.username||'-')}</strong></td><td>${escapeHtml(entry.username?`@${entry.username}`:'-')}</td></tr>`).join(''):'<tr><td colspan="2" class="kp-muted">Belum ada petugas.</td></tr>'
+    const rpMediaRows=(media)=>media.length?media.map((item)=>`<tr><td class="kp-center">${item.type==='video'?'<div class="kp-muted">Video</div>':rpImg(item.thumbnail_url||item.url)}</td><td>${escapeHtml(item.notes||item.name||(item.type==='video'?item.url:'Media laporan')||'-')}</td></tr>`).join(''):'<tr><td colspan="2" class="kp-muted">Belum ada media.</td></tr>'
+    const rpConditionRows=(entries)=>entries.map((entry)=>`<tr><td>${escapeHtml(entry.metric||'-')}</td><td class="kp-num">${entry.qty?`${escapeHtml(entry.qty)} ekor`:'-'}</td></tr>`).join('')
+    const rpSortingBody=(entries)=>{
+      const groups=new Map()
+      entries.forEach((entry)=>{const key=entry.category||'-';if(!groups.has(key))groups.set(key,[]);groups.get(key).push(entry)})
+      return [...groups.entries()].map(([category,rows])=>{
+        const total=rows.reduce((sum,row)=>sum+(Number(row.qty)||0),0)
+        return `<tr style="background:#f1f5f9"><td colspan="3"><strong>${escapeHtml(category)} - TOTAL ${total} EKOR</strong></td></tr>`
+          + rows.map((row)=>`<tr><td>${escapeHtml(row.destination||'-')}</td><td>${escapeHtml(row.description||'-')}</td><td class="kp-num">${row.qty?`${escapeHtml(row.qty)} ekor`:'-'}</td></tr>`).join('')
+      }).join('')
+    }
+    const validationLabels={ikan_di_foto:'Ikan di foto',ikan_masuk_web:'Ikan masuk web',ikan_di_pindah:'Ikan di pindah'}
+    const printReportRich=(report)=>{
+      const pondEntries=parseJson(report.pond_entries)
+      const conditionEntries=parseJson(report.condition_entries)
+      const sortingEntries=parseJson(report.sorting_entries)
+      const breedingEntries=parseJson(report.breeding_entries).filter((entry)=>entry.show_on_print!==false)
+      const koiEntries=parseJson(report.koi_entries).filter((entry)=>entry.show_on_print!==false)
+      const reporterEntries=parseJson(report.reporter_entries)
+      const media=parseJson(report.media_entries)
+      const validationChecks=parseJson(report.validation_checks)
+      const spectrumSummary=parseJson(report.spectrum_summary)
+      const spectrumRows=Object.entries(spectrumSummary).filter(([,value])=>Number(value)>0)
+      const totalIkan=spectrumRows.reduce((sum,[,value])=>sum+Number(value),0)
+      const sizeSectionRows=spectrumRows.map(([key,value])=>`<tr><td>${escapeHtml(key)}</td><td class="kp-num">${escapeHtml(value)} ekor</td></tr>`).join('')+(spectrumRows.length?`<tr style="background:#f1f5f9"><td><strong>Total Ikan Data / Panen</strong></td><td class="kp-num"><strong>${totalIkan} ekor</strong></td></tr>`:'')+(report.average_length_cm?`<tr><td><em>Rata-rata Ukuran</em></td><td class="kp-num"><em>${window.KoiPrint.size(report.average_length_cm)} cm</em></td></tr>`:'')
+      const body=`
+        ${(spectrumRows.length||report.average_length_cm)?`<section class="kp-section"><h2>Distribusi Ukuran (Spectrum Variance)</h2><table class="kp-table"><thead><tr><th>Kategori Ukuran</th><th class="kp-num">Jumlah (Ekor)</th></tr></thead><tbody>${sizeSectionRows}</tbody></table></section>`:''}
+        ${validationChecks.length?`<section class="kp-section"><h2>Validasi Website</h2><table class="kp-table"><tbody>${validationChecks.map((check)=>`<tr><td>&check; ${escapeHtml(validationLabels[check]||check)}</td></tr>`).join('')}</tbody></table></section>`:''}
+        ${conditionEntries.length?`<section class="kp-section"><h2>Kondisi / Status Tambahan</h2><table class="kp-table"><thead><tr><th>Metrik Kondisi</th><th class="kp-num">Jumlah</th></tr></thead><tbody>${rpConditionRows(conditionEntries)}</tbody></table></section>`:''}
+        ${sortingEntries.length?`<section class="kp-section"><h2>Detail Sortir Ikan (Pemindahan Kolam)</h2><table class="kp-table"><thead><tr><th>Kolam Tujuan</th><th>Keterangan</th><th class="kp-num">Jumlah (Ekor)</th></tr></thead><tbody>${rpSortingBody(sortingEntries)}</tbody></table></section>`:''}
+        ${pondEntries.length?`<section class="kp-section"><h2>Lokasi / Kolam</h2><table class="kp-table"><thead><tr><th>Lokasi</th><th class="kp-num" style="width:14%">Hasil</th><th class="kp-num" style="width:16%">Rata-rata</th><th>Catatan</th></tr></thead><tbody>${rpPondRows(pondEntries)}</tbody></table></section>`:''}
+        ${breedingEntries.length?`<section class="kp-section"><h2>Sesi Breeding</h2><table class="kp-table"><thead><tr><th>Sesi</th><th>Info</th><th>Indukan</th><th>Catatan</th></tr></thead><tbody>${rpBreedingRows(breedingEntries)}</tbody></table></section>`:''}
+        ${koiEntries.length?`<section class="kp-section"><h2>Mention Ikan</h2><table class="kp-table"><thead><tr><th class="kp-center" style="width:48px">Foto</th><th>Kode/Label</th><th>Info</th><th>Detail</th><th>Catatan</th></tr></thead><tbody>${rpKoiRows(koiEntries)}</tbody></table></section>`:''}
+        ${reporterEntries.length?`<section class="kp-section"><h2>Petugas</h2><table class="kp-table"><thead><tr><th>Nama</th><th>Username</th></tr></thead><tbody>${rpReporterRows(reporterEntries)}</tbody></table></section>`:''}
+        ${media.length?`<section class="kp-section"><h2>Media Laporan</h2><table class="kp-table"><thead><tr><th class="kp-center" style="width:48px">Foto</th><th>Keterangan</th></tr></thead><tbody>${rpMediaRows(media)}</tbody></table></section>`:''}
+      `
+      window.KoiPrint.print({
+        key:'report-detail',
+        title:report.report_title||'Laporan',
+        heading:report.report_title||'Laporan',
+        subheading:`${formatDate(report.report_date)} - ${labels[report.report_type]||report.report_type||'-'}`,
+        info:[['Kode Batch',report.batch_code],['Jenis',labels[report.report_type]||report.report_type],['Lokasi Asal',report.origin_location],['Lokasi Tujuan',report.destination_location],['Varietas Dominan',report.dominant_variety]],
+        notes:report.notes||'',
+        body,
+      })
+    }
+    const printReport=(report)=>{const pondEntries=parseJson(report.pond_entries);const breedingEntries=parseJson(report.breeding_entries).filter((entry)=>entry.show_on_print!==false);const koiEntries=parseJson(report.koi_entries).filter((entry)=>entry.show_on_print!==false);const reporterEntries=parseJson(report.reporter_entries);const media=parseJson(report.media_entries);const printWindow=window.open('','_blank');if(!printWindow)return;const row=(label,value)=>`<tr><th>${label}</th><td>${value}</td></tr>`;printWindow.document.write(`<html><head><title>${escapeHtml(report.report_title||'Laporan')}</title><style>body{font-family:Arial,sans-serif;padding:24px;color:#111;background:#fff}h1{margin:0 0 8px}table{border-collapse:collapse;width:100%;margin:16px 0}td,th{border:1px solid #ddd;padding:8px;text-align:left;vertical-align:top}.media{display:flex;gap:12px;flex-wrap:wrap}.media img{max-width:180px;max-height:140px;object-fit:cover}</style></head><body><h1>${escapeHtml(report.report_title||'Laporan')}</h1><p>${formatDate(report.report_date)} - ${escapeHtml(labels[report.report_type]||report.report_type||'-')}</p><table><tbody>${row('Varietas Dominan',escapeHtml(report.dominant_variety||'-'))}${row('Lokasi',escapeHtml(pondEntries.map((entry)=>[entry.pond_name,entry.location].filter(Boolean).join(' -> ')).join(', ')||'-'))}${row('Breeding',escapeHtml(breedingEntries.map((entry)=>linkedPrintText(entry,'breeding')).join(', ')||'-'))}${row('Ikan',escapeHtml(koiEntries.map((entry)=>linkedPrintText(entry,'koi')).join(', ')||'-'))}${row('Petugas',escapeHtml(reporterEntries.map((entry)=>entry.label||entry.name||entry.username).join(', ')||'-'))}${row('Catatan Laporan',escapeHtml(report.notes||'-'))}</tbody></table><div class="media">${media.map((item)=>`<div>${item.type==='video'?`<p>Video: ${escapeHtml(item.url)}</p>`:`<img src="${escapeHtml(item.url)}" />`}<p>${escapeHtml(item.notes||'')}</p></div>`).join('')}</div><script>window.print()<\/script></body></html>`);printWindow.document.close()}
+    const reportExcelColumns = ['Tanggal', 'Kode Batch', 'Jenis', 'Judul', 'Varietas Dominan', 'Lokasi Asal', 'Lokasi Tujuan', 'Rata-rata Ukuran (cm)', 'Kolam', 'Breeding', 'Petugas', 'Catatan', 'Galeri', 'ID Galeri']
+    const reportDateFromText = (value) => {
+      const typed = String(value || '').trim()
+      const iso = typed.match(/^(\d{4})-(\d{1,2})-(\d{1,2})/)
+      const dmy = typed.match(/^(\d{1,2})[\/.-](\d{1,2})[\/.-](\d{4})$/)
+      const long = typed.match(/^(\d{1,2})\s*-\s*\[?(\d{1,2})\]?[^\d]*-\s*(\d{4})$/)
+      const parts = iso ? iso.slice(1, 4) : dmy ? dmy.slice(1, 4).reverse() : long ? long.slice(1, 4).reverse() : null
+      if (!parts) return ''
+      const [year, month, day] = parts.map(Number)
+      const date = new Date(year, month - 1, day)
+      return date.getFullYear() === year && date.getMonth() === month - 1 && date.getDate() === day
+        ? `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`
+        : ''
+    }
+
+    // "Galeri" column: Ya / Tidak. Empty = Ya when the report arrives with documentation (ZIP), so the
+    // photos get a history in the Galeri menu; otherwise Tidak.
+    const reportGalleryFrom = (value, hasMedia) => {
+      const typed = String(value || '').trim().toLowerCase()
+      if (['ya', 'y', 'yes', 'true', '1'].includes(typed)) return true
+      if (['tidak', 't', 'no', 'false', '0'].includes(typed)) return false
+      return hasMedia
+    }
+
+    // "Ikan Datang" reports (Laporan Ikan Datang): the main sheet has their summary row; the fish lines
+    // (one row per jenis) go to an extra sheet "Ikan Datang", which is also the format the import reads.
+    const reportArrivalColumns = ['Tanggal', 'Nama Laporan', 'Ikan Dari', 'Jenis', 'Gender', 'Ukuran (cm)', 'Farm', 'Bloodline', 'Owner', 'Kolam Tujuan', 'Foto', 'Catatan', 'Kode Batch']
+    // Photo of a line: in the ZIP it is a file under dokumentasi/<kode>/, in a plain Excel file its upload URL.
+    const reportArrivalPhotoPath = (item, index, line) => `image/${window.KoiZip.safeName(item.batch_code || String(item.id), 'laporan')}/ikan/ikan-${String(index + 1).padStart(2, '0')}.${(String(line.image_url).split('?')[0].split('.').pop() || 'jpg').toLowerCase()}`
+    const reportArrivalRows = (chosen, zipMode = false) => chosen.filter((item) => item.report_type === 'ikan_datang').flatMap((item) =>
+      window.KoiArrival.linesOf(item).map((line, index) => [
+        String(item.report_date || '').slice(0, 10), item.report_title || '', item.origin_location || '', line.variety,
+        window.KoiArrival.genderLabels[line.gender], line.size_cm, line.farm, line.bloodline, line.owner, line.pond_name,
+        line.image_url ? (zipMode ? reportArrivalPhotoPath(item, index, line) : line.image_url) : '', item.notes || '', item.batch_code || '',
+      ]))
+    const reportArrivalPhotoFiles = (chosen) => chosen.filter((item) => item.report_type === 'ikan_datang').flatMap((item) =>
+      window.KoiArrival.linesOf(item).map((line, index) => (line.image_url ? { path: reportArrivalPhotoPath(item, index, line), url: line.image_url } : null)).filter(Boolean))
+
+    const exportReportsZip = async (chosen, rows) => {
+      const progress = window.KoiZip.progress('Unduh ZIP Laporan')
+      try {
+        const result = await window.KoiZip.exportPackage({
+          sheetName: 'Laporan',
+          header: reportExcelColumns,
+          rows,
+          keyHeader: 'Kode Batch',
+          xlsxName: 'data-laporan.xlsx',
+          extraSheets: reportArrivalRows(chosen, true).length ? [{ name: 'Ikan Datang', header: reportArrivalColumns, rows: reportArrivalRows(chosen, true), keyColumn: reportArrivalColumns.length - 1 }] : [],
+          extraFiles: reportArrivalPhotoFiles(chosen),
+          docs: chosen.map((item) => ({ key: item.batch_code || String(item.id), media: parseJson(item.media_entries) })),
+          onProgress: (text) => progress.set(text),
+        })
+        window.KoiZip.download(result.blob, `zip-laporan-${window.KoiZip.today()}.zip`)
+        window.KoiDock.showResult('Unduh ZIP Laporan', `Selesai: ${chosen.length} laporan, ${result.photos} foto, ${result.videos} video.`, result.problems)
+      } catch (error) {
+        window.KoiDock.showResult('Unduh ZIP Laporan', error.message || 'ZIP gagal dibuat.')
+      } finally {
+        progress.close()
+      }
+    }
+
+    const exportReportsExcel = (ids, zipMode = false) => {
+      if (!window.XLSX) {
+        window.KoiDock.showResult('Export Excel', 'Pustaka Excel belum termuat. Muat ulang halaman.')
+        return
+      }
+
+      const chosen = ids.length ? reportItems.filter((item) => ids.includes(String(item.id))) : dock.apply(reportItems)
+      if (!chosen.length) {
+        window.KoiDock.showResult('Export Excel', 'Belum ada laporan untuk diexport.')
+        return
+      }
+
+      const rows = chosen.map((item) => [
+        String(item.report_date || '').slice(0, 10),
+        item.batch_code || '',
+        labels[item.report_type] || (item.report_type === 'kegiatan' ? 'Kegiatan' : item.report_type === 'ikan_datang' ? 'Ikan Datang' : item.report_type || ''),
+        item.report_title || '',
+        item.dominant_variety || '',
+        item.origin_location || '',
+        item.destination_location || '',
+        item.average_length_cm ?? '',
+        parseJson(item.pond_entries).map((entry) => [entry.pond_name, entry.location].filter(Boolean).join(' -> ')).filter(Boolean).join(', ') || item.pond_name || '',
+        parseJson(item.breeding_entries).map((entry) => entry.label).filter(Boolean).join(', '),
+        parseJson(item.reporter_entries).map((entry) => entry.label || entry.name || entry.username).filter(Boolean).join(', ') || item.reporter || '',
+        item.notes || '',
+    item.gallery_id ? 'Ya' : 'Tidak',
+    item.gallery_id || '',
+  ])
+      if (zipMode) return exportReportsZip(chosen, rows)
+      const sheet = XLSX.utils.aoa_to_sheet([reportExcelColumns, ...rows])
+      sheet['!cols'] = reportExcelColumns.map((column) => ({ wch: Math.max(14, column.length + 2) }))
+      const workbook = XLSX.utils.book_new()
+      XLSX.utils.book_append_sheet(workbook, sheet, 'Laporan')
+      const arrivalRows = reportArrivalRows(chosen)
+      if (arrivalRows.length) {
+        const arrivalSheet = XLSX.utils.aoa_to_sheet([reportArrivalColumns, ...arrivalRows])
+        arrivalSheet['!cols'] = reportArrivalColumns.map((column) => ({ wch: Math.max(14, column.length + 2) }))
+        XLSX.utils.book_append_sheet(workbook, arrivalSheet, 'Ikan Datang')
+      }
+      const buffer = XLSX.write(workbook, { type: 'array', bookType: 'xlsx' })
+      const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' })
+      const link = document.createElement('a')
+      const objectUrl = URL.createObjectURL(blob)
+
+      link.href = objectUrl
+      link.download = `data-laporan-${new Date().toISOString().slice(0, 10)}.xlsx`
+      document.body.appendChild(link)
+      link.click()
+      link.remove()
+      setTimeout(() => URL.revokeObjectURL(objectUrl), 1000)
+    }
+
+    // Import makes NEW reports from the summary columns (Tanggal, Jenis, Judul, Varietas Dominan, Lokasi Asal/Tujuan,
+    // Rata-rata Ukuran, Catatan, Galeri). Kolam, Breeding and Petugas are export-only; fill in the details through the form.
+    // Laporan Ikan Datang comes from the sheet "Ikan Datang" (one row per fish).
+    // Mass input works in two passes: everything is checked first and shown as a preview (nothing is written),
+    // and only after "Lanjutkan" the reports are saved. A report that is already there (same code, or same type,
+    // date and title) is never created a second time.
+    const readReportsWorkbook = async (file) => {
+      const workbook = XLSX.read(await file.arrayBuffer(), { type: 'array', cellDates: true, dateNF: 'yyyy-mm-dd' })
+      const toRecords = (sheet) => XLSX.utils.sheet_to_json(sheet, { defval: '', raw: false }).map((row) => Object.fromEntries(Object.entries(row).map(([key, value]) => [String(key).trim().toLowerCase(), String(value ?? '').trim().replace(/^[-–—]+$/, '')])))
+      const records = toRecords(workbook.Sheets[workbook.SheetNames[0]])
+      const arrivalSheetName = workbook.SheetNames.find((name) => name.trim().toLowerCase() === 'ikan datang')
+      const arrivalFormat = records.length > 0 && 'ikan dari' in records[0]
+      const arrivalRecords = arrivalFormat ? records : arrivalSheetName ? toRecords(workbook.Sheets[arrivalSheetName]) : null
+      return { records, arrivalFormat, arrivalSheetName, arrivalRecords }
+    }
+
+    const runReportsImport = async (sheet, pkg, dryRun, progress) => {
+      const problems = []
+      let inserted = 0
+      let arrivalCreated = 0
+      let docsAdded = 0
+      let docsSkipped = 0
+      let docsPlanned = 0
+      let galleryCount = 0
+      const { records, arrivalFormat, arrivalSheetName, arrivalRecords } = sheet
+      const knownCodes = new Set(reportItems.map((item) => String(item.batch_code || '').toUpperCase()))
+      const typeFrom = (value) => ({ panen: 'panen', 'data ulang': 'data_ulang', data_ulang: 'data_ulang' })[String(value || '').trim().toLowerCase()] || ''
+      const dateOf = (item) => String(item.report_date || '').slice(0, 10)
+      // date + title alone is not enough: one day can have several reports with the same title (different ponds, different notes)
+      const reportKey = (type, date, title, origin, notes) => `${type}|${date}|${String(title || '').trim().toLowerCase()}|${String(origin || '').trim().toLowerCase()}|${String(notes || '').trim().toLowerCase()}`
+      const arrivalKey = (date, title, origin) => `${date}|${String(title || '').trim().toLowerCase()}|${String(origin || '').trim().toLowerCase()}`
+      const existingKeys = new Set(reportItems.filter((item) => item.report_type !== 'ikan_datang').map((item) => reportKey(item.report_type, dateOf(item), item.report_title, item.origin_location, item.notes)))
+      const existingArrivals = new Set(reportItems.filter((item) => item.report_type === 'ikan_datang').map((item) => arrivalKey(dateOf(item), item.report_title, item.origin_location)))
+
+      if (arrivalRecords && window.KoiArrival) {
+        const parsed = window.KoiArrival.importSheet(arrivalRecords, { knownCodes: [...knownCodes], dateFromText: reportDateFromText, pondByName: await window.KoiArrival.pondMap() })
+        problems.push(...parsed.problems)
+        for (const group of parsed.groups) {
+          if (pkg && group.code) pkg.markUsed(group.code)
+          const key = arrivalKey(group.date, group.title, group.origin)
+          if (existingArrivals.has(key)) {
+            problems.push(`${group.title}: laporan Ikan Datang dengan tanggal, nama, dan asal yang sama sudah ada, dilewati`)
+            continue
+          }
+          existingArrivals.add(key)
+          let docs = null
+          if (pkg) {
+            const found = await pkg.docsForRow(group.docsCell, group.code)
+            docs = found.docs
+            problems.push(...found.problems.map((message) => `${group.title}: ${message}`))
+          }
+          if (docs && docs.length) docsPlanned += docs.length
+          if (dryRun) {
+            arrivalCreated += 1
+            continue
+          }
+          let arrivalMedia = []
+          if (docs && docs.length) {
+            progress?.set(`${group.title}: ${docs.length} dokumentasi`)
+            const uploaded = await window.KoiZip.uploadEntries(docs, { imagePrefix: 'report-image', videoPrefix: 'report-video', existingUrls: [] })
+            problems.push(...uploaded.problems.map((message) => `${group.title}: ${message}`))
+            docsAdded += uploaded.entries.length
+            docsSkipped += uploaded.duplicates
+            arrivalMedia = uploaded.entries
+          }
+          problems.push(...(await window.KoiArrival.resolveLineImages(group, pkg)))
+          const galleryWantedArrival = reportGalleryFrom('', arrivalMedia.length > 0)
+          try {
+            const response = await fetch('/api/farm-reports', {
+              method: 'POST',
+              headers: { 'content-type': 'application/json' },
+              body: JSON.stringify(window.KoiArrival.payloadFor(group, { media_entries: arrivalMedia, show_in_gallery: galleryWantedArrival })),
+            })
+            if (response.ok) {
+              arrivalCreated += 1
+              if (galleryWantedArrival) galleryCount += 1
+            } else {
+              const result = await response.json().catch(() => ({}))
+              problems.push(`${group.title}: ${result.error || 'gagal disimpan'}`)
+            }
+          } catch {
+            problems.push(`${group.title}: gagal disimpan`)
+          }
+        }
+      }
+
+      for (const [index, record] of (arrivalFormat ? [] : records).entries()) {
+        const line = index + 2
+        const code = (record['kode batch'] || '').toUpperCase()
+        if (pkg && code) pkg.markUsed(code)
+        const bad = []
+        const date = reportDateFromText(record.tanggal)
+        const type = typeFrom(record.jenis)
+        if (String(record.jenis || '').trim().toLowerCase() === 'ikan datang') {
+          if (!arrivalSheetName) problems.push(`Baris ${line}: Laporan Ikan Datang diimport lewat sheet "Ikan Datang" (satu baris per ekor ikan)`)
+          continue
+        }
+
+        if (code && knownCodes.has(code)) {
+          problems.push(`Baris ${line} (${code}): laporan dengan kode ini sudah ada, dilewati`)
+          continue
+        }
+        if (!date) bad.push(record.tanggal ? `Tanggal "${record.tanggal}" tidak valid` : 'Tanggal wajib diisi')
+        if (!type) bad.push(String(record.jenis || '').toLowerCase() === 'kegiatan' ? 'Laporan Kegiatan tidak bisa diimport, buat lewat formulir' : `Jenis "${record.jenis}" tidak dikenal (Panen atau Data Ulang)`)
+        if (!record.judul) bad.push('Judul wajib diisi')
+        if (bad.length) {
+          problems.push(`Baris ${line}${code ? ` (${code})` : ''}: ${bad.join('; ')}`)
+          continue
+        }
+        const key = reportKey(type, date, record.judul, record['lokasi asal'], record.catatan)
+        if (existingKeys.has(key)) {
+          problems.push(`Baris ${line}${code ? ` (${code})` : ''}: laporan "${record.judul}" tanggal ${date} (${type === 'panen' ? 'Panen' : 'Data Ulang'}) sudah ada, dilewati`)
+          continue
+        }
+        existingKeys.add(key)
+
+        // Dokumentasi cell: folder(s) of the ZIP and/or @ID of media that is already in the Galeri
+        let docs = null
+        if (pkg) {
+          const found = await pkg.docsForRow(record.dokumentasi, code)
+          docs = found.docs
+          problems.push(...found.problems.map((message) => `Baris ${line}${code ? ` (${code})` : ''}: ${message}`))
+        }
+        if (docs && docs.length) docsPlanned += docs.length
+        if (dryRun) {
+          inserted += 1
+          continue
+        }
+
+        // Documentation from a ZIP: the photos/videos for this Kode Batch (files, or media mentioned by ID Media)
+        // become the new report's media.
+        let importedMedia = []
+        if (docs && docs.length) {
+          progress?.set(`Baris ${line}: ${docs.length} dokumentasi`)
+          const uploaded = await window.KoiZip.uploadEntries(docs, { imagePrefix: 'report-image', videoPrefix: 'report-video', existingUrls: [] })
+          problems.push(...uploaded.problems.map((message) => `Baris ${line} (${code}): ${message}`))
+          docsAdded += uploaded.entries.length
+          docsSkipped += uploaded.duplicates
+          importedMedia = uploaded.entries
+        }
+        const galleryWanted = reportGalleryFrom(record.galeri, importedMedia.length > 0)
+        try {
+          const response = await fetch('/api/farm-reports', {
+            method: 'POST',
+            headers: { 'content-type': 'application/json' },
+            body: JSON.stringify({
+              report_type: type,
+              report_date: date,
+              report_title: record.judul,
+              dominant_variety: record['varietas dominan'],
+              origin_location: record['lokasi asal'],
+              destination_location: record['lokasi tujuan'],
+              average_length_cm: record['rata-rata ukuran (cm)'],
+              notes: record.catatan,
+              media_entries: importedMedia,
+              show_in_gallery: galleryWanted,
+            }),
+          })
+          if (response.ok) {
+            inserted += 1
+            if (galleryWanted) galleryCount += 1
+          } else {
+            const result = await response.json().catch(() => ({}))
+            problems.push(`Baris ${line}: ${result.error || 'gagal disimpan'}`)
+          }
+        } catch {
+          problems.push(`Baris ${line}: gagal disimpan`)
+        }
+      }
+
+      if (pkg) {
+        for (const key of pkg.unusedKeys()) problems.push(`Folder dokumentasi "${key}" tidak dipakai: tidak ada baris data yang memakainya`)
+      }
+      return { inserted, arrivalCreated, docsAdded, docsSkipped, docsPlanned, galleryCount, problems }
+    }
+
+    const importReportsExcel = async (file) => {
+      if (!window.XLSX) {
+        window.KoiDock.showResult('Import Excel', 'Pustaka Excel belum termuat. Muat ulang halaman.')
+        return
+      }
+
+      let progress = null
+      try {
+        progress = window.KoiZip.progress('Memeriksa file Laporan')
+        let pkg = null
+        const packageProblems = []
+        if (/\.zip$/i.test(file.name)) {
+          pkg = await window.KoiZip.readPackage(file)
+          file = pkg.xlsxFile
+          packageProblems.push(...pkg.problems)
+        } else {
+          pkg = await window.KoiZip.plainPackage()
+        }
+        const sheet = await readReportsWorkbook(file)
+        if (!sheet.records.length) {
+          window.KoiDock.showResult('Import Excel', 'File tidak berisi data. Kolom yang dikenali: ' + reportExcelColumns.join(', ') + '.')
+          return
+        }
+
+        // pass 1: check everything, write nothing
+        const plan = await runReportsImport(sheet, pkg, true, progress)
+        progress.close()
+        progress = null
+        const planProblems = [...packageProblems, ...plan.problems]
+        if (!plan.inserted && !plan.arrivalCreated) {
+          window.KoiDock.showResult('Import Excel Laporan', 'Tidak ada laporan yang bisa diimport.', planProblems)
+          return
+        }
+        const summary = `Laporan baru: ${plan.inserted}` + (plan.arrivalCreated ? `\nLaporan Ikan Datang baru: ${plan.arrivalCreated}` : '') +
+          (pkg.isZip || plan.docsPlanned ? `\nDokumentasi: ${plan.docsPlanned} file (masuk Galeri kecuali kolom Galeri = Tidak)` : '') +
+          (planProblems.length ? '\nBaris atau file bermasalah dilewati.' : '')
+        const go = await window.KoiDock.showResult('Pratinjau import Laporan', summary, planProblems, { confirm: true, okLabel: planProblems.length ? 'Lanjutkan (lewati yang bermasalah)' : 'Lanjutkan' })
+        if (!go) return
+
+        // pass 2: write
+        progress = window.KoiZip.progress('Import Laporan')
+        const result = await runReportsImport(sheet, pkg, false, progress)
+        const allProblems = [...packageProblems, ...result.problems]
+        window.KoiDock.showResult('Import Excel Laporan', `Laporan baru ${result.inserted}${result.arrivalCreated ? `, Ikan Datang baru ${result.arrivalCreated}` : ''}, bermasalah ${allProblems.length}.${pkg.isZip || result.docsPlanned ? ` Dokumentasi ditambahkan ${result.docsAdded}, sudah ada ${result.docsSkipped}. Masuk Galeri ${result.galleryCount}.` : ''} Rincian kolam, kondisi, sortir, spektrum, dan data lain diisi lewat formulir.`, allProblems)
+        await loadReports()
+      } catch (error) {
+        window.KoiDock.showResult('Import Excel Laporan', error.message || 'File tidak dapat dibaca.')
+      } finally {
+        progress?.close()
+      }
+    }
+
+    const reportImportInput = document.createElement('input')
+    reportImportInput.type = 'file'
+    reportImportInput.accept = '.xlsx,.xls,.zip'
+    reportImportInput.hidden = true
+    reportImportInput.addEventListener('change', async () => {
+      const [file] = Array.from(reportImportInput.files || [])
+      reportImportInput.value = ''
+      if (file) await importReportsExcel(file)
+    })
+    document.body.appendChild(reportImportInput)
+
+    const deleteReportsBatch=async(ids)=>{const titles=ids.map((id)=>{const report=reportItems.find((item)=>String(item.id)===String(id));return report?.report_title||report?.batch_code}).filter(Boolean);if(!(await window.KoiDialog.confirm(`Hapus ${ids.length} laporan (${titles.join(', ')})?`)))return;const failed=[];for(const id of ids){try{const response=await fetch(`${apiUrl}/farm-reports/${id}`,{method:'DELETE'});if(!response.ok)failed.push(id)}catch{failed.push(id)}}dock.clear();await loadReports();if(failed.length)alert(`${failed.length} laporan gagal dihapus.`)}
+    // DEAD CODE (diperiksa 2026-10-14): chooseReportType tidak dipanggil di mana pun. Aman dihapus; sengaja belum dihapus.
+    const chooseReportType=()=>{document.querySelector('[data-report-type-chooser]')?.remove();const overlay=document.createElement('div');overlay.setAttribute('data-report-type-chooser','');overlay.style.cssText='position:fixed;inset:0;z-index:4900;display:flex;align-items:center;justify-content:center;padding:16px;background:rgba(0,0,0,.6)';overlay.innerHTML='<div class="card" style="max-width:26rem;width:100%"><div class="card-header"><h3 class="card-title">Tambah Laporan</h3><div class="card-actions"><button type="button" class="btn-close" data-close-chooser aria-label="Tutup"></button></div></div><div class="list-group list-group-flush"><button type="button" class="list-group-item list-group-item-action" data-choose="perikanan"><div class="fw-medium">Laporan Perikanan</div><div class="small text-secondary">Data ulang / panen: jumlah, ukuran, spektrum, validasi.</div></button><button type="button" class="list-group-item list-group-item-action" data-choose="kegiatan"><div class="fw-medium">Laporan Kegiatan</div><div class="small text-secondary">Pakan, ganti air, pengobatan, bersih kolam, pindah ikan, perbaikan.</div></button></div></div>';overlay.addEventListener('click',(event)=>{const choice=event.target.closest('[data-choose]');if(choice){overlay.remove();const target=choice.dataset.choose==='kegiatan'?(document.querySelector('[data-report-open-activity]')||document.querySelector('[data-report-open]')):document.querySelector('[data-report-open]');target?.click();return}if(event.target===overlay||event.target.closest('[data-close-chooser]'))overlay.remove()});document.body.appendChild(overlay)}
+    document.addEventListener('keydown',(event)=>{if(event.key==='Escape')document.querySelector('[data-report-type-chooser]')?.remove()})
+    const dock=window.KoiDock.create({root:reportTable,label:'laporan',idOf:(item)=>String(item.id),visibleItems:()=>dock.apply(reportItems.filter(rdReportMatches)),render:()=>renderReports(reportItems),actions:[{key:'edit',icon:'edit',title:'Edit laporan terpilih',role:'farm-operate',show:(count)=>count===1,onClick:(ids)=>{document.querySelector(`[data-dock-id="${ids[0]}"] [data-edit-report]`)?.click()}},{key:'copy',icon:'copy',title:'Salin kode batch terpilih',onClick:async(ids,button)=>{const codes=ids.map((id)=>reportItems.find((item)=>String(item.id)===String(id))?.batch_code).filter(Boolean);const copied=await window.KoiDock.copyText(codes.join('\n'));button.classList.remove('btn-outline-primary');button.classList.add(copied?'btn-success':'btn-danger');button.setAttribute('title',copied?'Kode batch tersalin':'Kode batch gagal disalin');setTimeout(()=>{button.classList.remove('btn-success','btn-danger');button.classList.add('btn-outline-primary');button.setAttribute('title','Salin kode batch terpilih')},1200)}},{key:'print',icon:'printer',variant:'secondary',title:(count)=>count>1?`Cetak ${count} laporan terpilih (satu halaman per laporan)`:'Cetak laporan terpilih',show:(count)=>count>=1,onClick:(ids)=>{const clickPrint=(id)=>document.querySelector(`[data-dock-id="${id}"] [data-print-report]`)?.click();if(ids.length>1)window.KoiPrint.printMany(ids,clickPrint,{title:`Laporan terpilih (${ids.length})`});else clickPrint(ids[0])}},{key:'delete',icon:'trash',variant:'danger',title:(count)=>`Hapus ${count} laporan terpilih`,role:'farm-operate',onClick:(ids)=>deleteReportsBatch(ids)},{key:'export',icon:'file-spreadsheet',variant:'success',title:(count)=>(count?`Export Excel (${count} terpilih)`:'Export Excel'),always:true,onClick:(ids)=>exportReportsExcel(ids)},{key:'zip',icon:'file-zip',variant:'success',title:(count)=>(count?`Unduh ZIP (${count} terpilih)`:'Unduh ZIP (Excel + dokumentasi)'),always:true,onClick:(ids)=>exportReportsExcel(ids,true)},{key:'import',icon:'upload',variant:'success',title:'Import Excel atau ZIP',role:'farm-operate',always:true,show:(count)=>count===0,onClick:()=>reportImportInput.click()}],add:{title:'Tambah laporan',role:'farm-operate',onClick:()=>document.querySelector('[data-report-open]').click()}})
+
+// the navbar search feeds the hidden [data-report-search] input
+;(function () {
+  var box = document.querySelector('[data-report-search]')
+  var navbar = document.querySelector('#navbar-global-search')
+  if (navbar) {
+    navbar.setAttribute('placeholder', 'Kode, judul, kolam, jenis:panen')
+    navbar.setAttribute('title', 'Cari bebas: kode, judul, jenis, varietas, asal, tujuan, kolam, breeding, petugas. Cari per kolom dengan kolom:isi, boleh digabung: jenis:panen kolam:mudpond catatan:habis. Nama kolom boleh disingkat (misalnya jen:panen). Kolom: kode, judul, jenis, tanggal, varietas, asal, tujuan, kolam, breeding, petugas, ukuran, catatan, galeri.')
+  }
+  if (box) box.addEventListener('input', function () { rdReportSearch = box.value.trim(); renderReports(reportItems) })
+})()
+    reportTable.addEventListener('click',async(event)=>{const copyCodeButton=event.target.closest('[data-copy-report-code]');if(copyCodeButton){event.preventDefault();event.stopPropagation();const originalText=copyCodeButton.textContent;const copied=await window.KoiDock.copyText(copyCodeButton.dataset.copyReportCode);copyCodeButton.setAttribute('title',copied?'Kode Batch tersalin':'Kode Batch gagal disalin');copyCodeButton.classList.toggle('is-copied',copied);copyCodeButton.classList.toggle('is-copy-failed',!copied);copyCodeButton.textContent=copied?'Tersalin':'Gagal';setTimeout(()=>{copyCodeButton.textContent=originalText;copyCodeButton.classList.remove('is-copied','is-copy-failed')},1000);return}const selectArea=event.target.closest('[data-dock-select]');if(selectArea){dock.toggle(selectArea.closest('[data-dock-id]').dataset.dockId);return}const printButton=event.target.closest('[data-print-report]');if(printButton){event.stopPropagation();const report=reportItems.find((item)=>String(item.id)===String(printButton.dataset.printReport));if(report)printReportRich(report);return}const editButton=event.target.closest('[data-edit-report]');if(editButton){event.stopPropagation();const report=reportItems.find((item)=>String(item.id)===String(editButton.dataset.editReport));if(report)showReportEdit(report);return}const deleteButton=event.target.closest('[data-delete-report]');if(deleteButton){event.stopPropagation();const report=reportItems.find((item)=>String(item.id)===String(deleteButton.dataset.deleteReport));if(!report)return;const title=report.report_title||formatDate(report.report_date)||'laporan ini';if(!(await window.KoiDialog.confirm(`Hapus ${title}?`)))return;deleteButton.disabled=true;deleteButton.textContent='Menghapus';try{const response=await fetch(`${apiUrl}/farm-reports/${deleteButton.dataset.deleteReport}`,{method:'DELETE'});const data=await response.json().catch(()=>({}));if(!response.ok)throw new Error(data.error||data.detail||'Laporan gagal dihapus');await loadReports()}catch(error){alert(error.message);deleteButton.disabled=false;deleteButton.textContent='Hapus'}return}if(event.target.closest('.dropdown')){event.stopPropagation();return}const row=event.target.closest('[data-report-id]');const report=reportItems.find((item)=>String(item.id)===String(row?.dataset.reportId));if(report)showReportDetail(report)})
+    reportTable.addEventListener('keydown',(event)=>{if(event.key!=='Enter'&&event.key!==' ')return;const row=event.target.closest('[data-report-id]');if(event.target!==row)return;const report=reportItems.find((item)=>String(item.id)===row?.dataset.reportId);if(report){event.preventDefault();showReportDetail(report)}})
+    form.addEventListener('submit',async(event)=>{event.preventDefault();errorBox.classList.add('d-none');successBox.classList.add('d-none');submitButton.disabled=true;submitButton.textContent='Menyimpan...';const payload={report_type:new FormData(form).get('report_type'),report_date:form.elements.report_date.value,batch_code:form.elements.batch_code.value,report_title:form.elements.report_title.value,dominant_variety:form.elements.dominant_variety.value,origin_location:form.elements.origin_location.value,destination_location:form.elements.destination_location.value,average_length_cm:form.elements.average_length_cm.value,notes:form.elements.notes.value,pond_entries:getPondEntries(),condition_entries:getConditionEntries(),sorting_entries:getSortingEntries(),breeding_entries:getLinkedEntries(breedingEntryList,'breeding'),koi_entries:getLinkedEntries(koiEntryList,'koi'),reporter_entries:getAccountEntries(),media_entries:collectMediaEntries(),spectrum_sizes:getSpectrumSizes(),spectrum_summary:getSpectrumSummary(),validation_checks:[...document.querySelectorAll('[data-validation-check]:checked')].map((item)=>item.value),show_in_gallery:Boolean(form.elements.show_in_gallery?.checked)};try{const response=await fetch(`${apiUrl}/farm-reports${editingReportId?`/${editingReportId}`:''}`,{method:editingReportId?'PUT':'POST',headers:{'content-type':'application/json'},body:JSON.stringify(payload)});const data=await response.json().catch(()=>({}));if(!response.ok)throw new Error(data.error||data.detail||'Laporan gagal disimpan');const wasEditing=Boolean(editingReportId);await loadReports();reportDrafts?.consume();if(!wasEditing){resetForm();hideForm()}}catch(error){errorBox.textContent=error.message;errorBox.classList.remove('d-none')}finally{submitButton.disabled=false;submitButton.textContent=editingReportId?'Simpan Perubahan':'Simpan Laporan'}})
+    reportDate.valueAsDate=new Date();renderSpectrum();restoreReportCache();loadReports();loadOptions().catch(()=>{});window.KoiAuth?.registerRealtimeRefresh(()=>loadReports(true),{intervalMs:30000})
+    // Fish photos in report rows/detail open the shared photo preview.
+    document.head.insertAdjacentHTML('beforeend','<style>.report-parent-chip img{cursor:zoom-in}</style>')
+    document.addEventListener('click',(event)=>{const chipPhoto=event.target.closest('.report-parent-chip img');if(chipPhoto)window.KoiAuth.zoomPhoto(chipPhoto.src,chipPhoto.alt)})
+  </script>
+  <script is:inline src="/assets/activity-report.js?v=20261024a"></script>
+  <script is:inline src="/assets/arrival-report.js?v=20261019a"></script>
+</DefaultLayout>
+

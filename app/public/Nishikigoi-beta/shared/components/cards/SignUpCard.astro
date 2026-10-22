@@ -1,0 +1,106 @@
+---
+---
+
+<form class="card card-md" action="./sign-in.html" method="get" novalidate data-signup-form>
+  <div class="card-body">
+    <h2 class="card-title text-center mb-4">Buat akun baru</h2>
+    <div class="alert alert-danger d-none" role="alert" data-signup-message></div>
+
+    <div class="mb-3">
+      <label class="form-label" for="signup-name">Nama</label>
+      <input type="text" id="signup-name" class="form-control" placeholder="Nama lengkap" autocomplete="name" />
+    </div>
+    <div class="mb-3">
+      <label class="form-label" for="signup-email">Alamat email <span class="text-secondary fw-normal">(opsional)</span></label>
+      <input type="email" id="signup-email" class="form-control" placeholder="Alamat email" autocomplete="email" />
+    </div>
+    <div class="mb-3">
+      <label class="form-label" for="signup-phone">Nomor telepon <span class="text-secondary fw-normal">(opsional)</span></label>
+      <input type="tel" id="signup-phone" class="form-control" placeholder="Contoh: 0812 3456 7890" autocomplete="tel" inputmode="tel" />
+    </div>
+    <div class="mb-3">
+      <label class="form-label" for="signup-username">Username</label>
+      <input type="text" id="signup-username" class="form-control" placeholder="username" autocomplete="username" />
+    </div>
+    <div class="mb-3">
+      <label class="form-label" for="signup-password">Kata sandi</label>
+      <div class="input-group">
+        <input type="password" class="form-control" placeholder="Kata sandi" autocomplete="new-password" id="signup-password" />
+        <button type="button" class="btn" title="Tampilkan kata sandi" aria-label="Tampilkan kata sandi" aria-pressed="false" data-password-toggle="signup-password">
+          <span class="icon-toggle-show">Show</span><span class="icon-toggle-hide d-none">Hide</span>
+        </button>
+      </div>
+    </div>
+    <div class="mb-3">
+      <label class="form-check">
+        <input type="checkbox" class="form-check-input" />
+        <span class="form-check-label">Saya setuju dengan <a href="./license.html">ketentuan dan lisensi</a>.</span>
+      </label>
+    </div>
+
+    <div class="form-footer">
+      <button type="submit" class="btn btn-primary w-100">Buat akun</button>
+    </div>
+  </div>
+</form>
+
+<div class="text-center text-secondary mt-3">
+  Sudah punya akun? <a href="./sign-in.html">Masuk</a>
+</div>
+
+<script is:inline>
+  // @ts-nocheck
+  ;(function () {
+    var form = document.querySelector('[data-signup-form]')
+    if (!form) return
+    var box = document.querySelector('[data-signup-message]')
+    var button = form.querySelector('button[type="submit"]')
+
+    function show(text, ok) {
+      if (!box) return
+      box.textContent = text
+      box.classList.remove('d-none', 'alert-danger', 'alert-success')
+      box.classList.add(ok ? 'alert-success' : 'alert-danger')
+    }
+    function value(id) {
+      var el = document.getElementById(id)
+      return el ? el.value.trim() : ''
+    }
+
+    form.addEventListener('submit', async function (event) {
+      event.preventDefault()
+      var name = value('signup-name')
+      var email = value('signup-email')
+      var phone = value('signup-phone')
+      var username = value('signup-username').toLowerCase()
+      var passwordInput = document.getElementById('signup-password')
+      var password = passwordInput ? passwordInput.value : ''
+
+      if (!name || !username || !password) {
+        show('Nama, username, dan kata sandi wajib diisi.')
+        return
+      }
+      if (password.length < 6) {
+        show('Kata sandi minimal 6 karakter.')
+        return
+      }
+
+      if (button) button.disabled = true
+      try {
+        var response = await fetch('/api/auth/register', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ name: name, username: username, email: email, phone: phone, password: password }),
+        })
+        var data = await response.json().catch(function () { return {} })
+        if (!response.ok) throw new Error(data.error || 'Akun gagal dibuat.')
+        form.reset()
+        form.querySelectorAll('input').forEach(function (input) { input.disabled = true })
+        show('Pendaftaran berhasil. Akun Anda menunggu diaktifkan oleh Master Admin; setelah aktif, Anda bisa masuk.', true)
+      } catch (error) {
+        show(error.message || 'Akun gagal dibuat.')
+        if (button) button.disabled = false
+      }
+    })
+  })()
+</script>

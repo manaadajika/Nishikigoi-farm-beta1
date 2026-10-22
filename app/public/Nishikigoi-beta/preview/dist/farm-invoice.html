@@ -1,0 +1,3434 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <!-- BEGIN META -->
+    <meta charset="utf-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, viewport-fit=cover"
+    />
+    <meta name="color-scheme" content="light dark" />
+    <meta http-equiv="X-UA-Compatible" content="ie=edge" />
+
+    <title>Invoice - Nishikigoi</title>
+
+    <link
+      rel="icon"
+      href="/api/favicon?v=2"
+      data-brand-favicon
+    />
+    <link
+      rel="shortcut icon"
+      href="/api/favicon?v=2"
+      data-brand-favicon
+    />
+    <script>
+      (() => {
+        try {
+          const settings =
+            JSON.parse(
+              localStorage.getItem("nishikigoi-app-settings") || "null",
+            ) || {};
+          const icon = String(settings.brand_favicon || settings.brand_icon || "").trim();
+          if (!icon) return;
+          document.querySelectorAll("[data-brand-favicon]").forEach((link) => {
+            link.href = icon;
+            link.type = icon.startsWith("data:image/png")
+              ? "image/png"
+              : icon.startsWith("data:image/svg")
+                ? "image/svg+xml"
+                : icon.startsWith("data:image/webp")
+                  ? "image/webp"
+                  : "image/x-icon";
+          });
+        } catch {}
+      })();
+    </script>
+    <!-- END META -->
+
+    <!-- BEGIN GLOBAL MANDATORY STYLES -->
+    <link href="./dist/css/tabler.css" rel="stylesheet" />
+    <!-- END GLOBAL MANDATORY STYLES -->
+
+    <!-- BEGIN PLUGINS STYLES -->
+    <link href="./dist/css/tabler-flags.css" rel="stylesheet" />
+    <link href="./dist/css/tabler-socials.css" rel="stylesheet" />
+    <link href="./dist/css/tabler-payments.css" rel="stylesheet" />
+    <link href="./dist/css/tabler-vendors.css" rel="stylesheet" />
+    <link href="./dist/css/tabler-marketing.css" rel="stylesheet" />
+    <link href="./dist/css/tabler-themes.css" rel="stylesheet" />
+    <!-- END PLUGINS STYLES -->
+
+    <!-- BEGIN DEMO STYLES -->
+    <link href="./preview/css/demo.css" rel="stylesheet" />
+    <!-- END DEMO STYLES -->
+
+    <!-- BEGIN CUSTOM FONT -->
+
+    <style>
+      @import url("https://rsms.me/inter/inter.css");
+    </style>
+    <!-- END CUSTOM FONT -->
+    <style>
+      .breeding-parent-preview {
+        min-height: 0;
+      }
+      .breeding-parent-photo {
+        aspect-ratio: 2/3;
+        border: 1px solid var(--tblr-border-color);
+        background: var(--tblr-bg-surface-secondary);
+        border-radius: 6px;
+        flex: none;
+        width: 72px;
+        overflow: hidden;
+      }
+      .breeding-parent-photo img {
+        object-fit: cover;
+        width: 100%;
+        height: 100%;
+      }
+      .breeding-parent-photo-button {
+        cursor: zoom-in;
+        background: 0 0;
+        border: 0;
+        padding: 0;
+      }
+      .breeding-parent-placeholder {
+        width: 100%;
+        height: 100%;
+        color: var(--tblr-secondary);
+        text-align: center;
+        padding: 0.35rem;
+        font-size: 0.68rem;
+        line-height: 1.15;
+      }
+      .breeding-parent-size {
+        width: 72px;
+        max-width: 100%;
+      }
+      .breeding-parent-size .form-label {
+        text-align: center;
+        display: block;
+      }
+      .breeding-parent-size .form-control {
+        text-align: center;
+        padding-left: 0.25rem;
+        padding-right: 0.25rem;
+      }
+      .breeding-parent-size .form-control::-webkit-outer-spin-button {
+        appearance: none;
+        margin: 0;
+      }
+      .breeding-parent-size .form-control::-webkit-inner-spin-button {
+        appearance: none;
+        margin: 0;
+      }
+      .breeding-parent-size .form-control[type="number"] {
+        appearance: textfield;
+      }
+      .breeding-parent-search-wrap {
+        position: relative;
+      }
+      .breeding-parent-suggestions {
+        z-index: 1080;
+        background: var(--tblr-bg-surface);
+        border: 1px solid var(--tblr-border-color);
+        max-height: 240px;
+        box-shadow: var(--tblr-box-shadow-dropdown);
+        border-radius: 6px;
+        position: absolute;
+        top: calc(100% + 4px);
+        left: 0;
+        right: 0;
+        overflow-y: auto;
+      }
+      .breeding-parent-suggestion {
+        border: 0;
+        border-bottom: 1px solid var(--tblr-border-color);
+        width: 100%;
+        color: inherit;
+        text-align: left;
+        background: 0 0;
+      }
+      .breeding-parent-suggestion:last-child {
+        border-bottom: 0;
+      }
+      .breeding-parent-suggestion:hover,
+      .breeding-parent-suggestion:focus {
+        background: var(--tblr-bg-surface-secondary);
+      }
+      [data-parent-entry="male"] {
+        border-top: 2px solid var(--tblr-border-color);
+        margin-top: 0.75rem;
+        padding-top: 1rem;
+      }
+      [data-parent-entry="male"]:first-child {
+        border-top: 0;
+        padding-top: 0;
+      }
+      [data-pond-entry] {
+        border-top: 2px solid var(--tblr-border-color);
+        margin-top: 0.85rem;
+        padding-top: 0.85rem;
+      }
+      [data-pond-entry]:first-child {
+        border-top: 0;
+        margin-top: 0;
+        padding-top: 0;
+      }
+      .breeding-mention-wrap {
+        position: relative;
+      }
+      .breeding-zoom {
+        z-index: 2000;
+        background: #0f172ad1;
+        justify-content: center;
+        align-items: center;
+        padding: 1rem;
+        display: flex;
+        position: fixed;
+        inset: 0;
+      }
+      .breeding-zoom img {
+        background: var(--tblr-bg-surface);
+        object-fit: contain;
+        border-radius: 8px;
+        max-width: min(92vw, 720px);
+        max-height: 86vh;
+      }
+      .breeding-zoom-close {
+        z-index: 2001;
+        position: fixed;
+        top: 1rem;
+        right: 1rem;
+      }
+
+    .breeding-card {
+      border: 1px solid var(--tblr-border-color);
+            transition: border-color .15s ease;
+    }
+
+    .breeding-card:hover {
+      border-color: var(--tblr-primary);
+    }
+
+    .breeding-card .card-body {
+      padding: .75rem;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .breeding-card-actions {
+      display: flex;
+      gap: .5rem;
+      margin-top: auto;
+      padding-top: .75rem;
+    }
+
+    .breeding-card-actions .btn {
+      flex: 1 1 0;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: .35rem;
+      min-width: 0;
+    }
+
+    .breeding-card-photo {
+      position: relative;
+      display: block;
+      width: 100%;
+      aspect-ratio: 2 / 3;
+      min-height: 220px;
+      border-radius: 0;
+      background: var(--tblr-bg-surface-secondary);
+      overflow: hidden;
+      cursor: pointer;
+    }
+
+    .breeding-zoom-btn {
+      position: absolute;
+      top: .5rem;
+      right: .5rem;
+      z-index: 1;
+      background: rgba(15, 23, 42, .62);
+      border: 0;
+      color: #fff;
+    }
+
+    .breeding-card .card-body[data-breeding-id],
+    .breeding-card-head[data-breeding-id] {
+      cursor: pointer;
+    }
+
+    /* kode, nama sesi, status, and tanggal sit above the photo of the female parent */
+    .breeding-card-head {
+      padding: var(--tblr-card-spacer-y, 1rem) var(--tblr-card-spacer-x, 1rem) .75rem;
+      border-radius: calc(var(--tblr-card-border-radius, 8px) - 1px) calc(var(--tblr-card-border-radius, 8px) - 1px) 0 0;
+    }
+
+    .breeding-card-photo img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .breeding-card-title,
+    .breeding-card-cell {
+      min-width: 0;
+    }
+
+    .breeding-code-copy {
+
+      display: block;
+
+      max-width: 100%;
+
+      border: 0;
+
+      background: transparent;
+
+      color: inherit;
+
+      font: inherit;
+
+      font-weight: 600;
+
+      padding: 0;
+
+      text-align: left;
+
+      cursor: pointer;
+
+      user-select: none;
+
+    }
+
+
+    .breeding-code-copy:hover {
+
+      color: var(--tblr-primary);
+
+    }
+
+
+    .breeding-code-copy.is-copied {
+
+      color: var(--tblr-success);
+
+    }
+
+
+    .breeding-code-copy.is-copy-failed {
+
+      color: var(--tblr-danger);
+
+    }
+
+
+    .breeding-ellipsis {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .breeding-male-thumbs {
+      display: flex;
+      justify-content: center;
+      gap: .35rem;
+      margin-top: .15rem;
+    }
+    .breeding-male-thumb {
+      position: relative;
+      width: 100%;
+      min-width: 0;
+      flex: 0 0 calc((100% - 3 * .35rem) / 4);
+
+      aspect-ratio: 2 / 3;
+      padding: 0;
+      border: 1px solid var(--tblr-border-color);
+      border-radius: 6px;
+      background: var(--tblr-bg-surface-secondary);
+      overflow: hidden;
+      cursor: zoom-in;
+    }
+
+
+    .breeding-male-thumb-wide {
+      width: 100%;
+      max-width: none;
+    }
+
+    .breeding-male-thumb img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .breeding-male-code {
+      display: block;
+      padding: .2rem;
+      font-size: .6rem;
+      line-height: 1.1;
+      color: var(--tblr-secondary);
+      word-break: break-all;
+    }
+
+    .breeding-male-more {
+      cursor: pointer;
+    }
+
+    .breeding-male-more img {
+      filter: brightness(.45);
+    }
+
+    .breeding-male-more-count {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #fff;
+      font-weight: 700;
+      font-size: .95rem;
+    }
+
+      .breeding-table-wrap {
+        overflow: visible;
+      }
+      .breeding-actions-menu {
+        z-index: 1085;
+      }
+      @media (width<=991.98px) {
+        .breeding-table-wrap {
+          padding-bottom: 4.5rem;
+          overflow: auto visible;
+        }
+        .breeding-actions-dropdown .dropdown-menu.show {
+          min-width: 150px;
+          position: fixed !important;
+          inset: auto 1rem 1rem auto !important;
+          transform: none !important;
+        }
+      }
+      .koi-print-root {
+        display: none;
+      }
+      @media print {
+        body.koi-printing {
+          background: #fff !important;
+        }
+        body.koi-printing > :not(.koi-print-root) {
+          display: none !important;
+        }
+        body.koi-printing .koi-print-root {
+          color: #172033 !important;
+          background: #fff !important;
+          width: 100% !important;
+          min-height: auto !important;
+          margin: 0 !important;
+          padding: 0 !important;
+          display: block !important;
+          position: static !important;
+        }
+      }
+      .nishikigoi-brand-link[data-astro-cid-flr2tpzy],
+      .nishikigoi-brand-link[data-astro-cid-flr2tpzy]:hover,
+      .nishikigoi-brand-link[data-astro-cid-flr2tpzy]:focus {
+        text-decoration: none;
+      }
+      .nishikigoi-brand-custom-icon[data-astro-cid-flr2tpzy] {
+        object-fit: contain;
+        border-radius: 8px;
+        width: 32px;
+        height: 32px;
+      }
+      @media (width<=767.98px) {
+        .nishikigoi-brand-link[data-astro-cid-flr2tpzy] .navbar-brand-text {
+          display: none;
+        }
+      }
+    </style>
+    <link rel="stylesheet" href="/_astro/DefaultLayout.d0930n1.css" />
+      <link rel="manifest" href="/api/manifest" />
+  <style>
+    .invoice-card { overflow: hidden; }
+    .invoice-card-top { display: flex; align-items: center; justify-content: space-between; gap: .5rem; padding: .75rem 1rem; border-bottom: 1px solid var(--tblr-border-color); cursor: pointer; }
+    .invoice-card .card-body[data-invoice-id] { cursor: pointer; }
+    .invoice-total { font-size: 1.2rem; font-weight: 700; }
+    .invoice-ellipsis { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .invoice-filter-chip { cursor: pointer; }
+    .invoice-line { display: grid; grid-template-columns: minmax(0, 1fr) 90px 150px 130px 40px; gap: .5rem; align-items: center; }
+    .invoice-line-head { font-size: .75rem; text-transform: uppercase; color: var(--tblr-secondary); }
+    .invoice-line-total { text-align: right; font-weight: 600; white-space: nowrap; }
+    @media (max-width: 767.98px) {
+      .invoice-line { grid-template-columns: 1fr 1fr; }
+      .invoice-line > :first-child { grid-column: 1 / -1; }
+      .invoice-line-head { display: none; }
+    }
+    .invoice-picker { position: relative; }
+    .invoice-picker-menu { position: absolute; left: 0; right: 0; top: 100%; z-index: 20; max-height: 18rem; overflow: auto; background: var(--tblr-bg-surface); border: 1px solid var(--tblr-border-color); border-radius: 6px; box-shadow: 0 8px 24px rgba(0, 0, 0, .35); }
+    .invoice-picker-option { display: flex; align-items: center; gap: .6rem; width: 100%; padding: .4rem .6rem; border: 0; background: transparent; color: inherit; text-align: left; cursor: pointer; }
+    .invoice-picker-option:hover { background: var(--tblr-bg-surface-secondary); }
+    .invoice-dropzone { border: 2px dashed var(--tblr-border-color); border-radius: 8px; padding: 1rem; text-align: center; transition: border-color .15s, background .15s; }
+    .invoice-dropzone.is-over { border-color: var(--tblr-primary); background: rgba(var(--tblr-primary-rgb), .1); }
+    .invoice-proof-thumb { width: 100%; aspect-ratio: 4 / 3; object-fit: cover; border-radius: 6px; border: 1px solid var(--tblr-border-color); background: var(--tblr-bg-surface-secondary); cursor: zoom-in; }
+    .invoice-thumb { width: 32px; height: 48px; object-fit: cover; border-radius: 4px; flex: 0 0 auto; background: var(--tblr-bg-surface-secondary); }
+  </style>
+  </head>
+
+  <body>
+    <a href="#content" class="visually-hidden-focusable skip-link"
+      >Skip to main content</a
+    >
+
+    <!-- BEGIN GLOBAL THEME SCRIPT -->
+    <script>
+      (function () {
+        var themeKeys = [
+          "theme",
+          "theme-base",
+          "theme-font",
+          "theme-primary",
+          "theme-radius",
+        ];
+        var session = JSON.parse(
+          sessionStorage.getItem("koi-farm-auth-session") || "null",
+        );
+        var username = session && session.username;
+        if (!username) return;
+
+        var accountThemeKey = "koi-farm-theme-settings-" + username;
+        var accountTheme =
+          JSON.parse(localStorage.getItem(accountThemeKey) || "null") || {};
+
+        themeKeys.forEach(function (key) {
+          var accountValue = accountTheme[key];
+          if (accountValue) {
+            localStorage.setItem("tabler-" + key, accountValue);
+          } else {
+            localStorage.removeItem("tabler-" + key);
+          }
+        });
+      })();
+    </script>
+    <script src="./assets/theme-auto.js?v=20261016a"></script>
+    <script src="./dist/js/tabler-theme.js"></script>
+    <!-- END GLOBAL THEME SCRIPT -->
+
+    <!-- BEGIN APP AUTH SCRIPT -->
+    <script src="./assets/auth.js?v=20261026a"></script>
+    <script src="./assets/drafts.js?v=20261024b"></script>
+    <script src="./assets/theme-sync.js?v=20261014b"></script>
+    <script src="./assets/print-kit.js?v=20261024a"></script>
+    <script src="./assets/action-dock.js?v=20261015f"></script>
+    <!-- END APP AUTH SCRIPT -->
+
+    <div class="page">
+      <!-- BEGIN NAVBAR  -->
+
+      <!-- BEGIN NAVBAR -->
+      <header
+        class="navbar navbar-expand-md d-print-none"
+        data-astro-cid-wfnge2tk
+      >
+        <div
+          class="container-xl nishikigoi-navbar-head"
+          data-astro-cid-wfnge2tk
+        >
+          <!-- BEGIN NAVBAR TOGGLER -->
+          <button
+            class="navbar-toggler navbar-toggler-tabler"
+            type="button"
+            data-bs-toggle="collapse"
+            data-bs-target="#navbar-menu"
+            aria-controls="navbar-menu"
+            aria-expanded="false"
+            aria-label="Toggle primary navigation"
+            data-astro-cid-eqcup72q
+          >
+            <!-- Download SVG icon from http://tabler.io/icons/icon/menu-2 -->
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="24"
+              height="24"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              aria-hidden="true"
+              focusable="false"
+              class="icon navbar-toggler-symbol navbar-toggler-symbol-menu"
+            >
+              <path d="M4 6l16 0" />
+              <path d="M4 12l16 0" />
+              <path d="M4 18l16 0" />
+            </svg>
+            <!-- Download SVG icon from http://tabler.io/icons/icon/x -->
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="24"
+              height="24"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              aria-hidden="true"
+              focusable="false"
+              class="icon navbar-toggler-symbol navbar-toggler-symbol-close"
+            >
+              <path d="M18 6l-12 12" />
+              <path d="M6 6l12 12" />
+            </svg>
+          </button>
+          <!-- END NAVBAR TOGGLER -->
+
+          <!-- BEGIN NAVBAR LOGO -->
+          <div
+            class="navbar-brand navbar-brand-autodark nishikigoi-brand-link d-none-navbar-horizontal pe-0 pe-md-2 flex-shrink-0"
+            data-astro-cid-flr2tpzy
+          >
+            <a
+              href="./farm.html"
+              aria-label="Nishikigoi"
+              class="nishikigoi-brand-link"
+              data-astro-cid-flr2tpzy
+            >
+              <span
+                class="nishikigoi-brand-default-icon"
+                data-brand-default-icon
+                hidden
+                data-astro-cid-flr2tpzy
+                ><svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  viewBox="0 0 68 68"
+                  width="32"
+                  height="32"
+                  aria-hidden="true"
+                  focusable="false"
+                  class="navbar-brand-image"
+                >
+                  <path
+                    d="M64.6 16.2C63 9.9 58.1 5 51.8 3.4 40 1.5 28 1.5 16.2 3.4 9.9 5 5 9.9 3.4 16.2 1.5 28 1.5 40 3.4 51.8 5 58.1 9.9 63 16.2 64.6c11.8 1.9 23.8 1.9 35.6 0C58.1 63 63 58.1 64.6 51.8c1.9-11.8 1.9-23.8 0-35.6zM33.3 36.3c-2.8 4.4-6.6 8.2-11.1 11-1.5.9-3.3.9-4.8.1s-2.4-2.3-2.5-4c0-1.7.9-3.3 2.4-4.1 2.3-1.4 4.4-3.2 6.1-5.3-1.8-2.1-3.8-3.8-6.1-5.3-2.3-1.3-3-4.2-1.7-6.4s4.3-2.9 6.5-1.6c4.5 2.8 8.2 6.5 11.1 10.9 1 1.4 1 3.3.1 4.7zM49.2 46H37.8c-2.1 0-3.8-1-3.8-3s1.7-3 3.8-3h11.4c2.1 0 3.8 1 3.8 3s-1.7 3-3.8 3z"
+                    fill="#066fd1"
+                    style="
+                      fill: var(
+                        --tblr-navbar-logo-color,
+                        var(--tblr-primary, #066fd1)
+                      );
+                    "
+                  /></svg></span
+              ><img
+                class="nishikigoi-brand-custom-icon"
+                data-brand-icon
+                hidden
+                alt=""
+                data-astro-cid-flr2tpzy
+              />
+              <span
+                class="navbar-brand-text fw-bold ms-2"
+                data-brand-name
+                data-astro-cid-flr2tpzy
+                >Nishikigoi</span
+              >
+            </a>
+          </div>
+          <!-- END NAVBAR LOGO -->
+
+          <!-- BEGIN NAVBAR SEARCH -->
+          <div
+            class="navbar-global-search nishikigoi-navbar-search order-1 order-md-0"
+            data-astro-cid-x2cvvrkm
+          >
+            <div class="input-icon">
+              <span class="input-icon-addon"
+                ><!-- Download SVG icon from http://tabler.io/icons/icon/search -->
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="24"
+                  height="24"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  aria-hidden="true"
+                  focusable="false"
+                  class="icon"
+                >
+                  <path d="M3 10a7 7 0 1 0 14 0a7 7 0 1 0 -14 0" />
+                  <path d="M21 21l-6 -6" /></svg
+              ></span>
+              <input
+                type="text"
+                id="navbar-global-search"
+                name="global_search"
+                value
+                class="form-control navbar-global-search-input"
+                placeholder="Cari data..."
+                aria-label="Cari data"
+                autocomplete="off"
+              />
+            </div>
+            <button
+              type="button"
+              class="navbar-global-search-clear"
+              data-navbar-search-clear
+              aria-label="Hapus pencarian"
+              title="Hapus pencarian"
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="24"
+                height="24"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                class="icon"
+              >
+                <path d="M18 6l-12 12" />
+                <path d="M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
+          <!-- END NAVBAR SEARCH -->
+
+          <script>
+            (() => {
+              const normalize = (value) =>
+                String(value || "")
+                  .toLowerCase()
+                  .trim();
+
+              const pageSearchSelector = [
+                "[data-koi-search]",
+                "[data-pond-search]",
+                "[data-gallery-search]",
+                "[data-report-search]",
+                "[data-breeding-search]",
+                "[data-log-search]",
+                "[data-sell-search]",
+                "[data-invoice-search]",
+                "[data-inventory-search]",
+              ].join(", ");
+
+              const getPageSearch = () => {
+                const candidates = Array.from(
+                  document.querySelectorAll(pageSearchSelector),
+                ).filter(
+                  (input) =>
+                    !input.closest(
+                      ".modal, .dropdown-menu, #offcanvas-settings",
+                    ),
+                );
+
+                return (
+                  candidates.find((input) =>
+                    input.matches(
+                      "[data-breeding-search], [data-report-search], [data-gallery-search], [data-koi-search], [data-pond-search], [data-log-search], [data-sell-search], [data-invoice-search], [data-inventory-search]",
+                    ),
+                  ) || null
+                );
+              };
+
+              const getSearchTargets = () => {
+                const tableRows = Array.from(
+                  document.querySelectorAll("tbody tr"),
+                ).filter((row) => row.children.length);
+                const cards = Array.from(
+                  document.querySelectorAll(".card"),
+                ).filter((card) => {
+                  if (
+                    card.closest(".modal, .dropdown-menu, #offcanvas-settings")
+                  )
+                    return false;
+                  return !card.querySelector("table");
+                });
+                return tableRows;
+              };
+
+              const applyGlobalSearch = (query) => {
+                const pageSearch = getPageSearch();
+
+                if (pageSearch && pageSearch.value !== query) {
+                  pageSearch.value = query;
+                  pageSearch.dispatchEvent(
+                    new Event("input", { bubbles: true }),
+                  );
+                  return;
+                }
+
+                const text = normalize(query);
+                const terms = text.split(/\s+/).filter(Boolean);
+                getSearchTargets().forEach((target) => {
+                  const haystack = normalize(
+                    target.dataset.searchText || target.textContent || "",
+                  );
+                  const matches = target.dataset.searchText
+                    ? terms.some((term) => haystack.includes(term))
+                    : terms.every((term) => haystack.includes(term));
+                  target.classList.toggle(
+                    "d-none",
+                    terms.length > 0 && !matches,
+                  );
+                });
+
+                document
+                  .querySelectorAll("tbody tr.table-active")
+                  .forEach((groupRow) => {
+                    if (terms.length === 0) {
+                      groupRow.classList.remove("d-none");
+                      return;
+                    }
+
+                    let hasVisibleItem = false;
+                    let row = groupRow.nextElementSibling;
+                    while (row && !row.classList.contains("table-active")) {
+                      if (!row.classList.contains("d-none")) {
+                        hasVisibleItem = true;
+                        break;
+                      }
+                      row = row.nextElementSibling;
+                    }
+
+                    groupRow.classList.toggle("d-none", !hasVisibleItem);
+                  });
+              };
+
+              const syncSearchClear = (input) => {
+                const wrapper = input.closest(".navbar-global-search");
+                wrapper?.classList.toggle("has-value", Boolean(input.value));
+              };
+
+              const bindSearch = () => {
+                document
+                  .querySelectorAll(".navbar-global-search-input")
+                  .forEach((input) => {
+                    if (input.dataset.globalSearchReady) return;
+                    input.dataset.globalSearchReady = "true";
+                    input.addEventListener("input", () => {
+                      applyGlobalSearch(input.value);
+                      syncSearchClear(input);
+                    });
+                    input
+                      .closest(".navbar-global-search")
+                      ?.querySelector("[data-navbar-search-clear]")
+                      ?.addEventListener("click", () => {
+                        input.value = "";
+                        applyGlobalSearch("");
+                        syncSearchClear(input);
+                        input.focus();
+                      });
+                    syncSearchClear(input);
+                  });
+
+                const pageSearch = getPageSearch();
+                const globalSearch = document.querySelector(
+                  ".navbar-global-search-input",
+                );
+                if (
+                  pageSearch &&
+                  globalSearch &&
+                  pageSearch.value &&
+                  !globalSearch.value
+                ) {
+                  globalSearch.value = pageSearch.value;
+                  syncSearchClear(globalSearch);
+                }
+              };
+
+              bindSearch();
+              document.addEventListener("DOMContentLoaded", bindSearch);
+            })();
+          </script>
+
+          <!-- BEGIN NAVBAR ACTIONS -->
+          <div class="navbar-nav flex-row navbar-side order-md-last ms-auto">
+            <div class="navbar-side-actions d-flex align-items-center me-3">
+              <!-- BEGIN THEME TOGGLE -->
+              <div class="nav-item">
+                <a
+                  href="?theme=dark"
+                  class="nav-link px-0 hide-theme-dark js-theme-toggle"
+                  title="Enable dark mode"
+                  data-theme-value="dark"
+                  data-bs-toggle="tooltip"
+                  data-bs-placement="bottom"
+                >
+                  <!-- Download SVG icon from http://tabler.io/icons/icon/moon -->
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="24"
+                    height="24"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    aria-hidden="true"
+                    focusable="false"
+                    class="icon"
+                  >
+                    <path
+                      d="M12 3c.132 0 .263 0 .393 0a7.5 7.5 0 0 0 7.92 12.446a9 9 0 1 1 -8.313 -12.454l0 .008"
+                    />
+                  </svg>
+                </a>
+
+                <a
+                  href="?theme=light"
+                  class="nav-link px-0 hide-theme-light js-theme-toggle"
+                  title="Enable light mode"
+                  data-theme-value="light"
+                  data-bs-toggle="tooltip"
+                  data-bs-placement="bottom"
+                >
+                  <!-- Download SVG icon from http://tabler.io/icons/icon/sun -->
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="24"
+                    height="24"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    aria-hidden="true"
+                    focusable="false"
+                    class="icon"
+                  >
+                    <path d="M8 12a4 4 0 1 0 8 0a4 4 0 1 0 -8 0" />
+                    <path
+                      d="M3 12h1m8 -9v1m8 8h1m-9 8v1m-6.4 -15.4l.7 .7m12.1 -.7l-.7 .7m0 11.4l.7 .7m-12.1 -.7l-.7 .7"
+                    />
+                  </svg>
+                </a>
+              </div>
+              <!-- END THEME TOGGLE -->
+              <!-- BEGIN NOTIFICATIONS -->
+              <div class="nav-item dropdown" data-astro-cid-ry6bbqh3>
+                <a
+                  href="#"
+                  id="navbar-notifications-toggle"
+                  class="nav-link px-0"
+                  data-bs-toggle="dropdown"
+                  aria-label="Show notifications"
+                  data-bs-auto-close="outside"
+                  aria-expanded="false"
+                  data-astro-cid-ry6bbqh3
+                >
+                  <!-- Download SVG icon from http://tabler.io/icons/icon/bell -->
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="24"
+                    height="24"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    aria-hidden="true"
+                    focusable="false"
+                    class="icon"
+                  >
+                    <path
+                      d="M10 5a2 2 0 1 1 4 0a7 7 0 0 1 4 6v3a4 4 0 0 0 2 3h-16a4 4 0 0 0 2 -3v-3a7 7 0 0 1 4 -6"
+                    />
+                    <path d="M9 17v1a3 3 0 0 0 6 0v-1" />
+                  </svg>
+                  <span
+                    class="badge bg-red d-none"
+                    data-navbar-notifications-badge
+                    data-astro-cid-ry6bbqh3
+                  ></span>
+                </a>
+                <!-- BEGIN NAVBAR NOTIFICATIONS -->
+                <div
+                  class="dropdown-menu dropdown-menu-arrow dropdown-menu-end dropdown-menu-card navbar-notifications-menu"
+                  data-astro-cid-ry6bbqh3
+                >
+                  <div class="card" data-astro-cid-ry6bbqh3>
+                    <div class="card-header d-flex" data-astro-cid-ry6bbqh3>
+                      <h3 class="card-title">Notifications</h3>
+                      <button
+                        type="button"
+                        class="btn-close ms-auto"
+                        data-navbar-notifications-close
+                        aria-label="Close"
+                        data-astro-cid-ry6bbqh3
+                      ></button>
+                    </div>
+                    <div
+                      class="list-group list-group-flush list-group-hoverable"
+                      data-navbar-notifications-list
+                      data-astro-cid-ry6bbqh3
+                    >
+                      <div class="list-group-item" data-astro-cid-ry6bbqh3>
+                        <div class="text-secondary" data-astro-cid-ry6bbqh3>
+                          <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>Memuat notifikasi...
+                        </div>
+                      </div>
+                    </div>
+                    <div class="card-body" data-astro-cid-ry6bbqh3>
+                      <div class="notification-actions" data-astro-cid-ry6bbqh3>
+                        <a
+                          href="farm-log.html"
+                          class="btn"
+                          data-astro-cid-ry6bbqh3
+                          >Lihat Log</a
+                        >
+                        <button
+                          type="button"
+                          class="btn"
+                          data-navbar-notifications-clear
+                          data-astro-cid-ry6bbqh3
+                        >
+                          Clear
+                        </button>
+                        <button
+                          type="button"
+                          class="btn"
+                          data-navbar-notifications-read-all
+                          data-astro-cid-ry6bbqh3
+                        >
+                          Mark all read
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <!-- END NAVBAR NOTIFICATIONS -->
+              </div>
+
+              <!-- END NOTIFICATIONS -->
+            </div>
+
+            <!-- BEGIN USER MENU -->
+            <div class="nav-item dropdown">
+              <a
+                href="#"
+                class="nav-link d-flex lh-1 p-0 px-2"
+                data-bs-toggle="dropdown"
+                aria-label="Open user menu"
+              >
+                <span
+                  class="koi-api-indicator koi-api-indicator-loading me-2"
+                  data-api-indicator
+                  title="Memeriksa API"
+                  aria-label="Memeriksa API"
+                ></span>
+                <span class="avatar avatar-sm" data-auth-avatar>HA</span>
+                <div class="d-none d-xl-block ps-2">
+                  <div data-auth-name>Holil</div>
+                  <div class="mt-1 small text-secondary" data-auth-role>
+                    Master Admin
+                  </div>
+                </div>
+              </a>
+              <div class="dropdown-menu dropdown-menu-end dropdown-menu-arrow navbar-user-menu">
+                <a class="dropdown-item" href="#" data-koi-my-profile><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false" class="icon dropdown-item-icon"><path d="M8 7a4 4 0 1 0 8 0a4 4 0 0 0 -8 0" /><path d="M6 21v-2a4 4 0 0 1 4 -4h4a4 4 0 0 1 4 4v2" /></svg> Profile</a>
+                <div class="dropdown-divider"></div>
+                <a class="dropdown-item d-flex align-items-center" href="#" data-koi-sp-toggle aria-expanded="false">Settings &amp; Privacy</a>
+                <div class="koi-sp-list" data-koi-sp-list hidden>
+                  <a class="dropdown-item" href="./settings.html">Pengaturan Akun</a>
+                  <a class="dropdown-item" href="./farm-log.html#changelog" data-koi-changelog>Change Log</a>
+                  <a class="dropdown-item" href="#" data-bs-toggle="offcanvas" data-bs-target="#offcanvas-settings" aria-controls="offcanvas-settings">Theme Settings</a>
+                  <a class="dropdown-item" href="#" data-feedback-open>Give Feedback</a>
+                  <a class="dropdown-item" href="./settings-master-account.html" data-role-required="master-admin">Master Akun</a>
+                </div>
+                <div class="dropdown-divider"></div>
+                <a class="dropdown-item" href="./sign-in.html" data-action="logout">Sign out</a>
+              </div>
+            </div>
+            <!-- END USER MENU -->
+          </div>
+          <!-- END NAVBAR ACTIONS -->
+        </div>
+      </header>
+
+      <div class="navbar-expand-md" data-astro-cid-wfnge2tk>
+        <div
+          class="collapse navbar-collapse"
+          id="navbar-menu"
+          data-astro-cid-wfnge2tk
+        >
+          <div class="navbar" data-astro-cid-wfnge2tk>
+            <div class="container-xl" data-astro-cid-wfnge2tk>
+              <div
+                class="row flex-column flex-md-row flex-fill align-items-center justify-content-center"
+                data-astro-cid-wfnge2tk
+              >
+                <div class="col-auto" data-astro-cid-wfnge2tk>
+                  <!-- BEGIN NAVBAR MENU -->
+                  <nav aria-label="Primary" data-astro-cid-wfnge2tk>
+                    <!-- BEGIN NAVBAR MENU -->
+                    <ul class="navbar-nav">
+                      <!-- BEGIN NAVBAR ITEM -->
+                      <li class="nav-item">
+                        <a class="nav-link" href="./farm.html">
+                          <span
+                            class="nav-link-icon d-md-none d-lg-inline-block"
+                            ><!-- Download SVG icon from http://tabler.io/icons/icon/dashboard -->
+                            <svg
+                              xmlns="http://www.w3.org/2000/svg"
+                              width="24"
+                              height="24"
+                              viewBox="0 0 24 24"
+                              fill="none"
+                              stroke="currentColor"
+                              stroke-width="2"
+                              stroke-linecap="round"
+                              stroke-linejoin="round"
+                              aria-hidden="true"
+                              focusable="false"
+                              class="icon"
+                            >
+                              <path d="M10 13a2 2 0 1 0 4 0a2 2 0 1 0 -4 0" />
+                              <path d="M13.45 11.55l2.05 -2.05" />
+                              <path d="M6.4 20a9 9 0 1 1 11.2 0l-11.2 0" /></svg
+                          ></span>
+
+                          <span class="nav-link-title">Dashboard</span>
+                        </a>
+                      </li>
+                      <!-- END NAVBAR ITEM -->
+
+                      <!-- BEGIN NAVBAR ITEM -->
+                      <li class="nav-item">
+                        <a class="nav-link" href="./farm-koi.html">
+                          <span
+                            class="nav-link-icon d-md-none d-lg-inline-block"
+                            ><!-- Download SVG icon from http://tabler.io/icons/icon/fish -->
+                            <svg
+                              xmlns="http://www.w3.org/2000/svg"
+                              width="24"
+                              height="24"
+                              viewBox="0 0 24 24"
+                              fill="none"
+                              stroke="currentColor"
+                              stroke-width="2"
+                              stroke-linecap="round"
+                              stroke-linejoin="round"
+                              aria-hidden="true"
+                              focusable="false"
+                              class="icon"
+                            >
+                              <path
+                                d="M16.69 7.44a6.973 6.973 0 0 0 -1.69 4.56c0 1.747 .64 3.345 1.699 4.571"
+                              />
+                              <path
+                                d="M2 9.504c7.715 8.647 14.75 10.265 20 2.498c-5.25 -7.761 -12.285 -6.142 -20 2.504"
+                              />
+                              <path d="M18 11v.01" />
+                              <path d="M11.5 10.5c-.667 1 -.667 2 0 3" /></svg
+                          ></span>
+
+                          <span class="nav-link-title">Data Ikan</span>
+                        </a>
+                      </li>
+                      <!-- END NAVBAR ITEM -->
+
+                      <!-- BEGIN NAVBAR ITEM -->
+                      <li class="nav-item">
+                        <a class="nav-link" href="./farm-ponds.html">
+                          <span
+                            class="nav-link-icon d-md-none d-lg-inline-block"
+                            ><!-- Download SVG icon from http://tabler.io/icons/icon/bowl -->
+                            <svg
+                              xmlns="http://www.w3.org/2000/svg"
+                              width="24"
+                              height="24"
+                              viewBox="0 0 24 24"
+                              fill="none"
+                              stroke="currentColor"
+                              stroke-width="2"
+                              stroke-linecap="round"
+                              stroke-linejoin="round"
+                              aria-hidden="true"
+                              focusable="false"
+                              class="icon"
+                            >
+                              <path
+                                d="M4 8h16a1 1 0 0 1 1 1v.5c0 1.5 -2.517 5.573 -4 6.5v1a1 1 0 0 1 -1 1h-8a1 1 0 0 1 -1 -1v-1c-1.687 -1.054 -4 -5 -4 -6.5v-.5a1 1 0 0 1 1 -1"
+                              /></svg
+                          ></span>
+
+                          <span class="nav-link-title">Data Kolam</span>
+                        </a>
+                      </li>
+                      <!-- END NAVBAR ITEM -->
+
+                      <!-- BEGIN NAVBAR ITEM -->
+                      <li class="nav-item">
+                        <a
+                          class="nav-link"
+                          href="./farm-breeding.html"
+                        >
+                          <span
+                            class="nav-link-icon d-md-none d-lg-inline-block"
+                            ><!-- Download SVG icon from http://tabler.io/icons/icon/dna-2 -->
+                            <svg
+                              xmlns="http://www.w3.org/2000/svg"
+                              width="24"
+                              height="24"
+                              viewBox="0 0 24 24"
+                              fill="none"
+                              stroke="currentColor"
+                              stroke-width="2"
+                              stroke-linecap="round"
+                              stroke-linejoin="round"
+                              aria-hidden="true"
+                              focusable="false"
+                              class="icon"
+                            >
+                              <path
+                                d="M17 3v1c-.01 3.352 -1.68 6.023 -5.008 8.014c-3.328 1.99 3.336 -2 .008 -.014c-3.328 1.99 -5 4.662 -5.008 8.014v1"
+                              />
+                              <path
+                                d="M17 21.014v-1c-.01 -3.352 -1.68 -6.023 -5.008 -8.014c-3.328 -1.99 3.336 2 .008 .014c-3.328 -1.991 -5 -4.662 -5.008 -8.014v-1"
+                              />
+                              <path d="M7 4h10" />
+                              <path d="M7 20h10" />
+                              <path d="M8 8h8" />
+                              <path d="M8 16h8" /></svg
+                          ></span>
+
+                          <span class="nav-link-title">Breeding</span>
+                        </a>
+                      </li>
+                      <!-- END NAVBAR ITEM -->
+
+                      <!-- BEGIN NAVBAR ITEM -->
+                      <li class="nav-item">
+                        <a class="nav-link" href="./farm-reports.html">
+                          <span
+                            class="nav-link-icon d-md-none d-lg-inline-block"
+                            ><!-- Download SVG icon from http://tabler.io/icons/icon/report -->
+                            <svg
+                              xmlns="http://www.w3.org/2000/svg"
+                              width="24"
+                              height="24"
+                              viewBox="0 0 24 24"
+                              fill="none"
+                              stroke="currentColor"
+                              stroke-width="2"
+                              stroke-linecap="round"
+                              stroke-linejoin="round"
+                              aria-hidden="true"
+                              focusable="false"
+                              class="icon"
+                            >
+                              <path
+                                d="M8 5h-2a2 2 0 0 0 -2 2v12a2 2 0 0 0 2 2h5.697"
+                              />
+                              <path d="M18 14v4h4" />
+                              <path d="M18 11v-4a2 2 0 0 0 -2 -2h-2" />
+                              <path
+                                d="M8 5a2 2 0 0 1 2 -2h2a2 2 0 0 1 2 2a2 2 0 0 1 -2 2h-2a2 2 0 0 1 -2 -2"
+                              />
+                              <path d="M14 18a4 4 0 1 0 8 0a4 4 0 1 0 -8 0" />
+                              <path d="M8 11h4" />
+                              <path d="M8 15h3" /></svg
+                          ></span>
+
+                          <span class="nav-link-title">Laporan</span>
+                        </a>
+                      </li>
+                      <!-- END NAVBAR ITEM -->
+
+                      <!-- BEGIN NAVBAR ITEM -->
+                      <li class="nav-item dropdown active">
+                        <a
+                          class="nav-link dropdown-toggle"
+                          href="#navbar-penjualan"
+                          data-bs-toggle="dropdown"
+                          data-bs-auto-close="outside"
+                          role="button"
+                          aria-haspopup="true"
+                          aria-expanded="false"
+                    aria-current="page"
+                        >
+                          <span class="nav-link-icon d-md-none d-lg-inline-block"
+                            ><!-- Download SVG icon from http://tabler.io/icons/icon/tag -->
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false" class="icon">
+<path d="M6.5 7.5a1 1 0 1 0 2 0a1 1 0 1 0 -2 0" /><path d="M3 6v5.172a2 2 0 0 0 .586 1.414l7.71 7.71a2.41 2.41 0 0 0 3.408 0l5.592 -5.592a2.41 2.41 0 0 0 0 -3.408l-7.71 -7.71a2 2 0 0 0 -1.414 -.586h-5.172a3 3 0 0 0 -3 3" />
+                            </svg></span
+                          >
+
+                          <span class="nav-link-title">Penjualan</span>
+                        </a>
+
+                        <div class="dropdown-menu">
+                        <!-- BEGIN NAVBAR ITEM --><a
+                          class="dropdown-item"
+                          href="./farm-sell.html"
+                        >
+                          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false" class="icon icon-inline me-1">
+<path d="M4 19a2 2 0 1 0 4 0a2 2 0 1 0 -4 0" /><path d="M15 19a2 2 0 1 0 4 0a2 2 0 1 0 -4 0" /><path d="M17 17h-11v-14h-2" /><path d="M6 5l14 1l-1 7h-13" />
+                          </svg>
+
+                          Katalog
+                        </a>
+                        <!-- END NAVBAR ITEM -->
+                        <!-- BEGIN NAVBAR ITEM --><a
+                          class="dropdown-item active"
+                          href="./farm-invoice.html"
+                          aria-current="page"
+                        >
+                          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false" class="icon icon-inline me-1">
+<path d="M14 3v4a1 1 0 0 0 1 1h4" /><path d="M17 21h-10a2 2 0 0 1 -2 -2v-14a2 2 0 0 1 2 -2h7l5 5v11a2 2 0 0 1 -2 2" /><path d="M9 7l1 0" /><path d="M9 13l6 0" /><path d="M13 17l2 0" />
+                          </svg>
+
+                          Invoice
+                        </a>
+                        <!-- END NAVBAR ITEM -->
+                        </div>
+                      </li>
+                      <!-- END NAVBAR ITEM -->
+
+                      <!-- BEGIN NAVBAR ITEM -->
+                      <li class="nav-item dropdown">
+                        <a
+                          class="nav-link dropdown-toggle"
+                          href="#navbar-management"
+                          data-bs-toggle="dropdown"
+                          data-bs-auto-close="outside"
+                          role="button"
+                          aria-haspopup="true"
+                          aria-expanded="false"
+                          data-role-required="database-write"
+                        >
+                          <span
+                            class="nav-link-icon d-md-none d-lg-inline-block"
+                            ><!-- Download SVG icon from http://tabler.io/icons/icon/category -->
+                            <svg
+                              xmlns="http://www.w3.org/2000/svg"
+                              width="24"
+                              height="24"
+                              viewBox="0 0 24 24"
+                              fill="none"
+                              stroke="currentColor"
+                              stroke-width="2"
+                              stroke-linecap="round"
+                              stroke-linejoin="round"
+                              aria-hidden="true"
+                              focusable="false"
+                              class="icon"
+                            >
+                              <path d="M4 4h6v6h-6l0 -6" />
+                              <path d="M14 4h6v6h-6l0 -6" />
+                              <path d="M4 14h6v6h-6l0 -6" />
+                              <path
+                                d="M14 17a3 3 0 1 0 6 0a3 3 0 1 0 -6 0"
+                              /></svg
+                          ></span>
+
+                          <span class="nav-link-title">Etc</span>
+                        </a>
+
+                        <div class="dropdown-menu">
+                          <!-- BEGIN NAVBAR ITEM --><a
+                            class="dropdown-item"
+                            href="./farm-archive.html"
+                          >
+                            <!-- Download SVG icon from http://tabler.io/icons/icon/archive -->
+                            <svg
+                              xmlns="http://www.w3.org/2000/svg"
+                              width="24"
+                              height="24"
+                              viewBox="0 0 24 24"
+                              fill="none"
+                              stroke="currentColor"
+                              stroke-width="2"
+                              stroke-linecap="round"
+                              stroke-linejoin="round"
+                              aria-hidden="true"
+                              focusable="false"
+                              class="icon icon-inline me-1"
+                            >
+                              <path
+                                d="M3 4m0 2a2 2 0 0 1 2 -2h14a2 2 0 0 1 2 2v0a2 2 0 0 1 -2 2h-14a2 2 0 0 1 -2 -2z"
+                              />
+                              <path d="M5 8v10a2 2 0 0 0 2 2h10a2 2 0 0 0 2 -2v-10" />
+                              <path d="M10 12l4 0" />
+                            </svg>
+
+                            Archive
+                          </a>
+                          <!-- END NAVBAR ITEM --><!-- BEGIN NAVBAR ITEM --><a
+                            class="dropdown-item"
+                            href="./farm-inventory.html"
+                          >
+                            <!-- Download SVG icon from http://tabler.io/icons/icon/package -->
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false" class="icon icon-inline me-1"><path d="M12 3l8 4.5l0 9l-8 4.5l-8 -4.5l0 -9l8 -4.5" /><path d="M12 12l8 -4.5" /><path d="M12 12l0 9" /><path d="M12 12l-8 -4.5" /><path d="M16 5.25l-8 4.5" /></svg>
+
+                            Inventaris
+                          </a>
+                          <!-- END NAVBAR ITEM --><!-- BEGIN NAVBAR ITEM --><a
+                            class="dropdown-item"
+                            href="./farm-queue.html"
+                          >
+                            <!-- Download SVG icon from http://tabler.io/icons/icon/stack-2 -->
+                            <svg
+                              xmlns="http://www.w3.org/2000/svg"
+                              width="24"
+                              height="24"
+                              viewBox="0 0 24 24"
+                              fill="none"
+                              stroke="currentColor"
+                              stroke-width="2"
+                              stroke-linecap="round"
+                              stroke-linejoin="round"
+                              aria-hidden="true"
+                              focusable="false"
+                              class="icon icon-inline me-1"
+                            >
+                              <path d="M12 4l-8 4l8 4l8 -4l-8 -4" />
+                              <path d="M4 12l8 4l8 -4" />
+                              <path d="M4 16l8 4l8 -4" />
+                            </svg>
+
+                            Queue
+                          </a>
+                          <!-- END NAVBAR ITEM --><!-- BEGIN NAVBAR ITEM --><a
+                            class="dropdown-item"
+                            href="./farm-gallery.html"
+                          >
+                            <!-- Download SVG icon from http://tabler.io/icons/icon/photo -->
+                            <svg
+                              xmlns="http://www.w3.org/2000/svg"
+                              width="24"
+                              height="24"
+                              viewBox="0 0 24 24"
+                              fill="none"
+                              stroke="currentColor"
+                              stroke-width="2"
+                              stroke-linecap="round"
+                              stroke-linejoin="round"
+                              aria-hidden="true"
+                              focusable="false"
+                              class="icon icon-inline me-1"
+                            >
+                              <path d="M15 8h.01" />
+                              <path
+                                d="M3 6a3 3 0 0 1 3 -3h12a3 3 0 0 1 3 3v12a3 3 0 0 1 -3 3h-12a3 3 0 0 1 -3 -3v-12"
+                              />
+                              <path
+                                d="M3 16l5 -5c.928 -.893 2.072 -.893 3 0l5 5"
+                              />
+                              <path
+                                d="M14 14l1 -1c.928 -.893 2.072 -.893 3 0l3 3"
+                              />
+                            </svg>
+
+                            Gallery
+                          </a>
+                          <!-- END NAVBAR ITEM --><!-- BEGIN NAVBAR ITEM --><a
+                            class="dropdown-item"
+                            href="./farm-log.html"
+                          >
+                            <!-- Download SVG icon from http://tabler.io/icons/icon/clipboard-list -->
+                            <svg
+                              xmlns="http://www.w3.org/2000/svg"
+                              width="24"
+                              height="24"
+                              viewBox="0 0 24 24"
+                              fill="none"
+                              stroke="currentColor"
+                              stroke-width="2"
+                              stroke-linecap="round"
+                              stroke-linejoin="round"
+                              aria-hidden="true"
+                              focusable="false"
+                              class="icon icon-inline me-1"
+                            >
+                              <path
+                                d="M9 5h-2a2 2 0 0 0 -2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2 -2v-12a2 2 0 0 0 -2 -2h-2"
+                              />
+                              <path
+                                d="M9 5a2 2 0 0 1 2 -2h2a2 2 0 0 1 2 2a2 2 0 0 1 -2 2h-2a2 2 0 0 1 -2 -2"
+                              />
+                              <path d="M9 12l.01 0" />
+                              <path d="M13 12l2 0" />
+                              <path d="M9 16l.01 0" />
+                              <path d="M13 16l2 0" />
+                            </svg>
+
+                            Log
+                          </a>
+                          <!-- END NAVBAR ITEM -->
+                        </div>
+                      </li>
+                      <!-- END NAVBAR ITEM -->
+                    </ul>
+                    <!-- END NAVBAR MENU -->
+                  </nav>
+                  <!-- END NAVBAR MENU -->
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <!-- END NAVBAR -->
+
+      <!-- END NAVBAR  -->
+
+      <div class="page-wrapper">
+        <!-- BEGIN PAGE HEADER -->
+
+        <div class="page-header d-print-none" data-astro-cid-52ptlyh5>
+          <div class="container-xl" data-astro-cid-52ptlyh5>
+            <div class="row g-0 align-items-center" data-astro-cid-52ptlyh5>
+              <div
+                class="col page-header-compact-title"
+                data-astro-cid-52ptlyh5
+              >
+                <div class="page-title-line" data-astro-cid-52ptlyh5>
+                  <span class="page-title-line-title" data-astro-cid-52ptlyh5>Penjualan Invoice</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <!-- END PAGE HEADER -->
+
+        <!-- BEGIN PAGE BODY -->
+        <main id="content" class="page-body">
+          <div class="container-xl">
+  
+
+  <div class="modal modal-blur fade" id="invoice-modal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-xl modal-dialog-centered" role="document">
+      <form class="modal-content" data-invoice-form>
+        <div class="modal-header">
+          <h5 class="modal-title" data-invoice-modal-title>Formulir Tambah Invoice</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Tutup"></button>
+        </div>
+        <div class="modal-body">
+          <div class="alert alert-danger d-none" data-invoice-error></div>
+          <input type="hidden" name="id" />
+          <div class="row g-3">
+            <div class="col-md-3">
+              <label class="form-label">Nomor Invoice</label>
+              <input class="form-control" name="invoice_no" maxlength="40" placeholder="Otomatis" data-invoice-no />
+            </div>
+            <div class="col-md-3">
+              <label class="form-label">Tanggal</label>
+              <input class="form-control" type="date" name="invoice_date" required />
+            </div>
+            <div class="col-md-3">
+              <label class="form-label">Jatuh Tempo</label>
+              <input class="form-control" type="date" name="due_date" />
+            </div>
+            <div class="col-md-3">
+              <label class="form-label">Status Pembayaran</label>
+              <div class="btn-group w-100" role="group">
+                <input type="radio" class="btn-check" name="status" id="invoice-status-unpaid" value="unpaid" checked />
+                <label class="btn btn-outline-warning" for="invoice-status-unpaid">Belum dibayar</label>
+                <input type="radio" class="btn-check" name="status" id="invoice-status-paid" value="paid" />
+                <label class="btn btn-outline-success" for="invoice-status-paid">Lunas</label>
+              </div>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">Client / Pembeli</label>
+              <input class="form-control" name="client_name" maxlength="200" placeholder="Nama client atau pembeli" required />
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">Judul Invoice (perihal)</label>
+              <input class="form-control" name="title" maxlength="200" placeholder="Contoh: Pembelian Kohaku Oktober 2026" />
+            </div>
+            <div class="col-12">
+              <label class="form-label">Kontak / alamat client</label>
+              <textarea class="form-control" name="client_contact" rows="2" placeholder="Opsional: alamat, nomor telepon, atau email client"></textarea>
+            </div>
+
+            <div class="col-12 border-top pt-3">
+              <label class="form-label">Rincian</label>
+              <div class="invoice-picker" data-invoice-picker>
+                <input class="form-control" type="search" placeholder="Cari ikan atau item Penjualan, atau tempel beberapa kode ikan" autocomplete="off" data-invoice-picker-input />
+                <div class="invoice-picker-menu d-none" data-invoice-picker-menu></div>
+              </div>
+              <div class="d-flex flex-wrap gap-2 mt-2">
+                <button class="btn btn-outline-primary btn-sm" type="button" data-invoice-pull>Tarik dari Data Ikan</button>
+                <button class="btn btn-outline-primary btn-sm" type="button" data-invoice-add-custom>Tambah item custom</button>
+              </div>
+              <div class="vstack gap-2 mt-3">
+                <div class="invoice-line invoice-line-head"><div>Deskripsi</div><div>Qty</div><div>Harga satuan (Rp)</div><div class="text-end">Jumlah</div><div></div></div>
+                <div class="vstack gap-2" data-invoice-lines></div>
+              </div>
+              <div class="row g-3 mt-1">
+                <div class="col-md-6 offset-md-6">
+                  <div class="d-flex justify-content-between"><span class="text-secondary">Subtotal</span><span data-invoice-subtotal>Rp 0</span></div>
+                  <div class="d-flex justify-content-between align-items-center gap-3 mt-1">
+                    <span class="text-secondary">Diskon (Rp)</span>
+                    <input class="form-control form-control-sm text-end" style="max-width: 11rem" name="discount" inputmode="numeric" placeholder="0" autocomplete="off" data-invoice-discount />
+                  </div>
+                  <div class="d-flex justify-content-between mt-2 border-top pt-2"><strong>Total</strong><strong class="invoice-total" data-invoice-total>Rp 0</strong></div>
+                </div>
+              </div>
+            </div>
+
+            <div class="col-md-6">
+              <label class="form-label">Nomor rekening pembayaran</label>
+              <textarea class="form-control" name="bank_account" rows="3" placeholder="Contoh: BCA 1234567890 a.n. Nishikigoi Farm"></textarea>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">Kontak sales</label>
+              <textarea class="form-control" name="sales_contact" rows="3" placeholder="Contoh: Budi (WhatsApp 0812-0000-0000)"></textarea>
+            </div>
+            <div class="col-12">
+              <label class="form-label">Catatan invoice</label>
+              <textarea class="form-control" name="notes" rows="3" placeholder="Syarat pembayaran, pengiriman, garansi, atau catatan lain"></textarea>
+              <div class="form-hint">Rekening dan kontak sales diingat dari invoice terakhir supaya tidak diketik ulang.</div>
+            </div>
+            <div class="col-12">
+              <label class="form-label">Bukti transfer</label>
+              <div class="invoice-dropzone" data-invoice-zone="proof" tabindex="0">
+                <div class="text-secondary">Tarik dan lepas gambar ke sini, tempel dengan Ctrl+V, atau pilih dari tombol di bawah.</div>
+                <div class="d-flex flex-wrap gap-2 justify-content-center mt-2">
+                  <input class="d-none" type="file" accept="image/*" multiple data-invoice-proof-input />
+                  <button class="btn btn-outline-primary btn-sm" type="button" data-invoice-proof-upload>Unggah gambar</button>
+                  <button class="btn btn-outline-primary btn-sm" type="button" data-invoice-proof-paste>Paste gambar</button>
+                </div>
+              </div>
+              <div class="row g-2 mt-2" data-invoice-proofs></div>
+              <div class="text-secondary mt-1" data-invoice-proof-status></div>
+            </div>
+            <div class="col-12">
+              <label class="form-label">Dokumentasi (foto atau video)</label>
+              <div class="invoice-dropzone" data-invoice-zone="media" tabindex="0">
+                <div class="text-secondary">Tarik dan lepas foto atau video ke sini, tempel gambar dengan Ctrl+V, atau pilih dari tombol di bawah. Video maksimal 40 MB.</div>
+                <div class="d-flex flex-wrap gap-2 justify-content-center mt-2">
+                  <input class="d-none" type="file" accept="image/*,video/mp4,video/webm" multiple data-invoice-media-input />
+                  <button class="btn btn-outline-primary btn-sm" type="button" data-invoice-media-upload>Unggah foto/video</button>
+                  <button class="btn btn-outline-primary btn-sm" type="button" data-invoice-media-paste>Paste gambar</button>
+                </div>
+              </div>
+              <div class="row g-2 mt-2" data-invoice-media></div>
+              <div class="text-secondary mt-1" data-invoice-media-status></div>
+              <label class="form-check mt-2 mb-1"><input class="form-check-input" type="checkbox" name="show_in_gallery" checked /><span class="form-check-label">Tampilkan dokumentasi di Galeri</span></label>
+              <div class="form-hint">Dokumentasi ikut tampil di menu Galeri sebagai satu koleksi (file tidak digandakan). Bukti transfer tidak ikut ke Galeri.</div>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn me-auto d-none" data-invoice-print-form>Cetak</button>
+          <button type="button" class="btn btn-icon" data-bs-dismiss="modal" aria-label="Tutup" title="Tutup">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false" class="icon"><path d="M18 6l-12 12" /><path d="M6 6l12 12" /></svg>
+          </button>
+          <button type="submit" class="btn btn-primary btn-icon" data-invoice-submit aria-label="Simpan" title="Simpan">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false" class="icon"><path d="M6 4h10l4 4v10a2 2 0 0 1 -2 2h-12a2 2 0 0 1 -2 -2v-12a2 2 0 0 1 2 -2" /><path d="M10 14a2 2 0 1 0 4 0a2 2 0 1 0 -4 0" /><path d="M14 4l0 4l-6 0l0 -4" /></svg>
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div class="row row-deck row-cards">
+    <div class="col-12">
+      <div class="card">
+        <div class="card-header">
+          <h3 class="card-title">Daftar Invoice</h3>
+          <div class="card-actions">
+            <button class="btn btn-primary btn-icon" type="button" data-add-invoice data-role-required="farm-operate" aria-label="Tambah invoice" title="Tambah invoice">
+              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false" class="icon"><path d="M12 5l0 14" /><path d="M5 12l14 0" /></svg>
+            </button>
+          </div>
+        </div>
+        <div class="card-body">
+          <div class="d-flex flex-wrap gap-2 mb-3">
+            <span class="badge bg-blue-lt invoice-filter-chip" data-invoice-filter="all">Semua</span>
+            <span class="badge bg-yellow-lt invoice-filter-chip" data-invoice-filter="unpaid">Belum dibayar</span>
+            <span class="badge bg-green-lt invoice-filter-chip" data-invoice-filter="paid">Lunas</span>
+          </div>
+          <div class="row g-3" data-invoice-table>
+            <div class="col-12 text-secondary"><div class="d-flex flex-column align-items-center justify-content-center gap-2 py-5 text-secondary"><span class="spinner-border text-primary" role="status" aria-hidden="true"></span><span>Memuat data invoice...</span></div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <input class="d-none" id="invoice-search" name="invoice_search" type="search" data-invoice-search aria-hidden="true" tabindex="-1" autocomplete="off" />
+
+  <script src="/assets/koi-picker.js?v=20261020b"></script>
+
+  
+<script>
+(function () {
+const editIcon = "\u003csvg xmlns=\"http://www.w3.org/2000/svg\" width=\"24\" height=\"24\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\" focusable=\"false\" class=\"icon\">\u003cpath d=\"M7 7h-1a2 2 0 0 0 -2 2v9a2 2 0 0 0 2 2h9a2 2 0 0 0 2 -2v-1\" />\u003cpath d=\"M20.385 6.585a2.1 2.1 0 0 0 -2.97 -2.97l-8.415 8.385v3h3l8.385 -8.415\" />\u003cpath d=\"M16 5l3 3\" />\u003c/svg>"
+const printIcon = "\u003csvg xmlns=\"http://www.w3.org/2000/svg\" width=\"24\" height=\"24\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\" focusable=\"false\" class=\"icon\">\u003cpath d=\"M17 17h2a2 2 0 0 0 2 -2v-4a2 2 0 0 0 -2 -2h-14a2 2 0 0 0 -2 2v4a2 2 0 0 0 2 2h2\" />\u003cpath d=\"M17 9v-4a2 2 0 0 0 -2 -2h-6a2 2 0 0 0 -2 2v4\" />\u003cpath d=\"M7 15a2 2 0 0 1 2 -2h6a2 2 0 0 1 2 2v4a2 2 0 0 1 -2 2h-6a2 2 0 0 1 -2 -2l0 -4\" />\u003c/svg>"
+const trashIcon = "\u003csvg xmlns=\"http://www.w3.org/2000/svg\" width=\"24\" height=\"24\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\" focusable=\"false\" class=\"icon\">\u003cpath d=\"M4 7l16 0\" />\u003cpath d=\"M10 11l0 6\" />\u003cpath d=\"M14 11l0 6\" />\u003cpath d=\"M5 7l1 12a2 2 0 0 0 2 2h8a2 2 0 0 0 2 -2l1 -12\" />\u003cpath d=\"M9 7v-3a1 1 0 0 1 1 -1h4a1 1 0 0 1 1 1v3\" />\u003c/svg>"
+const saveIcon = "\u003csvg xmlns=\"http://www.w3.org/2000/svg\" width=\"24\" height=\"24\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\" focusable=\"false\" class=\"icon\">\u003cpath d=\"M6 4h10l4 4v10a2 2 0 0 1 -2 2h-12a2 2 0 0 1 -2 -2v-12a2 2 0 0 1 2 -2\" />\u003cpath d=\"M10 14a2 2 0 1 0 4 0a2 2 0 1 0 -4 0\" />\u003cpath d=\"M14 4l0 4l-6 0l0 -4\" />\u003c/svg>"
+const historyIcon = "\u003csvg xmlns=\"http://www.w3.org/2000/svg\" width=\"24\" height=\"24\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\" focusable=\"false\" class=\"icon\">\u003cpath d=\"M12 8l0 4l2 2\" />\u003cpath d=\"M3.05 11a9 9 0 1 1 .5 4m-.5 5v-5h5\" />\u003c/svg>"
+const packageIcon = "\u003csvg xmlns=\"http://www.w3.org/2000/svg\" width=\"24\" height=\"24\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\" focusable=\"false\" class=\"icon\">\u003cpath d=\"M12 3l8 4.5l0 9l-8 4.5l-8 -4.5l0 -9l8 -4.5\" />\u003cpath d=\"M12 12l8 -4.5\" />\u003cpath d=\"M12 12l0 9\" />\u003cpath d=\"M12 12l-8 -4.5\" />\u003cpath d=\"M16 5.25l-8 4.5\" />\u003c/svg>"
+    const apiUrl = '/api'
+    const table = document.querySelector('[data-invoice-table]')
+    const searchInput = document.querySelector('[data-invoice-search]')
+    const navbarSearchBox = document.querySelector('#navbar-global-search')
+    if (navbarSearchBox) {
+      navbarSearchBox.setAttribute('placeholder', 'Nomor, client, judul, status:lunas')
+      navbarSearchBox.setAttribute('title', 'Cari bebas: nomor invoice, client, judul, item. Cari per kolom dengan kolom:isi, boleh digabung: status:belum client:budi total:>5000000. Nama kolom boleh disingkat. Kolom: nomor, judul, client, status, total, tanggal, item, kontak, catatan.')
+    }
+    const form = document.querySelector('[data-invoice-form]')
+    const modalElement = document.querySelector('#invoice-modal')
+    const modalTitle = document.querySelector('[data-invoice-modal-title]')
+    const errorBox = document.querySelector('[data-invoice-error]')
+    const submitButton = document.querySelector('[data-invoice-submit]')
+    const addButton = document.querySelector('[data-add-invoice]')
+    const printFormButton = document.querySelector('[data-invoice-print-form]')
+    const linesBox = document.querySelector('[data-invoice-lines]')
+    const subtotalBox = document.querySelector('[data-invoice-subtotal]')
+    const totalBox = document.querySelector('[data-invoice-total]')
+    const discountInput = document.querySelector('[data-invoice-discount]')
+    const pickerInput = document.querySelector('[data-invoice-picker-input]')
+    const pickerMenu = document.querySelector('[data-invoice-picker-menu]')
+    const filterChips = [...document.querySelectorAll('[data-invoice-filter]')]
+    const zones = { proof: form.querySelector('[data-invoice-zone="proof"]'), media: form.querySelector('[data-invoice-zone="media"]') }
+    const mediaInput = document.querySelector('[data-invoice-media-input]')
+    const mediaBox = document.querySelector('[data-invoice-media]')
+    const mediaStatus = document.querySelector('[data-invoice-media-status]')
+    const proofInput = document.querySelector('[data-invoice-proof-input]')
+    const proofBox = document.querySelector('[data-invoice-proofs]')
+    const proofStatus = document.querySelector('[data-invoice-proof-status]')
+    const cacheKey = 'nishikigoi-cache:farm-invoice'
+    const filterKey = 'nishikigoi-invoice-filter'
+    const defaultsKey = 'nishikigoi-invoice-defaults'
+
+    let invoices = []
+    let sellItems = []
+    let sourcesLoaded = false
+    let lines = []
+    let proofs = []
+    let mediaFiles = []
+    let activeZone = 'proof'
+    let readonlyMode = false
+    let statusFilter = 'all'
+    let signature = ''
+    try { statusFilter = sessionStorage.getItem(filterKey) || 'all' } catch {}
+
+    const statusLabels = {
+      unpaid: { label: 'Belum dibayar', className: 'bg-yellow-lt text-yellow' },
+      paid: { label: 'Lunas', className: 'bg-green-lt text-green' },
+    }
+    const escapeHtml = (value) =>
+      String(value ?? '').replace(/[&<>'"]/g, (char) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' })[char])
+    const money = (value) => `Rp ${Math.round(Number(value) || 0).toLocaleString('id-ID')}`
+    const dateShort = (value) => (value ? window.KoiAuth.formatDate(String(value).slice(0, 10)) : '')
+    const dateLong = (value) => (value ? window.KoiAuth.formatDate(String(value).slice(0, 10), { weekday: true }) : '')
+    const today = () => new Date().toISOString().slice(0, 10)
+    const keepScroll = async (callback) => {
+      const scrollX = window.scrollX
+      const scrollY = window.scrollY
+      const result = await callback()
+      requestAnimationFrame(() => window.scrollTo(scrollX, scrollY))
+      return result
+    }
+    const norm = (value) => String(value === null || value === undefined ? '' : value).toLowerCase().trim()
+    const qtyNumber = (value) => {
+      const number = Number(String(value ?? '').replace(',', '.'))
+      return Number.isFinite(number) ? number : 0
+    }
+    const lineSum = (line) => qtyNumber(line.qty) * (Number(line.unit_price) || 0)
+    const invoiceSubtotal = (invoice) => (invoice.items || []).reduce((sum, line) => sum + lineSum(line), 0)
+
+    // ---- search: plain words + "field:value" ---------------------------------------------------------------
+    const searchAliases = {
+      nomor: 'invoice_no', no: 'invoice_no',
+      judul: 'title', perihal: 'title',
+      client: 'client_name', pembeli: 'client_name', nama: 'client_name',
+      status: 'status',
+      total: 'total', harga: 'total',
+      tanggal: 'invoice_date',
+      item: 'items', ikan: 'items', barang: 'items',
+      kontak: 'sales_contact', sales: 'sales_contact',
+      catatan: 'notes',
+    }
+    const resolveMarkers = (keyword) => {
+      const names = Object.keys(searchAliases)
+      const found = []
+      const pattern = /(?:^|[\s,])([a-z]+)\s*:/gi
+      let match
+      while ((match = pattern.exec(keyword))) {
+        const key = match[1].toLowerCase()
+        const name = searchAliases[key] ? key : (key.length >= 2 ? names.find((alias) => alias.startsWith(key)) : null)
+        if (name) {
+          const hit = [match[0], name]
+          hit.index = match.index
+          found.push(hit)
+        }
+      }
+      return found
+    }
+    const numberTest = (value) => {
+      const text = String(value || '').toLowerCase().replace(/rp|\s/g, '')
+      const toNumber = (part) => Number(String(part).replace(/\./g, '').replace(',', '.'))
+      const compare = text.match(/^(>=|<=|>|<)([\d.,]+)$/)
+      if (compare) {
+        const limit = toNumber(compare[2])
+        return { '>=': (n) => n >= limit, '<=': (n) => n <= limit, '>': (n) => n > limit, '<': (n) => n < limit }[compare[1]]
+      }
+      const range = text.match(/^([\d.,]+)-([\d.,]+)$/)
+      if (range) {
+        const [a, b] = [toNumber(range[1]), toNumber(range[2])]
+        return (n) => n >= Math.min(a, b) && n <= Math.max(a, b)
+      }
+      return /^[\d.,]+$/.test(text) ? (n) => n === toNumber(text) : null
+    }
+    const statusWords = { belum: 'unpaid', unpaid: 'unpaid', tagihan: 'unpaid', lunas: 'paid', paid: 'paid', bayar: 'paid' }
+    const matchesField = (invoice, field, rawValue) => {
+      const value = norm(rawValue)
+      if (!value) return null
+      if (field === 'total') {
+        const test = numberTest(value)
+        return test ? test(Number(invoice.total)) : null
+      }
+      if (field === 'invoice_date') return String(invoice.invoice_date || '').slice(0, 10).includes(value)
+      return value.split(',').map((part) => part.trim()).filter(Boolean).some((choice) => {
+        if (field === 'status') {
+          const wanted = Object.entries(statusWords).find(([word]) => choice.startsWith(word))?.[1] || choice
+          return invoice.status === wanted
+        }
+        if (field === 'items') return (invoice.items || []).some((line) => norm(line.description).includes(choice))
+        return norm(invoice[field]).includes(choice)
+      })
+    }
+    const matchesSearch = (invoice) => {
+      const keyword = String(searchInput.value || '').trim()
+      if (!keyword) return true
+      const markers = resolveMarkers(keyword)
+      const plain = markers.length ? keyword.slice(0, markers[0].index) : keyword
+      for (let index = 0; index < markers.length; index += 1) {
+        const marker = markers[index]
+        const start = marker.index + marker[0].length
+        const end = index + 1 < markers.length ? markers[index + 1].index : keyword.length
+        if (matchesField(invoice, searchAliases[marker[1]], keyword.slice(start, end)) === false) return false
+      }
+      const alternatives = plain.split(',').map((part) => norm(part).split(/\s+/).filter(Boolean)).filter((words) => words.length)
+      if (!alternatives.length) return true
+      const blob = norm([invoice.invoice_no, invoice.title, invoice.client_name, statusLabels[invoice.status]?.label, ...(invoice.items || []).map((line) => line.description)].join(' '))
+      return alternatives.some((words) => words.every((word) => blob.includes(word)))
+    }
+    const visibleInvoices = () => dock.apply(invoices.filter((invoice) => (statusFilter === 'all' || invoice.status === statusFilter) && matchesSearch(invoice)))
+
+    // ---- list ----------------------------------------------------------------------------------------------
+    const renderFilters = () => {
+      const counts = { all: invoices.length, unpaid: 0, paid: 0 }
+      invoices.forEach((invoice) => { counts[invoice.status] = (counts[invoice.status] || 0) + 1 })
+      filterChips.forEach((chip) => {
+        const key = chip.dataset.invoiceFilter
+        const base = { all: 'Semua', unpaid: 'Belum dibayar', paid: 'Lunas' }[key]
+        chip.textContent = `${base} (${counts[key] || 0})`
+        chip.style.outline = key === statusFilter ? '2px solid var(--tblr-primary)' : ''
+      })
+    }
+    const renderTable = () => {
+      dock.prune(invoices)
+      renderFilters()
+      const items = visibleInvoices()
+      table.innerHTML = items.map((invoice) => {
+        const status = statusLabels[invoice.status] || statusLabels.unpaid
+        const lineCount = (invoice.items || []).length
+        return `
+        <div class="col-sm-6 col-lg-4 col-xl-3">
+          <div class="card h-100 invoice-card" data-dock-id="${escapeHtml(invoice.id)}">
+            <div class="invoice-card-top" data-dock-select title="Klik kartu untuk memilih, klik dua kali untuk membuka detail">
+              <span class="fw-semibold invoice-ellipsis">${escapeHtml(invoice.invoice_no)}</span>
+              <span class="d-flex align-items-center gap-1 flex-shrink-0">
+                <span class="badge bg-blue text-blue-fg dock-selected-badge">Terpilih</span>
+                <span class="badge ${status.className}">${escapeHtml(status.label)}</span>
+              </span>
+            </div>
+            <div class="card-body d-flex flex-column" role="button" tabindex="0" data-invoice-id="${escapeHtml(invoice.id)}">
+              <div class="fw-semibold invoice-ellipsis" title="${escapeHtml(invoice.client_name)}">${escapeHtml(invoice.client_name)}</div>
+              ${invoice.title ? `<div class="text-secondary small invoice-ellipsis" title="${escapeHtml(invoice.title)}">${escapeHtml(invoice.title)}</div>` : ''}
+              <div class="text-secondary small mt-2">${escapeHtml(dateShort(invoice.invoice_date))}${invoice.due_date ? ` · jatuh tempo ${escapeHtml(dateShort(invoice.due_date))}` : ''}</div>
+              <div class="text-secondary small">${lineCount} item${(invoice.payment_proofs || []).length ? ` · <span class="text-azure">bukti transfer (${invoice.payment_proofs.length})</span>` : ''}${(invoice.media_entries || []).length ? ` · <span class="text-azure">dokumentasi (${invoice.media_entries.length})${invoice.gallery_id ? ' · di Galeri' : ''}</span>` : ''}</div>
+              <div class="invoice-total mt-2">${escapeHtml(money(invoice.total))}</div>
+              <div class="d-flex gap-2 mt-3 pt-2" style="margin-top:auto">
+                <button class="btn btn-sm flex-fill" type="button" data-print-invoice="${escapeHtml(invoice.id)}">${printIcon} Print</button>
+                <button class="btn btn-sm flex-fill" type="button" data-edit-invoice="${escapeHtml(invoice.id)}" data-role-required="farm-operate">${editIcon} Edit</button>
+                <button class="btn btn-sm btn-outline-danger flex-fill" type="button" data-delete-invoice="${escapeHtml(invoice.id)}" data-role-required="farm-operate">${trashIcon} Hapus</button>
+              </div>
+            </div>
+          </div>
+        </div>`
+      }).join('') || `<div class="col-12 text-secondary">${invoices.length ? 'Tidak ada invoice yang cocok.' : 'Belum ada invoice. Tekan + untuk membuat.'}</div>`
+      dock.refresh()
+    }
+    const loadInvoices = async (silent = false) => {
+      try {
+        const response = await fetch(`${apiUrl}/invoices`)
+        if (!response.ok) throw new Error('Data invoice gagal dimuat')
+        const data = await response.json()
+        const next = JSON.stringify(data)
+        try { localStorage.setItem(cacheKey, next) } catch {}
+        if (silent && next === signature) return
+        signature = next
+        invoices = data
+        renderTable()
+      } catch (error) {
+        if (!silent) table.innerHTML = `<div class="col-12 text-danger">${escapeHtml(error.message)}</div>`
+      }
+    }
+    const loadSources = async () => {
+      if (sourcesLoaded) return
+      try {
+        const sell = await fetch(`${apiUrl}/sell`)
+        if (sell.ok) sellItems = await sell.json()
+        sourcesLoaded = true
+      } catch {}
+    }
+
+    // ---- lines ---------------------------------------------------------------------------------------------
+    const formatMoneyInput = (input) => {
+      const digits = input.value.replace(/[^\d]/g, '')
+      input.value = digits ? Number(digits).toLocaleString('id-ID') : ''
+    }
+    const digitsOf = (value) => Number(String(value || '').replace(/[^\d]/g, '')) || 0
+    const updateTotals = () => {
+      const subtotal = lines.reduce((sum, line) => sum + lineSum(line), 0)
+      const discount = digitsOf(discountInput.value)
+      subtotalBox.textContent = money(subtotal)
+      totalBox.textContent = money(Math.max(0, subtotal - discount))
+      linesBox.querySelectorAll('[data-line-total]').forEach((element) => {
+        const index = Number(element.dataset.lineTotal)
+        element.textContent = money(lineSum(lines[index] || {}))
+      })
+    }
+    const renderLines = () => {
+      linesBox.innerHTML = lines.map((line, index) => `
+        <div class="invoice-line" data-invoice-line="${index}">
+          <input class="form-control" data-line-field="description" value="${escapeHtml(line.description)}" placeholder="Deskripsi item" maxlength="300" ${readonlyMode ? 'disabled' : ''} />
+          <input class="form-control" data-line-field="qty" inputmode="decimal" value="${escapeHtml(line.qty)}" placeholder="Qty" ${readonlyMode ? 'disabled' : ''} />
+          <input class="form-control text-end" data-line-field="unit_price" inputmode="numeric" value="${line.unit_price ? Number(line.unit_price).toLocaleString('id-ID') : ''}" placeholder="0" ${readonlyMode ? 'disabled' : ''} />
+          <div class="invoice-line-total" data-line-total="${index}">${escapeHtml(money(lineSum(line)))}</div>
+          ${readonlyMode ? '<div></div>' : `<button class="btn btn-sm btn-outline-danger btn-icon" type="button" data-line-remove="${index}" aria-label="Hapus baris" title="Hapus baris">${trashIcon}</button>`}
+        </div>`).join('') || '<div class="text-secondary small">Belum ada rincian. Cari ikan atau item di atas, atau tambah item custom.</div>'
+      updateTotals()
+    }
+    const addLine = (line) => {
+      lines.push({ description: '', qty: 1, unit_price: 0, ...line })
+      renderLines()
+    }
+    const koiDescription = (koi) => {
+      const size = Number(koi.current_length_cm)
+      return [koi.code, [koi.variety, koi.bloodline].filter(Boolean).join(' '), Number.isFinite(size) && size > 0 ? `${size.toLocaleString('id-ID', { maximumFractionDigits: 1 })} cm` : ''].filter(Boolean).join(' - ')
+    }
+    let pickerResult = null
+    let pickerBusy = false
+    let pickerToken = 0
+    const renderPickerMenu = () => {
+      const query = norm(pickerInput.value)
+      if (!query || readonlyMode) { pickerMenu.classList.add('d-none'); return }
+      const terms = query.split(/[\s,;]+/).filter(Boolean)
+      const listMode = Boolean(pickerResult?.list_mode)
+      const codeSet = Object.fromEntries((listMode ? pickerResult.tokens : []).map((token) => [token, true]))
+      const sellMatches = sellItems
+        .filter((item) => item.status !== 'sold')
+        .filter((item) => {
+          if (listMode) return (item.koi || []).some((koi) => codeSet[norm(koi.code)])
+          const haystack = norm([item.title, ...(item.koi || []).map((koi) => [koi.code, koi.name, koi.variety].join(' '))].join(' '))
+          return terms.every((term) => haystack.includes(term))
+        })
+        .slice(0, 5)
+      const koiTotal = pickerResult ? pickerResult.total : 0
+      const koiMatches = (pickerResult?.items || []).slice(0, listMode ? 40 : 8)
+      const addAll = listMode && koiTotal > 1
+        ? `<button class="invoice-picker-option" type="button" data-invoice-pick="allkoi:0"><span class="fw-semibold">Tambahkan semua (${koiTotal} ikan)</span></button>` +
+          (pickerResult.missing.length ? `<div class="px-3 pb-1 small text-warning">Tidak ditemukan: ${escapeHtml(pickerResult.missing.slice(0, 6).join(', ').toUpperCase())}</div>` : '')
+        : ''
+      const option = (kind, id, image, title, subtitle) => `
+        <button class="invoice-picker-option" type="button" data-invoice-pick="${kind}:${escapeHtml(id)}">
+          ${image ? `<img class="invoice-thumb" src="${escapeHtml(image)}" alt="" loading="lazy" />` : '<div class="invoice-thumb"></div>'}
+          <span class="min-width-0"><span class="d-block fw-semibold">${escapeHtml(title)}</span><span class="d-block small text-secondary">${escapeHtml(subtitle)}</span></span>
+        </button>`
+      pickerMenu.innerHTML = addAll +
+        (sellMatches.length ? '<div class="px-3 pt-2 small text-secondary">Penjualan</div>' + sellMatches.map((item) => option('sell', item.id, ((item.media_entries || [])[0]?.thumbnail_url) || ((item.koi || [])[0]?.image_url) || '', item.title, `${money(item.price)} · ${(item.koi || []).map((koi) => koi.code).join(', ') || 'foto'}`)).join('') : '') +
+        (koiMatches.length ? '<div class="px-3 pt-2 small text-secondary">Data Ikan</div>' + koiMatches.map((koi) => option('koi', koi.id, koi.image_url, koiDescription(koi), `${koi.sale_price ? money(koi.sale_price) : 'Harga belum diisi'}${koi.status === 'sold' ? ' · Sold' : ''}`)).join('') : '') ||
+        (sourcesLoaded && pickerResult && !pickerBusy ? '<div class="p-3 text-secondary">Tidak ditemukan.</div>' : '<div class="p-3 text-secondary"><span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>Mencari...</div>')
+      pickerMenu.classList.remove('d-none')
+    }
+    const searchPicker = window.KoiPicker.debounce(async () => {
+      const text = pickerInput.value
+      if (!norm(text)) { pickerResult = null; pickerBusy = false; return }
+      const mine = ++pickerToken
+      pickerBusy = true
+      try {
+        const result = await window.KoiPicker.lookup(text, { limit: 40 })
+        if (mine !== pickerToken) return
+        pickerResult = result
+      } catch {
+        if (mine !== pickerToken) return
+        pickerResult = { items: [], total: 0, ids: [], missing: [], list_mode: false, tokens: [] }
+      }
+      pickerBusy = false
+      renderPickerMenu()
+    }, 220)
+
+    // ---- proof of transfer: upload button, paste, drag and drop ------------------------------------------------
+    const readFileAsDataUrl = (file) => new Promise((resolve, reject) => {
+      const reader = new FileReader()
+      reader.addEventListener('load', () => resolve(reader.result))
+      reader.addEventListener('error', () => reject(new Error('File gagal dibaca')))
+      reader.readAsDataURL(file)
+    })
+    const loadImage = (src) => new Promise((resolve, reject) => {
+      const image = new Image()
+      image.addEventListener('load', () => resolve(image))
+      image.addEventListener('error', () => reject(new Error('Gambar gagal diproses')))
+      image.src = src
+    })
+    // larger and sharper than the photo upload, so the numbers on a transfer receipt stay readable
+    const compressProof = async (file) => {
+      const image = await loadImage(await readFileAsDataUrl(file))
+      const scale = Math.min(1, 2000 / Math.max(image.naturalWidth, image.naturalHeight))
+      const canvas = document.createElement('canvas')
+      canvas.width = Math.max(1, Math.round(image.naturalWidth * scale))
+      canvas.height = Math.max(1, Math.round(image.naturalHeight * scale))
+      canvas.getContext('2d').drawImage(image, 0, 0, canvas.width, canvas.height)
+      return canvas.toDataURL('image/jpeg', 0.86)
+    }
+    const renderProofs = () => {
+      proofBox.innerHTML = proofs.map((proof, index) => `
+        <div class="col-6 col-md-3">
+          <img class="invoice-proof-thumb" src="${escapeHtml(proof.previewUrl || proof.url)}" alt="Bukti transfer ${index + 1}" data-proof-zoom="${index}" />
+          <div class="small text-secondary text-truncate mt-1" title="${escapeHtml(proof.name || '')}">${escapeHtml(proof.name || `Bukti ${index + 1}`)}${proof.file ? ' (belum disimpan)' : ''}</div>
+          ${readonlyMode ? '' : `<button class="btn btn-sm btn-outline-danger w-100 mt-1" type="button" data-proof-remove="${index}">Hapus</button>`}
+        </div>`).join('')
+    }
+    const addProofFiles = (files) => {
+      const images = Array.from(files || []).filter((file) => /^image\//.test(file.type))
+      if (!images.length) {
+        proofStatus.textContent = 'Hanya file gambar yang bisa dijadikan bukti transfer.'
+        return
+      }
+      proofStatus.textContent = ''
+      images.forEach((file) => proofs.push({ file, name: file.name || `bukti-${proofs.length + 1}.png`, previewUrl: URL.createObjectURL(file) }))
+      renderProofs()
+    }
+    const uploadProofs = async () => {
+      const saved = []
+      for (const [index, proof] of proofs.entries()) {
+        if (proof.url) { saved.push({ url: proof.url, name: proof.name || '' }); continue }
+        proofStatus.textContent = `Mengupload bukti transfer ${index + 1}/${proofs.length}...`
+        const response = await fetch(`${apiUrl}/images`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ prefix: 'invoice-proof', image_data: await compressProof(proof.file) }) })
+        const data = await response.json().catch(() => ({}))
+        if (!response.ok) throw new Error(data.error || data.detail || 'Bukti transfer gagal diupload')
+        saved.push({ url: data.image_url, name: proof.name || '' })
+      }
+      proofStatus.textContent = ''
+      return saved
+    }
+
+    // ---- documentation: photos and videos (shown in Galeri on request) --------------------------------------------
+    const MAX_VIDEO_BYTES = 40 * 1024 * 1024
+    const compressImage = async (file) => {
+      const image = await loadImage(await readFileAsDataUrl(file))
+      const scale = Math.min(1, 1600 / Math.max(image.naturalWidth, image.naturalHeight))
+      const canvas = document.createElement('canvas')
+      canvas.width = Math.max(1, Math.round(image.naturalWidth * scale))
+      canvas.height = Math.max(1, Math.round(image.naturalHeight * scale))
+      canvas.getContext('2d').drawImage(image, 0, 0, canvas.width, canvas.height)
+      return canvas.toDataURL('image/jpeg', 0.8)
+    }
+    const createVideoThumbnail = (file) => new Promise((resolve) => {
+      const video = document.createElement('video')
+      const canvas = document.createElement('canvas')
+      const objectUrl = URL.createObjectURL(file)
+      video.muted = true
+      video.playsInline = true
+      video.preload = 'metadata'
+      video.addEventListener('loadeddata', () => {
+        canvas.width = video.videoWidth || 640
+        canvas.height = video.videoHeight || 360
+        canvas.getContext('2d').drawImage(video, 0, 0, canvas.width, canvas.height)
+        URL.revokeObjectURL(objectUrl)
+        resolve(canvas.toDataURL('image/webp', 0.82))
+      }, { once: true })
+      video.addEventListener('error', () => { URL.revokeObjectURL(objectUrl); resolve('') }, { once: true })
+      video.src = objectUrl
+    })
+    const renderMedia = () => {
+      mediaBox.innerHTML = mediaFiles.map((item, index) => {
+        const src = item.previewUrl || item.thumbnail_url || item.url || ''
+        return `
+        <div class="col-6 col-md-3" data-invoice-media-item="${index}">
+          ${item.type === 'video' && !src ? '<div class="invoice-proof-thumb d-flex align-items-center justify-content-center">Video</div>' : `<img class="invoice-proof-thumb" src="${escapeHtml(src)}" alt="" data-media-zoom="${index}" />`}
+          ${item.type === 'video' ? '<div class="small text-secondary">Video</div>' : ''}
+          <input class="form-control form-control-sm mt-1" data-invoice-media-notes placeholder="Catatan" value="${escapeHtml(item.notes || '')}" ${readonlyMode ? 'disabled' : ''} />
+          ${readonlyMode ? '' : `<button class="btn btn-sm btn-outline-danger w-100 mt-1" type="button" data-media-remove="${index}">Hapus</button>`}
+        </div>`
+      }).join('')
+    }
+    const collectMediaNotes = () => {
+      mediaBox.querySelectorAll('[data-invoice-media-item]').forEach((element) => {
+        const entry = mediaFiles[Number(element.dataset.invoiceMediaItem)]
+        if (entry) entry.notes = element.querySelector('[data-invoice-media-notes]').value.trim()
+      })
+    }
+    const addMediaFiles = (files) => {
+      collectMediaNotes()
+      let skipped = ''
+      Array.from(files || []).forEach((file) => {
+        const isVideo = /^video\//.test(file.type)
+        if (!isVideo && !/^image\//.test(file.type)) { skipped = 'Hanya file foto atau video yang bisa dilampirkan.'; return }
+        if (isVideo && file.size > MAX_VIDEO_BYTES) { skipped = `Video ${file.name} lebih dari 40 MB dan dilewati.`; return }
+        mediaFiles.push({ file, type: isVideo ? 'video' : 'image', name: file.name || `foto-${mediaFiles.length + 1}.png`, notes: '', previewUrl: isVideo ? '' : URL.createObjectURL(file) })
+      })
+      mediaStatus.textContent = skipped
+      renderMedia()
+    }
+    const uploadMedia = async () => {
+      collectMediaNotes()
+      const entries = []
+      for (const [index, item] of mediaFiles.entries()) {
+        if (item.url) {
+          entries.push({ type: item.type || 'image', url: item.url, thumbnail_url: item.thumbnail_url || item.url, name: item.name || '', notes: item.notes || '' })
+          continue
+        }
+        mediaStatus.textContent = `Mengupload dokumentasi ${index + 1}/${mediaFiles.length}...`
+        if (item.type === 'video') {
+          const [videoData, thumbnailData] = await Promise.all([readFileAsDataUrl(item.file), createVideoThumbnail(item.file)])
+          const response = await fetch(`${apiUrl}/videos`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ prefix: 'invoice-video', video_data: videoData, thumbnail_data: thumbnailData }) })
+          const data = await response.json().catch(() => ({}))
+          if (!response.ok) throw new Error(data.error || data.detail || 'Video gagal diupload')
+          entries.push({ type: 'video', url: data.video_url, thumbnail_url: data.video_thumbnail_url, name: item.name || '', notes: item.notes || '' })
+          continue
+        }
+        const response = await fetch(`${apiUrl}/images`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ prefix: 'invoice-image', image_data: await compressImage(item.file) }) })
+        const data = await response.json().catch(() => ({}))
+        if (!response.ok) throw new Error(data.error || data.detail || 'Gambar gagal diupload')
+        entries.push({ type: 'image', url: data.image_url, thumbnail_url: data.image_url, name: item.name || '', notes: item.notes || '' })
+      }
+      mediaStatus.textContent = ''
+      return entries
+    }
+    const mediaFromServer = (list) => (list || []).map((media) => ({ type: media.type, url: media.url, thumbnail_url: media.thumbnail_url, name: media.name, notes: media.notes, previewUrl: media.thumbnail_url || media.url }))
+
+    // ---- form ----------------------------------------------------------------------------------------------
+    const modalApi = () => window.tabler?.bootstrap?.Modal || window.bootstrap?.Modal
+    const openModal = () => {
+      const api = modalApi()
+      if (api) { api.getOrCreateInstance(modalElement).show(); return }
+      modalElement.classList.add('show')
+      modalElement.style.display = 'block'
+    }
+    const closeModal = () => {
+      const api = modalApi()
+      if (api) { api.getInstance(modalElement)?.hide(); return }
+      modalElement.classList.remove('show')
+      modalElement.style.display = 'none'
+    }
+    const setReadonly = (readonly) => {
+      readonlyMode = readonly
+      form.querySelectorAll('input, textarea').forEach((field) => { if (field.type !== 'hidden') field.disabled = readonly })
+      form.querySelectorAll('[data-invoice-add-custom], [data-invoice-pull], [data-invoice-proof-upload], [data-invoice-proof-paste], [data-invoice-media-upload], [data-invoice-media-paste]').forEach((button) => { button.disabled = readonly })
+      Object.values(zones).forEach((zone) => zone.classList.toggle('d-none', readonly))
+      submitButton.classList.toggle('d-none', readonly)
+    }
+    const readDefaults = () => {
+      try { return JSON.parse(localStorage.getItem(defaultsKey) || '{}') || {} } catch { return {} }
+    }
+    const openForm = async (id, readonly = false) => {
+      const invoice = id ? invoices.find((entry) => String(entry.id) === String(id)) : null
+      form.reset()
+      errorBox.classList.add('d-none')
+      pickerMenu.classList.add('d-none')
+      pickerInput.value = ''
+      const defaults = readDefaults()
+      form.elements.id.value = invoice ? invoice.id : ''
+      modalTitle.textContent = invoice ? (readonly ? `Invoice ${invoice.invoice_no}` : `Formulir Edit Invoice ${invoice.invoice_no}`) : 'Formulir Tambah Invoice'
+      form.elements.invoice_no.value = invoice?.invoice_no || ''
+      form.elements.invoice_date.value = invoice ? String(invoice.invoice_date).slice(0, 10) : today()
+      form.elements.due_date.value = invoice?.due_date ? String(invoice.due_date).slice(0, 10) : ''
+      form.querySelectorAll('[name="status"]').forEach((radio) => { radio.checked = radio.value === (invoice?.status || 'unpaid') })
+      form.elements.client_name.value = invoice?.client_name || ''
+      form.elements.title.value = invoice?.title || ''
+      form.elements.client_contact.value = invoice?.client_contact || ''
+      form.elements.sales_contact.value = invoice ? (invoice.sales_contact || '') : (defaults.sales_contact || '')
+      form.elements.bank_account.value = invoice ? (invoice.bank_account || '') : (defaults.bank_account || '')
+      form.elements.notes.value = invoice?.notes || ''
+      discountInput.value = invoice && Number(invoice.discount) ? Math.round(Number(invoice.discount)).toLocaleString('id-ID') : ''
+      lines = (invoice?.items || []).map((line) => ({ ...line }))
+      proofs = (invoice?.payment_proofs || []).map((proof) => ({ url: proof.url, name: proof.name, previewUrl: proof.url }))
+      proofInput.value = ''
+      proofStatus.textContent = ''
+      mediaFiles = mediaFromServer(invoice?.media_entries)
+      mediaInput.value = ''
+      mediaStatus.textContent = ''
+      activeZone = 'proof'
+      // a collection only exists while there is documentation, so an invoice without any starts ticked
+      form.elements.show_in_gallery.checked = invoice ? (Boolean(invoice.gallery_id) || !(invoice.media_entries || []).length) : true
+      if (!invoice && !lines.length) lines = [{ description: '', qty: 1, unit_price: 0 }]
+      setReadonly(readonly)
+      renderProofs()
+      renderMedia()
+      printFormButton.classList.toggle('d-none', !invoice)
+      printFormButton.dataset.invoiceId = invoice ? invoice.id : ''
+      renderLines()
+      openModal()
+      if (!invoice) {
+        try {
+          const response = await fetch(`${apiUrl}/invoices-next-number?date=${encodeURIComponent(form.elements.invoice_date.value)}`)
+          if (response.ok) form.elements.invoice_no.placeholder = `Otomatis (${(await response.json()).invoice_no})`
+        } catch {}
+      }
+      loadSources()
+    }
+    form.addEventListener('submit', async (event) => {
+      event.preventDefault()
+      errorBox.classList.add('d-none')
+      submitButton.disabled = true
+      try {
+        const id = form.elements.id.value
+        const payload = {
+          invoice_no: form.elements.invoice_no.value.trim(),
+          invoice_date: form.elements.invoice_date.value,
+          due_date: form.elements.due_date.value,
+          status: form.querySelector('[name="status"]:checked')?.value || 'unpaid',
+          client_name: form.elements.client_name.value.trim(),
+          title: form.elements.title.value.trim(),
+          client_contact: form.elements.client_contact.value.trim(),
+          sales_contact: form.elements.sales_contact.value.trim(),
+          bank_account: form.elements.bank_account.value.trim(),
+          notes: form.elements.notes.value.trim(),
+          discount: digitsOf(discountInput.value),
+          items: lines.filter((line) => String(line.description || '').trim()).map((line) => ({
+            description: String(line.description).trim(),
+            qty: qtyNumber(line.qty) || 1,
+            unit_price: Number(line.unit_price) || 0,
+            ...(line.koi_id ? { koi_id: line.koi_id } : {}),
+            ...(line.sell_id ? { sell_id: line.sell_id } : {}),
+          })),
+        }
+        if (!payload.client_name) throw new Error('Nama client atau pembeli wajib diisi')
+        if (!payload.items.length) throw new Error('Isi minimal satu baris rincian')
+        payload.payment_proofs = await uploadProofs()
+        payload.media_entries = await uploadMedia()
+        payload.show_in_gallery = Boolean(form.elements.show_in_gallery.checked)
+        const response = await fetch(id ? `${apiUrl}/invoices/${id}` : `${apiUrl}/invoices`, { method: id ? 'PATCH' : 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(payload) })
+        const data = await response.json().catch(() => ({}))
+        if (!response.ok) throw new Error(data.error || 'Invoice gagal disimpan')
+        try { localStorage.setItem(defaultsKey, JSON.stringify({ sales_contact: payload.sales_contact, bank_account: payload.bank_account })) } catch {}
+        await keepScroll(loadInvoices)
+        if (id) {
+          form.elements.invoice_no.value = data.invoice_no || payload.invoice_no
+          proofs = (data.payment_proofs || []).map((proof) => ({ url: proof.url, name: proof.name, previewUrl: proof.url }))
+          mediaFiles = mediaFromServer(data.media_entries)
+          renderProofs()
+          renderMedia()
+          modalTitle.textContent = `Formulir Edit Invoice ${data.invoice_no || ''}`
+        } else {
+          closeModal()
+        }
+      } catch (error) {
+        errorBox.textContent = error.message
+        errorBox.classList.remove('d-none')
+        proofStatus.textContent = ''
+        mediaStatus.textContent = ''
+      } finally {
+        submitButton.disabled = false
+      }
+    })
+
+    // ---- print ---------------------------------------------------------------------------------------------
+    const printInvoice = (id) => {
+      const invoice = invoices.find((entry) => String(entry.id) === String(id))
+      if (!invoice || !window.KoiPrint) return
+      const e = window.KoiPrint.escapeHtml
+      const items = invoice.items || []
+      const subtotal = invoiceSubtotal(invoice)
+      const discount = Number(invoice.discount) || 0
+      const rows = items.map((line, index) => `<tr>
+        <td class="kp-center">${index + 1}</td>
+        <td>${e(line.description)}</td>
+        <td class="kp-num">${e(Number(line.qty).toLocaleString('id-ID', { maximumFractionDigits: 2 }))}</td>
+        <td class="kp-num">${e(money(line.unit_price))}</td>
+        <td class="kp-num">${e(money(lineSum(line)))}</td></tr>`).join('')
+      const box = (label, value) => (value ? `<div style="border:1px solid #999;padding:6px 8px;break-inside:avoid"><span class="kp-label">${e(label)}</span><div style="white-space:pre-wrap">${e(value)}</div></div>` : '')
+      const notesBlocks = [box('Pembayaran (nomor rekening)', invoice.bank_account), box('Kontak sales', invoice.sales_contact)].filter(Boolean)
+      // documentation (photos, and the cover picture of videos) goes on page 2 onward when its checkbox is ticked
+      const documentation = invoice.media_entries || []
+      const mediaSrc = (url) => (window.KoiAuth?.apiUrl ? window.KoiAuth.apiUrl(url) : url)
+      const documentationBody = documentation.length ? `
+        <section class="kp-section" style="display:grid;grid-template-columns:repeat(2,1fr);gap:10px">
+          ${documentation.map((media, index) => {
+            const isVideo = media.type === 'video'
+            const src = isVideo ? media.thumbnail_url : (media.url || media.thumbnail_url)
+            const caption = [isVideo ? 'Video' : '', media.notes || media.name || ''].filter(Boolean).join(': ')
+            return `<figure style="margin:0;border:1px solid #999;break-inside:avoid;page-break-inside:avoid">
+              ${src ? `<img src="${e(mediaSrc(src))}" alt="" style="display:block;width:100%;max-height:105mm;object-fit:contain;background:#f3f3f3">` : '<div style="height:60mm;display:flex;align-items:center;justify-content:center;background:#eee;color:#666">Video</div>'}
+              <figcaption style="padding:3px 6px;font-size:9px"><strong>${index + 1}.</strong> ${e(caption)}</figcaption>
+            </figure>`
+          }).join('')}
+        </section>` : ''
+      window.KoiPrint.print({
+        attachment: documentation.length ? {
+          key: 'documentation',
+          label: 'Dokumentasi (foto atau video)',
+          heading: 'LAMPIRAN DOKUMENTASI',
+          subheading: invoice.invoice_no,
+          title: `Lampiran invoice ${invoice.invoice_no}`,
+          body: documentationBody,
+        } : null,
+        key: 'invoice',
+        title: `Invoice ${invoice.invoice_no}`,
+        heading: 'INVOICE',
+        subheading: invoice.invoice_no,
+        info: [
+          ['No. Invoice', invoice.invoice_no],
+          ['Tanggal', dateLong(invoice.invoice_date)],
+          ['Jatuh tempo', invoice.due_date ? dateLong(invoice.due_date) : '-'],
+          ['Status', statusLabels[invoice.status]?.label || ''],
+        ],
+        body: `
+          <section class="kp-section" style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+            <div style="border:1px solid #999;padding:6px 8px"><span class="kp-label">Ditagihkan kepada</span>
+              <div style="font-size:13px;font-weight:800">${e(invoice.client_name)}</div>
+              ${invoice.client_contact ? `<div style="white-space:pre-wrap">${e(invoice.client_contact)}</div>` : ''}</div>
+            <div style="border:1px solid #999;padding:6px 8px"><span class="kp-label">Perihal</span>
+              <div style="font-weight:700">${e(invoice.title || '-')}</div></div>
+          </section>
+          <section class="kp-section">
+            <table class="kp-table">
+              <thead><tr><th class="kp-center" style="width:28px">No</th><th>Deskripsi</th><th class="kp-num" style="width:9%">Qty</th><th class="kp-num" style="width:18%">Harga satuan</th><th class="kp-num" style="width:18%">Jumlah</th></tr></thead>
+              <tbody>${rows}</tbody>
+            </table>
+            <table style="width:46%;margin-left:auto;margin-top:6px;border-collapse:collapse">
+              <tr><td style="padding:3px 6px">Subtotal</td><td class="kp-num" style="padding:3px 6px">${e(money(subtotal))}</td></tr>
+              ${discount ? `<tr><td style="padding:3px 6px">Diskon</td><td class="kp-num" style="padding:3px 6px">- ${e(money(discount))}</td></tr>` : ''}
+              <tr><td style="padding:5px 6px;border-top:2px solid #111;font-weight:800">TOTAL</td><td class="kp-num" style="padding:5px 6px;border-top:2px solid #111;font-weight:800;font-size:13px">${e(money(invoice.total))}</td></tr>
+            </table>
+          </section>
+          ${notesBlocks.length ? `<section class="kp-section" style="display:grid;grid-template-columns:repeat(${notesBlocks.length},1fr);gap:10px">${notesBlocks.join('')}</section>` : ''}
+          ${invoice.notes ? `<section class="kp-section">${box('Catatan', invoice.notes)}</section>` : ''}`,
+        signatures: ['Penerima', 'Hormat kami'],
+      })
+    }
+    const printSelected = (ids) => {
+      if (!window.KoiPrint) { window.alert('Modul cetak belum dimuat. Muat ulang halaman.'); return }
+      if (ids.length > 1) window.KoiPrint.printMany(ids, printInvoice, { title: `Invoice (${ids.length} lembar)` })
+      else printInvoice(ids[0])
+    }
+
+    // ---- actions -------------------------------------------------------------------------------------------
+    const deleteInvoices = async (ids) => {
+      const names = ids.map((id) => invoices.find((entry) => String(entry.id) === String(id))?.invoice_no).filter(Boolean)
+      if (!(await window.KoiDialog.confirm(`Hapus ${ids.length} invoice (${names.join(', ')})?`))) return
+      const failed = []
+      for (const id of ids) {
+        try {
+          const response = await fetch(`${apiUrl}/invoices/${id}`, { method: 'DELETE' })
+          if (!response.ok) failed.push(id)
+        } catch { failed.push(id) }
+      }
+      dock.clear()
+      await keepScroll(loadInvoices)
+      if (failed.length) window.alert(`${failed.length} invoice gagal dihapus.`)
+    }
+    const markPaid = async (ids) => {
+      if (!(await window.KoiDialog.confirm(`Tandai ${ids.length} invoice sebagai Lunas?`))) return
+      for (const id of ids) {
+        await fetch(`${apiUrl}/invoices/${id}`, { method: 'PATCH', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ status: 'paid' }) }).catch(() => {})
+      }
+      dock.clear()
+      await keepScroll(loadInvoices)
+    }
+    const dock = window.KoiDock.create({
+      root: table,
+      label: 'invoice',
+      idOf: (invoice) => String(invoice.id),
+      visibleItems: () => visibleInvoices(),
+      render: () => renderTable(),
+      actions: [
+        { key: 'edit', icon: 'edit', title: 'Edit invoice terpilih', role: 'farm-operate', show: (count) => count === 1, onClick: (ids) => openForm(ids[0], false) },
+        { key: 'paid', icon: 'coin', variant: 'success', title: (count) => `Tandai ${count} invoice lunas`, role: 'farm-operate', show: (count) => count >= 1, onClick: (ids) => markPaid(ids) },
+        { key: 'print', icon: 'printer', variant: 'secondary', title: (count) => (count > 1 ? `Cetak ${count} invoice terpilih (satu lembar per invoice)` : 'Cetak invoice terpilih'), show: (count) => count >= 1, onClick: (ids) => printSelected(ids) },
+        { key: 'delete', icon: 'trash', variant: 'danger', title: (count) => `Hapus ${count} invoice terpilih`, role: 'farm-operate', onClick: (ids) => deleteInvoices(ids) },
+      ],
+      add: { title: 'Tambah invoice', role: 'farm-operate', onClick: () => openForm(null, false) },
+    })
+
+    // ---- events --------------------------------------------------------------------------------------------
+    filterChips.forEach((chip) => chip.addEventListener('click', () => {
+      statusFilter = chip.dataset.invoiceFilter
+      try { sessionStorage.setItem(filterKey, statusFilter) } catch {}
+      renderTable()
+    }))
+    searchInput.addEventListener('input', () => renderTable())
+    addButton?.addEventListener('click', () => openForm(null, false))
+    table.addEventListener('click', (event) => {
+      const printButton = event.target.closest('[data-print-invoice]')
+      if (printButton) { printInvoice(printButton.dataset.printInvoice); return }
+      const editButton = event.target.closest('[data-edit-invoice]')
+      if (editButton) { openForm(editButton.dataset.editInvoice, false); return }
+      const deleteButton = event.target.closest('[data-delete-invoice]')
+      if (deleteButton) { deleteInvoices([deleteButton.dataset.deleteInvoice]); return }
+      // anywhere else on the card selects it (several cards can be selected); double-click opens the detail
+      if (event.target.closest('button, a, input')) return
+      const card = event.target.closest('[data-dock-id]')
+      if (card) dock.toggle(card.dataset.dockId)
+    })
+    table.addEventListener('dblclick', (event) => {
+      if (event.target.closest('button, a, input')) return
+      const card = event.target.closest('[data-dock-id]')
+      if (!card) return
+      window.getSelection()?.removeAllRanges()
+      openForm(card.dataset.dockId, true)
+    })
+    table.addEventListener('keydown', (event) => {
+      if (event.key !== 'Enter' && event.key !== ' ') return
+      const row = event.target.closest('[data-invoice-id]')
+      if (row && event.target === row) {
+        event.preventDefault()
+        openForm(row.dataset.invoiceId, true)
+      }
+    })
+    printFormButton.addEventListener('click', () => {
+      if (printFormButton.dataset.invoiceId) printInvoice(printFormButton.dataset.invoiceId)
+    })
+    discountInput.addEventListener('input', () => { formatMoneyInput(discountInput); updateTotals() })
+    linesBox.addEventListener('input', (event) => {
+      const row = event.target.closest('[data-invoice-line]')
+      const field = event.target.dataset.lineField
+      if (!row || !field) return
+      const line = lines[Number(row.dataset.invoiceLine)]
+      if (!line) return
+      if (field === 'unit_price') {
+        formatMoneyInput(event.target)
+        line.unit_price = digitsOf(event.target.value)
+      } else if (field === 'qty') {
+        line.qty = event.target.value
+      } else {
+        line.description = event.target.value
+      }
+      updateTotals()
+    })
+    linesBox.addEventListener('click', (event) => {
+      const remove = event.target.closest('[data-line-remove]')
+      if (!remove) return
+      lines.splice(Number(remove.dataset.lineRemove), 1)
+      renderLines()
+    })
+    form.querySelector('[data-invoice-add-custom]').addEventListener('click', () => addLine({}))
+    form.querySelector('[data-invoice-proof-upload]').addEventListener('click', () => proofInput.click())
+    proofInput.addEventListener('change', () => {
+      addProofFiles(proofInput.files)
+      proofInput.value = ''
+    })
+    form.querySelector('[data-invoice-proof-paste]').addEventListener('click', async () => {
+      try {
+        const clipboardItems = await navigator.clipboard.read()
+        const files = []
+        for (const clipboardItem of clipboardItems) {
+          const type = clipboardItem.types.find((entry) => entry.startsWith('image/'))
+          if (!type) continue
+          const blob = await clipboardItem.getType(type)
+          files.push(new File([blob], `bukti-${Date.now()}-${files.length + 1}.${type.split('/')[1] || 'png'}`, { type }))
+        }
+        if (files.length) addProofFiles(files)
+        else proofStatus.textContent = 'Tidak ada gambar di clipboard.'
+      } catch {
+        proofStatus.textContent = 'Clipboard tidak bisa dibaca. Tempel dengan Ctrl+V atau pilih file.'
+      }
+    })
+    form.querySelector('[data-invoice-media-upload]').addEventListener('click', () => mediaInput.click())
+    mediaInput.addEventListener('change', () => {
+      addMediaFiles(mediaInput.files)
+      mediaInput.value = ''
+    })
+    form.querySelector('[data-invoice-media-paste]').addEventListener('click', async () => {
+      try {
+        const clipboardItems = await navigator.clipboard.read()
+        const files = []
+        for (const clipboardItem of clipboardItems) {
+          const type = clipboardItem.types.find((entry) => entry.startsWith('image/'))
+          if (!type) continue
+          const blob = await clipboardItem.getType(type)
+          files.push(new File([blob], `foto-${Date.now()}-${files.length + 1}.${type.split('/')[1] || 'png'}`, { type }))
+        }
+        if (files.length) addMediaFiles(files)
+        else mediaStatus.textContent = 'Tidak ada gambar di clipboard.'
+      } catch {
+        mediaStatus.textContent = 'Clipboard tidak bisa dibaca. Tempel dengan Ctrl+V atau pilih file.'
+      }
+    })
+    // Two drop targets (bukti transfer and dokumentasi). The one you last pointed at, focused or clicked takes
+    // a Ctrl+V; a drop goes to the box it lands on, and a miss elsewhere in the form goes to the last used box.
+    const sendFiles = (zone, files) => {
+      if (zone === 'media') addMediaFiles(files)
+      else addProofFiles(files)
+    }
+    Object.entries(zones).forEach(([name, zone]) => {
+      ;['mouseenter', 'focusin', 'click', 'dragenter'].forEach((type) => zone.addEventListener(type, () => { activeZone = name }))
+    })
+    const zoneOf = (event) => event.target.closest?.('[data-invoice-zone]')?.dataset.invoiceZone || activeZone
+    modalElement.addEventListener('paste', (event) => {
+      if (readonlyMode) return
+      const files = Array.from(event.clipboardData?.files || []).filter((file) => /^image\//.test(file.type))
+      if (files.length) { event.preventDefault(); sendFiles(activeZone, files) }
+    })
+    const dragHasFiles = (event) => Array.from(event.dataTransfer?.types || []).includes('Files')
+    const clearOver = () => Object.values(zones).forEach((zone) => zone.classList.remove('is-over'))
+    modalElement.addEventListener('dragover', (event) => {
+      if (!dragHasFiles(event)) return
+      event.preventDefault()
+      if (readonlyMode) return
+      clearOver()
+      zones[zoneOf(event)].classList.add('is-over')
+    })
+    modalElement.addEventListener('dragleave', (event) => {
+      if (!modalElement.contains(event.relatedTarget)) clearOver()
+    })
+    modalElement.addEventListener('drop', (event) => {
+      if (!dragHasFiles(event)) return
+      event.preventDefault()
+      clearOver()
+      if (!readonlyMode) sendFiles(zoneOf(event), event.dataTransfer.files)
+    })
+    mediaBox.addEventListener('click', (event) => {
+      const remove = event.target.closest('[data-media-remove]')
+      if (remove) {
+        collectMediaNotes()
+        mediaFiles.splice(Number(remove.dataset.mediaRemove), 1)
+        renderMedia()
+        return
+      }
+      const zoom = event.target.closest('[data-media-zoom]')
+      if (zoom) {
+        const media = mediaFiles[Number(zoom.dataset.mediaZoom)]
+        if (media && media.type !== 'video') window.KoiAuth?.zoomPhoto?.(media.previewUrl || media.url, media.name || 'Dokumentasi invoice', [media.notes ? `Catatan: ${media.notes}` : ''])
+      }
+    })
+    proofBox.addEventListener('click', (event) => {
+      const remove = event.target.closest('[data-proof-remove]')
+      if (remove) {
+        proofs.splice(Number(remove.dataset.proofRemove), 1)
+        renderProofs()
+        return
+      }
+      const zoom = event.target.closest('[data-proof-zoom]')
+      if (zoom) {
+        const proof = proofs[Number(zoom.dataset.proofZoom)]
+        if (proof) window.KoiAuth?.zoomPhoto?.(proof.previewUrl || proof.url, 'Bukti transfer')
+      }
+    })
+    form.querySelector('[data-invoice-pull]').addEventListener('click', async () => {
+      await loadSources()
+      if (!window.KoiPicker) { window.alert('Modul pilih ikan belum dimuat. Muat ulang halaman.'); return }
+      window.KoiPicker.open({
+        title: 'Tarik dari Data Ikan',
+        disabledIds: lines.filter((line) => line.koi_id).map((line) => String(line.koi_id)),
+        confirmLabel: 'Masukkan ke invoice',
+        onConfirm: (ids, picked) => {
+          // an untouched empty first line is replaced instead of left behind
+          if (lines.length === 1 && !String(lines[0].description || '').trim() && !Number(lines[0].unit_price)) lines = []
+          picked.forEach((koi) => {
+            lines.push({ description: koiDescription(koi), qty: 1, unit_price: Math.round(Number(koi.sale_price) || 0), koi_id: koi.id })
+          })
+          renderLines()
+        },
+      })
+    })
+    window.KoiPicker?.fixPaste?.(pickerInput)
+    pickerInput.addEventListener('input', () => {
+      renderPickerMenu()
+      searchPicker()
+      if (!sourcesLoaded) loadSources().then(renderPickerMenu)
+    })
+    form.addEventListener('click', (event) => {
+      const pick = event.target.closest('[data-invoice-pick]')
+      if (!pick) return
+      const [kind, id] = pick.dataset.invoicePick.split(':')
+      if (kind === 'allkoi') {
+        const already = new Set(lines.filter((line) => line.koi_id).map((line) => String(line.koi_id)))
+        const wantedIds = (pickerResult?.ids || []).filter((koiId) => !already.has(String(koiId)))
+        window.KoiPicker.byIds(wantedIds).then((toAdd) => {
+          // an untouched empty first line is replaced instead of left behind
+          if (toAdd.length && lines.length === 1 && !String(lines[0].description || '').trim() && !Number(lines[0].unit_price)) lines = []
+          toAdd.forEach((koi) => lines.push({ description: koiDescription(koi), qty: 1, unit_price: Math.round(Number(koi.sale_price) || 0), koi_id: koi.id }))
+          renderLines()
+        })
+      } else if (kind === 'sell') {
+        const item = sellItems.find((entry) => String(entry.id) === id)
+        if (item) {
+          const codes = (item.koi || []).map((koi) => koi.code).filter(Boolean)
+          addLine({ description: codes.length ? `${item.title} (${codes.join(', ')})` : item.title, qty: 1, unit_price: Math.round(Number(item.price) || 0), sell_id: item.id })
+        }
+      } else {
+        const koi = window.KoiPicker.cache[id]
+        if (koi) addLine({ description: koiDescription(koi), qty: 1, unit_price: Math.round(Number(koi.sale_price) || 0), koi_id: koi.id })
+      }
+      pickerInput.value = ''
+      pickerResult = null
+      pickerMenu.classList.add('d-none')
+    })
+    document.addEventListener('click', (event) => {
+      if (!event.target.closest('[data-invoice-picker]')) pickerMenu.classList.add('d-none')
+    })
+
+    try {
+      const cached = JSON.parse(localStorage.getItem(cacheKey) || '[]')
+      if (Array.isArray(cached) && cached.length) { invoices = cached; signature = JSON.stringify(cached); renderTable() }
+    } catch {}
+    loadInvoices(invoices.length > 0)
+    window.KoiAuth?.registerRealtimeRefresh(() => keepScroll(() => loadInvoices(true)), { intervalMs: 30000 })
+  
+})()
+</script>
+
+          </div>
+        </main>
+        <!-- END PAGE BODY -->
+
+        <!-- BEGIN FOOTER -->
+        <!--  BEGIN FOOTER  -->
+        <footer class="footer footer-transparent d-print-none">
+          <div class="container-xl">
+            <div class="row text-center align-items-center flex-row-reverse">
+              <div class="col-lg-auto ms-lg-auto">
+                <nav aria-label="Footer">
+                  <ul class="list-inline mb-0">
+                    <li class="list-inline-item">
+                      <a href="./license.html" class="link-secondary"
+                        >License</a
+                      >
+                    </li>
+                  </ul>
+                </nav>
+              </div>
+              <div class="col-12 col-lg-auto mt-3 mt-lg-0">
+                <ul class="list-inline mb-0">
+                  <li class="list-inline-item">
+                    Copyright &copy; 2026 <span data-brand-owner>Nishikigoi Farm</span>. All rights
+                    reserved. V1-261018
+                  </li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        </footer>
+        <!--  END FOOTER  -->
+        <!-- END FOOTER -->
+      </div>
+    </div>
+
+    <!-- BEGIN THEME SETTINGS -->
+    <div>
+      <form
+        class="offcanvas offcanvas-start offcanvas-narrow"
+        tabindex="-1"
+        id="offcanvas-settings"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="offcanvas-settings-title"
+      >
+        <div class="offcanvas-header">
+          <h2 class="offcanvas-title" id="offcanvas-settings-title">
+            Theme Settings
+          </h2>
+          <button
+            type="button"
+            class="btn-close"
+            data-bs-dismiss="offcanvas"
+            aria-label="Close"
+          ></button>
+        </div>
+        <div class="offcanvas-body d-flex flex-column">
+          <div>
+            <fieldset class="border-0 p-0 mb-4">
+              <legend
+                class="form-label float-none mb-0"
+                style="font-size: inherit"
+              >
+                Color mode
+              </legend>
+              <p class="form-hint">Choose the color mode for your app.</p>
+              <label class="form-check">
+                <div class="form-selectgroup-item">
+                  <input
+                    type="radio"
+                    name="theme"
+                    value="light"
+                    class="form-check-input"
+                    checked
+                  />
+                  <div class="form-check-label">Light</div>
+                </div> </label
+              ><label class="form-check">
+                <div class="form-selectgroup-item">
+                  <input
+                    type="radio"
+                    name="theme"
+                    value="dark"
+                    class="form-check-input"
+                  />
+                  <div class="form-check-label">Dark</div>
+                </div> </label
+              ><label class="form-check">
+                <div class="form-selectgroup-item">
+                  <input
+                    type="radio"
+                    name="theme"
+                    value="auto"
+                    class="form-check-input"
+                  />
+                  <div class="form-check-label">Auto</div>
+                </div>
+              </label>
+            </fieldset>
+
+            <fieldset class="border-0 p-0 mb-4">
+              <legend
+                class="form-label float-none mb-0"
+                style="font-size: inherit"
+              >
+                Color scheme
+              </legend>
+              <p class="form-hint">The perfect color mode for your app.</p>
+
+              <div class="row g-2">
+                <div class="col-auto">
+                  <label class="form-colorinput">
+                    <input
+                      name="theme-primary"
+                      type="radio"
+                      value="blue"
+                      class="form-colorinput-input"
+                      aria-label="blue"
+                    />
+                    <span class="form-colorinput-color bg-blue"></span>
+                  </label>
+                </div>
+                <div class="col-auto">
+                  <label class="form-colorinput">
+                    <input
+                      name="theme-primary"
+                      type="radio"
+                      value="azure"
+                      class="form-colorinput-input"
+                      aria-label="azure"
+                    />
+                    <span class="form-colorinput-color bg-azure"></span>
+                  </label>
+                </div>
+                <div class="col-auto">
+                  <label class="form-colorinput">
+                    <input
+                      name="theme-primary"
+                      type="radio"
+                      value="indigo"
+                      class="form-colorinput-input"
+                      aria-label="indigo"
+                    />
+                    <span class="form-colorinput-color bg-indigo"></span>
+                  </label>
+                </div>
+                <div class="col-auto">
+                  <label class="form-colorinput">
+                    <input
+                      name="theme-primary"
+                      type="radio"
+                      value="purple"
+                      class="form-colorinput-input"
+                      aria-label="purple"
+                    />
+                    <span class="form-colorinput-color bg-purple"></span>
+                  </label>
+                </div>
+                <div class="col-auto">
+                  <label class="form-colorinput">
+                    <input
+                      name="theme-primary"
+                      type="radio"
+                      value="pink"
+                      class="form-colorinput-input"
+                      aria-label="pink"
+                    />
+                    <span class="form-colorinput-color bg-pink"></span>
+                  </label>
+                </div>
+                <div class="col-auto">
+                  <label class="form-colorinput">
+                    <input
+                      name="theme-primary"
+                      type="radio"
+                      value="red"
+                      class="form-colorinput-input"
+                      aria-label="red"
+                    />
+                    <span class="form-colorinput-color bg-red"></span>
+                  </label>
+                </div>
+                <div class="col-auto">
+                  <label class="form-colorinput">
+                    <input
+                      name="theme-primary"
+                      type="radio"
+                      value="orange"
+                      class="form-colorinput-input"
+                      aria-label="orange"
+                    />
+                    <span class="form-colorinput-color bg-orange"></span>
+                  </label>
+                </div>
+                <div class="col-auto">
+                  <label class="form-colorinput">
+                    <input
+                      name="theme-primary"
+                      type="radio"
+                      value="yellow"
+                      class="form-colorinput-input"
+                      aria-label="yellow"
+                    />
+                    <span class="form-colorinput-color bg-yellow"></span>
+                  </label>
+                </div>
+                <div class="col-auto">
+                  <label class="form-colorinput">
+                    <input
+                      name="theme-primary"
+                      type="radio"
+                      value="lime"
+                      class="form-colorinput-input"
+                      aria-label="lime"
+                    />
+                    <span class="form-colorinput-color bg-lime"></span>
+                  </label>
+                </div>
+                <div class="col-auto">
+                  <label class="form-colorinput">
+                    <input
+                      name="theme-primary"
+                      type="radio"
+                      value="green"
+                      class="form-colorinput-input"
+                      aria-label="green"
+                    />
+                    <span class="form-colorinput-color bg-green"></span>
+                  </label>
+                </div>
+                <div class="col-auto">
+                  <label class="form-colorinput">
+                    <input
+                      name="theme-primary"
+                      type="radio"
+                      value="teal"
+                      class="form-colorinput-input"
+                      aria-label="teal"
+                    />
+                    <span class="form-colorinput-color bg-teal"></span>
+                  </label>
+                </div>
+                <div class="col-auto">
+                  <label class="form-colorinput">
+                    <input
+                      name="theme-primary"
+                      type="radio"
+                      value="cyan"
+                      class="form-colorinput-input"
+                      aria-label="cyan"
+                    />
+                    <span class="form-colorinput-color bg-cyan"></span>
+                  </label>
+                </div>
+                <div class="col-auto">
+                  <label class="form-colorinput">
+                    <input
+                      name="theme-primary"
+                      type="radio"
+                      value="inverted"
+                      class="form-colorinput-input"
+                      aria-label="Inverted"
+                    />
+                    <span class="form-colorinput-color bg-inverted"></span>
+                  </label>
+                </div>
+              </div>
+            </fieldset>
+
+            <fieldset class="border-0 p-0 mb-4">
+              <legend
+                class="form-label float-none mb-0"
+                style="font-size: inherit"
+              >
+                Font family
+              </legend>
+              <p class="form-hint">
+                Choose the font family that fits your app.
+              </p>
+
+              <div>
+                <label class="form-check">
+                  <div class="form-selectgroup-item">
+                    <input
+                      type="radio"
+                      name="theme-font"
+                      value="sans-serif"
+                      class="form-check-input"
+                      checked
+                    />
+                    <div class="form-check-label">Sans-serif</div>
+                  </div> </label
+                ><label class="form-check">
+                  <div class="form-selectgroup-item">
+                    <input
+                      type="radio"
+                      name="theme-font"
+                      value="serif"
+                      class="form-check-input"
+                    />
+                    <div class="form-check-label">Serif</div>
+                  </div> </label
+                ><label class="form-check">
+                  <div class="form-selectgroup-item">
+                    <input
+                      type="radio"
+                      name="theme-font"
+                      value="monospace"
+                      class="form-check-input"
+                    />
+                    <div class="form-check-label">Monospace</div>
+                  </div> </label
+                ><label class="form-check">
+                  <div class="form-selectgroup-item">
+                    <input
+                      type="radio"
+                      name="theme-font"
+                      value="comic"
+                      class="form-check-input"
+                    />
+                    <div class="form-check-label">Comic</div>
+                  </div>
+                </label>
+              </div>
+            </fieldset>
+
+            <fieldset class="border-0 p-0 mb-4">
+              <legend
+                class="form-label float-none mb-0"
+                style="font-size: inherit"
+              >
+                Theme base
+              </legend>
+              <p class="form-hint">Choose the gray shade for your app.</p>
+
+              <div>
+                <label class="form-check">
+                  <div class="form-selectgroup-item">
+                    <input
+                      type="radio"
+                      name="theme-base"
+                      value="slate"
+                      class="form-check-input"
+                    />
+                    <div class="form-check-label">Slate</div>
+                  </div> </label
+                ><label class="form-check">
+                  <div class="form-selectgroup-item">
+                    <input
+                      type="radio"
+                      name="theme-base"
+                      value="gray"
+                      class="form-check-input"
+                      checked
+                    />
+                    <div class="form-check-label">Gray</div>
+                  </div> </label
+                ><label class="form-check">
+                  <div class="form-selectgroup-item">
+                    <input
+                      type="radio"
+                      name="theme-base"
+                      value="zinc"
+                      class="form-check-input"
+                    />
+                    <div class="form-check-label">Zinc</div>
+                  </div> </label
+                ><label class="form-check">
+                  <div class="form-selectgroup-item">
+                    <input
+                      type="radio"
+                      name="theme-base"
+                      value="neutral"
+                      class="form-check-input"
+                    />
+                    <div class="form-check-label">Neutral</div>
+                  </div> </label
+                ><label class="form-check">
+                  <div class="form-selectgroup-item">
+                    <input
+                      type="radio"
+                      name="theme-base"
+                      value="stone"
+                      class="form-check-input"
+                    />
+                    <div class="form-check-label">Stone</div>
+                  </div>
+                </label>
+              </div>
+            </fieldset>
+
+            <fieldset class="border-0 p-0 mb-4">
+              <legend
+                class="form-label float-none mb-0"
+                style="font-size: inherit"
+              >
+                Corner Radius
+              </legend>
+              <p class="form-hint">
+                Choose the border radius factor for your app.
+              </p>
+
+              <div>
+                <label class="form-check">
+                  <div class="form-selectgroup-item">
+                    <input
+                      type="radio"
+                      name="theme-radius"
+                      value="0"
+                      class="form-check-input"
+                    />
+                    <div class="form-check-label">0</div>
+                  </div> </label
+                ><label class="form-check">
+                  <div class="form-selectgroup-item">
+                    <input
+                      type="radio"
+                      name="theme-radius"
+                      value="0.5"
+                      class="form-check-input"
+                    />
+                    <div class="form-check-label">0.5</div>
+                  </div> </label
+                ><label class="form-check">
+                  <div class="form-selectgroup-item">
+                    <input
+                      type="radio"
+                      name="theme-radius"
+                      value="1"
+                      class="form-check-input"
+                      checked
+                    />
+                    <div class="form-check-label">1</div>
+                  </div> </label
+                ><label class="form-check">
+                  <div class="form-selectgroup-item">
+                    <input
+                      type="radio"
+                      name="theme-radius"
+                      value="1.5"
+                      class="form-check-input"
+                    />
+                    <div class="form-check-label">1.5</div>
+                  </div> </label
+                ><label class="form-check">
+                  <div class="form-selectgroup-item">
+                    <input
+                      type="radio"
+                      name="theme-radius"
+                      value="2"
+                      class="form-check-input"
+                    />
+                    <div class="form-check-label">2</div>
+                  </div>
+                </label>
+              </div>
+            </fieldset>
+          </div>
+
+          <div class="mt-auto space-y">
+            <button type="button" class="btn w-100" id="reset-changes">
+              <!-- Download SVG icon from http://tabler.io/icons/icon/rotate -->
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="24"
+                height="24"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                aria-hidden="true"
+                focusable="false"
+                class="icon"
+              >
+                <path d="M19.95 11a8 8 0 1 0 -.5 4m.5 5v-5h-5" />
+              </svg>
+              Reset changes
+            </button>
+            <button
+              type="button"
+              class="btn btn-primary w-100"
+              data-bs-dismiss="offcanvas"
+            >
+              Save
+            </button>
+          </div>
+        </div>
+      </form>
+    </div>
+    <!-- END THEME SETTINGS -->
+
+    <!-- BEGIN PAGE LIBRARIES -->
+    <script src="./dist/libs/litepicker/dist/litepicker.js" defer></script>
+    <!-- END PAGE LIBRARIES -->
+
+    <!-- BEGIN GLOBAL MANDATORY SCRIPTS -->
+    <script src="./dist/js/tabler.js" defer></script>
+    <!-- END GLOBAL MANDATORY SCRIPTS -->
+
+    <script>
+      document.addEventListener("DOMContentLoaded", () => {
+        const toggle = document.getElementById("navbar-notifications-toggle");
+        const closeButton = document.querySelector(
+          "[data-navbar-notifications-close]",
+        );
+        const readAllButton = document.querySelector(
+          "[data-navbar-notifications-read-all]",
+        );
+        const clearButton = document.querySelector(
+          "[data-navbar-notifications-clear]",
+        );
+        const list = document.querySelector("[data-navbar-notifications-list]");
+        const badge = document.querySelector(
+          "[data-navbar-notifications-badge]",
+        );
+        let currentNotifications = [];
+
+        const escapeHtml = (value) =>
+          String(value || "").replace(
+            /[&<>'"]/g,
+            (char) =>
+              ({
+                "&": "&amp;",
+                "<": "&lt;",
+                ">": "&gt;",
+                "'": "&#39;",
+                '"': "&quot;",
+              })[char],
+          );
+
+        const dotClass = (type, status) => {
+          if (status === "read") return "status-dot d-block";
+          if (type === "error")
+            return "status-dot status-dot-animated bg-red d-block";
+          if (type === "success")
+            return "status-dot status-dot-animated bg-green d-block";
+          if (type === "warning")
+            return "status-dot status-dot-animated bg-yellow d-block";
+          return "status-dot status-dot-animated bg-blue d-block";
+        };
+
+        const renderNotifications = (notifications) => {
+          const items = Array.isArray(notifications)
+            ? notifications
+            : Array.isArray(notifications?.items)
+              ? notifications.items
+              : [];
+          currentNotifications = items;
+          const unread = items.filter((item) => item.status !== "read");
+
+          badge?.classList.toggle("d-none", unread.length === 0);
+          clearButton?.classList.toggle("d-none", items.length === 0);
+          readAllButton?.classList.toggle("d-none", unread.length === 0);
+
+          if (!items.length) {
+            list.innerHTML =
+              '<div class="list-group-item"><div class="text-secondary">Belum ada notifikasi.</div></div>';
+            return;
+          }
+
+          list.innerHTML = items
+            .slice(0, 8)
+            .map(
+              (item) => `
+          <div class="list-group-item ${item.type === 'feedback' ? 'cursor-pointer' : ''}" ${item.type === 'feedback' ? `data-feedback-notification="${escapeHtml(item.id)}"` : ''}>
+            <div class="row align-items-center">
+              <div class="col-auto">
+                <span class="${dotClass(item.type, item.status)}"><span class="visually-hidden">${item.status === "read" ? "Read" : "Unread"}</span></span>
+              </div>
+              <div class="col text-truncate">
+                <div class="text-body d-block text-truncate">${escapeHtml(item.title || "Notifikasi Sistem")}</div>
+                <div class="d-block text-secondary text-truncate mt-n1">${escapeHtml(item.message || item.created_at || "")}</div>
+              </div>
+            </div>
+          </div>
+        `,
+            )
+            .join("");
+        };
+
+        const loadNotifications = async () => {
+          try {
+            const request = window.KoiAuth?.apiRequest;
+            const response = request
+              ? await request("/notifications?panel=1")
+              : await fetch("/api/notifications?panel=1");
+            if (!response.ok) throw new Error("Notifikasi gagal dimuat");
+            renderNotifications(await response.json());
+          } catch {
+            badge?.classList.add("d-none");
+            list.innerHTML =
+              '<div class="list-group-item"><div class="text-danger">Notifikasi gagal dimuat.</div></div>';
+          }
+        };
+
+        closeButton?.addEventListener("click", () => {
+          window.tabler.bootstrap.Dropdown.getOrCreateInstance(toggle).hide();
+        });
+
+        readAllButton?.addEventListener("click", async () => {
+          try {
+            const request = window.KoiAuth?.apiRequest;
+            const response = request
+              ? await request("/notifications?panel=1")
+              : await fetch("/api/notifications?panel=1");
+            const payload = response.ok ? await response.json() : [];
+            const items = Array.isArray(payload)
+              ? payload
+              : Array.isArray(payload?.items)
+                ? payload.items
+                : [];
+            const unread = items.filter((item) => item.status !== "read");
+            await Promise.all(
+              unread.map((item) =>
+                request
+                  ? request(`/notifications/${item.id}/read`, {
+                      method: "PATCH",
+                    })
+                  : fetch(`/api/notifications/${item.id}/read`, {
+                      method: "PATCH",
+                    }),
+              ),
+            );
+            await loadNotifications();
+          } catch {
+            await loadNotifications();
+          }
+        });
+
+        clearButton?.addEventListener("click", async () => {
+          try {
+            const request = window.KoiAuth?.apiRequest;
+            const ids = currentNotifications
+              .map((item) => item.id)
+              .filter(Boolean);
+            if (!ids.length) return;
+
+            const options = {
+              method: "PATCH",
+              headers: { "content-type": "application/json" },
+              body: JSON.stringify({ ids }),
+            };
+
+            const response = request
+              ? await request("/notifications/clear", options)
+              : await fetch("/api/notifications/clear", options);
+            if (!response.ok) throw new Error("Notifikasi gagal dibersihkan");
+            await loadNotifications();
+          } catch {
+            await loadNotifications();
+          }
+        });
+
+        toggle?.addEventListener("shown.bs.dropdown", loadNotifications);
+        loadNotifications();
+      });
+    </script>
+
+    <!-- BEGIN PAGE SCRIPTS -->
+    <script>
+      document.addEventListener("DOMContentLoaded", function () {
+        var themeConfig = {
+          theme: "light",
+          "theme-base": "gray",
+          "theme-font": "sans-serif",
+          "theme-primary": "blue",
+          "theme-radius": "1",
+        };
+
+        var url = new URL(window.location);
+        var form = document.getElementById("offcanvas-settings");
+        var resetButton = document.getElementById("reset-changes");
+        if (!form || !resetButton) return;
+
+        var themeKeys = Object.keys(themeConfig);
+        var getAccountThemeKey = function () {
+          var session =
+            window.KoiAuth && window.KoiAuth.getSession
+              ? window.KoiAuth.getSession()
+              : JSON.parse(
+                  sessionStorage.getItem("koi-farm-auth-session") || "null",
+                );
+          return session && session.username
+            ? "koi-farm-theme-settings-" + session.username
+            : "koi-farm-theme-settings-guest";
+        };
+
+        var readAccountTheme = function () {
+          return (
+            JSON.parse(
+              window.localStorage.getItem(getAccountThemeKey()) || "null",
+            ) || {}
+          );
+        };
+
+        var writeAccountTheme = function (theme) {
+          window.localStorage.setItem(
+            getAccountThemeKey(),
+            JSON.stringify(theme),
+          );
+        };
+
+        var checkItems = function () {
+          var accountTheme = readAccountTheme();
+          for (var key in themeConfig) {
+            var value = accountTheme[key] || themeConfig[key];
+
+            if (!!value) {
+              var radios = form.querySelectorAll(`[name="${key}"]`);
+
+              if (!!radios) {
+                radios.forEach((radio) => {
+                  radio.checked = radio.value === value;
+                });
+              }
+            }
+          }
+        };
+
+        form.addEventListener("change", function (event) {
+          var target = event.target,
+            name = target.name,
+            value = target.value;
+
+          for (var key in themeConfig) {
+            if (name === key) {
+              var applied = value;
+              if (key === "theme" && value === "auto") {
+                applied = window.matchMedia("(prefers-color-scheme: dark)")
+                  .matches
+                  ? "dark"
+                  : "light";
+              }
+              if (applied !== themeConfig[key]) {
+                document.documentElement.setAttribute(
+                  "data-bs-" + key,
+                  applied,
+                );
+              } else {
+                document.documentElement.removeAttribute("data-bs-" + key);
+              }
+              window.localStorage.setItem("tabler-" + key, value);
+              var accountTheme = readAccountTheme();
+              accountTheme[key] = value;
+              writeAccountTheme(accountTheme);
+              url.searchParams.set(key, value);
+            }
+          }
+
+          window.history.pushState({}, "", url);
+        });
+
+        resetButton.addEventListener("click", function () {
+          var accountTheme = {};
+          for (var key in themeConfig) {
+            document.documentElement.removeAttribute("data-bs-" + key);
+            window.localStorage.removeItem("tabler-" + key);
+            url.searchParams.delete(key);
+          }
+          writeAccountTheme(accountTheme);
+
+          checkItems();
+
+          window.history.pushState({}, "", url);
+        });
+
+        document
+          .querySelectorAll(".js-theme-toggle[data-theme-value]")
+          .forEach(function (toggle) {
+            toggle.addEventListener("click", function (event) {
+              var value = toggle.getAttribute("data-theme-value");
+              if (!value) return;
+
+              event.preventDefault();
+
+              document.documentElement.setAttribute("data-bs-theme", value);
+              window.localStorage.setItem("tabler-theme", value);
+
+              var accountTheme = readAccountTheme();
+              accountTheme.theme = value;
+              writeAccountTheme(accountTheme);
+
+              url.searchParams.set("theme", value);
+              window.history.replaceState({}, "", url);
+            });
+          });
+
+        checkItems();
+      });
+    </script>
+    <!-- END PAGE SCRIPTS -->
+      <script>
+  ;(function () {
+    var current = null
+    var sides = ['top', 'bottom', 'left', 'right']
+    function place(menu, toggle) {
+      if (window.innerWidth > 991.98) return
+      var r = toggle.getBoundingClientRect()
+      var mh = menu.offsetHeight
+      menu.style.setProperty('left', 'auto', 'important')
+      menu.style.setProperty('right', Math.max(8, window.innerWidth - r.right) + 'px', 'important')
+      if (r.bottom + 4 + mh > window.innerHeight - 8) {
+        menu.style.setProperty('top', 'auto', 'important')
+        menu.style.setProperty('bottom', window.innerHeight - r.top + 4 + 'px', 'important')
+      } else {
+        menu.style.setProperty('bottom', 'auto', 'important')
+        menu.style.setProperty('top', r.bottom + 4 + 'px', 'important')
+      }
+    }
+    document.addEventListener('shown.bs.dropdown', function (event) {
+      var dropdown = event.target.closest && event.target.closest('.breeding-actions-dropdown')
+      if (!dropdown) return
+      var menu = dropdown.querySelector('.dropdown-menu')
+      current = { menu: menu, toggle: event.target }
+      // Popper applies its own inset after this event; place on the next frames so ours wins.
+      requestAnimationFrame(function () {
+        place(menu, event.target)
+        requestAnimationFrame(function () { place(menu, event.target) })
+      })
+    })
+    document.addEventListener('hidden.bs.dropdown', function (event) {
+      var dropdown = event.target.closest && event.target.closest('.breeding-actions-dropdown')
+      if (!dropdown) return
+      var menu = dropdown.querySelector('.dropdown-menu')
+      sides.forEach(function (side) { menu.style.removeProperty(side) })
+      current = null
+    })
+    function reposition() {
+      if (!current) return
+      requestAnimationFrame(function () {
+        if (current) place(current.menu, current.toggle)
+      })
+    }
+    window.addEventListener('scroll', reposition, true)
+    window.addEventListener('resize', reposition)
+  })()
+</script>
+  </body>
+</html>

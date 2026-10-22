@@ -1,0 +1,27 @@
+# Salin file ini jadi dist/.htaccess setelah build (folder dist/ tidak masuk Git).
+# Ikon tab untuk gambar yang dibuka langsung (klik kanan, buka gambar di tab baru): peramban meminta /favicon.ico;
+# jawabannya Icon Program dari Identitas Program (lihat api-php handlers/dashboard.php, route /favicon)
+RewriteEngine On
+RewriteRule ^favicon\.ico$ /api/favicon [L]
+
+# Halaman error bertema program (kode HTTP standar). Status asli (404, 500, ...) tetap dikirim;
+# halaman /assets/error.html membaca kodenya sendiri.
+ErrorDocument 400 /assets/error.html
+ErrorDocument 401 /assets/error.html
+ErrorDocument 403 /assets/error.html
+ErrorDocument 404 /assets/error.html
+ErrorDocument 405 /assets/error.html
+ErrorDocument 408 /assets/error.html
+ErrorDocument 413 /assets/error.html
+ErrorDocument 414 /assets/error.html
+ErrorDocument 429 /assets/error.html
+ErrorDocument 500 /assets/error.html
+ErrorDocument 502 /assets/error.html
+ErrorDocument 503 /assets/error.html
+ErrorDocument 504 /assets/error.html
+
+# service worker harus bisa diambil segar setiap kali dan boleh mengontrol seluruh situs
+<Files "sw.js">
+    Header set Cache-Control "no-cache"
+    Header set Service-Worker-Allowed "/"
+</Files>

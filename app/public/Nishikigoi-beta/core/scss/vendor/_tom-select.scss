@@ -1,0 +1,100 @@
+@use '../config' as *;
+
+$input-border-width: 1px;
+
+:root {
+  --ts-pr-clear-button: 0rem;
+  --ts-pr-caret: 0rem;
+}
+
+.ts-input {
+  color: inherit;
+}
+
+.focus .ts-control {
+  @include border-radius(var(--border-radius));
+}
+
+.ts-control {
+  color: inherit;
+
+  .dropdown-menu {
+    width: 100%;
+    height: auto;
+  }
+}
+
+.ts-wrapper {
+  .form-control,
+  .form-select,
+  &.form-control,
+  &.form-select {
+    box-shadow: $input-box-shadow;
+  }
+
+  &.is-invalid,
+  &.is-valid {
+    .ts-control {
+      --ts-pr-clear-button: 1.5rem;
+    }
+  }
+}
+
+.ts-dropdown {
+  z-index: $zindex-dropdown;
+  color: var(--body-color);
+  background: var(--bg-surface);
+  box-shadow: var(--shadow-dropdown);
+
+  .option {
+    padding: $dropdown-item-padding-y $dropdown-item-padding-x;
+  }
+
+  // Override TomSelect's bootstrap5 preset which references --bs- vars not available in Tabler (#2600)
+  .active {
+    color: var(--body-color);
+    background-color: var(--active-bg);
+  }
+
+  .active.create {
+    color: var(--body-color);
+  }
+
+  .optgroup-header {
+    color: var(--body-color);
+    background: var(--bg-surface);
+  }
+}
+
+.ts-control,
+.ts-control input {
+  color: var(--body-color);
+}
+
+.ts-control input {
+  &::placeholder {
+    color: $input-placeholder-color;
+  }
+}
+
+.ts-wrapper.multi,
+.ts-wrapper.multi.disabled {
+  .ts-control > div {
+    color: var(--body-color);
+    background: var(--bg-surface-secondary);
+    border: 1px solid var(--border-color);
+  }
+}
+
+.ts-wrapper.disabled .ts-control {
+  background-color: var(--secondary-bg);
+  opacity: 1;
+
+  & > div.item {
+    color: var(--gray-500);
+  }
+}
+
+.ts-wrapper.full .ts-control {
+  background-color: var(--body-bg);
+}

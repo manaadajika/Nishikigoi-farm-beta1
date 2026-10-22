@@ -1,0 +1,23 @@
+---
+import SignInForm from './SignInForm.astro'
+---
+
+<div class="nishikigoi-login-card-wrap">
+  <div class="card card-md">
+    <div class="card-body">
+      <h2 class="h2 text-center mb-4">Masuk ke akun Anda</h2>
+
+      <SignInForm />
+    </div>
+  </div>
+  <div class="koi-api-status-line-wrap" data-api-indicator title="Memeriksa API" aria-label="Memeriksa API">
+    <span class="koi-api-indicator koi-api-indicator-loading"></span>
+  </div>
+</div>
+
+<div class="text-center text-secondary mt-3">
+  Belum punya akun? <a href="./sign-up.html">Daftar</a>
+</div>
+<div class="text-center mt-4">
+  <a href="./landing.html">Kembali ke Beranda</a>
+</div>

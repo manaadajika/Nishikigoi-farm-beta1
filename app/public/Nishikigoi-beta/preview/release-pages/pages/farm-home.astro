@@ -1,0 +1,26 @@
+---
+import DefaultLayout from '@shared/layouts/DefaultLayout.astro'
+---
+
+<DefaultLayout title="Beranda" pageHeader="Beranda" pretitle="" pageMenu="farm-home">
+  <!-- Beranda dinonaktifkan sementara: kunjungan langsung diarahkan ke Dashboard. Hapus skrip ini untuk mengaktifkannya lagi. -->
+  <script is:inline>window.location.replace('./farm.html')</script>
+  <div class="mx-auto" style="max-width: 680px">
+    <div class="card" id="koi-home-card"><div id="koi-home-feed"></div></div>
+  </div>
+  <script is:inline>
+    ;(() => {
+      const started = Date.now()
+      const timer = window.setInterval(() => {
+        const target = document.getElementById('koi-home-feed')
+        if (window.KoiSocial && window.KoiAuth && window.KoiAuth.getSession()) {
+          window.clearInterval(timer)
+          window.KoiSocial.mount(target, { mode: 'feed' })
+        } else if (Date.now() - started > 15000) {
+          window.clearInterval(timer)
+          target.innerHTML = '<div class="p-4 text-secondary text-center">Beranda tidak bisa dimuat. Muat ulang halaman.</div>'
+        }
+      }, 100)
+    })()
+  </script>
+</DefaultLayout>

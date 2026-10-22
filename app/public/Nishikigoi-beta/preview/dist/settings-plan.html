@@ -1,0 +1,2341 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <!-- BEGIN META -->
+    <meta charset="utf-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, viewport-fit=cover"
+    />
+    <meta name="color-scheme" content="light dark" />
+    <meta http-equiv="X-UA-Compatible" content="ie=edge" />
+
+    <title>Plans - Nishikigoi</title>
+
+    <link
+      rel="icon"
+      href="/api/favicon?v=2"
+      data-brand-favicon
+    />
+    <link
+      rel="shortcut icon"
+      href="/api/favicon?v=2"
+      data-brand-favicon
+    />
+    <script>
+      (() => {
+        try {
+          const settings =
+            JSON.parse(
+              localStorage.getItem("nishikigoi-app-settings") || "null",
+            ) || {};
+          const icon = String(settings.brand_favicon || settings.brand_icon || "").trim();
+          if (!icon) return;
+          document.querySelectorAll("[data-brand-favicon]").forEach((link) => {
+            link.href = icon;
+            link.type = icon.startsWith("data:image/png")
+              ? "image/png"
+              : icon.startsWith("data:image/svg")
+                ? "image/svg+xml"
+                : icon.startsWith("data:image/webp")
+                  ? "image/webp"
+                  : "image/x-icon";
+          });
+        } catch {}
+      })();
+    </script>
+    <!-- END META -->
+
+    <!-- BEGIN GLOBAL MANDATORY STYLES -->
+    <link href="./dist/css/tabler.css" rel="stylesheet" />
+    <!-- END GLOBAL MANDATORY STYLES -->
+
+    <!-- BEGIN PLUGINS STYLES -->
+    <link href="./dist/css/tabler-flags.css" rel="stylesheet" />
+    <link href="./dist/css/tabler-socials.css" rel="stylesheet" />
+    <link href="./dist/css/tabler-payments.css" rel="stylesheet" />
+    <link href="./dist/css/tabler-vendors.css" rel="stylesheet" />
+    <link href="./dist/css/tabler-marketing.css" rel="stylesheet" />
+    <link href="./dist/css/tabler-themes.css" rel="stylesheet" />
+    <!-- END PLUGINS STYLES -->
+
+    <!-- BEGIN DEMO STYLES -->
+    <link href="./preview/css/demo.css" rel="stylesheet" />
+    <!-- END DEMO STYLES -->
+
+    <!-- BEGIN CUSTOM FONT -->
+
+    <style>
+      @import url("https://rsms.me/inter/inter.css");
+    </style>
+    <!-- END CUSTOM FONT -->
+    <style>
+      .nishikigoi-brand-link[data-astro-cid-flr2tpzy],
+      .nishikigoi-brand-link[data-astro-cid-flr2tpzy]:hover,
+      .nishikigoi-brand-link[data-astro-cid-flr2tpzy]:focus {
+        text-decoration: none;
+      }
+      .nishikigoi-brand-custom-icon[data-astro-cid-flr2tpzy] {
+        object-fit: contain;
+        border-radius: 8px;
+        width: 32px;
+        height: 32px;
+      }
+      @media (width<=767.98px) {
+        .nishikigoi-brand-link[data-astro-cid-flr2tpzy] .navbar-brand-text {
+          display: none;
+        }
+      }
+    </style>
+    <link rel="stylesheet" href="/_astro/DefaultLayout.d0930n1.css" />
+      <link rel="manifest" href="/api/manifest" />
+  </head>
+
+  <body>
+    <a href="#content" class="visually-hidden-focusable skip-link"
+      >Skip to main content</a
+    >
+
+    <!-- BEGIN GLOBAL THEME SCRIPT -->
+    <script>
+      (function () {
+        var themeKeys = [
+          "theme",
+          "theme-base",
+          "theme-font",
+          "theme-primary",
+          "theme-radius",
+        ];
+        var session = JSON.parse(
+          sessionStorage.getItem("koi-farm-auth-session") || "null",
+        );
+        var username = session && session.username;
+        if (!username) return;
+
+        var accountThemeKey = "koi-farm-theme-settings-" + username;
+        var accountTheme =
+          JSON.parse(localStorage.getItem(accountThemeKey) || "null") || {};
+
+        themeKeys.forEach(function (key) {
+          var accountValue = accountTheme[key];
+          if (accountValue) {
+            localStorage.setItem("tabler-" + key, accountValue);
+          } else {
+            localStorage.removeItem("tabler-" + key);
+          }
+        });
+      })();
+    </script>
+    <script src="./assets/theme-auto.js?v=20261016a"></script>
+    <script src="./dist/js/tabler-theme.js"></script>
+    <!-- END GLOBAL THEME SCRIPT -->
+
+    <!-- BEGIN APP AUTH SCRIPT -->
+    <script src="./assets/auth.js?v=20261026a"></script>
+    <script src="./assets/drafts.js?v=20261024b"></script>
+    <script src="./assets/theme-sync.js?v=20261014b"></script>
+    <script src="./assets/print-kit.js?v=20261024a"></script>
+    <script src="./assets/action-dock.js?v=20261015f"></script>
+    <!-- END APP AUTH SCRIPT -->
+
+    <div class="page">
+      <!-- BEGIN NAVBAR  -->
+
+      <!-- BEGIN NAVBAR -->
+      <header
+        class="navbar navbar-expand-md d-print-none"
+        data-astro-cid-wfnge2tk
+      >
+        <div
+          class="container-xl nishikigoi-navbar-head"
+          data-astro-cid-wfnge2tk
+        >
+          <!-- BEGIN NAVBAR TOGGLER -->
+          <button
+            class="navbar-toggler navbar-toggler-tabler"
+            type="button"
+            data-bs-toggle="collapse"
+            data-bs-target="#navbar-menu"
+            aria-controls="navbar-menu"
+            aria-expanded="false"
+            aria-label="Toggle primary navigation"
+            data-astro-cid-eqcup72q
+          >
+            <!-- Download SVG icon from http://tabler.io/icons/icon/menu-2 -->
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="24"
+              height="24"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              aria-hidden="true"
+              focusable="false"
+              class="icon navbar-toggler-symbol navbar-toggler-symbol-menu"
+            >
+              <path d="M4 6l16 0" />
+              <path d="M4 12l16 0" />
+              <path d="M4 18l16 0" />
+            </svg>
+            <!-- Download SVG icon from http://tabler.io/icons/icon/x -->
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="24"
+              height="24"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              aria-hidden="true"
+              focusable="false"
+              class="icon navbar-toggler-symbol navbar-toggler-symbol-close"
+            >
+              <path d="M18 6l-12 12" />
+              <path d="M6 6l12 12" />
+            </svg>
+          </button>
+          <!-- END NAVBAR TOGGLER -->
+
+          <!-- BEGIN NAVBAR LOGO -->
+          <div
+            class="navbar-brand navbar-brand-autodark nishikigoi-brand-link d-none-navbar-horizontal pe-0 pe-md-2 flex-shrink-0"
+            data-astro-cid-flr2tpzy
+          >
+            <a
+              href="./farm.html"
+              aria-label="Nishikigoi"
+              class="nishikigoi-brand-link"
+              data-astro-cid-flr2tpzy
+            >
+              <span
+                class="nishikigoi-brand-default-icon"
+                data-brand-default-icon
+                hidden
+                data-astro-cid-flr2tpzy
+                ><svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  viewBox="0 0 68 68"
+                  width="32"
+                  height="32"
+                  aria-hidden="true"
+                  focusable="false"
+                  class="navbar-brand-image"
+                >
+                  <path
+                    d="M64.6 16.2C63 9.9 58.1 5 51.8 3.4 40 1.5 28 1.5 16.2 3.4 9.9 5 5 9.9 3.4 16.2 1.5 28 1.5 40 3.4 51.8 5 58.1 9.9 63 16.2 64.6c11.8 1.9 23.8 1.9 35.6 0C58.1 63 63 58.1 64.6 51.8c1.9-11.8 1.9-23.8 0-35.6zM33.3 36.3c-2.8 4.4-6.6 8.2-11.1 11-1.5.9-3.3.9-4.8.1s-2.4-2.3-2.5-4c0-1.7.9-3.3 2.4-4.1 2.3-1.4 4.4-3.2 6.1-5.3-1.8-2.1-3.8-3.8-6.1-5.3-2.3-1.3-3-4.2-1.7-6.4s4.3-2.9 6.5-1.6c4.5 2.8 8.2 6.5 11.1 10.9 1 1.4 1 3.3.1 4.7zM49.2 46H37.8c-2.1 0-3.8-1-3.8-3s1.7-3 3.8-3h11.4c2.1 0 3.8 1 3.8 3s-1.7 3-3.8 3z"
+                    fill="#066fd1"
+                    style="
+                      fill: var(
+                        --tblr-navbar-logo-color,
+                        var(--tblr-primary, #066fd1)
+                      );
+                    "
+                  /></svg></span
+              ><img
+                class="nishikigoi-brand-custom-icon"
+                data-brand-icon
+                hidden
+                alt=""
+                data-astro-cid-flr2tpzy
+              />
+              <span
+                class="navbar-brand-text fw-bold ms-2"
+                data-brand-name
+                data-astro-cid-flr2tpzy
+                >Nishikigoi</span
+              >
+            </a>
+          </div>
+          <!-- END NAVBAR LOGO -->
+
+          <!-- BEGIN NAVBAR SEARCH -->
+          <div
+            class="navbar-global-search nishikigoi-navbar-search order-1 order-md-0"
+            data-astro-cid-x2cvvrkm
+          >
+            <div class="input-icon">
+              <span class="input-icon-addon"
+                ><!-- Download SVG icon from http://tabler.io/icons/icon/search -->
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="24"
+                  height="24"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  aria-hidden="true"
+                  focusable="false"
+                  class="icon"
+                >
+                  <path d="M3 10a7 7 0 1 0 14 0a7 7 0 1 0 -14 0" />
+                  <path d="M21 21l-6 -6" /></svg
+              ></span>
+              <input
+                type="text"
+                id="navbar-global-search"
+                name="global_search"
+                value
+                class="form-control navbar-global-search-input"
+                placeholder="Cari data..."
+                aria-label="Cari data"
+                autocomplete="off"
+              />
+            </div>
+            <button
+              type="button"
+              class="navbar-global-search-clear"
+              data-navbar-search-clear
+              aria-label="Hapus pencarian"
+              title="Hapus pencarian"
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="24"
+                height="24"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                class="icon"
+              >
+                <path d="M18 6l-12 12" />
+                <path d="M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
+          <!-- END NAVBAR SEARCH -->
+
+          <script>
+            (() => {
+              const normalize = (value) =>
+                String(value || "")
+                  .toLowerCase()
+                  .trim();
+
+              const pageSearchSelector = [
+                "[data-koi-search]",
+                "[data-pond-search]",
+                "[data-gallery-search]",
+                "[data-report-search]",
+                "[data-breeding-search]",
+                "[data-log-search]",
+                "[data-sell-search]",
+                "[data-invoice-search]",
+                "[data-inventory-search]",
+              ].join(", ");
+
+              const getPageSearch = () => {
+                const candidates = Array.from(
+                  document.querySelectorAll(pageSearchSelector),
+                ).filter(
+                  (input) =>
+                    !input.closest(
+                      ".modal, .dropdown-menu, #offcanvas-settings",
+                    ),
+                );
+
+                return (
+                  candidates.find((input) =>
+                    input.matches(
+                      "[data-breeding-search], [data-report-search], [data-gallery-search], [data-koi-search], [data-pond-search], [data-log-search], [data-sell-search], [data-invoice-search], [data-inventory-search]",
+                    ),
+                  ) || null
+                );
+              };
+
+              const getSearchTargets = () => {
+                const tableRows = Array.from(
+                  document.querySelectorAll("tbody tr"),
+                ).filter((row) => row.children.length);
+                const cards = Array.from(
+                  document.querySelectorAll(".card"),
+                ).filter((card) => {
+                  if (
+                    card.closest(".modal, .dropdown-menu, #offcanvas-settings")
+                  )
+                    return false;
+                  return !card.querySelector("table");
+                });
+                return tableRows;
+              };
+
+              const applyGlobalSearch = (query) => {
+                const pageSearch = getPageSearch();
+
+                if (pageSearch && pageSearch.value !== query) {
+                  pageSearch.value = query;
+                  pageSearch.dispatchEvent(
+                    new Event("input", { bubbles: true }),
+                  );
+                  return;
+                }
+
+                const text = normalize(query);
+                const terms = text.split(/\s+/).filter(Boolean);
+                getSearchTargets().forEach((target) => {
+                  const haystack = normalize(
+                    target.dataset.searchText || target.textContent || "",
+                  );
+                  const matches = target.dataset.searchText
+                    ? terms.some((term) => haystack.includes(term))
+                    : terms.every((term) => haystack.includes(term));
+                  target.classList.toggle(
+                    "d-none",
+                    terms.length > 0 && !matches,
+                  );
+                });
+
+                document
+                  .querySelectorAll("tbody tr.table-active")
+                  .forEach((groupRow) => {
+                    if (terms.length === 0) {
+                      groupRow.classList.remove("d-none");
+                      return;
+                    }
+
+                    let hasVisibleItem = false;
+                    let row = groupRow.nextElementSibling;
+                    while (row && !row.classList.contains("table-active")) {
+                      if (!row.classList.contains("d-none")) {
+                        hasVisibleItem = true;
+                        break;
+                      }
+                      row = row.nextElementSibling;
+                    }
+
+                    groupRow.classList.toggle("d-none", !hasVisibleItem);
+                  });
+              };
+
+              const syncSearchClear = (input) => {
+                const wrapper = input.closest(".navbar-global-search");
+                wrapper?.classList.toggle("has-value", Boolean(input.value));
+              };
+
+              const bindSearch = () => {
+                document
+                  .querySelectorAll(".navbar-global-search-input")
+                  .forEach((input) => {
+                    if (input.dataset.globalSearchReady) return;
+                    input.dataset.globalSearchReady = "true";
+                    input.addEventListener("input", () => {
+                      applyGlobalSearch(input.value);
+                      syncSearchClear(input);
+                    });
+                    input
+                      .closest(".navbar-global-search")
+                      ?.querySelector("[data-navbar-search-clear]")
+                      ?.addEventListener("click", () => {
+                        input.value = "";
+                        applyGlobalSearch("");
+                        syncSearchClear(input);
+                        input.focus();
+                      });
+                    syncSearchClear(input);
+                  });
+
+                const pageSearch = getPageSearch();
+                const globalSearch = document.querySelector(
+                  ".navbar-global-search-input",
+                );
+                if (
+                  pageSearch &&
+                  globalSearch &&
+                  pageSearch.value &&
+                  !globalSearch.value
+                ) {
+                  globalSearch.value = pageSearch.value;
+                  syncSearchClear(globalSearch);
+                }
+              };
+
+              bindSearch();
+              document.addEventListener("DOMContentLoaded", bindSearch);
+            })();
+          </script>
+
+          <!-- BEGIN NAVBAR ACTIONS -->
+          <div class="navbar-nav flex-row navbar-side order-md-last ms-auto">
+            <div class="navbar-side-actions d-flex align-items-center me-3">
+              <!-- BEGIN THEME TOGGLE -->
+              <div class="nav-item">
+                <a
+                  href="?theme=dark"
+                  class="nav-link px-0 hide-theme-dark js-theme-toggle"
+                  title="Enable dark mode"
+                  data-theme-value="dark"
+                  data-bs-toggle="tooltip"
+                  data-bs-placement="bottom"
+                >
+                  <!-- Download SVG icon from http://tabler.io/icons/icon/moon -->
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="24"
+                    height="24"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    aria-hidden="true"
+                    focusable="false"
+                    class="icon"
+                  >
+                    <path
+                      d="M12 3c.132 0 .263 0 .393 0a7.5 7.5 0 0 0 7.92 12.446a9 9 0 1 1 -8.313 -12.454l0 .008"
+                    />
+                  </svg>
+                </a>
+
+                <a
+                  href="?theme=light"
+                  class="nav-link px-0 hide-theme-light js-theme-toggle"
+                  title="Enable light mode"
+                  data-theme-value="light"
+                  data-bs-toggle="tooltip"
+                  data-bs-placement="bottom"
+                >
+                  <!-- Download SVG icon from http://tabler.io/icons/icon/sun -->
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="24"
+                    height="24"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    aria-hidden="true"
+                    focusable="false"
+                    class="icon"
+                  >
+                    <path d="M8 12a4 4 0 1 0 8 0a4 4 0 1 0 -8 0" />
+                    <path
+                      d="M3 12h1m8 -9v1m8 8h1m-9 8v1m-6.4 -15.4l.7 .7m12.1 -.7l-.7 .7m0 11.4l.7 .7m-12.1 -.7l-.7 .7"
+                    />
+                  </svg>
+                </a>
+              </div>
+              <!-- END THEME TOGGLE -->
+              <!-- BEGIN NOTIFICATIONS -->
+              <div class="nav-item dropdown" data-astro-cid-ry6bbqh3>
+                <a
+                  href="#"
+                  id="navbar-notifications-toggle"
+                  class="nav-link px-0"
+                  data-bs-toggle="dropdown"
+                  aria-label="Show notifications"
+                  data-bs-auto-close="outside"
+                  aria-expanded="false"
+                  data-astro-cid-ry6bbqh3
+                >
+                  <!-- Download SVG icon from http://tabler.io/icons/icon/bell -->
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="24"
+                    height="24"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    aria-hidden="true"
+                    focusable="false"
+                    class="icon"
+                  >
+                    <path
+                      d="M10 5a2 2 0 1 1 4 0a7 7 0 0 1 4 6v3a4 4 0 0 0 2 3h-16a4 4 0 0 0 2 -3v-3a7 7 0 0 1 4 -6"
+                    />
+                    <path d="M9 17v1a3 3 0 0 0 6 0v-1" />
+                  </svg>
+                  <span
+                    class="badge bg-red d-none"
+                    data-navbar-notifications-badge
+                    data-astro-cid-ry6bbqh3
+                  ></span>
+                </a>
+                <!-- BEGIN NAVBAR NOTIFICATIONS -->
+                <div
+                  class="dropdown-menu dropdown-menu-arrow dropdown-menu-end dropdown-menu-card navbar-notifications-menu"
+                  data-astro-cid-ry6bbqh3
+                >
+                  <div class="card" data-astro-cid-ry6bbqh3>
+                    <div class="card-header d-flex" data-astro-cid-ry6bbqh3>
+                      <h3 class="card-title">Notifications</h3>
+                      <button
+                        type="button"
+                        class="btn-close ms-auto"
+                        data-navbar-notifications-close
+                        aria-label="Close"
+                        data-astro-cid-ry6bbqh3
+                      ></button>
+                    </div>
+                    <div
+                      class="list-group list-group-flush list-group-hoverable"
+                      data-navbar-notifications-list
+                      data-astro-cid-ry6bbqh3
+                    >
+                      <div class="list-group-item" data-astro-cid-ry6bbqh3>
+                        <div class="text-secondary" data-astro-cid-ry6bbqh3>
+                          <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>Memuat notifikasi...
+                        </div>
+                      </div>
+                    </div>
+                    <div class="card-body" data-astro-cid-ry6bbqh3>
+                      <div class="notification-actions" data-astro-cid-ry6bbqh3>
+                        <a
+                          href="farm-log.html"
+                          class="btn"
+                          data-astro-cid-ry6bbqh3
+                          >Lihat Log</a
+                        >
+                        <button
+                          type="button"
+                          class="btn"
+                          data-navbar-notifications-clear
+                          data-astro-cid-ry6bbqh3
+                        >
+                          Clear
+                        </button>
+                        <button
+                          type="button"
+                          class="btn"
+                          data-navbar-notifications-read-all
+                          data-astro-cid-ry6bbqh3
+                        >
+                          Mark all read
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <!-- END NAVBAR NOTIFICATIONS -->
+              </div>
+
+              <!-- END NOTIFICATIONS -->
+            </div>
+
+            <!-- BEGIN USER MENU -->
+            <div class="nav-item dropdown">
+              <a
+                href="#"
+                class="nav-link d-flex lh-1 p-0 px-2"
+                data-bs-toggle="dropdown"
+                aria-label="Open user menu"
+              >
+                <span
+                  class="koi-api-indicator koi-api-indicator-loading me-2"
+                  data-api-indicator
+                  title="Memeriksa API"
+                  aria-label="Memeriksa API"
+                ></span>
+                <span class="avatar avatar-sm" data-auth-avatar>HA</span>
+                <div class="d-none d-xl-block ps-2">
+                  <div data-auth-name>Holil</div>
+                  <div class="mt-1 small text-secondary" data-auth-role>
+                    Master Admin
+                  </div>
+                </div>
+              </a>
+              <div class="dropdown-menu dropdown-menu-end dropdown-menu-arrow navbar-user-menu">
+                <a class="dropdown-item" href="#" data-koi-my-profile><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false" class="icon dropdown-item-icon"><path d="M8 7a4 4 0 1 0 8 0a4 4 0 0 0 -8 0" /><path d="M6 21v-2a4 4 0 0 1 4 -4h4a4 4 0 0 1 4 4v2" /></svg> Profile</a>
+                <div class="dropdown-divider"></div>
+                <a class="dropdown-item d-flex align-items-center" href="#" data-koi-sp-toggle aria-expanded="false">Settings &amp; Privacy</a>
+                <div class="koi-sp-list" data-koi-sp-list hidden>
+                  <a class="dropdown-item" href="./settings.html">Pengaturan Akun</a>
+                  <a class="dropdown-item" href="./farm-log.html#changelog" data-koi-changelog>Change Log</a>
+                  <a class="dropdown-item" href="#" data-bs-toggle="offcanvas" data-bs-target="#offcanvas-settings" aria-controls="offcanvas-settings">Theme Settings</a>
+                  <a class="dropdown-item" href="#" data-feedback-open>Give Feedback</a>
+                  <a class="dropdown-item" href="./settings-master-account.html" data-role-required="master-admin">Master Akun</a>
+                </div>
+                <div class="dropdown-divider"></div>
+                <a class="dropdown-item" href="./sign-in.html" data-action="logout">Sign out</a>
+              </div>
+            </div>
+            <!-- END USER MENU -->
+          </div>
+          <!-- END NAVBAR ACTIONS -->
+        </div>
+      </header>
+
+      <div class="navbar-expand-md" data-astro-cid-wfnge2tk>
+        <div
+          class="collapse navbar-collapse"
+          id="navbar-menu"
+          data-astro-cid-wfnge2tk
+        >
+          <div class="navbar" data-astro-cid-wfnge2tk>
+            <div class="container-xl" data-astro-cid-wfnge2tk>
+              <div
+                class="row flex-column flex-md-row flex-fill align-items-center justify-content-center"
+                data-astro-cid-wfnge2tk
+              >
+                <div class="col-auto" data-astro-cid-wfnge2tk>
+                  <!-- BEGIN NAVBAR MENU -->
+                  <nav aria-label="Primary" data-astro-cid-wfnge2tk>
+                    <!-- BEGIN NAVBAR MENU -->
+                    <ul class="navbar-nav">
+                      <!-- BEGIN NAVBAR ITEM -->
+                      <li class="nav-item">
+                        <a class="nav-link" href="./farm.html">
+                          <span
+                            class="nav-link-icon d-md-none d-lg-inline-block"
+                            ><!-- Download SVG icon from http://tabler.io/icons/icon/dashboard -->
+                            <svg
+                              xmlns="http://www.w3.org/2000/svg"
+                              width="24"
+                              height="24"
+                              viewBox="0 0 24 24"
+                              fill="none"
+                              stroke="currentColor"
+                              stroke-width="2"
+                              stroke-linecap="round"
+                              stroke-linejoin="round"
+                              aria-hidden="true"
+                              focusable="false"
+                              class="icon"
+                            >
+                              <path d="M10 13a2 2 0 1 0 4 0a2 2 0 1 0 -4 0" />
+                              <path d="M13.45 11.55l2.05 -2.05" />
+                              <path d="M6.4 20a9 9 0 1 1 11.2 0l-11.2 0" /></svg
+                          ></span>
+
+                          <span class="nav-link-title">Dashboard</span>
+                        </a>
+                      </li>
+                      <!-- END NAVBAR ITEM -->
+
+                      <!-- BEGIN NAVBAR ITEM -->
+                      <li class="nav-item">
+                        <a class="nav-link" href="./farm-koi.html">
+                          <span
+                            class="nav-link-icon d-md-none d-lg-inline-block"
+                            ><!-- Download SVG icon from http://tabler.io/icons/icon/fish -->
+                            <svg
+                              xmlns="http://www.w3.org/2000/svg"
+                              width="24"
+                              height="24"
+                              viewBox="0 0 24 24"
+                              fill="none"
+                              stroke="currentColor"
+                              stroke-width="2"
+                              stroke-linecap="round"
+                              stroke-linejoin="round"
+                              aria-hidden="true"
+                              focusable="false"
+                              class="icon"
+                            >
+                              <path
+                                d="M16.69 7.44a6.973 6.973 0 0 0 -1.69 4.56c0 1.747 .64 3.345 1.699 4.571"
+                              />
+                              <path
+                                d="M2 9.504c7.715 8.647 14.75 10.265 20 2.498c-5.25 -7.761 -12.285 -6.142 -20 2.504"
+                              />
+                              <path d="M18 11v.01" />
+                              <path d="M11.5 10.5c-.667 1 -.667 2 0 3" /></svg
+                          ></span>
+
+                          <span class="nav-link-title">Data Ikan</span>
+                        </a>
+                      </li>
+                      <!-- END NAVBAR ITEM -->
+
+                      <!-- BEGIN NAVBAR ITEM -->
+                      <li class="nav-item">
+                        <a class="nav-link" href="./farm-ponds.html">
+                          <span
+                            class="nav-link-icon d-md-none d-lg-inline-block"
+                            ><!-- Download SVG icon from http://tabler.io/icons/icon/bowl -->
+                            <svg
+                              xmlns="http://www.w3.org/2000/svg"
+                              width="24"
+                              height="24"
+                              viewBox="0 0 24 24"
+                              fill="none"
+                              stroke="currentColor"
+                              stroke-width="2"
+                              stroke-linecap="round"
+                              stroke-linejoin="round"
+                              aria-hidden="true"
+                              focusable="false"
+                              class="icon"
+                            >
+                              <path
+                                d="M4 8h16a1 1 0 0 1 1 1v.5c0 1.5 -2.517 5.573 -4 6.5v1a1 1 0 0 1 -1 1h-8a1 1 0 0 1 -1 -1v-1c-1.687 -1.054 -4 -5 -4 -6.5v-.5a1 1 0 0 1 1 -1"
+                              /></svg
+                          ></span>
+
+                          <span class="nav-link-title">Data Kolam</span>
+                        </a>
+                      </li>
+                      <!-- END NAVBAR ITEM -->
+
+                      <!-- BEGIN NAVBAR ITEM -->
+                      <li class="nav-item">
+                        <a class="nav-link" href="./farm-breeding.html">
+                          <span
+                            class="nav-link-icon d-md-none d-lg-inline-block"
+                            ><!-- Download SVG icon from http://tabler.io/icons/icon/dna-2 -->
+                            <svg
+                              xmlns="http://www.w3.org/2000/svg"
+                              width="24"
+                              height="24"
+                              viewBox="0 0 24 24"
+                              fill="none"
+                              stroke="currentColor"
+                              stroke-width="2"
+                              stroke-linecap="round"
+                              stroke-linejoin="round"
+                              aria-hidden="true"
+                              focusable="false"
+                              class="icon"
+                            >
+                              <path
+                                d="M17 3v1c-.01 3.352 -1.68 6.023 -5.008 8.014c-3.328 1.99 3.336 -2 .008 -.014c-3.328 1.99 -5 4.662 -5.008 8.014v1"
+                              />
+                              <path
+                                d="M17 21.014v-1c-.01 -3.352 -1.68 -6.023 -5.008 -8.014c-3.328 -1.99 3.336 2 .008 .014c-3.328 -1.991 -5 -4.662 -5.008 -8.014v-1"
+                              />
+                              <path d="M7 4h10" />
+                              <path d="M7 20h10" />
+                              <path d="M8 8h8" />
+                              <path d="M8 16h8" /></svg
+                          ></span>
+
+                          <span class="nav-link-title">Breeding</span>
+                        </a>
+                      </li>
+                      <!-- END NAVBAR ITEM -->
+
+                      <!-- BEGIN NAVBAR ITEM -->
+                      <li class="nav-item">
+                        <a class="nav-link" href="./farm-reports.html">
+                          <span
+                            class="nav-link-icon d-md-none d-lg-inline-block"
+                            ><!-- Download SVG icon from http://tabler.io/icons/icon/report -->
+                            <svg
+                              xmlns="http://www.w3.org/2000/svg"
+                              width="24"
+                              height="24"
+                              viewBox="0 0 24 24"
+                              fill="none"
+                              stroke="currentColor"
+                              stroke-width="2"
+                              stroke-linecap="round"
+                              stroke-linejoin="round"
+                              aria-hidden="true"
+                              focusable="false"
+                              class="icon"
+                            >
+                              <path
+                                d="M8 5h-2a2 2 0 0 0 -2 2v12a2 2 0 0 0 2 2h5.697"
+                              />
+                              <path d="M18 14v4h4" />
+                              <path d="M18 11v-4a2 2 0 0 0 -2 -2h-2" />
+                              <path
+                                d="M8 5a2 2 0 0 1 2 -2h2a2 2 0 0 1 2 2a2 2 0 0 1 -2 2h-2a2 2 0 0 1 -2 -2"
+                              />
+                              <path d="M14 18a4 4 0 1 0 8 0a4 4 0 1 0 -8 0" />
+                              <path d="M8 11h4" />
+                              <path d="M8 15h3" /></svg
+                          ></span>
+
+                          <span class="nav-link-title">Laporan</span>
+                        </a>
+                      </li>
+                      <!-- END NAVBAR ITEM -->
+
+                      <!-- BEGIN NAVBAR ITEM -->
+                      <li class="nav-item dropdown">
+                        <a
+                          class="nav-link dropdown-toggle"
+                          href="#navbar-penjualan"
+                          data-bs-toggle="dropdown"
+                          data-bs-auto-close="outside"
+                          role="button"
+                          aria-haspopup="true"
+                          aria-expanded="false"
+                        >
+                          <span class="nav-link-icon d-md-none d-lg-inline-block"
+                            ><!-- Download SVG icon from http://tabler.io/icons/icon/tag -->
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false" class="icon">
+<path d="M6.5 7.5a1 1 0 1 0 2 0a1 1 0 1 0 -2 0" /><path d="M3 6v5.172a2 2 0 0 0 .586 1.414l7.71 7.71a2.41 2.41 0 0 0 3.408 0l5.592 -5.592a2.41 2.41 0 0 0 0 -3.408l-7.71 -7.71a2 2 0 0 0 -1.414 -.586h-5.172a3 3 0 0 0 -3 3" />
+                            </svg></span
+                          >
+
+                          <span class="nav-link-title">Penjualan</span>
+                        </a>
+
+                        <div class="dropdown-menu">
+                        <!-- BEGIN NAVBAR ITEM --><a
+                          class="dropdown-item"
+                          href="./farm-sell.html"
+                        >
+                          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false" class="icon icon-inline me-1">
+<path d="M4 19a2 2 0 1 0 4 0a2 2 0 1 0 -4 0" /><path d="M15 19a2 2 0 1 0 4 0a2 2 0 1 0 -4 0" /><path d="M17 17h-11v-14h-2" /><path d="M6 5l14 1l-1 7h-13" />
+                          </svg>
+
+                          Katalog
+                        </a>
+                        <!-- END NAVBAR ITEM -->
+                        <!-- BEGIN NAVBAR ITEM --><a
+                          class="dropdown-item"
+                          href="./farm-invoice.html"
+                        >
+                          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false" class="icon icon-inline me-1">
+<path d="M14 3v4a1 1 0 0 0 1 1h4" /><path d="M17 21h-10a2 2 0 0 1 -2 -2v-14a2 2 0 0 1 2 -2h7l5 5v11a2 2 0 0 1 -2 2" /><path d="M9 7l1 0" /><path d="M9 13l6 0" /><path d="M13 17l2 0" />
+                          </svg>
+
+                          Invoice
+                        </a>
+                        <!-- END NAVBAR ITEM -->
+                        </div>
+                      </li>
+                      <!-- END NAVBAR ITEM -->
+
+                      <!-- BEGIN NAVBAR ITEM -->
+                      <li class="nav-item dropdown">
+                        <a
+                          class="nav-link dropdown-toggle"
+                          href="#navbar-management"
+                          data-bs-toggle="dropdown"
+                          data-bs-auto-close="outside"
+                          role="button"
+                          aria-haspopup="true"
+                          aria-expanded="false"
+                          data-role-required="database-write"
+                        >
+                          <span
+                            class="nav-link-icon d-md-none d-lg-inline-block"
+                            ><!-- Download SVG icon from http://tabler.io/icons/icon/category -->
+                            <svg
+                              xmlns="http://www.w3.org/2000/svg"
+                              width="24"
+                              height="24"
+                              viewBox="0 0 24 24"
+                              fill="none"
+                              stroke="currentColor"
+                              stroke-width="2"
+                              stroke-linecap="round"
+                              stroke-linejoin="round"
+                              aria-hidden="true"
+                              focusable="false"
+                              class="icon"
+                            >
+                              <path d="M4 4h6v6h-6l0 -6" />
+                              <path d="M14 4h6v6h-6l0 -6" />
+                              <path d="M4 14h6v6h-6l0 -6" />
+                              <path
+                                d="M14 17a3 3 0 1 0 6 0a3 3 0 1 0 -6 0"
+                              /></svg
+                          ></span>
+
+                          <span class="nav-link-title">Etc</span>
+                        </a>
+
+                        <div class="dropdown-menu">
+                          <!-- BEGIN NAVBAR ITEM --><a
+                            class="dropdown-item"
+                            href="./farm-archive.html"
+                          >
+                            <!-- Download SVG icon from http://tabler.io/icons/icon/archive -->
+                            <svg
+                              xmlns="http://www.w3.org/2000/svg"
+                              width="24"
+                              height="24"
+                              viewBox="0 0 24 24"
+                              fill="none"
+                              stroke="currentColor"
+                              stroke-width="2"
+                              stroke-linecap="round"
+                              stroke-linejoin="round"
+                              aria-hidden="true"
+                              focusable="false"
+                              class="icon icon-inline me-1"
+                            >
+                              <path
+                                d="M3 4m0 2a2 2 0 0 1 2 -2h14a2 2 0 0 1 2 2v0a2 2 0 0 1 -2 2h-14a2 2 0 0 1 -2 -2z"
+                              />
+                              <path d="M5 8v10a2 2 0 0 0 2 2h10a2 2 0 0 0 2 -2v-10" />
+                              <path d="M10 12l4 0" />
+                            </svg>
+
+                            Archive
+                          </a>
+                          <!-- END NAVBAR ITEM --><!-- BEGIN NAVBAR ITEM --><a
+                            class="dropdown-item"
+                            href="./farm-inventory.html"
+                          >
+                            <!-- Download SVG icon from http://tabler.io/icons/icon/package -->
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false" class="icon icon-inline me-1"><path d="M12 3l8 4.5l0 9l-8 4.5l-8 -4.5l0 -9l8 -4.5" /><path d="M12 12l8 -4.5" /><path d="M12 12l0 9" /><path d="M12 12l-8 -4.5" /><path d="M16 5.25l-8 4.5" /></svg>
+
+                            Inventaris
+                          </a>
+                          <!-- END NAVBAR ITEM --><!-- BEGIN NAVBAR ITEM --><a
+                            class="dropdown-item"
+                            href="./farm-queue.html"
+                          >
+                            <!-- Download SVG icon from http://tabler.io/icons/icon/stack-2 -->
+                            <svg
+                              xmlns="http://www.w3.org/2000/svg"
+                              width="24"
+                              height="24"
+                              viewBox="0 0 24 24"
+                              fill="none"
+                              stroke="currentColor"
+                              stroke-width="2"
+                              stroke-linecap="round"
+                              stroke-linejoin="round"
+                              aria-hidden="true"
+                              focusable="false"
+                              class="icon icon-inline me-1"
+                            >
+                              <path d="M12 4l-8 4l8 4l8 -4l-8 -4" />
+                              <path d="M4 12l8 4l8 -4" />
+                              <path d="M4 16l8 4l8 -4" />
+                            </svg>
+
+                            Queue
+                          </a>
+                          <!-- END NAVBAR ITEM --><!-- BEGIN NAVBAR ITEM --><a
+                            class="dropdown-item"
+                            href="./farm-gallery.html"
+                          >
+                            <!-- Download SVG icon from http://tabler.io/icons/icon/photo -->
+                            <svg
+                              xmlns="http://www.w3.org/2000/svg"
+                              width="24"
+                              height="24"
+                              viewBox="0 0 24 24"
+                              fill="none"
+                              stroke="currentColor"
+                              stroke-width="2"
+                              stroke-linecap="round"
+                              stroke-linejoin="round"
+                              aria-hidden="true"
+                              focusable="false"
+                              class="icon icon-inline me-1"
+                            >
+                              <path d="M15 8h.01" />
+                              <path
+                                d="M3 6a3 3 0 0 1 3 -3h12a3 3 0 0 1 3 3v12a3 3 0 0 1 -3 3h-12a3 3 0 0 1 -3 -3v-12"
+                              />
+                              <path
+                                d="M3 16l5 -5c.928 -.893 2.072 -.893 3 0l5 5"
+                              />
+                              <path
+                                d="M14 14l1 -1c.928 -.893 2.072 -.893 3 0l3 3"
+                              />
+                            </svg>
+
+                            Gallery
+                          </a>
+                          <!-- END NAVBAR ITEM --><!-- BEGIN NAVBAR ITEM --><a
+                            class="dropdown-item"
+                            href="./farm-log.html"
+                          >
+                            <!-- Download SVG icon from http://tabler.io/icons/icon/clipboard-list -->
+                            <svg
+                              xmlns="http://www.w3.org/2000/svg"
+                              width="24"
+                              height="24"
+                              viewBox="0 0 24 24"
+                              fill="none"
+                              stroke="currentColor"
+                              stroke-width="2"
+                              stroke-linecap="round"
+                              stroke-linejoin="round"
+                              aria-hidden="true"
+                              focusable="false"
+                              class="icon icon-inline me-1"
+                            >
+                              <path
+                                d="M9 5h-2a2 2 0 0 0 -2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2 -2v-12a2 2 0 0 0 -2 -2h-2"
+                              />
+                              <path
+                                d="M9 5a2 2 0 0 1 2 -2h2a2 2 0 0 1 2 2a2 2 0 0 1 -2 2h-2a2 2 0 0 1 -2 -2"
+                              />
+                              <path d="M9 12l.01 0" />
+                              <path d="M13 12l2 0" />
+                              <path d="M9 16l.01 0" />
+                              <path d="M13 16l2 0" />
+                            </svg>
+
+                            Log
+                          </a>
+                          <!-- END NAVBAR ITEM -->
+                        </div>
+                      </li>
+                      <!-- END NAVBAR ITEM -->
+                    </ul>
+                    <!-- END NAVBAR MENU -->
+                  </nav>
+                  <!-- END NAVBAR MENU -->
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <!-- END NAVBAR -->
+
+      <!-- END NAVBAR  -->
+
+      <div class="page-wrapper">
+        <!-- BEGIN PAGE HEADER -->
+
+        <div class="page-header d-print-none" data-astro-cid-52ptlyh5>
+          <div class="container-xl" data-astro-cid-52ptlyh5>
+            <div class="row g-0 align-items-center" data-astro-cid-52ptlyh5>
+              <div
+                class="col page-header-compact-title"
+                data-astro-cid-52ptlyh5
+              >
+                <div class="page-title-line" data-astro-cid-52ptlyh5>
+                  <span class="page-title-line-title" data-astro-cid-52ptlyh5
+                    >Account Settings</span
+                  >
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <!-- END PAGE HEADER -->
+
+        <!-- BEGIN PAGE BODY -->
+        <main id="content" class="page-body">
+          <div class="container-xl">
+            <div class="card">
+              <div class="row g-0">
+                <!-- BEGIN SETTINGS NAV -->
+                <div class="col-12 col-md-3 border-end">
+                  <div class="card-body">
+                    <h4 class="subheader">Configuration Acount</h4>
+
+                    <nav
+                      aria-label="Configuration Acount"
+                      class="list-group list-group-transparent"
+                    >
+                      <a
+                        href="./settings.html"
+                        class="list-group-item list-group-item-action d-flex align-items-center"
+                      >
+                        My Account
+                      </a>
+                      <a
+                        href="./settings-master-account.html"
+                        data-role-required="master-admin"
+                        class="list-group-item list-group-item-action d-flex align-items-center justify-content-between gap-2"
+                      >
+                        <span>Master Akun</span>
+                        <span class="badge bg-purple-lt text-purple-lt-fg"
+                          >Master Admin</span
+                        >
+                      </a>
+                    </nav>
+
+                    <h4 class="subheader mt-4">Experience</h4>
+
+                    <nav
+                      aria-label="Experience"
+                      class="list-group list-group-transparent"
+                    >
+                      <button
+                        type="button"
+                        data-bs-toggle="offcanvas"
+                        data-bs-target="#offcanvas-settings"
+                        aria-controls="offcanvas-settings"
+                        class="list-group-item list-group-item-action text-start"
+                      >
+                        Theme Settings
+                      </button>
+                      <a
+                        href="#"
+                        data-feedback-open
+                        class="list-group-item list-group-item-action"
+                      >
+                        Give Feedback
+                      </a>
+                    </nav>
+                  </div>
+                </div>
+                <!-- END SETTINGS NAV -->
+                <div class="col-12 col-md-9 d-flex flex-column">
+                  <div class="card-body">
+                    <h2 class="mb-4">Plans</h2>
+
+                    <p class="text-secondary mb-4">
+                      This workspace’s Basic Plan is set to $34 per month and
+                      will renew on June 19, 2022.
+                    </p>
+
+                    <div class="row row-cards">
+                      <div class="col-lg-4">
+                        <div class="card card-md">
+                          <div class="card-body text-center">
+                            <div
+                              class="text-uppercase text-secondary fw-medium"
+                            >
+                              Free
+                            </div>
+
+                            <div class="display-5 fw-bold my-3">$0</div>
+
+                            <ul class="list-unstyled lh-lg">
+                              <li><strong>3</strong> Users</li>
+                              <li>
+                                <!-- Download SVG icon from http://tabler.io/icons/icon/check -->
+                                <svg
+                                  xmlns="http://www.w3.org/2000/svg"
+                                  width="24"
+                                  height="24"
+                                  viewBox="0 0 24 24"
+                                  fill="none"
+                                  stroke="currentColor"
+                                  stroke-width="2"
+                                  stroke-linecap="round"
+                                  stroke-linejoin="round"
+                                  aria-hidden="true"
+                                  focusable="false"
+                                  class="icon me-1 text-success"
+                                >
+                                  <path d="M5 12l5 5l10 -10" />
+                                </svg>
+                                Sharing Tools
+                              </li>
+                              <li>
+                                <!-- Download SVG icon from http://tabler.io/icons/icon/x -->
+                                <svg
+                                  xmlns="http://www.w3.org/2000/svg"
+                                  width="24"
+                                  height="24"
+                                  viewBox="0 0 24 24"
+                                  fill="none"
+                                  stroke="currentColor"
+                                  stroke-width="2"
+                                  stroke-linecap="round"
+                                  stroke-linejoin="round"
+                                  aria-hidden="true"
+                                  focusable="false"
+                                  class="icon me-1 text-danger"
+                                >
+                                  <path d="M18 6l-12 12" />
+                                  <path d="M6 6l12 12" />
+                                </svg>
+                                Design Tools
+                              </li>
+                              <li>
+                                <!-- Download SVG icon from http://tabler.io/icons/icon/x -->
+                                <svg
+                                  xmlns="http://www.w3.org/2000/svg"
+                                  width="24"
+                                  height="24"
+                                  viewBox="0 0 24 24"
+                                  fill="none"
+                                  stroke="currentColor"
+                                  stroke-width="2"
+                                  stroke-linecap="round"
+                                  stroke-linejoin="round"
+                                  aria-hidden="true"
+                                  focusable="false"
+                                  class="icon me-1 text-danger"
+                                >
+                                  <path d="M18 6l-12 12" />
+                                  <path d="M6 6l12 12" />
+                                </svg>
+                                Private Messages
+                              </li>
+                              <li>
+                                <!-- Download SVG icon from http://tabler.io/icons/icon/x -->
+                                <svg
+                                  xmlns="http://www.w3.org/2000/svg"
+                                  width="24"
+                                  height="24"
+                                  viewBox="0 0 24 24"
+                                  fill="none"
+                                  stroke="currentColor"
+                                  stroke-width="2"
+                                  stroke-linecap="round"
+                                  stroke-linejoin="round"
+                                  aria-hidden="true"
+                                  focusable="false"
+                                  class="icon me-1 text-danger"
+                                >
+                                  <path d="M18 6l-12 12" />
+                                  <path d="M6 6l12 12" />
+                                </svg>
+                                Twitter API
+                              </li>
+                            </ul>
+
+                            <div class="text-center mt-4">
+                              <a href="#" class="btn w-100">Choose plan</a>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                      <div class="col-lg-4">
+                        <div class="card card-md">
+                          <div
+                            class="ribbon ribbon-top ribbon-bookmark bg-green"
+                          >
+                            <!-- Download SVG icon from http://tabler.io/icons/icon/star -->
+                            <svg
+                              xmlns="http://www.w3.org/2000/svg"
+                              width="24"
+                              height="24"
+                              viewBox="0 0 24 24"
+                              fill="none"
+                              stroke="currentColor"
+                              stroke-width="2"
+                              stroke-linecap="round"
+                              stroke-linejoin="round"
+                              aria-hidden="true"
+                              focusable="false"
+                              class="icon"
+                            >
+                              <path
+                                d="M12 17.75l-6.172 3.245l1.179 -6.873l-5 -4.867l6.9 -1l3.086 -6.253l3.086 6.253l6.9 1l-5 4.867l1.179 6.873l-6.158 -3.245"
+                              />
+                            </svg>
+                          </div>
+
+                          <div class="card-body text-center">
+                            <div
+                              class="text-uppercase text-secondary fw-medium"
+                            >
+                              Premium
+                            </div>
+
+                            <div class="display-5 fw-bold my-3">$49</div>
+
+                            <ul class="list-unstyled lh-lg">
+                              <li><strong>10</strong> Users</li>
+                              <li>
+                                <!-- Download SVG icon from http://tabler.io/icons/icon/check -->
+                                <svg
+                                  xmlns="http://www.w3.org/2000/svg"
+                                  width="24"
+                                  height="24"
+                                  viewBox="0 0 24 24"
+                                  fill="none"
+                                  stroke="currentColor"
+                                  stroke-width="2"
+                                  stroke-linecap="round"
+                                  stroke-linejoin="round"
+                                  aria-hidden="true"
+                                  focusable="false"
+                                  class="icon me-1 text-success"
+                                >
+                                  <path d="M5 12l5 5l10 -10" />
+                                </svg>
+                                Sharing Tools
+                              </li>
+                              <li>
+                                <!-- Download SVG icon from http://tabler.io/icons/icon/check -->
+                                <svg
+                                  xmlns="http://www.w3.org/2000/svg"
+                                  width="24"
+                                  height="24"
+                                  viewBox="0 0 24 24"
+                                  fill="none"
+                                  stroke="currentColor"
+                                  stroke-width="2"
+                                  stroke-linecap="round"
+                                  stroke-linejoin="round"
+                                  aria-hidden="true"
+                                  focusable="false"
+                                  class="icon me-1 text-success"
+                                >
+                                  <path d="M5 12l5 5l10 -10" />
+                                </svg>
+                                Design Tools
+                              </li>
+                              <li>
+                                <!-- Download SVG icon from http://tabler.io/icons/icon/x -->
+                                <svg
+                                  xmlns="http://www.w3.org/2000/svg"
+                                  width="24"
+                                  height="24"
+                                  viewBox="0 0 24 24"
+                                  fill="none"
+                                  stroke="currentColor"
+                                  stroke-width="2"
+                                  stroke-linecap="round"
+                                  stroke-linejoin="round"
+                                  aria-hidden="true"
+                                  focusable="false"
+                                  class="icon me-1 text-danger"
+                                >
+                                  <path d="M18 6l-12 12" />
+                                  <path d="M6 6l12 12" />
+                                </svg>
+                                Private Messages
+                              </li>
+                              <li>
+                                <!-- Download SVG icon from http://tabler.io/icons/icon/x -->
+                                <svg
+                                  xmlns="http://www.w3.org/2000/svg"
+                                  width="24"
+                                  height="24"
+                                  viewBox="0 0 24 24"
+                                  fill="none"
+                                  stroke="currentColor"
+                                  stroke-width="2"
+                                  stroke-linecap="round"
+                                  stroke-linejoin="round"
+                                  aria-hidden="true"
+                                  focusable="false"
+                                  class="icon me-1 text-danger"
+                                >
+                                  <path d="M18 6l-12 12" />
+                                  <path d="M6 6l12 12" />
+                                </svg>
+                                Twitter API
+                              </li>
+                            </ul>
+
+                            <div class="text-center mt-4">
+                              <a href="#" class="btn btn-green w-100"
+                                >Choose plan</a
+                              >
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                      <div class="col-lg-4">
+                        <div class="card card-md">
+                          <div class="card-body text-center">
+                            <div
+                              class="text-uppercase text-secondary fw-medium"
+                            >
+                              Enterprise
+                            </div>
+
+                            <div class="display-5 fw-bold my-3">$99</div>
+
+                            <ul class="list-unstyled lh-lg">
+                              <li><strong>100</strong> Users</li>
+                              <li>
+                                <!-- Download SVG icon from http://tabler.io/icons/icon/check -->
+                                <svg
+                                  xmlns="http://www.w3.org/2000/svg"
+                                  width="24"
+                                  height="24"
+                                  viewBox="0 0 24 24"
+                                  fill="none"
+                                  stroke="currentColor"
+                                  stroke-width="2"
+                                  stroke-linecap="round"
+                                  stroke-linejoin="round"
+                                  aria-hidden="true"
+                                  focusable="false"
+                                  class="icon me-1 text-success"
+                                >
+                                  <path d="M5 12l5 5l10 -10" />
+                                </svg>
+                                Sharing Tools
+                              </li>
+                              <li>
+                                <!-- Download SVG icon from http://tabler.io/icons/icon/check -->
+                                <svg
+                                  xmlns="http://www.w3.org/2000/svg"
+                                  width="24"
+                                  height="24"
+                                  viewBox="0 0 24 24"
+                                  fill="none"
+                                  stroke="currentColor"
+                                  stroke-width="2"
+                                  stroke-linecap="round"
+                                  stroke-linejoin="round"
+                                  aria-hidden="true"
+                                  focusable="false"
+                                  class="icon me-1 text-success"
+                                >
+                                  <path d="M5 12l5 5l10 -10" />
+                                </svg>
+                                Design Tools
+                              </li>
+                              <li>
+                                <!-- Download SVG icon from http://tabler.io/icons/icon/check -->
+                                <svg
+                                  xmlns="http://www.w3.org/2000/svg"
+                                  width="24"
+                                  height="24"
+                                  viewBox="0 0 24 24"
+                                  fill="none"
+                                  stroke="currentColor"
+                                  stroke-width="2"
+                                  stroke-linecap="round"
+                                  stroke-linejoin="round"
+                                  aria-hidden="true"
+                                  focusable="false"
+                                  class="icon me-1 text-success"
+                                >
+                                  <path d="M5 12l5 5l10 -10" />
+                                </svg>
+                                Private Messages
+                              </li>
+                              <li>
+                                <!-- Download SVG icon from http://tabler.io/icons/icon/x -->
+                                <svg
+                                  xmlns="http://www.w3.org/2000/svg"
+                                  width="24"
+                                  height="24"
+                                  viewBox="0 0 24 24"
+                                  fill="none"
+                                  stroke="currentColor"
+                                  stroke-width="2"
+                                  stroke-linecap="round"
+                                  stroke-linejoin="round"
+                                  aria-hidden="true"
+                                  focusable="false"
+                                  class="icon me-1 text-danger"
+                                >
+                                  <path d="M18 6l-12 12" />
+                                  <path d="M6 6l12 12" />
+                                </svg>
+                                Twitter API
+                              </li>
+                            </ul>
+
+                            <div class="text-center mt-4">
+                              <a href="#" class="btn w-100">Choose plan</a>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                      <div class="col-12">
+                        <div class="card card-md">
+                          <div class="card-body">
+                            <div class="row align-items-center">
+                              <div class="col">
+                                <h2 class="h3">
+                                  Enterprise-ready. Reach out for a custom
+                                  quote.
+                                </h2>
+                                <p class="m-0 text-secondary">
+                                  Tabler is designed to work great for large
+                                  enterprises. Take a look at our feature
+                                  comparison.
+                                </p>
+                              </div>
+                              <div class="col-auto">
+                                <button type="button" class="btn">
+                                  Book a demo
+                                </button>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </main>
+        <!-- END PAGE BODY -->
+
+        <!-- BEGIN FOOTER -->
+        <!--  BEGIN FOOTER  -->
+        <footer class="footer footer-transparent d-print-none">
+          <div class="container-xl">
+            <div class="row text-center align-items-center flex-row-reverse">
+              <div class="col-lg-auto ms-lg-auto">
+                <nav aria-label="Footer">
+                  <ul class="list-inline mb-0">
+                    <li class="list-inline-item">
+                      <a href="./license.html" class="link-secondary"
+                        >License</a
+                      >
+                    </li>
+                  </ul>
+                </nav>
+              </div>
+              <div class="col-12 col-lg-auto mt-3 mt-lg-0">
+                <ul class="list-inline mb-0">
+                  <li class="list-inline-item">
+                    Copyright &copy; 2026 <span data-brand-owner>Nishikigoi Farm</span>. All rights
+                    reserved. V1-261018
+                  </li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        </footer>
+        <!--  END FOOTER  -->
+        <!-- END FOOTER -->
+      </div>
+    </div>
+
+    <!-- BEGIN THEME SETTINGS -->
+    <div>
+      <form
+        class="offcanvas offcanvas-start offcanvas-narrow"
+        tabindex="-1"
+        id="offcanvas-settings"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="offcanvas-settings-title"
+      >
+        <div class="offcanvas-header">
+          <h2 class="offcanvas-title" id="offcanvas-settings-title">
+            Theme Settings
+          </h2>
+          <button
+            type="button"
+            class="btn-close"
+            data-bs-dismiss="offcanvas"
+            aria-label="Close"
+          ></button>
+        </div>
+        <div class="offcanvas-body d-flex flex-column">
+          <div>
+            <fieldset class="border-0 p-0 mb-4">
+              <legend
+                class="form-label float-none mb-0"
+                style="font-size: inherit"
+              >
+                Color mode
+              </legend>
+              <p class="form-hint">Choose the color mode for your app.</p>
+              <label class="form-check">
+                <div class="form-selectgroup-item">
+                  <input
+                    type="radio"
+                    name="theme"
+                    value="light"
+                    class="form-check-input"
+                    checked
+                  />
+                  <div class="form-check-label">Light</div>
+                </div> </label
+              ><label class="form-check">
+                <div class="form-selectgroup-item">
+                  <input
+                    type="radio"
+                    name="theme"
+                    value="dark"
+                    class="form-check-input"
+                  />
+                  <div class="form-check-label">Dark</div>
+                </div> </label
+              ><label class="form-check">
+                <div class="form-selectgroup-item">
+                  <input
+                    type="radio"
+                    name="theme"
+                    value="auto"
+                    class="form-check-input"
+                  />
+                  <div class="form-check-label">Auto</div>
+                </div>
+              </label>
+            </fieldset>
+
+            <fieldset class="border-0 p-0 mb-4">
+              <legend
+                class="form-label float-none mb-0"
+                style="font-size: inherit"
+              >
+                Color scheme
+              </legend>
+              <p class="form-hint">The perfect color mode for your app.</p>
+
+              <div class="row g-2">
+                <div class="col-auto">
+                  <label class="form-colorinput">
+                    <input
+                      name="theme-primary"
+                      type="radio"
+                      value="blue"
+                      class="form-colorinput-input"
+                      aria-label="blue"
+                    />
+                    <span class="form-colorinput-color bg-blue"></span>
+                  </label>
+                </div>
+                <div class="col-auto">
+                  <label class="form-colorinput">
+                    <input
+                      name="theme-primary"
+                      type="radio"
+                      value="azure"
+                      class="form-colorinput-input"
+                      aria-label="azure"
+                    />
+                    <span class="form-colorinput-color bg-azure"></span>
+                  </label>
+                </div>
+                <div class="col-auto">
+                  <label class="form-colorinput">
+                    <input
+                      name="theme-primary"
+                      type="radio"
+                      value="indigo"
+                      class="form-colorinput-input"
+                      aria-label="indigo"
+                    />
+                    <span class="form-colorinput-color bg-indigo"></span>
+                  </label>
+                </div>
+                <div class="col-auto">
+                  <label class="form-colorinput">
+                    <input
+                      name="theme-primary"
+                      type="radio"
+                      value="purple"
+                      class="form-colorinput-input"
+                      aria-label="purple"
+                    />
+                    <span class="form-colorinput-color bg-purple"></span>
+                  </label>
+                </div>
+                <div class="col-auto">
+                  <label class="form-colorinput">
+                    <input
+                      name="theme-primary"
+                      type="radio"
+                      value="pink"
+                      class="form-colorinput-input"
+                      aria-label="pink"
+                    />
+                    <span class="form-colorinput-color bg-pink"></span>
+                  </label>
+                </div>
+                <div class="col-auto">
+                  <label class="form-colorinput">
+                    <input
+                      name="theme-primary"
+                      type="radio"
+                      value="red"
+                      class="form-colorinput-input"
+                      aria-label="red"
+                    />
+                    <span class="form-colorinput-color bg-red"></span>
+                  </label>
+                </div>
+                <div class="col-auto">
+                  <label class="form-colorinput">
+                    <input
+                      name="theme-primary"
+                      type="radio"
+                      value="orange"
+                      class="form-colorinput-input"
+                      aria-label="orange"
+                    />
+                    <span class="form-colorinput-color bg-orange"></span>
+                  </label>
+                </div>
+                <div class="col-auto">
+                  <label class="form-colorinput">
+                    <input
+                      name="theme-primary"
+                      type="radio"
+                      value="yellow"
+                      class="form-colorinput-input"
+                      aria-label="yellow"
+                    />
+                    <span class="form-colorinput-color bg-yellow"></span>
+                  </label>
+                </div>
+                <div class="col-auto">
+                  <label class="form-colorinput">
+                    <input
+                      name="theme-primary"
+                      type="radio"
+                      value="lime"
+                      class="form-colorinput-input"
+                      aria-label="lime"
+                    />
+                    <span class="form-colorinput-color bg-lime"></span>
+                  </label>
+                </div>
+                <div class="col-auto">
+                  <label class="form-colorinput">
+                    <input
+                      name="theme-primary"
+                      type="radio"
+                      value="green"
+                      class="form-colorinput-input"
+                      aria-label="green"
+                    />
+                    <span class="form-colorinput-color bg-green"></span>
+                  </label>
+                </div>
+                <div class="col-auto">
+                  <label class="form-colorinput">
+                    <input
+                      name="theme-primary"
+                      type="radio"
+                      value="teal"
+                      class="form-colorinput-input"
+                      aria-label="teal"
+                    />
+                    <span class="form-colorinput-color bg-teal"></span>
+                  </label>
+                </div>
+                <div class="col-auto">
+                  <label class="form-colorinput">
+                    <input
+                      name="theme-primary"
+                      type="radio"
+                      value="cyan"
+                      class="form-colorinput-input"
+                      aria-label="cyan"
+                    />
+                    <span class="form-colorinput-color bg-cyan"></span>
+                  </label>
+                </div>
+                <div class="col-auto">
+                  <label class="form-colorinput">
+                    <input
+                      name="theme-primary"
+                      type="radio"
+                      value="inverted"
+                      class="form-colorinput-input"
+                      aria-label="Inverted"
+                    />
+                    <span class="form-colorinput-color bg-inverted"></span>
+                  </label>
+                </div>
+              </div>
+            </fieldset>
+
+            <fieldset class="border-0 p-0 mb-4">
+              <legend
+                class="form-label float-none mb-0"
+                style="font-size: inherit"
+              >
+                Font family
+              </legend>
+              <p class="form-hint">
+                Choose the font family that fits your app.
+              </p>
+
+              <div>
+                <label class="form-check">
+                  <div class="form-selectgroup-item">
+                    <input
+                      type="radio"
+                      name="theme-font"
+                      value="sans-serif"
+                      class="form-check-input"
+                      checked
+                    />
+                    <div class="form-check-label">Sans-serif</div>
+                  </div> </label
+                ><label class="form-check">
+                  <div class="form-selectgroup-item">
+                    <input
+                      type="radio"
+                      name="theme-font"
+                      value="serif"
+                      class="form-check-input"
+                    />
+                    <div class="form-check-label">Serif</div>
+                  </div> </label
+                ><label class="form-check">
+                  <div class="form-selectgroup-item">
+                    <input
+                      type="radio"
+                      name="theme-font"
+                      value="monospace"
+                      class="form-check-input"
+                    />
+                    <div class="form-check-label">Monospace</div>
+                  </div> </label
+                ><label class="form-check">
+                  <div class="form-selectgroup-item">
+                    <input
+                      type="radio"
+                      name="theme-font"
+                      value="comic"
+                      class="form-check-input"
+                    />
+                    <div class="form-check-label">Comic</div>
+                  </div>
+                </label>
+              </div>
+            </fieldset>
+
+            <fieldset class="border-0 p-0 mb-4">
+              <legend
+                class="form-label float-none mb-0"
+                style="font-size: inherit"
+              >
+                Theme base
+              </legend>
+              <p class="form-hint">Choose the gray shade for your app.</p>
+
+              <div>
+                <label class="form-check">
+                  <div class="form-selectgroup-item">
+                    <input
+                      type="radio"
+                      name="theme-base"
+                      value="slate"
+                      class="form-check-input"
+                    />
+                    <div class="form-check-label">Slate</div>
+                  </div> </label
+                ><label class="form-check">
+                  <div class="form-selectgroup-item">
+                    <input
+                      type="radio"
+                      name="theme-base"
+                      value="gray"
+                      class="form-check-input"
+                      checked
+                    />
+                    <div class="form-check-label">Gray</div>
+                  </div> </label
+                ><label class="form-check">
+                  <div class="form-selectgroup-item">
+                    <input
+                      type="radio"
+                      name="theme-base"
+                      value="zinc"
+                      class="form-check-input"
+                    />
+                    <div class="form-check-label">Zinc</div>
+                  </div> </label
+                ><label class="form-check">
+                  <div class="form-selectgroup-item">
+                    <input
+                      type="radio"
+                      name="theme-base"
+                      value="neutral"
+                      class="form-check-input"
+                    />
+                    <div class="form-check-label">Neutral</div>
+                  </div> </label
+                ><label class="form-check">
+                  <div class="form-selectgroup-item">
+                    <input
+                      type="radio"
+                      name="theme-base"
+                      value="stone"
+                      class="form-check-input"
+                    />
+                    <div class="form-check-label">Stone</div>
+                  </div>
+                </label>
+              </div>
+            </fieldset>
+
+            <fieldset class="border-0 p-0 mb-4">
+              <legend
+                class="form-label float-none mb-0"
+                style="font-size: inherit"
+              >
+                Corner Radius
+              </legend>
+              <p class="form-hint">
+                Choose the border radius factor for your app.
+              </p>
+
+              <div>
+                <label class="form-check">
+                  <div class="form-selectgroup-item">
+                    <input
+                      type="radio"
+                      name="theme-radius"
+                      value="0"
+                      class="form-check-input"
+                    />
+                    <div class="form-check-label">0</div>
+                  </div> </label
+                ><label class="form-check">
+                  <div class="form-selectgroup-item">
+                    <input
+                      type="radio"
+                      name="theme-radius"
+                      value="0.5"
+                      class="form-check-input"
+                    />
+                    <div class="form-check-label">0.5</div>
+                  </div> </label
+                ><label class="form-check">
+                  <div class="form-selectgroup-item">
+                    <input
+                      type="radio"
+                      name="theme-radius"
+                      value="1"
+                      class="form-check-input"
+                      checked
+                    />
+                    <div class="form-check-label">1</div>
+                  </div> </label
+                ><label class="form-check">
+                  <div class="form-selectgroup-item">
+                    <input
+                      type="radio"
+                      name="theme-radius"
+                      value="1.5"
+                      class="form-check-input"
+                    />
+                    <div class="form-check-label">1.5</div>
+                  </div> </label
+                ><label class="form-check">
+                  <div class="form-selectgroup-item">
+                    <input
+                      type="radio"
+                      name="theme-radius"
+                      value="2"
+                      class="form-check-input"
+                    />
+                    <div class="form-check-label">2</div>
+                  </div>
+                </label>
+              </div>
+            </fieldset>
+          </div>
+
+          <div class="mt-auto space-y">
+            <button type="button" class="btn w-100" id="reset-changes">
+              <!-- Download SVG icon from http://tabler.io/icons/icon/rotate -->
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="24"
+                height="24"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                aria-hidden="true"
+                focusable="false"
+                class="icon"
+              >
+                <path d="M19.95 11a8 8 0 1 0 -.5 4m.5 5v-5h-5" />
+              </svg>
+              Reset changes
+            </button>
+            <button
+              type="button"
+              class="btn btn-primary w-100"
+              data-bs-dismiss="offcanvas"
+            >
+              Save
+            </button>
+          </div>
+        </div>
+      </form>
+    </div>
+    <!-- END THEME SETTINGS -->
+
+    <!-- BEGIN GLOBAL MANDATORY SCRIPTS -->
+    <script src="./dist/js/tabler.js" defer></script>
+    <!-- END GLOBAL MANDATORY SCRIPTS -->
+
+    <script>
+      document.addEventListener("DOMContentLoaded", () => {
+        const toggle = document.getElementById("navbar-notifications-toggle");
+        const closeButton = document.querySelector(
+          "[data-navbar-notifications-close]",
+        );
+        const readAllButton = document.querySelector(
+          "[data-navbar-notifications-read-all]",
+        );
+        const clearButton = document.querySelector(
+          "[data-navbar-notifications-clear]",
+        );
+        const list = document.querySelector("[data-navbar-notifications-list]");
+        const badge = document.querySelector(
+          "[data-navbar-notifications-badge]",
+        );
+        let currentNotifications = [];
+
+        const escapeHtml = (value) =>
+          String(value || "").replace(
+            /[&<>'"]/g,
+            (char) =>
+              ({
+                "&": "&amp;",
+                "<": "&lt;",
+                ">": "&gt;",
+                "'": "&#39;",
+                '"': "&quot;",
+              })[char],
+          );
+
+        const dotClass = (type, status) => {
+          if (status === "read") return "status-dot d-block";
+          if (type === "error")
+            return "status-dot status-dot-animated bg-red d-block";
+          if (type === "success")
+            return "status-dot status-dot-animated bg-green d-block";
+          if (type === "warning")
+            return "status-dot status-dot-animated bg-yellow d-block";
+          return "status-dot status-dot-animated bg-blue d-block";
+        };
+
+        const renderNotifications = (notifications) => {
+          const items = Array.isArray(notifications)
+            ? notifications
+            : Array.isArray(notifications?.items)
+              ? notifications.items
+              : [];
+          currentNotifications = items;
+          const unread = items.filter((item) => item.status !== "read");
+
+          badge?.classList.toggle("d-none", unread.length === 0);
+          clearButton?.classList.toggle("d-none", items.length === 0);
+          readAllButton?.classList.toggle("d-none", unread.length === 0);
+
+          if (!items.length) {
+            list.innerHTML =
+              '<div class="list-group-item"><div class="text-secondary">Belum ada notifikasi.</div></div>';
+            return;
+          }
+
+          list.innerHTML = items
+            .slice(0, 8)
+            .map(
+              (item) => `
+          <div class="list-group-item ${item.type === 'feedback' ? 'cursor-pointer' : ''}" ${item.type === 'feedback' ? `data-feedback-notification="${escapeHtml(item.id)}"` : ''}>
+            <div class="row align-items-center">
+              <div class="col-auto">
+                <span class="${dotClass(item.type, item.status)}"><span class="visually-hidden">${item.status === "read" ? "Read" : "Unread"}</span></span>
+              </div>
+              <div class="col text-truncate">
+                <div class="text-body d-block text-truncate">${escapeHtml(item.title || "Notifikasi Sistem")}</div>
+                <div class="d-block text-secondary text-truncate mt-n1">${escapeHtml(item.message || item.created_at || "")}</div>
+              </div>
+            </div>
+          </div>
+        `,
+            )
+            .join("");
+        };
+
+        const loadNotifications = async () => {
+          try {
+            const request = window.KoiAuth?.apiRequest;
+            const response = request
+              ? await request("/notifications?panel=1")
+              : await fetch("/api/notifications?panel=1");
+            if (!response.ok) throw new Error("Notifikasi gagal dimuat");
+            renderNotifications(await response.json());
+          } catch {
+            badge?.classList.add("d-none");
+            list.innerHTML =
+              '<div class="list-group-item"><div class="text-danger">Notifikasi gagal dimuat.</div></div>';
+          }
+        };
+
+        closeButton?.addEventListener("click", () => {
+          window.tabler.bootstrap.Dropdown.getOrCreateInstance(toggle).hide();
+        });
+
+        readAllButton?.addEventListener("click", async () => {
+          try {
+            const request = window.KoiAuth?.apiRequest;
+            const response = request
+              ? await request("/notifications?panel=1")
+              : await fetch("/api/notifications?panel=1");
+            const payload = response.ok ? await response.json() : [];
+            const items = Array.isArray(payload)
+              ? payload
+              : Array.isArray(payload?.items)
+                ? payload.items
+                : [];
+            const unread = items.filter((item) => item.status !== "read");
+            await Promise.all(
+              unread.map((item) =>
+                request
+                  ? request(`/notifications/${item.id}/read`, {
+                      method: "PATCH",
+                    })
+                  : fetch(`/api/notifications/${item.id}/read`, {
+                      method: "PATCH",
+                    }),
+              ),
+            );
+            await loadNotifications();
+          } catch {
+            await loadNotifications();
+          }
+        });
+
+        clearButton?.addEventListener("click", async () => {
+          try {
+            const request = window.KoiAuth?.apiRequest;
+            const ids = currentNotifications
+              .map((item) => item.id)
+              .filter(Boolean);
+            if (!ids.length) return;
+
+            const options = {
+              method: "PATCH",
+              headers: { "content-type": "application/json" },
+              body: JSON.stringify({ ids }),
+            };
+
+            const response = request
+              ? await request("/notifications/clear", options)
+              : await fetch("/api/notifications/clear", options);
+            if (!response.ok) throw new Error("Notifikasi gagal dibersihkan");
+            await loadNotifications();
+          } catch {
+            await loadNotifications();
+          }
+        });
+
+        toggle?.addEventListener("shown.bs.dropdown", loadNotifications);
+        loadNotifications();
+      });
+    </script>
+
+    <!-- BEGIN PAGE SCRIPTS -->
+    <script>
+      document.addEventListener("DOMContentLoaded", function () {
+        var themeConfig = {
+          theme: "light",
+          "theme-base": "gray",
+          "theme-font": "sans-serif",
+          "theme-primary": "blue",
+          "theme-radius": "1",
+        };
+
+        var url = new URL(window.location);
+        var form = document.getElementById("offcanvas-settings");
+        var resetButton = document.getElementById("reset-changes");
+        if (!form || !resetButton) return;
+
+        var themeKeys = Object.keys(themeConfig);
+        var getAccountThemeKey = function () {
+          var session =
+            window.KoiAuth && window.KoiAuth.getSession
+              ? window.KoiAuth.getSession()
+              : JSON.parse(
+                  sessionStorage.getItem("koi-farm-auth-session") || "null",
+                );
+          return session && session.username
+            ? "koi-farm-theme-settings-" + session.username
+            : "koi-farm-theme-settings-guest";
+        };
+
+        var readAccountTheme = function () {
+          return (
+            JSON.parse(
+              window.localStorage.getItem(getAccountThemeKey()) || "null",
+            ) || {}
+          );
+        };
+
+        var writeAccountTheme = function (theme) {
+          window.localStorage.setItem(
+            getAccountThemeKey(),
+            JSON.stringify(theme),
+          );
+        };
+
+        var checkItems = function () {
+          var accountTheme = readAccountTheme();
+          for (var key in themeConfig) {
+            var value = accountTheme[key] || themeConfig[key];
+
+            if (!!value) {
+              var radios = form.querySelectorAll(`[name="${key}"]`);
+
+              if (!!radios) {
+                radios.forEach((radio) => {
+                  radio.checked = radio.value === value;
+                });
+              }
+            }
+          }
+        };
+
+        form.addEventListener("change", function (event) {
+          var target = event.target,
+            name = target.name,
+            value = target.value;
+
+          for (var key in themeConfig) {
+            if (name === key) {
+              var applied = value;
+              if (key === "theme" && value === "auto") {
+                applied = window.matchMedia("(prefers-color-scheme: dark)")
+                  .matches
+                  ? "dark"
+                  : "light";
+              }
+              if (applied !== themeConfig[key]) {
+                document.documentElement.setAttribute(
+                  "data-bs-" + key,
+                  applied,
+                );
+              } else {
+                document.documentElement.removeAttribute("data-bs-" + key);
+              }
+              window.localStorage.setItem("tabler-" + key, value);
+              var accountTheme = readAccountTheme();
+              accountTheme[key] = value;
+              writeAccountTheme(accountTheme);
+              url.searchParams.set(key, value);
+            }
+          }
+
+          window.history.pushState({}, "", url);
+        });
+
+        resetButton.addEventListener("click", function () {
+          var accountTheme = {};
+          for (var key in themeConfig) {
+            document.documentElement.removeAttribute("data-bs-" + key);
+            window.localStorage.removeItem("tabler-" + key);
+            url.searchParams.delete(key);
+          }
+          writeAccountTheme(accountTheme);
+
+          checkItems();
+
+          window.history.pushState({}, "", url);
+        });
+
+        document
+          .querySelectorAll(".js-theme-toggle[data-theme-value]")
+          .forEach(function (toggle) {
+            toggle.addEventListener("click", function (event) {
+              var value = toggle.getAttribute("data-theme-value");
+              if (!value) return;
+
+              event.preventDefault();
+
+              document.documentElement.setAttribute("data-bs-theme", value);
+              window.localStorage.setItem("tabler-theme", value);
+
+              var accountTheme = readAccountTheme();
+              accountTheme.theme = value;
+              writeAccountTheme(accountTheme);
+
+              url.searchParams.set("theme", value);
+              window.history.replaceState({}, "", url);
+            });
+          });
+
+        checkItems();
+      });
+    </script>
+    <!-- END PAGE SCRIPTS -->
+  </body>
+</html>

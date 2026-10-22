@@ -1,0 +1,1079 @@
+---
+import DefaultLayout from '@shared/layouts/DefaultLayout.astro'
+import Icon from '@shared/ui/Icon.astro'
+import icons from '@data/icons.json'
+
+const iconSvg = (name: string) => {
+  const icon = (icons as unknown as Record<string, { svg: Record<string, string> }>)[name]
+  let svg = icon?.svg?.outline ?? ''
+
+  svg = svg.replace(/<path stroke="none" d="M0 0h24v24H0z" fill="none"\s*\/>/, '')
+  svg = svg.replace(/class="[^"]+"/, 'aria-hidden="true" focusable="false" class="icon"')
+
+  return svg
+}
+
+const editIcon = iconSvg('edit')
+const historyIcon = iconSvg('history')
+const trashIcon = iconSvg('trash')
+const packageIcon = iconSvg('package')
+---
+
+<DefaultLayout title="Inventaris" pageHeader="Inventaris" pretitle="Etc" pageMenu="management.inventory">
+  <style is:global>
+    .inv-card { overflow: hidden; }
+    .inv-card-top { display: flex; align-items: center; justify-content: space-between; gap: .5rem; padding: .6rem 1rem; border-bottom: 1px solid var(--tblr-border-color); cursor: pointer; }
+    .inv-card .card-body[data-inv-id] { cursor: pointer; }
+    .inv-thumb { width: 100%; aspect-ratio: 4 / 3; object-fit: cover; border-radius: 6px; border: 1px solid var(--tblr-border-color); background: var(--tblr-bg-surface-secondary); }
+    .inv-thumb-empty { display: flex; align-items: center; justify-content: center; color: var(--tblr-secondary); aspect-ratio: 16 / 7; }
+    .inv-thumb-empty svg { width: 40px; height: 40px; }
+    .inv-card .inv-thumb:not(.inv-thumb-empty) { max-height: 190px; }
+    .inv-ellipsis { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .inv-stock { font-size: 1.35rem; font-weight: 700; }
+    .inv-filter-chip { cursor: pointer; }
+    .inv-dropzone { border: 2px dashed var(--tblr-border-color); border-radius: 8px; padding: .75rem; text-align: center; transition: border-color .15s, background .15s; }
+    .inv-dropzone.is-over { border-color: var(--tblr-primary); background: rgba(var(--tblr-primary-rgb), .1); }
+    .inv-preview { width: 120px; aspect-ratio: 4 / 3; object-fit: cover; border-radius: 6px; border: 1px solid var(--tblr-border-color); }
+    .inv-history-type { white-space: nowrap; }
+  </style>
+
+  <!-- item form -->
+  <div class="modal modal-blur fade" id="inventory-modal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered" role="document">
+      <form class="modal-content" data-inv-form>
+        <div class="modal-header">
+          <h5 class="modal-title" data-inv-modal-title>Formulir Tambah Barang</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Tutup"></button>
+        </div>
+        <div class="modal-body">
+          <div class="alert alert-danger d-none" data-inv-error></div>
+          <input type="hidden" name="id" />
+          <div class="row g-3">
+            <div class="col-12">
+              <label class="form-label">Jenis</label>
+              <div class="btn-group w-100" role="group">
+                <input type="radio" class="btn-check" name="kind" id="inv-kind-habis" value="habis_pakai" checked />
+                <label class="btn btn-outline-primary" for="inv-kind-habis">Habis pakai</label>
+                <input type="radio" class="btn-check" name="kind" id="inv-kind-aset" value="aset" />
+                <label class="btn btn-outline-primary" for="inv-kind-aset">Aset (sekali beli)</label>
+                <input type="radio" class="btn-check" name="kind" id="inv-kind-ikan" value="ikan" />
+                <label class="btn btn-outline-primary" for="inv-kind-ikan">Pembelian ikan</label>
+              </div>
+              <div class="form-hint" data-inv-kind-hint></div>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">Nama barang</label>
+              <input class="form-control" name="name" maxlength="200" placeholder="Contoh: Pakan Hikari 5 kg" required />
+            </div>
+            <div class="col-md-3">
+              <label class="form-label">Kategori</label>
+              <input class="form-control" name="category" maxlength="100" list="inv-category-list" placeholder="Pakan, obat, alat..." autocomplete="off" />
+              <datalist id="inv-category-list"></datalist>
+            </div>
+            <div class="col-md-3">
+              <label class="form-label">Satuan</label>
+              <input class="form-control" name="unit" maxlength="30" list="inv-unit-list" placeholder="kg, pcs, sak..." autocomplete="off" />
+              <datalist id="inv-unit-list"></datalist>
+            </div>
+            <div class="col-md-3" data-inv-only="habis_pakai">
+              <label class="form-label">Stok minimum</label>
+              <input class="form-control" name="min_stock" inputmode="decimal" placeholder="Batas perlu beli" autocomplete="off" />
+            </div>
+            <div class="col-md-3" data-inv-only="habis_pakai">
+              <label class="form-label">Kebutuhan per bulan</label>
+              <input class="form-control" name="monthly_need" inputmode="decimal" placeholder="Opsional" autocomplete="off" />
+            </div>
+            <div class="col-12">
+              <label class="form-label">Catatan</label>
+              <textarea class="form-control" name="notes" rows="2" placeholder="Merek, ukuran, kegunaan, atau catatan lain"></textarea>
+            </div>
+            <div class="col-12">
+              <label class="form-label">Gambar</label>
+              <div class="inv-dropzone" data-inv-zone tabindex="0">
+                <div class="d-flex align-items-center gap-3 flex-wrap justify-content-center">
+                  <img class="inv-preview d-none" alt="" data-inv-preview />
+                  <div>
+                    <div class="text-secondary small">Tarik gambar ke sini, tempel dengan Ctrl+V, atau pilih dari tombol.</div>
+                    <div class="d-flex gap-2 justify-content-center mt-2">
+                      <input class="d-none" type="file" accept="image/*" data-inv-image-input />
+                      <button class="btn btn-outline-primary btn-sm" type="button" data-inv-image-upload>Unggah gambar</button>
+                      <button class="btn btn-outline-primary btn-sm" type="button" data-inv-image-paste>Paste gambar</button>
+                      <button class="btn btn-outline-danger btn-sm d-none" type="button" data-inv-image-clear>Hapus gambar</button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="text-secondary small mt-1" data-inv-image-status></div>
+            </div>
+
+            <div class="col-12 border-top pt-3" data-inv-initial>
+              <div class="fw-semibold mb-2">Pembelian pertama <span class="text-secondary fw-normal">(opsional, bisa diisi nanti lewat tombol Masuk)</span></div>
+              <div class="row g-3">
+                <div class="col-md-3">
+                  <label class="form-label">Jumlah</label>
+                  <input class="form-control" name="initial_qty" inputmode="decimal" autocomplete="off" />
+                </div>
+                <div class="col-md-3">
+                  <label class="form-label">Harga satuan (Rp)</label>
+                  <input class="form-control text-end" name="initial_price" inputmode="numeric" autocomplete="off" />
+                </div>
+                <div class="col-md-3">
+                  <label class="form-label">Tanggal masuk</label>
+                  <input class="form-control" type="date" name="initial_date" />
+                </div>
+                <div class="col-md-3">
+                  <label class="form-label">Lokasi</label>
+                  <input class="form-control" name="initial_location" maxlength="200" list="inv-location-list" placeholder="Gudang, kolam, ruang..." autocomplete="off" />
+                </div>
+                <div class="col-12">
+                  <label class="form-label">Penjual / toko</label>
+                  <input class="form-control" name="initial_supplier" maxlength="200" placeholder="Opsional" autocomplete="off" />
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-icon me-auto" data-bs-dismiss="modal" aria-label="Tutup" title="Tutup">
+            <Icon name="x" />
+          </button>
+          <button type="submit" class="btn btn-primary btn-icon" data-inv-submit aria-label="Simpan" title="Simpan">
+            <Icon name="device-floppy" />
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- movement form (masuk / keluar / rusak / diperbaiki / pindah / koreksi) -->
+  <div class="modal modal-blur fade" id="inventory-move-modal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+      <form class="modal-content" data-inv-move-form>
+        <div class="modal-header">
+          <h5 class="modal-title" data-inv-move-title>Catatan barang</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Tutup"></button>
+        </div>
+        <div class="modal-body">
+          <div class="alert alert-danger d-none" data-inv-move-error></div>
+          <div class="alert alert-info py-2" data-inv-move-info></div>
+          <div class="row g-3">
+            <div class="col-6">
+              <label class="form-label">Tanggal</label>
+              <input class="form-control" type="date" name="movement_date" required />
+            </div>
+            <div class="col-6" data-move-only="qty">
+              <label class="form-label" data-move-qty-label>Jumlah</label>
+              <input class="form-control" name="qty" inputmode="decimal" autocomplete="off" />
+            </div>
+            <div class="col-6" data-move-only="koreksi">
+              <label class="form-label">Stok sebenarnya</label>
+              <input class="form-control" name="actual_stock" inputmode="decimal" autocomplete="off" />
+            </div>
+            <div class="col-6" data-move-only="masuk">
+              <label class="form-label">Harga satuan (Rp)</label>
+              <input class="form-control text-end" name="unit_price" inputmode="numeric" autocomplete="off" />
+            </div>
+            <div class="col-6" data-move-only="masuk">
+              <label class="form-label">Penjual / toko</label>
+              <input class="form-control" name="supplier" maxlength="200" autocomplete="off" />
+            </div>
+            <div class="col-12" data-move-only="location">
+              <label class="form-label" data-move-location-label>Lokasi</label>
+              <input class="form-control" name="location" maxlength="200" list="inv-location-list" placeholder="Gudang, kolam, ruang..." autocomplete="off" />
+            </div>
+            <div class="col-12" data-move-only="koi">
+              <label class="form-label">Kode ikan yang dibeli (opsional)</label>
+              <div class="d-flex gap-2 align-items-center flex-wrap">
+                <button class="btn btn-outline-primary btn-sm" type="button" data-inv-move-pull>Tarik dari Data Ikan</button>
+                <span class="small text-secondary" data-inv-move-koi>Belum ada ikan dipilih</span>
+              </div>
+            </div>
+            <div class="col-12">
+              <label class="form-label">Catatan</label>
+              <textarea class="form-control" name="notes" rows="2"></textarea>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-icon me-auto" data-bs-dismiss="modal" aria-label="Tutup" title="Tutup">
+            <Icon name="x" />
+          </button>
+          <button type="submit" class="btn btn-primary btn-icon" data-inv-move-submit aria-label="Simpan" title="Simpan">
+            <Icon name="device-floppy" />
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- detail + history -->
+  <div class="modal modal-blur fade" id="inventory-detail-modal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable" role="document">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" data-inv-detail-title>Detail Barang</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Tutup"></button>
+        </div>
+        <div class="modal-body" data-inv-detail-body></div>
+      </div>
+    </div>
+  </div>
+
+  <datalist id="inv-location-list"></datalist>
+
+  <div class="row row-deck row-cards">
+    <div class="col-12">
+      <div class="card">
+        <div class="card-header">
+          <h3 class="card-title">Daftar Inventaris</h3>
+          <div class="card-actions">
+            <button class="btn btn-primary btn-icon" type="button" data-add-inventory data-role-required="farm-operate" aria-label="Tambah barang" title="Tambah barang">
+              <Icon name="plus" />
+            </button>
+          </div>
+        </div>
+        <div class="card-body">
+          <div class="d-flex flex-wrap gap-2 mb-3">
+            <span class="badge bg-blue-lt inv-filter-chip" data-inv-filter="all">Semua</span>
+            <span class="badge bg-cyan-lt inv-filter-chip" data-inv-filter="habis_pakai">Habis pakai</span>
+            <span class="badge bg-purple-lt inv-filter-chip" data-inv-filter="aset">Aset</span>
+            <span class="badge bg-teal-lt inv-filter-chip" data-inv-filter="ikan">Ikan</span>
+            <span class="badge bg-yellow-lt inv-filter-chip" data-inv-filter="perlu">Perlu beli</span>
+            <span class="badge bg-red-lt inv-filter-chip" data-inv-filter="rusak">Rusak</span>
+          </div>
+          <div class="row g-3" data-inv-table>
+            <div class="col-12 text-secondary"><div class="d-flex flex-column align-items-center justify-content-center gap-2 py-5 text-secondary"><span class="spinner-border text-primary" role="status" aria-hidden="true"></span><span>Memuat data inventaris...</span></div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <input class="d-none" id="inventory-search" name="inventory_search" type="search" data-inventory-search aria-hidden="true" tabindex="-1" autocomplete="off" />
+
+  <script src="/assets/koi-picker.js?v=20261020b" is:inline></script>
+  <script src="/assets/vendor/xlsx/xlsx.core.min.js" is:inline></script>
+
+  <script define:vars={{ editIcon, historyIcon, trashIcon, packageIcon }}>
+    const apiUrl = '/api'
+    const table = document.querySelector('[data-inv-table]')
+    const searchInput = document.querySelector('[data-inventory-search]')
+    const navbarSearchBox = document.querySelector('#navbar-global-search')
+    if (navbarSearchBox) {
+      navbarSearchBox.setAttribute('placeholder', 'Nama, kategori, lokasi, status:perlu')
+      navbarSearchBox.setAttribute('title', 'Cari bebas: nama, kategori, lokasi, penjual, catatan. Cari per kolom dengan kolom:isi, boleh digabung: jenis:aset lokasi:gudang stok:<5. Nama kolom boleh disingkat. Kolom: nama, kategori, jenis, status, lokasi, penjual, catatan, stok, harga.')
+    }
+    const form = document.querySelector('[data-inv-form]')
+    const modalElement = document.querySelector('#inventory-modal')
+    const modalTitle = document.querySelector('[data-inv-modal-title]')
+    const errorBox = document.querySelector('[data-inv-error]')
+    const submitButton = document.querySelector('[data-inv-submit]')
+    const addButton = document.querySelector('[data-add-inventory]')
+    const kindHint = document.querySelector('[data-inv-kind-hint]')
+    const initialBox = document.querySelector('[data-inv-initial]')
+    const zone = document.querySelector('[data-inv-zone]')
+    const imageInput = document.querySelector('[data-inv-image-input]')
+    const imagePreview = document.querySelector('[data-inv-preview]')
+    const imageClear = document.querySelector('[data-inv-image-clear]')
+    const imageStatus = document.querySelector('[data-inv-image-status]')
+    const moveModalElement = document.querySelector('#inventory-move-modal')
+    const moveForm = document.querySelector('[data-inv-move-form]')
+    const moveTitle = document.querySelector('[data-inv-move-title]')
+    const moveError = document.querySelector('[data-inv-move-error]')
+    const moveInfo = document.querySelector('[data-inv-move-info]')
+    const moveSubmit = document.querySelector('[data-inv-move-submit]')
+    const moveKoiLabel = document.querySelector('[data-inv-move-koi]')
+    const detailModalElement = document.querySelector('#inventory-detail-modal')
+    const detailTitle = document.querySelector('[data-inv-detail-title]')
+    const detailBody = document.querySelector('[data-inv-detail-body]')
+    const filterChips = [...document.querySelectorAll('[data-inv-filter]')]
+    const cacheKey = 'nishikigoi-cache:farm-inventory'
+    const filterKey = 'nishikigoi-inventory-filter'
+
+    let items = []
+    let koiLoaded = false
+    let kindFilter = 'all'
+    let signature = ''
+    let imageState = { url: '', file: null, previewUrl: '' }
+    let moveItem = null
+    let moveType = ''
+    let moveKoiIds = []
+    let detailId = null
+    try { kindFilter = sessionStorage.getItem(filterKey) || 'all' } catch {}
+
+    const kindLabels = {
+      habis_pakai: { label: 'Habis pakai', className: 'bg-cyan-lt text-cyan' },
+      aset: { label: 'Aset', className: 'bg-purple-lt text-purple' },
+      ikan: { label: 'Ikan', className: 'bg-teal-lt text-teal' },
+    }
+    const kindHints = {
+      habis_pakai: 'Barang yang dipakai lalu dibeli lagi, misalnya pakan, obat, atau garam. Isi stok minimum supaya muncul tanda Perlu beli.',
+      aset: 'Barang sekali beli yang bisa rusak, misalnya pompa, jaring, atau aerator. Kerusakan dan perbaikan dicatat di riwayat.',
+      ikan: 'Catatan pembelian ikan. Boleh dikaitkan ke kode ikan di Data Ikan saat mencatat Masuk.',
+    }
+    const moveLabels = {
+      masuk: 'Masuk (pembelian)', keluar: 'Keluar (dipakai)', rusak: 'Rusak', diperbaiki: 'Diperbaiki', pindah: 'Pindah lokasi', koreksi: 'Koreksi stok',
+    }
+    const moveBadge = {
+      masuk: 'bg-green-lt text-green', keluar: 'bg-blue-lt text-blue', rusak: 'bg-red-lt text-red', diperbaiki: 'bg-teal-lt text-teal',
+      pindah: 'bg-purple-lt text-purple', koreksi: 'bg-yellow-lt text-yellow',
+    }
+    const escapeHtml = (value) =>
+      String(value ?? '').replace(/[&<>'"]/g, (char) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' })[char])
+    const money = (value) => `Rp ${Math.round(Number(value) || 0).toLocaleString('id-ID')}`
+    const num = (value) => Number(value || 0).toLocaleString('id-ID', { maximumFractionDigits: 2 })
+    const dateShort = (value) => (value ? window.KoiAuth.formatDate(String(value).slice(0, 10)) : '')
+    const today = () => new Date().toISOString().slice(0, 10)
+    const norm = (value) => String(value === null || value === undefined ? '' : value).toLowerCase().trim()
+    const digitsOf = (value) => Number(String(value || '').replace(/[^\d]/g, '')) || 0
+    const decimalOf = (value) => {
+      const text = String(value ?? '').trim().replace(/\./g, '').replace(',', '.')
+      if (text === '') return null
+      const number = Number(text)
+      return Number.isFinite(number) ? number : NaN
+    }
+    const withUnit = (item, value) => `${num(value)}${item.unit ? ' ' + item.unit : ''}`
+    const keepScroll = async (callback) => {
+      const scrollX = window.scrollX
+      const scrollY = window.scrollY
+      const result = await callback()
+      requestAnimationFrame(() => window.scrollTo(scrollX, scrollY))
+      return result
+    }
+    const formatMoneyInput = (input) => {
+      const digits = input.value.replace(/[^\d]/g, '')
+      input.value = digits ? Number(digits).toLocaleString('id-ID') : ''
+    }
+    const readError = async (response, fallback) => {
+      const data = await response.json().catch(() => ({}))
+      return data.error || data.detail || fallback
+    }
+    const itemStatus = (item) => {
+      const tags = []
+      if (item.needs_buy) tags.push({ key: 'perlu', label: 'Perlu beli', className: 'bg-yellow text-yellow-fg' })
+      if (Number(item.damaged) > 0) tags.push({ key: 'rusak', label: `Rusak ${num(item.damaged)}`, className: 'bg-red text-red-fg' })
+      if (item.kind === 'habis_pakai' && Number(item.stock) <= 0 && Number(item.movement_count) > 0 && !item.needs_buy) tags.push({ key: 'habis', label: 'Habis', className: 'bg-orange text-orange-fg' })
+      return tags
+    }
+    const statusText = (item) => {
+      const tags = itemStatus(item).map((tag) => tag.label)
+      if (!tags.length) tags.push(item.kind === 'aset' && Number(item.stock) > 0 ? 'Baik' : 'Aman')
+      return tags.join(', ')
+    }
+    const suggestedBuy = (item) => {
+      const target = Math.max(Number(item.min_stock) || 0, Number(item.monthly_need) || 0)
+      return Math.max(0, Math.round((target - Number(item.stock)) * 100) / 100)
+    }
+
+    // ---- search: plain words + "field:value" ---------------------------------------------------------------
+    const searchAliases = {
+      nama: 'name', barang: 'name',
+      kategori: 'category', golongan: 'category',
+      jenis: 'kind', tipe: 'kind',
+      status: 'status',
+      lokasi: 'last_location', tempat: 'last_location',
+      penjual: 'last_supplier', toko: 'last_supplier', supplier: 'last_supplier',
+      catatan: 'notes',
+      stok: 'stock', jumlah: 'stock',
+      harga: 'last_price',
+    }
+    const resolveMarkers = (keyword) => {
+      const names = Object.keys(searchAliases)
+      const found = []
+      const pattern = /(?:^|[\s,])([a-z]+)\s*:/gi
+      let match
+      while ((match = pattern.exec(keyword))) {
+        const key = match[1].toLowerCase()
+        const name = searchAliases[key] ? key : (key.length >= 2 ? names.find((alias) => alias.startsWith(key)) : null)
+        if (name) {
+          const hit = [match[0], name]
+          hit.index = match.index
+          found.push(hit)
+        }
+      }
+      return found
+    }
+    const numberTest = (value) => {
+      const text = String(value || '').toLowerCase().replace(/rp|\s/g, '')
+      const toNumber = (part) => Number(String(part).replace(/\./g, '').replace(',', '.'))
+      const compare = text.match(/^(>=|<=|>|<)([\d.,]+)$/)
+      if (compare) {
+        const limit = toNumber(compare[2])
+        return { '>=': (n) => n >= limit, '<=': (n) => n <= limit, '>': (n) => n > limit, '<': (n) => n < limit }[compare[1]]
+      }
+      const range = text.match(/^([\d.,]+)-([\d.,]+)$/)
+      if (range) {
+        const [a, b] = [toNumber(range[1]), toNumber(range[2])]
+        return (n) => n >= Math.min(a, b) && n <= Math.max(a, b)
+      }
+      return /^[\d.,]+$/.test(text) ? (n) => n === toNumber(text) : null
+    }
+    const kindWords = { habis: 'habis_pakai', pakai: 'habis_pakai', consumable: 'habis_pakai', aset: 'aset', asset: 'aset', ikan: 'ikan' }
+    const matchesField = (item, field, rawValue) => {
+      const value = norm(rawValue)
+      if (!value) return null
+      if (field === 'stock' || field === 'last_price') {
+        const test = numberTest(value)
+        return test ? test(Number(item[field]) || 0) : null
+      }
+      return value.split(',').map((part) => part.trim()).filter(Boolean).some((choice) => {
+        if (field === 'kind') {
+          const wanted = Object.entries(kindWords).find(([word]) => choice.startsWith(word))?.[1] || choice
+          return item.kind === wanted
+        }
+        if (field === 'status') return norm(statusText(item)).includes(choice)
+        return norm(item[field]).includes(choice)
+      })
+    }
+    const matchesSearch = (item) => {
+      const keyword = String(searchInput.value || '').trim()
+      if (!keyword) return true
+      const markers = resolveMarkers(keyword)
+      const plain = markers.length ? keyword.slice(0, markers[0].index) : keyword
+      for (let index = 0; index < markers.length; index += 1) {
+        const marker = markers[index]
+        const start = marker.index + marker[0].length
+        const end = index + 1 < markers.length ? markers[index + 1].index : keyword.length
+        if (matchesField(item, searchAliases[marker[1]], keyword.slice(start, end)) === false) return false
+      }
+      const alternatives = plain.split(',').map((part) => norm(part).split(/\s+/).filter(Boolean)).filter((words) => words.length)
+      if (!alternatives.length) return true
+      const blob = norm([item.name, item.category, kindLabels[item.kind]?.label, item.last_location, item.last_supplier, item.notes, statusText(item)].join(' '))
+      return alternatives.some((words) => words.every((word) => blob.includes(word)))
+    }
+    const kindMatches = (item) => {
+      if (kindFilter === 'all') return true
+      if (kindFilter === 'perlu') return Boolean(item.needs_buy)
+      if (kindFilter === 'rusak') return Number(item.damaged) > 0
+      return item.kind === kindFilter
+    }
+    const visibleItems = () => dock.apply(items.filter((item) => kindMatches(item) && matchesSearch(item)))
+
+    // ---- list ----------------------------------------------------------------------------------------------
+    const refreshSuggestions = () => {
+      const fill = (id, values) => {
+        const list = document.getElementById(id)
+        if (list) list.innerHTML = [...new Set(values.filter(Boolean))].sort((a, b) => a.localeCompare(b, 'id')).map((value) => `<option value="${escapeHtml(value)}"></option>`).join('')
+      }
+      fill('inv-category-list', items.map((item) => item.category))
+      fill('inv-unit-list', ['pcs', 'kg', 'gram', 'liter', 'botol', 'sak', 'dus', 'pack', 'buah', 'unit', 'meter', 'roll', 'set', ...items.map((item) => item.unit)])
+      fill('inv-location-list', items.map((item) => item.last_location))
+    }
+    const renderFilters = () => {
+      const counts = { all: items.length, habis_pakai: 0, aset: 0, ikan: 0, perlu: 0, rusak: 0 }
+      items.forEach((item) => {
+        counts[item.kind] = (counts[item.kind] || 0) + 1
+        if (item.needs_buy) counts.perlu += 1
+        if (Number(item.damaged) > 0) counts.rusak += 1
+      })
+      const names = { all: 'Semua', habis_pakai: 'Habis pakai', aset: 'Aset', ikan: 'Ikan', perlu: 'Perlu beli', rusak: 'Rusak' }
+      filterChips.forEach((chip) => {
+        const key = chip.dataset.invFilter
+        chip.textContent = `${names[key]} (${counts[key] || 0})`
+        chip.style.outline = key === kindFilter ? '2px solid var(--tblr-primary)' : ''
+      })
+    }
+    const renderTable = () => {
+      dock.prune(items)
+      renderFilters()
+      const list = visibleItems()
+      table.innerHTML = list.map((item) => {
+        const kind = kindLabels[item.kind] || kindLabels.habis_pakai
+        const tags = itemStatus(item)
+        const minText = item.kind === 'habis_pakai' && item.min_stock !== null ? ` · min ${withUnit(item, item.min_stock)}` : ''
+        return `
+        <div class="col-sm-6 col-lg-4 col-xl-3">
+          <div class="card h-100 inv-card" data-dock-id="${escapeHtml(item.id)}">
+            <div class="inv-card-top" data-dock-select title="Klik kartu untuk memilih, klik dua kali untuk membuka detail">
+              <span class="badge ${kind.className}">${escapeHtml(kind.label)}</span>
+              <span class="d-flex align-items-center gap-1 flex-shrink-0">
+                <span class="badge bg-blue text-blue-fg dock-selected-badge">Terpilih</span>
+                ${tags.map((tag) => `<span class="badge ${tag.className}">${escapeHtml(tag.label)}</span>`).join('')}
+              </span>
+            </div>
+            <div class="card-body d-flex flex-column" role="button" tabindex="0" data-inv-id="${escapeHtml(item.id)}">
+              ${item.image_url ? `<img class="inv-thumb" src="${escapeHtml(item.image_url)}" alt="" loading="lazy" />` : `<div class="inv-thumb inv-thumb-empty">${packageIcon}</div>`}
+              <div class="fw-semibold inv-ellipsis mt-2" title="${escapeHtml(item.name)}">${escapeHtml(item.name)}</div>
+              <div class="text-secondary small inv-ellipsis">${escapeHtml(item.category || 'Tanpa kategori')}</div>
+              <div class="inv-stock mt-1">${escapeHtml(withUnit(item, item.stock))}<span class="text-secondary small fw-normal">${escapeHtml(minText)}</span></div>
+              <div class="text-secondary small inv-ellipsis">${item.last_location ? `Lokasi: ${escapeHtml(item.last_location)}` : 'Lokasi belum diisi'}</div>
+              <div class="text-secondary small">${item.last_price !== null && item.last_price !== undefined ? `Harga terakhir ${escapeHtml(money(item.last_price))}` : 'Belum ada harga beli'}${item.last_in_date ? ` · masuk ${escapeHtml(dateShort(item.last_in_date))}` : ''}</div>
+              <div class="d-flex gap-2 mt-3 pt-2" style="margin-top:auto">
+                <button class="btn btn-sm flex-fill" type="button" data-detail-inv="${escapeHtml(item.id)}">${historyIcon} Riwayat</button>
+                <button class="btn btn-sm flex-fill" type="button" data-edit-inv="${escapeHtml(item.id)}" data-role-required="farm-operate">${editIcon} Edit</button>
+                <button class="btn btn-sm btn-outline-danger flex-fill" type="button" data-delete-inv="${escapeHtml(item.id)}" data-role-required="farm-operate">${trashIcon} Hapus</button>
+              </div>
+            </div>
+          </div>
+        </div>`
+      }).join('') || `<div class="col-12 text-secondary">${items.length ? 'Tidak ada barang yang cocok.' : 'Belum ada barang. Tekan + untuk menambah.'}</div>`
+      dock.refresh()
+    }
+    const loadItems = async (silent = false) => {
+      try {
+        const response = await fetch(`${apiUrl}/inventory`)
+        if (!response.ok) throw new Error('Data inventaris gagal dimuat')
+        const data = await response.json()
+        const next = JSON.stringify(data)
+        try { localStorage.setItem(cacheKey, next) } catch {}
+        if (silent && next === signature) return
+        signature = next
+        items = data
+        refreshSuggestions()
+        renderTable()
+      } catch (error) {
+        if (!silent) table.innerHTML = `<div class="col-12 text-danger">${escapeHtml(error.message)}</div>`
+      }
+    }
+    const loadKoi = async () => {
+      // the fish are searched on the server by the picker; nothing is downloaded here
+      koiLoaded = true
+    }
+    // codes of the fish linked in the history of an item (they are looked up by id, only those)
+    const withKoi = async (item) => {
+      const ids = (item.movements || []).flatMap((move) => move.koi_ids || [])
+      if (ids.length) {
+        try { await window.KoiPicker.byIds(ids, { scope: 'all' }) } catch {}
+      }
+      return item
+    }
+
+    // ---- modal helpers -------------------------------------------------------------------------------------
+    const modalApi = () => window.tabler?.bootstrap?.Modal || window.bootstrap?.Modal
+    const showModal = (element) => {
+      const api = modalApi()
+      if (api) { api.getOrCreateInstance(element).show(); return }
+      element.classList.add('show')
+      element.style.display = 'block'
+    }
+    const hideModal = (element) => {
+      const api = modalApi()
+      if (api) { api.getInstance(element)?.hide(); return }
+      element.classList.remove('show')
+      element.style.display = 'none'
+    }
+
+    // ---- image: upload button, paste, drag and drop --------------------------------------------------------
+    const readFileAsDataUrl = (file) => new Promise((resolve, reject) => {
+      const reader = new FileReader()
+      reader.addEventListener('load', () => resolve(reader.result))
+      reader.addEventListener('error', () => reject(new Error('File gagal dibaca')))
+      reader.readAsDataURL(file)
+    })
+    const loadImage = (src) => new Promise((resolve, reject) => {
+      const image = new Image()
+      image.addEventListener('load', () => resolve(image))
+      image.addEventListener('error', () => reject(new Error('Gambar gagal diproses')))
+      image.src = src
+    })
+    const compressImage = async (file) => {
+      const image = await loadImage(await readFileAsDataUrl(file))
+      const scale = Math.min(1, 1600 / Math.max(image.naturalWidth, image.naturalHeight))
+      const canvas = document.createElement('canvas')
+      canvas.width = Math.max(1, Math.round(image.naturalWidth * scale))
+      canvas.height = Math.max(1, Math.round(image.naturalHeight * scale))
+      canvas.getContext('2d').drawImage(image, 0, 0, canvas.width, canvas.height)
+      return canvas.toDataURL('image/jpeg', 0.8)
+    }
+    const renderImage = () => {
+      const src = imageState.previewUrl || imageState.url
+      imagePreview.classList.toggle('d-none', !src)
+      if (src) imagePreview.src = src
+      imageClear.classList.toggle('d-none', !src)
+    }
+    const setImageFile = (file) => {
+      if (!file || !/^image\//.test(file.type)) { imageStatus.textContent = 'Hanya file gambar yang bisa dipakai.'; return }
+      imageStatus.textContent = ''
+      imageState = { url: '', file, previewUrl: URL.createObjectURL(file) }
+      renderImage()
+    }
+    const uploadImage = async () => {
+      if (!imageState.file) return imageState.url || ''
+      imageStatus.textContent = 'Mengupload gambar...'
+      const response = await fetch(`${apiUrl}/images`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ prefix: 'inventory', image_data: await compressImage(imageState.file) }) })
+      const data = await response.json().catch(() => ({}))
+      if (!response.ok) throw new Error(data.error || data.detail || 'Gambar gagal diupload')
+      imageStatus.textContent = ''
+      return data.image_url
+    }
+    const readClipboardImage = async () => {
+      const clipboardItems = await navigator.clipboard.read()
+      for (const clipboardItem of clipboardItems) {
+        const type = clipboardItem.types.find((entry) => entry.startsWith('image/'))
+        if (!type) continue
+        const blob = await clipboardItem.getType(type)
+        return new File([blob], `barang-${Date.now()}.${type.split('/')[1] || 'png'}`, { type })
+      }
+      return null
+    }
+
+    // ---- item form -----------------------------------------------------------------------------------------
+    const currentKind = () => form.querySelector('[name="kind"]:checked')?.value || 'habis_pakai'
+    const syncKind = () => {
+      const kind = currentKind()
+      kindHint.textContent = kindHints[kind] || ''
+      form.querySelectorAll('[data-inv-only]').forEach((element) => {
+        element.classList.toggle('d-none', element.dataset.invOnly !== kind)
+      })
+    }
+    const openForm = (id) => {
+      const item = id ? items.find((entry) => String(entry.id) === String(id)) : null
+      form.reset()
+      errorBox.classList.add('d-none')
+      imageStatus.textContent = ''
+      form.elements.id.value = item ? item.id : ''
+      modalTitle.textContent = item ? `Formulir Edit Barang` : 'Formulir Tambah Barang'
+      form.querySelectorAll('[name="kind"]').forEach((radio) => { radio.checked = radio.value === (item?.kind || 'habis_pakai') })
+      form.elements.name.value = item?.name || ''
+      form.elements.category.value = item?.category || ''
+      form.elements.unit.value = item?.unit || ''
+      form.elements.min_stock.value = item && item.min_stock !== null ? String(item.min_stock).replace('.', ',') : ''
+      form.elements.monthly_need.value = item && item.monthly_need !== null ? String(item.monthly_need).replace('.', ',') : ''
+      form.elements.notes.value = item?.notes || ''
+      form.elements.initial_date.value = today()
+      imageState = { url: item?.image_url || '', file: null, previewUrl: '' }
+      initialBox.classList.toggle('d-none', Boolean(item))
+      renderImage()
+      syncKind()
+      showModal(modalElement)
+    }
+    form.addEventListener('submit', async (event) => {
+      event.preventDefault()
+      errorBox.classList.add('d-none')
+      submitButton.disabled = true
+      try {
+        const id = form.elements.id.value
+        const kind = currentKind()
+        const payload = {
+          name: form.elements.name.value.trim(),
+          kind,
+          category: form.elements.category.value.trim(),
+          unit: form.elements.unit.value.trim(),
+          notes: form.elements.notes.value.trim(),
+        }
+        if (!payload.name) throw new Error('Nama barang wajib diisi')
+        if (kind === 'habis_pakai') {
+          const min = decimalOf(form.elements.min_stock.value)
+          const monthly = decimalOf(form.elements.monthly_need.value)
+          if (Number.isNaN(min) || Number.isNaN(monthly)) throw new Error('Stok minimum dan kebutuhan per bulan harus berupa angka')
+          payload.min_stock = min
+          payload.monthly_need = monthly
+        } else {
+          payload.min_stock = null
+          payload.monthly_need = null
+        }
+        payload.image_url = await uploadImage()
+        if (!id) {
+          const qty = decimalOf(form.elements.initial_qty.value)
+          if (Number.isNaN(qty)) throw new Error('Jumlah pembelian pertama harus berupa angka')
+          payload.initial = {
+            qty: qty === null ? '' : qty,
+            unit_price: digitsOf(form.elements.initial_price.value) || null,
+            supplier: form.elements.initial_supplier.value.trim(),
+            movement_date: form.elements.initial_date.value,
+            location: form.elements.initial_location.value.trim(),
+          }
+        }
+        const response = await fetch(id ? `${apiUrl}/inventory/${id}` : `${apiUrl}/inventory`, { method: id ? 'PATCH' : 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(payload) })
+        if (!response.ok) throw new Error(await readError(response, 'Barang gagal disimpan'))
+        await keepScroll(loadItems)
+        hideModal(modalElement)
+      } catch (error) {
+        errorBox.textContent = error.message
+        errorBox.classList.remove('d-none')
+        imageStatus.textContent = ''
+      } finally {
+        submitButton.disabled = false
+      }
+    })
+    form.querySelectorAll('[name="kind"]').forEach((radio) => radio.addEventListener('change', syncKind))
+    form.elements.initial_price.addEventListener('input', () => formatMoneyInput(form.elements.initial_price))
+
+    // ---- movement form -------------------------------------------------------------------------------------
+    const renderMoveKoi = () => {
+      moveKoiLabel.textContent = moveKoiIds.length
+        ? `${moveKoiIds.length} ikan: ${moveKoiIds.map((id) => window.KoiPicker.cache[String(id)]?.code || id).join(', ')}`
+        : 'Belum ada ikan dipilih'
+    }
+    const openMove = (id, type) => {
+      const item = items.find((entry) => String(entry.id) === String(id))
+      if (!item) return
+      moveItem = item
+      moveType = type
+      moveKoiIds = []
+      moveForm.reset()
+      moveError.classList.add('d-none')
+      moveTitle.textContent = `${moveLabels[type]} - ${item.name}`
+      moveForm.elements.movement_date.value = today()
+      const parts = [`Stok sekarang ${withUnit(item, item.stock)}`]
+      if (item.kind === 'aset' || Number(item.damaged) > 0) parts.push(`baik ${withUnit(item, item.good)}`, `rusak ${withUnit(item, item.damaged)}`)
+      if (item.last_location) parts.push(`lokasi terakhir ${item.last_location}`)
+      moveInfo.textContent = parts.join(' · ')
+      const show = {
+        qty: ['masuk', 'keluar', 'rusak', 'diperbaiki'].includes(type),
+        koreksi: type === 'koreksi',
+        masuk: type === 'masuk',
+        location: ['masuk', 'pindah', 'keluar', 'rusak', 'diperbaiki'].includes(type),
+        koi: type === 'masuk' && item.kind === 'ikan',
+      }
+      moveForm.querySelectorAll('[data-move-only]').forEach((element) => {
+        element.classList.toggle('d-none', !show[element.dataset.moveOnly])
+      })
+      moveForm.querySelector('[data-move-qty-label]').textContent = { masuk: 'Jumlah dibeli', keluar: 'Jumlah dipakai', rusak: 'Jumlah rusak', diperbaiki: 'Jumlah diperbaiki' }[type] || 'Jumlah'
+      moveForm.querySelector('[data-move-location-label]').textContent = type === 'pindah' ? 'Lokasi baru' : 'Lokasi (opsional)'
+      if (type === 'pindah') moveForm.elements.location.required = true
+      else moveForm.elements.location.required = false
+      if (type === 'koreksi') moveForm.elements.actual_stock.value = String(item.stock).replace('.', ',')
+      if (type === 'masuk' && item.last_price) moveForm.elements.unit_price.value = Math.round(item.last_price).toLocaleString('id-ID')
+      if (type === 'masuk' && item.last_supplier) moveForm.elements.supplier.value = item.last_supplier
+      if (['masuk', 'pindah'].includes(type) && item.last_location) moveForm.elements.location.value = type === 'pindah' ? '' : item.last_location
+      renderMoveKoi()
+      showModal(moveModalElement)
+    }
+    moveForm.addEventListener('submit', async (event) => {
+      event.preventDefault()
+      moveError.classList.add('d-none')
+      moveSubmit.disabled = true
+      try {
+        const payload = {
+          type: moveType,
+          movement_date: moveForm.elements.movement_date.value,
+          location: moveForm.elements.location.value.trim(),
+          notes: moveForm.elements.notes.value.trim(),
+        }
+        if (['masuk', 'keluar', 'rusak', 'diperbaiki'].includes(moveType)) {
+          const qty = decimalOf(moveForm.elements.qty.value)
+          if (qty === null || Number.isNaN(qty) || qty <= 0) throw new Error('Isi jumlah dengan angka lebih dari 0')
+          payload.qty = qty
+        }
+        if (moveType === 'koreksi') {
+          const actual = decimalOf(moveForm.elements.actual_stock.value)
+          if (actual === null || Number.isNaN(actual) || actual < 0) throw new Error('Isi stok sebenarnya dengan angka 0 atau lebih')
+          payload.actual_stock = actual
+        }
+        if (moveType === 'masuk') {
+          payload.unit_price = digitsOf(moveForm.elements.unit_price.value) || null
+          payload.supplier = moveForm.elements.supplier.value.trim()
+          if (moveKoiIds.length) payload.koi_ids = moveKoiIds
+        }
+        if (moveType === 'pindah' && !payload.location) throw new Error('Lokasi baru wajib diisi')
+        const response = await fetch(`${apiUrl}/inventory/${moveItem.id}/movements`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(payload) })
+        if (!response.ok) throw new Error(await readError(response, 'Catatan gagal disimpan'))
+        dock.clear()
+        await keepScroll(loadItems)
+        hideModal(moveModalElement)
+      } catch (error) {
+        moveError.textContent = error.message
+        moveError.classList.remove('d-none')
+      } finally {
+        moveSubmit.disabled = false
+      }
+    })
+    moveForm.elements.unit_price.addEventListener('input', () => formatMoneyInput(moveForm.elements.unit_price))
+    moveForm.querySelector('[data-inv-move-pull]').addEventListener('click', async () => {
+      await loadKoi()
+      if (!window.KoiPicker) { window.alert('Modul pilih ikan belum dimuat. Muat ulang halaman.'); return }
+      window.KoiPicker.open({
+        title: 'Tarik dari Data Ikan',
+        disabledIds: [],
+        confirmLabel: 'Kaitkan ke pembelian',
+        onConfirm: (ids) => {
+          moveKoiIds = ids.map((value) => Number(value)).filter(Boolean)
+          if (moveKoiIds.length && !String(moveForm.elements.qty.value).trim()) moveForm.elements.qty.value = String(moveKoiIds.length)
+          renderMoveKoi()
+        },
+      })
+    })
+
+    // ---- detail + history ----------------------------------------------------------------------------------
+    const renderDetail = (item) => {
+      const kind = kindLabels[item.kind] || kindLabels.habis_pakai
+      const rows = (item.movements || []).map((move) => {
+        const qty = move.type === 'pindah' ? '-' : (move.type === 'koreksi' ? `${Number(move.qty) > 0 ? '+' : ''}${num(move.qty)}` : num(move.qty))
+        const koiCodes = (move.koi_ids || []).map((id) => window.KoiPicker.cache[String(id)]?.code || id)
+        return `<tr>
+          <td>${escapeHtml(dateShort(move.movement_date))}</td>
+          <td class="inv-history-type"><span class="badge ${moveBadge[move.type] || ''}">${escapeHtml(moveLabels[move.type] || move.type)}</span></td>
+          <td class="text-end">${escapeHtml(qty)}${move.type !== 'pindah' && item.unit ? ' ' + escapeHtml(item.unit) : ''}</td>
+          <td class="text-end">${move.unit_price !== null && move.unit_price !== undefined ? escapeHtml(money(move.unit_price)) : ''}</td>
+          <td class="text-end">${move.total_price !== null && move.total_price !== undefined ? escapeHtml(money(move.total_price)) : ''}</td>
+          <td>${escapeHtml([move.supplier, move.location, koiCodes.length ? 'Ikan: ' + koiCodes.join(', ') : '', move.notes].filter(Boolean).join(' · '))}</td>
+          <td class="text-secondary small">${escapeHtml(move.created_by || '')}</td>
+          <td class="text-end"><button class="btn btn-sm btn-outline-danger btn-icon" type="button" data-undo-move="${escapeHtml(move.id)}" data-role-required="farm-operate" title="Batalkan catatan ini" aria-label="Batalkan catatan ini">${trashIcon}</button></td>
+        </tr>`
+      }).join('')
+      detailBody.innerHTML = `
+        <div class="row g-3">
+          <div class="col-md-3">
+            ${item.image_url ? `<img class="inv-thumb" src="${escapeHtml(item.image_url)}" alt="" />` : `<div class="inv-thumb inv-thumb-empty">${packageIcon}</div>`}
+          </div>
+          <div class="col-md-9">
+            <div class="d-flex flex-wrap gap-2 mb-2">
+              <span class="badge ${kind.className}">${escapeHtml(kind.label)}</span>
+              ${itemStatus(item).map((tag) => `<span class="badge ${tag.className}">${escapeHtml(tag.label)}</span>`).join('')}
+              ${item.category ? `<span class="badge bg-secondary-lt">${escapeHtml(item.category)}</span>` : ''}
+            </div>
+            <div class="row g-2">
+              <div class="col-6 col-lg-3"><div class="text-secondary small">Stok</div><div class="fw-bold">${escapeHtml(withUnit(item, item.stock))}</div></div>
+              <div class="col-6 col-lg-3"><div class="text-secondary small">Baik / Rusak</div><div class="fw-bold">${escapeHtml(num(item.good))} / ${escapeHtml(num(item.damaged))}</div></div>
+              <div class="col-6 col-lg-3"><div class="text-secondary small">Harga terakhir</div><div class="fw-bold">${item.last_price !== null && item.last_price !== undefined ? escapeHtml(money(item.last_price)) : '-'}</div></div>
+              <div class="col-6 col-lg-3"><div class="text-secondary small">Total belanja</div><div class="fw-bold">${escapeHtml(money(item.total_spent))}</div></div>
+              <div class="col-6 col-lg-3"><div class="text-secondary small">Tanggal masuk terakhir</div><div>${item.last_in_date ? escapeHtml(dateShort(item.last_in_date)) : '-'}</div></div>
+              <div class="col-6 col-lg-3"><div class="text-secondary small">Lokasi terakhir</div><div>${escapeHtml(item.last_location || '-')}</div></div>
+              <div class="col-6 col-lg-3"><div class="text-secondary small">Penjual terakhir</div><div>${escapeHtml(item.last_supplier || '-')}</div></div>
+              <div class="col-6 col-lg-3"><div class="text-secondary small">Stok minimum / kebutuhan bulan</div><div>${item.min_stock !== null ? escapeHtml(num(item.min_stock)) : '-'} / ${item.monthly_need !== null ? escapeHtml(num(item.monthly_need)) : '-'}</div></div>
+            </div>
+            ${item.notes ? `<div class="mt-2 text-secondary" style="white-space:pre-wrap">${escapeHtml(item.notes)}</div>` : ''}
+          </div>
+          <div class="col-12">
+            <h4 class="mt-2">Riwayat</h4>
+            <div class="table-responsive">
+              <table class="table table-sm table-vcenter">
+                <thead><tr><th>Tanggal</th><th>Jenis</th><th class="text-end">Jumlah</th><th class="text-end">Harga satuan</th><th class="text-end">Total</th><th>Keterangan</th><th>Oleh</th><th></th></tr></thead>
+                <tbody>${rows || '<tr><td colspan="8" class="text-secondary">Belum ada catatan.</td></tr>'}</tbody>
+              </table>
+            </div>
+          </div>
+        </div>`
+      detailTitle.textContent = item.name
+    }
+    const openDetail = async (id) => {
+      detailId = id
+      detailBody.innerHTML = '<div class="text-secondary"><span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>Memuat riwayat...</div>'
+      detailTitle.textContent = 'Detail Barang'
+      showModal(detailModalElement)
+      try {
+        await loadKoi()
+        const response = await fetch(`${apiUrl}/inventory/${id}`)
+        if (!response.ok) throw new Error(await readError(response, 'Riwayat gagal dimuat'))
+        renderDetail(await withKoi(await response.json()))
+      } catch (error) {
+        detailBody.innerHTML = `<div class="text-danger">${escapeHtml(error.message)}</div>`
+      }
+    }
+    detailBody.addEventListener('click', async (event) => {
+      const undo = event.target.closest('[data-undo-move]')
+      if (!undo || !detailId) return
+      if (!(await window.KoiDialog.confirm('Batalkan catatan ini? Stok akan dihitung ulang.'))) return
+      try {
+        const response = await fetch(`${apiUrl}/inventory/${detailId}/movements/${undo.dataset.undoMove}`, { method: 'DELETE' })
+        if (!response.ok) throw new Error(await readError(response, 'Catatan gagal dibatalkan'))
+        renderDetail(await withKoi(await response.json()))
+        await keepScroll(() => loadItems(true))
+      } catch (error) {
+        window.alert(error.message)
+      }
+    })
+
+    // ---- print + export ------------------------------------------------------------------------------------
+    const chosenItems = (ids) => {
+      if (ids && ids.length) return ids.map((id) => items.find((entry) => String(entry.id) === String(id))).filter(Boolean)
+      return visibleItems()
+    }
+    const printStock = (list) => {
+      if (!window.KoiPrint) { window.alert('Modul cetak belum dimuat. Muat ulang halaman.'); return }
+      if (!list.length) { window.alert('Tidak ada barang untuk dicetak.'); return }
+      const e = window.KoiPrint.escapeHtml
+      const rows = list.map((item, index) => `<tr>
+        <td class="kp-center">${index + 1}</td>
+        <td>${e(item.name)}</td>
+        <td>${e(kindLabels[item.kind]?.label || '')}</td>
+        <td>${e(item.category || '')}</td>
+        <td class="kp-num">${e(withUnit(item, item.stock))}</td>
+        <td class="kp-num">${Number(item.damaged) > 0 ? e(num(item.damaged)) : ''}</td>
+        <td>${e(statusText(item))}</td>
+        <td>${e(item.last_location || '')}</td>
+        <td class="kp-num">${item.last_price !== null && item.last_price !== undefined ? e(money(item.last_price)) : ''}</td>
+        <td>${e(item.last_in_date ? dateShort(item.last_in_date) : '')}</td></tr>`).join('')
+      window.KoiPrint.print({
+        key: 'inventory-stock',
+        title: 'Daftar Stok Inventaris',
+        heading: 'DAFTAR STOK INVENTARIS',
+        subheading: `${list.length} barang`,
+        info: [['Tanggal cetak', window.KoiAuth.formatDate(new Date(), { weekday: true })], ['Jumlah barang', String(list.length)]],
+        body: `<section class="kp-section"><table class="kp-table">
+          <thead><tr><th class="kp-center" style="width:28px">No</th><th>Nama</th><th>Jenis</th><th>Kategori</th><th class="kp-num">Stok</th><th class="kp-num">Rusak</th><th>Status</th><th>Lokasi</th><th class="kp-num">Harga terakhir</th><th>Masuk</th></tr></thead>
+          <tbody>${rows}</tbody></table></section>`,
+        signatures: [],
+      })
+    }
+    const printShopping = (ids) => {
+      if (!window.KoiPrint) { window.alert('Modul cetak belum dimuat. Muat ulang halaman.'); return }
+      // chosen cards win; otherwise everything that needs buying
+      const list = (ids && ids.length ? chosenItems(ids) : items.filter((item) => item.needs_buy))
+      if (!list.length) { window.alert('Tidak ada barang yang perlu dibeli.'); return }
+      const e = window.KoiPrint.escapeHtml
+      let grand = 0
+      const rows = list.map((item, index) => {
+        const buy = suggestedBuy(item)
+        const estimate = item.last_price ? buy * Number(item.last_price) : 0
+        grand += estimate
+        return `<tr>
+          <td class="kp-center">${index + 1}</td>
+          <td>${e(item.name)}${item.category ? `<div style="font-size:9px;color:#555">${e(item.category)}</div>` : ''}</td>
+          <td class="kp-num">${e(withUnit(item, item.stock))}</td>
+          <td class="kp-num">${item.min_stock !== null ? e(withUnit(item, item.min_stock)) : ''}</td>
+          <td class="kp-num"><strong>${buy ? e(withUnit(item, buy)) : ''}</strong></td>
+          <td>${e(item.last_supplier || '')}</td>
+          <td class="kp-num">${item.last_price ? e(money(item.last_price)) : ''}</td>
+          <td class="kp-num">${estimate ? e(money(estimate)) : ''}</td></tr>`
+      }).join('')
+      window.KoiPrint.print({
+        key: 'inventory-shopping',
+        title: 'Daftar Belanja',
+        heading: 'DAFTAR BELANJA',
+        subheading: `${list.length} barang`,
+        info: [['Tanggal', window.KoiAuth.formatDate(new Date(), { weekday: true })], ['Perkiraan total', money(grand)]],
+        body: `<section class="kp-section"><table class="kp-table">
+          <thead><tr><th class="kp-center" style="width:28px">No</th><th>Barang</th><th class="kp-num">Stok</th><th class="kp-num">Minimum</th><th class="kp-num">Perlu beli</th><th>Penjual terakhir</th><th class="kp-num">Harga terakhir</th><th class="kp-num">Perkiraan</th></tr></thead>
+          <tbody>${rows}</tbody></table>
+          <div style="text-align:right;margin-top:6px;font-weight:800">Perkiraan total: ${e(money(grand))}</div></section>`,
+        signatures: [],
+      })
+    }
+    const exportExcel = (list) => {
+      if (!window.XLSX) { window.alert('Pustaka Excel belum termuat. Muat ulang halaman.'); return }
+      if (!list.length) { window.alert('Tidak ada barang untuk diexport.'); return }
+      const header = ['Nama', 'Jenis', 'Kategori', 'Satuan', 'Stok', 'Baik', 'Rusak', 'Stok minimum', 'Kebutuhan per bulan', 'Status', 'Lokasi terakhir', 'Harga terakhir', 'Tanggal masuk terakhir', 'Penjual terakhir', 'Total belanja', 'Catatan']
+      const rows = list.map((item) => [
+        item.name, kindLabels[item.kind]?.label || '', item.category || '', item.unit || '', Number(item.stock), Number(item.good), Number(item.damaged),
+        item.min_stock ?? '', item.monthly_need ?? '', statusText(item), item.last_location || '', item.last_price ?? '',
+        item.last_in_date ? String(item.last_in_date).slice(0, 10) : '', item.last_supplier || '', Number(item.total_spent), item.notes || '',
+      ])
+      const sheet = XLSX.utils.aoa_to_sheet([header, ...rows])
+      sheet['!cols'] = header.map((title, index) => ({ wch: index === 0 || index === 15 ? 32 : 16 }))
+      const workbook = XLSX.utils.book_new()
+      XLSX.utils.book_append_sheet(workbook, sheet, 'Inventaris')
+      const blob = new Blob([XLSX.write(workbook, { type: 'array', bookType: 'xlsx' })], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' })
+      const link = document.createElement('a')
+      link.href = URL.createObjectURL(blob)
+      link.download = `inventaris-${today()}.xlsx`
+      document.body.appendChild(link)
+      link.click()
+      link.remove()
+      setTimeout(() => URL.revokeObjectURL(link.href), 2000)
+    }
+
+    // ---- actions -------------------------------------------------------------------------------------------
+    const deleteItems = async (ids) => {
+      const names = ids.map((id) => items.find((entry) => String(entry.id) === String(id))?.name).filter(Boolean)
+      if (!(await window.KoiDialog.confirm(`Hapus ${ids.length} barang (${names.join(', ')}) beserta seluruh riwayatnya?`))) return
+      const failed = []
+      for (const id of ids) {
+        try {
+          const response = await fetch(`${apiUrl}/inventory/${id}`, { method: 'DELETE' })
+          if (!response.ok) failed.push(id)
+        } catch { failed.push(id) }
+      }
+      dock.clear()
+      await keepScroll(loadItems)
+      if (failed.length) window.alert(`${failed.length} barang gagal dihapus.`)
+    }
+    const single = (count) => count === 1
+    const dock = window.KoiDock.create({
+      root: table,
+      label: 'barang',
+      idOf: (item) => String(item.id),
+      visibleItems: () => visibleItems(),
+      render: () => renderTable(),
+      actions: [
+        { key: 'edit', icon: 'edit', title: 'Edit barang terpilih', role: 'farm-operate', show: single, onClick: (ids) => openForm(ids[0]) },
+        { key: 'masuk', icon: 'package', variant: 'success', title: 'Catat masuk (pembelian)', role: 'farm-operate', show: single, onClick: (ids) => openMove(ids[0], 'masuk') },
+        { key: 'keluar', icon: 'package-export', title: 'Catat keluar (dipakai)', role: 'farm-operate', show: single, onClick: (ids) => openMove(ids[0], 'keluar') },
+        { key: 'rusak', icon: 'alert-triangle', variant: 'warning', title: 'Catat rusak', role: 'farm-operate', show: single, onClick: (ids) => openMove(ids[0], 'rusak') },
+        { key: 'diperbaiki', icon: 'tool', title: 'Catat diperbaiki', role: 'farm-operate', show: single, onClick: (ids) => openMove(ids[0], 'diperbaiki') },
+        { key: 'pindah', icon: 'arrows-exchange', title: 'Pindah lokasi', role: 'farm-operate', show: single, onClick: (ids) => openMove(ids[0], 'pindah') },
+        { key: 'koreksi', icon: 'list-check', title: 'Koreksi stok (hitung ulang)', role: 'farm-operate', show: single, onClick: (ids) => openMove(ids[0], 'koreksi') },
+        { key: 'detail', icon: 'history', variant: 'secondary', title: 'Lihat riwayat', show: single, onClick: (ids) => openDetail(ids[0]) },
+        { key: 'shopping', icon: 'basket', variant: 'secondary', always: true, title: (count) => (count ? `Cetak daftar belanja (${count} terpilih)` : 'Cetak daftar belanja (yang perlu beli)'), onClick: (ids) => printShopping(ids) },
+        { key: 'print', icon: 'printer', variant: 'secondary', always: true, title: (count) => (count ? `Cetak daftar stok (${count} terpilih)` : 'Cetak daftar stok (semua yang tampil)'), onClick: (ids) => printStock(chosenItems(ids)) },
+        { key: 'export', icon: 'file-spreadsheet', variant: 'success', always: true, title: (count) => (count ? `Export Excel (${count} terpilih)` : 'Export Excel'), onClick: (ids) => exportExcel(chosenItems(ids)) },
+        { key: 'delete', icon: 'trash', variant: 'danger', title: (count) => `Hapus ${count} barang terpilih`, role: 'farm-operate', onClick: (ids) => deleteItems(ids) },
+      ],
+      add: { title: 'Tambah barang', role: 'farm-operate', onClick: () => openForm(null) },
+    })
+
+    // ---- events --------------------------------------------------------------------------------------------
+    filterChips.forEach((chip) => chip.addEventListener('click', () => {
+      kindFilter = chip.dataset.invFilter
+      try { sessionStorage.setItem(filterKey, kindFilter) } catch {}
+      renderTable()
+    }))
+    searchInput.addEventListener('input', () => renderTable())
+    addButton?.addEventListener('click', () => openForm(null))
+    table.addEventListener('click', (event) => {
+      const detail = event.target.closest('[data-detail-inv]')
+      if (detail) { openDetail(detail.dataset.detailInv); return }
+      const edit = event.target.closest('[data-edit-inv]')
+      if (edit) { openForm(edit.dataset.editInv); return }
+      const remove = event.target.closest('[data-delete-inv]')
+      if (remove) { deleteItems([remove.dataset.deleteInv]); return }
+      // anywhere else on the card selects it (several cards can be selected); double-click opens the history
+      if (event.target.closest('button, a, input')) return
+      const card = event.target.closest('[data-dock-id]')
+      if (card) dock.toggle(card.dataset.dockId)
+    })
+    table.addEventListener('dblclick', (event) => {
+      if (event.target.closest('button, a, input')) return
+      const card = event.target.closest('[data-dock-id]')
+      if (!card) return
+      window.getSelection()?.removeAllRanges()
+      openDetail(card.dataset.dockId)
+    })
+    table.addEventListener('keydown', (event) => {
+      if (event.key !== 'Enter' && event.key !== ' ') return
+      const row = event.target.closest('[data-inv-id]')
+      if (row && event.target === row) {
+        event.preventDefault()
+        openDetail(row.dataset.invId)
+      }
+    })
+    form.querySelector('[data-inv-image-upload]').addEventListener('click', () => imageInput.click())
+    imageInput.addEventListener('change', () => {
+      if (imageInput.files[0]) setImageFile(imageInput.files[0])
+      imageInput.value = ''
+    })
+    form.querySelector('[data-inv-image-paste]').addEventListener('click', async () => {
+      try {
+        const file = await readClipboardImage()
+        if (file) setImageFile(file)
+        else imageStatus.textContent = 'Tidak ada gambar di clipboard.'
+      } catch {
+        imageStatus.textContent = 'Clipboard tidak bisa dibaca. Tempel dengan Ctrl+V atau pilih file.'
+      }
+    })
+    imageClear.addEventListener('click', () => {
+      imageState = { url: '', file: null, previewUrl: '' }
+      imageStatus.textContent = ''
+      renderImage()
+    })
+    modalElement.addEventListener('paste', (event) => {
+      const file = Array.from(event.clipboardData?.files || []).find((entry) => /^image\//.test(entry.type))
+      if (file) { event.preventDefault(); setImageFile(file) }
+    })
+    const dragHasFiles = (event) => Array.from(event.dataTransfer?.types || []).includes('Files')
+    modalElement.addEventListener('dragover', (event) => {
+      if (!dragHasFiles(event)) return
+      event.preventDefault()
+      zone.classList.add('is-over')
+    })
+    modalElement.addEventListener('dragleave', (event) => {
+      if (!modalElement.contains(event.relatedTarget)) zone.classList.remove('is-over')
+    })
+    modalElement.addEventListener('drop', (event) => {
+      if (!dragHasFiles(event)) return
+      event.preventDefault()
+      zone.classList.remove('is-over')
+      const file = Array.from(event.dataTransfer.files).find((entry) => /^image\//.test(entry.type))
+      if (file) setImageFile(file)
+      else imageStatus.textContent = 'Hanya file gambar yang bisa dipakai.'
+    })
+
+    try {
+      const cached = JSON.parse(localStorage.getItem(cacheKey) || '[]')
+      if (Array.isArray(cached) && cached.length) { items = cached; signature = JSON.stringify(cached); refreshSuggestions(); renderTable() }
+    } catch {}
+    loadItems(items.length > 0)
+    window.KoiAuth?.registerRealtimeRefresh(() => keepScroll(() => loadItems(true)), { intervalMs: 30000 })
+  </script>
+</DefaultLayout>

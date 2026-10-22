@@ -1,0 +1,54 @@
+---
+import NavbarSideTheme from './NavbarSideTheme.astro'
+import NavbarSideNotifications from './NavbarSideNotifications.astro'
+import NavbarSideApps from './NavbarSideApps.astro'
+import NavbarSideLanguage from './NavbarSideLanguage.astro'
+import NavbarSideUser from './NavbarSideUser.astro'
+
+interface Props {
+  class?: string
+  breakpoint?: string
+  condensed?: boolean
+  personId?: number | undefined
+  hideUsername?: boolean
+  dark?: boolean
+  showThemeToggle?: boolean
+  showNotifications?: boolean
+  showApps?: boolean
+  showLanguageSelector?: boolean
+  showUser?: boolean
+}
+
+const {
+  class: className,
+  breakpoint = 'md',
+  condensed = false,
+  personId = 1,
+  hideUsername = false,
+  dark = false,
+    showThemeToggle = false,
+  showNotifications = false,
+  showApps = false,
+  showLanguageSelector = false,
+  showUser = false,
+} = Astro.props
+
+---
+
+<!-- BEGIN NAVBAR ACTIONS -->
+<div class:list={['navbar-nav flex-row navbar-side', className]}>
+
+  {
+    (showThemeToggle || showNotifications || showApps || showLanguageSelector) && (
+      <div class="navbar-side-actions d-flex align-items-center me-3">
+        {showThemeToggle && <NavbarSideTheme />}
+        {showNotifications && <NavbarSideNotifications />}
+        {showApps && <NavbarSideApps />}
+        {showLanguageSelector && <NavbarSideLanguage />}
+      </div>
+    )
+  }
+
+  {showUser && <NavbarSideUser personId={personId} hideUsername={hideUsername} dark={dark} />}
+</div>
+<!-- END NAVBAR ACTIONS -->

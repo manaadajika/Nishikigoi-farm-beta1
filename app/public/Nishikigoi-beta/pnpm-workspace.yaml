@@ -1,0 +1,19 @@
+packages:
+  - core
+  - preview
+  - docs
+  - screenshots
+  - shared
+
+allowBuilds:
+  '@parcel/watcher': false
+  core-js: false
+  core-js-pure: false
+  esbuild: false
+  sharp: false
+
+minimumReleaseAge: 0
+
+nodeLinker: hoisted
+
+symlink: false

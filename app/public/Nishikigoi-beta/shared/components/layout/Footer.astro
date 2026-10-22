@@ -1,0 +1,29 @@
+---
+const now = new Date()
+const appVersion = 'V1-261018' // V<major>-<YYMMDD of the release>; bump the date on every release
+---
+
+<!--  BEGIN FOOTER  -->
+<footer class="footer footer-transparent d-print-none">
+  <div class="container-xl">
+    <div class="row text-center align-items-center flex-row-reverse">
+      <div class="col-lg-auto ms-lg-auto">
+        <nav aria-label="Footer">
+          <ul class="list-inline mb-0">
+            <li class="list-inline-item">
+              <a href="./license.html" class="link-secondary">License</a>
+            </li>
+          </ul>
+        </nav>
+      </div>
+      <div class="col-12 col-lg-auto mt-3 mt-lg-0">
+        <ul class="list-inline mb-0">
+          <li class="list-inline-item">
+            Copyright &copy; {now.getUTCFullYear()} <span data-brand-owner>Nishikigoi Farm</span>. All rights reserved. {appVersion}
+          </li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</footer>
+<!--  END FOOTER  -->

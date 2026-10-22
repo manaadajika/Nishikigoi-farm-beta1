@@ -1,0 +1,1117 @@
+---
+import DefaultLayout from '@shared/layouts/DefaultLayout.astro'
+import Icon from '@shared/ui/Icon.astro'
+import icons from '@data/icons.json'
+
+const iconSvg = (name: string) => {
+  const icon = (icons as unknown as Record<string, { svg: Record<string, string> }>)[name]
+  let svg = icon?.svg?.outline ?? ''
+
+  svg = svg.replace(/<path stroke="none" d="M0 0h24v24H0z" fill="none"\s*\/>/, '')
+  svg = svg.replace(/class="[^"]+"/, 'aria-hidden="true" focusable="false" class="icon"')
+
+  return svg
+}
+
+const editIcon = iconSvg('edit')
+const printIcon = iconSvg('printer')
+const trashIcon = iconSvg('trash')
+---
+
+<DefaultLayout title="Invoice" pageHeader="Invoice" pretitle="Penjualan" pageMenu="penjualan.invoice">
+  <style is:global>
+    .invoice-card { overflow: hidden; }
+    .invoice-card-top { display: flex; align-items: center; justify-content: space-between; gap: .5rem; padding: .75rem 1rem; border-bottom: 1px solid var(--tblr-border-color); cursor: pointer; }
+    .invoice-card .card-body[data-invoice-id] { cursor: pointer; }
+    .invoice-total { font-size: 1.2rem; font-weight: 700; }
+    .invoice-ellipsis { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .invoice-filter-chip { cursor: pointer; }
+    .invoice-line { display: grid; grid-template-columns: minmax(0, 1fr) 90px 150px 130px 40px; gap: .5rem; align-items: center; }
+    .invoice-line-head { font-size: .75rem; text-transform: uppercase; color: var(--tblr-secondary); }
+    .invoice-line-total { text-align: right; font-weight: 600; white-space: nowrap; }
+    @media (max-width: 767.98px) {
+      .invoice-line { grid-template-columns: 1fr 1fr; }
+      .invoice-line > :first-child { grid-column: 1 / -1; }
+      .invoice-line-head { display: none; }
+    }
+    .invoice-picker { position: relative; }
+    .invoice-picker-menu { position: absolute; left: 0; right: 0; top: 100%; z-index: 20; max-height: 18rem; overflow: auto; background: var(--tblr-bg-surface); border: 1px solid var(--tblr-border-color); border-radius: 6px; box-shadow: 0 8px 24px rgba(0, 0, 0, .35); }
+    .invoice-picker-option { display: flex; align-items: center; gap: .6rem; width: 100%; padding: .4rem .6rem; border: 0; background: transparent; color: inherit; text-align: left; cursor: pointer; }
+    .invoice-picker-option:hover { background: var(--tblr-bg-surface-secondary); }
+    .invoice-dropzone { border: 2px dashed var(--tblr-border-color); border-radius: 8px; padding: 1rem; text-align: center; transition: border-color .15s, background .15s; }
+    .invoice-dropzone.is-over { border-color: var(--tblr-primary); background: rgba(var(--tblr-primary-rgb), .1); }
+    .invoice-proof-thumb { width: 100%; aspect-ratio: 4 / 3; object-fit: cover; border-radius: 6px; border: 1px solid var(--tblr-border-color); background: var(--tblr-bg-surface-secondary); cursor: zoom-in; }
+    .invoice-thumb { width: 32px; height: 48px; object-fit: cover; border-radius: 4px; flex: 0 0 auto; background: var(--tblr-bg-surface-secondary); }
+  </style>
+
+  <div class="modal modal-blur fade" id="invoice-modal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-xl modal-dialog-centered" role="document">
+      <form class="modal-content" data-invoice-form>
+        <div class="modal-header">
+          <h5 class="modal-title" data-invoice-modal-title>Formulir Tambah Invoice</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Tutup"></button>
+        </div>
+        <div class="modal-body">
+          <div class="alert alert-danger d-none" data-invoice-error></div>
+          <input type="hidden" name="id" />
+          <div class="row g-3">
+            <div class="col-md-3">
+              <label class="form-label">Nomor Invoice</label>
+              <input class="form-control" name="invoice_no" maxlength="40" placeholder="Otomatis" data-invoice-no />
+            </div>
+            <div class="col-md-3">
+              <label class="form-label">Tanggal</label>
+              <input class="form-control" type="date" name="invoice_date" required />
+            </div>
+            <div class="col-md-3">
+              <label class="form-label">Jatuh Tempo</label>
+              <input class="form-control" type="date" name="due_date" />
+            </div>
+            <div class="col-md-3">
+              <label class="form-label">Status Pembayaran</label>
+              <div class="btn-group w-100" role="group">
+                <input type="radio" class="btn-check" name="status" id="invoice-status-unpaid" value="unpaid" checked />
+                <label class="btn btn-outline-warning" for="invoice-status-unpaid">Belum dibayar</label>
+                <input type="radio" class="btn-check" name="status" id="invoice-status-paid" value="paid" />
+                <label class="btn btn-outline-success" for="invoice-status-paid">Lunas</label>
+              </div>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">Client / Pembeli</label>
+              <input class="form-control" name="client_name" maxlength="200" placeholder="Nama client atau pembeli" required />
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">Judul Invoice (perihal)</label>
+              <input class="form-control" name="title" maxlength="200" placeholder="Contoh: Pembelian Kohaku Oktober 2026" />
+            </div>
+            <div class="col-12">
+              <label class="form-label">Kontak / alamat client</label>
+              <textarea class="form-control" name="client_contact" rows="2" placeholder="Opsional: alamat, nomor telepon, atau email client"></textarea>
+            </div>
+
+            <div class="col-12 border-top pt-3">
+              <label class="form-label">Rincian</label>
+              <div class="invoice-picker" data-invoice-picker>
+                <input class="form-control" type="search" placeholder="Cari ikan atau item Penjualan, atau tempel beberapa kode ikan" autocomplete="off" data-invoice-picker-input />
+                <div class="invoice-picker-menu d-none" data-invoice-picker-menu></div>
+              </div>
+              <div class="d-flex flex-wrap gap-2 mt-2">
+                <button class="btn btn-outline-primary btn-sm" type="button" data-invoice-pull>Tarik dari Data Ikan</button>
+                <button class="btn btn-outline-primary btn-sm" type="button" data-invoice-add-custom>Tambah item custom</button>
+              </div>
+              <div class="vstack gap-2 mt-3">
+                <div class="invoice-line invoice-line-head"><div>Deskripsi</div><div>Qty</div><div>Harga satuan (Rp)</div><div class="text-end">Jumlah</div><div></div></div>
+                <div class="vstack gap-2" data-invoice-lines></div>
+              </div>
+              <div class="row g-3 mt-1">
+                <div class="col-md-6 offset-md-6">
+                  <div class="d-flex justify-content-between"><span class="text-secondary">Subtotal</span><span data-invoice-subtotal>Rp 0</span></div>
+                  <div class="d-flex justify-content-between align-items-center gap-3 mt-1">
+                    <span class="text-secondary">Diskon (Rp)</span>
+                    <input class="form-control form-control-sm text-end" style="max-width: 11rem" name="discount" inputmode="numeric" placeholder="0" autocomplete="off" data-invoice-discount />
+                  </div>
+                  <div class="d-flex justify-content-between mt-2 border-top pt-2"><strong>Total</strong><strong class="invoice-total" data-invoice-total>Rp 0</strong></div>
+                </div>
+              </div>
+            </div>
+
+            <div class="col-md-6">
+              <label class="form-label">Nomor rekening pembayaran</label>
+              <textarea class="form-control" name="bank_account" rows="3" placeholder="Contoh: BCA 1234567890 a.n. Nishikigoi Farm"></textarea>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">Kontak sales</label>
+              <textarea class="form-control" name="sales_contact" rows="3" placeholder="Contoh: Budi (WhatsApp 0812-0000-0000)"></textarea>
+            </div>
+            <div class="col-12">
+              <label class="form-label">Catatan invoice</label>
+              <textarea class="form-control" name="notes" rows="3" placeholder="Syarat pembayaran, pengiriman, garansi, atau catatan lain"></textarea>
+              <div class="form-hint">Rekening dan kontak sales diingat dari invoice terakhir supaya tidak diketik ulang.</div>
+            </div>
+            <div class="col-12">
+              <label class="form-label">Bukti transfer</label>
+              <div class="invoice-dropzone" data-invoice-zone="proof" tabindex="0">
+                <div class="text-secondary">Tarik dan lepas gambar ke sini, tempel dengan Ctrl+V, atau pilih dari tombol di bawah.</div>
+                <div class="d-flex flex-wrap gap-2 justify-content-center mt-2">
+                  <input class="d-none" type="file" accept="image/*" multiple data-invoice-proof-input />
+                  <button class="btn btn-outline-primary btn-sm" type="button" data-invoice-proof-upload>Unggah gambar</button>
+                  <button class="btn btn-outline-primary btn-sm" type="button" data-invoice-proof-paste>Paste gambar</button>
+                </div>
+              </div>
+              <div class="row g-2 mt-2" data-invoice-proofs></div>
+              <div class="text-secondary mt-1" data-invoice-proof-status></div>
+            </div>
+            <div class="col-12">
+              <label class="form-label">Dokumentasi (foto atau video)</label>
+              <div class="invoice-dropzone" data-invoice-zone="media" tabindex="0">
+                <div class="text-secondary">Tarik dan lepas foto atau video ke sini, tempel gambar dengan Ctrl+V, atau pilih dari tombol di bawah. Video maksimal 40 MB.</div>
+                <div class="d-flex flex-wrap gap-2 justify-content-center mt-2">
+                  <input class="d-none" type="file" accept="image/*,video/mp4,video/webm" multiple data-invoice-media-input />
+                  <button class="btn btn-outline-primary btn-sm" type="button" data-invoice-media-upload>Unggah foto/video</button>
+                  <button class="btn btn-outline-primary btn-sm" type="button" data-invoice-media-paste>Paste gambar</button>
+                </div>
+              </div>
+              <div class="row g-2 mt-2" data-invoice-media></div>
+              <div class="text-secondary mt-1" data-invoice-media-status></div>
+              <label class="form-check mt-2 mb-1"><input class="form-check-input" type="checkbox" name="show_in_gallery" checked /><span class="form-check-label">Tampilkan dokumentasi di Galeri</span></label>
+              <div class="form-hint">Dokumentasi ikut tampil di menu Galeri sebagai satu koleksi (file tidak digandakan). Bukti transfer tidak ikut ke Galeri.</div>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn me-auto d-none" data-invoice-print-form>Cetak</button>
+          <button type="button" class="btn btn-icon" data-bs-dismiss="modal" aria-label="Tutup" title="Tutup">
+            <Icon name="x" />
+          </button>
+          <button type="submit" class="btn btn-primary btn-icon" data-invoice-submit aria-label="Simpan" title="Simpan">
+            <Icon name="device-floppy" />
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div class="row row-deck row-cards">
+    <div class="col-12">
+      <div class="card">
+        <div class="card-header">
+          <h3 class="card-title">Daftar Invoice</h3>
+          <div class="card-actions">
+            <button class="btn btn-primary btn-icon" type="button" data-add-invoice data-role-required="farm-operate" aria-label="Tambah invoice" title="Tambah invoice">
+              <Icon name="plus" />
+            </button>
+          </div>
+        </div>
+        <div class="card-body">
+          <div class="d-flex flex-wrap gap-2 mb-3">
+            <span class="badge bg-blue-lt invoice-filter-chip" data-invoice-filter="all">Semua</span>
+            <span class="badge bg-yellow-lt invoice-filter-chip" data-invoice-filter="unpaid">Belum dibayar</span>
+            <span class="badge bg-green-lt invoice-filter-chip" data-invoice-filter="paid">Lunas</span>
+          </div>
+          <div class="row g-3" data-invoice-table>
+            <div class="col-12 text-secondary"><div class="d-flex flex-column align-items-center justify-content-center gap-2 py-5 text-secondary"><span class="spinner-border text-primary" role="status" aria-hidden="true"></span><span>Memuat data invoice...</span></div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <input class="d-none" id="invoice-search" name="invoice_search" type="search" data-invoice-search aria-hidden="true" tabindex="-1" autocomplete="off" />
+
+  <script src="/assets/koi-picker.js?v=20261020b" is:inline></script>
+
+  <script define:vars={{ editIcon, printIcon, trashIcon }}>
+    const apiUrl = '/api'
+    const table = document.querySelector('[data-invoice-table]')
+    const searchInput = document.querySelector('[data-invoice-search]')
+    const navbarSearchBox = document.querySelector('#navbar-global-search')
+    if (navbarSearchBox) {
+      navbarSearchBox.setAttribute('placeholder', 'Nomor, client, judul, status:lunas')
+      navbarSearchBox.setAttribute('title', 'Cari bebas: nomor invoice, client, judul, item. Cari per kolom dengan kolom:isi, boleh digabung: status:belum client:budi total:>5000000. Nama kolom boleh disingkat. Kolom: nomor, judul, client, status, total, tanggal, item, kontak, catatan.')
+    }
+    const form = document.querySelector('[data-invoice-form]')
+    const modalElement = document.querySelector('#invoice-modal')
+    const modalTitle = document.querySelector('[data-invoice-modal-title]')
+    const errorBox = document.querySelector('[data-invoice-error]')
+    const submitButton = document.querySelector('[data-invoice-submit]')
+    const addButton = document.querySelector('[data-add-invoice]')
+    const printFormButton = document.querySelector('[data-invoice-print-form]')
+    const linesBox = document.querySelector('[data-invoice-lines]')
+    const subtotalBox = document.querySelector('[data-invoice-subtotal]')
+    const totalBox = document.querySelector('[data-invoice-total]')
+    const discountInput = document.querySelector('[data-invoice-discount]')
+    const pickerInput = document.querySelector('[data-invoice-picker-input]')
+    const pickerMenu = document.querySelector('[data-invoice-picker-menu]')
+    const filterChips = [...document.querySelectorAll('[data-invoice-filter]')]
+    const zones = { proof: form.querySelector('[data-invoice-zone="proof"]'), media: form.querySelector('[data-invoice-zone="media"]') }
+    const mediaInput = document.querySelector('[data-invoice-media-input]')
+    const mediaBox = document.querySelector('[data-invoice-media]')
+    const mediaStatus = document.querySelector('[data-invoice-media-status]')
+    const proofInput = document.querySelector('[data-invoice-proof-input]')
+    const proofBox = document.querySelector('[data-invoice-proofs]')
+    const proofStatus = document.querySelector('[data-invoice-proof-status]')
+    const cacheKey = 'nishikigoi-cache:farm-invoice'
+    const filterKey = 'nishikigoi-invoice-filter'
+    const defaultsKey = 'nishikigoi-invoice-defaults'
+
+    let invoices = []
+    let sellItems = []
+    let sourcesLoaded = false
+    let lines = []
+    let proofs = []
+    let mediaFiles = []
+    let activeZone = 'proof'
+    let readonlyMode = false
+    let statusFilter = 'all'
+    let signature = ''
+    try { statusFilter = sessionStorage.getItem(filterKey) || 'all' } catch {}
+
+    const statusLabels = {
+      unpaid: { label: 'Belum dibayar', className: 'bg-yellow-lt text-yellow' },
+      paid: { label: 'Lunas', className: 'bg-green-lt text-green' },
+    }
+    const escapeHtml = (value) =>
+      String(value ?? '').replace(/[&<>'"]/g, (char) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' })[char])
+    const money = (value) => `Rp ${Math.round(Number(value) || 0).toLocaleString('id-ID')}`
+    const dateShort = (value) => (value ? window.KoiAuth.formatDate(String(value).slice(0, 10)) : '')
+    const dateLong = (value) => (value ? window.KoiAuth.formatDate(String(value).slice(0, 10), { weekday: true }) : '')
+    const today = () => new Date().toISOString().slice(0, 10)
+    const keepScroll = async (callback) => {
+      const scrollX = window.scrollX
+      const scrollY = window.scrollY
+      const result = await callback()
+      requestAnimationFrame(() => window.scrollTo(scrollX, scrollY))
+      return result
+    }
+    const norm = (value) => String(value === null || value === undefined ? '' : value).toLowerCase().trim()
+    const qtyNumber = (value) => {
+      const number = Number(String(value ?? '').replace(',', '.'))
+      return Number.isFinite(number) ? number : 0
+    }
+    const lineSum = (line) => qtyNumber(line.qty) * (Number(line.unit_price) || 0)
+    const invoiceSubtotal = (invoice) => (invoice.items || []).reduce((sum, line) => sum + lineSum(line), 0)
+
+    // ---- search: plain words + "field:value" ---------------------------------------------------------------
+    const searchAliases = {
+      nomor: 'invoice_no', no: 'invoice_no',
+      judul: 'title', perihal: 'title',
+      client: 'client_name', pembeli: 'client_name', nama: 'client_name',
+      status: 'status',
+      total: 'total', harga: 'total',
+      tanggal: 'invoice_date',
+      item: 'items', ikan: 'items', barang: 'items',
+      kontak: 'sales_contact', sales: 'sales_contact',
+      catatan: 'notes',
+    }
+    const resolveMarkers = (keyword) => {
+      const names = Object.keys(searchAliases)
+      const found = []
+      const pattern = /(?:^|[\s,])([a-z]+)\s*:/gi
+      let match
+      while ((match = pattern.exec(keyword))) {
+        const key = match[1].toLowerCase()
+        const name = searchAliases[key] ? key : (key.length >= 2 ? names.find((alias) => alias.startsWith(key)) : null)
+        if (name) {
+          const hit = [match[0], name]
+          hit.index = match.index
+          found.push(hit)
+        }
+      }
+      return found
+    }
+    const numberTest = (value) => {
+      const text = String(value || '').toLowerCase().replace(/rp|\s/g, '')
+      const toNumber = (part) => Number(String(part).replace(/\./g, '').replace(',', '.'))
+      const compare = text.match(/^(>=|<=|>|<)([\d.,]+)$/)
+      if (compare) {
+        const limit = toNumber(compare[2])
+        return { '>=': (n) => n >= limit, '<=': (n) => n <= limit, '>': (n) => n > limit, '<': (n) => n < limit }[compare[1]]
+      }
+      const range = text.match(/^([\d.,]+)-([\d.,]+)$/)
+      if (range) {
+        const [a, b] = [toNumber(range[1]), toNumber(range[2])]
+        return (n) => n >= Math.min(a, b) && n <= Math.max(a, b)
+      }
+      return /^[\d.,]+$/.test(text) ? (n) => n === toNumber(text) : null
+    }
+    const statusWords = { belum: 'unpaid', unpaid: 'unpaid', tagihan: 'unpaid', lunas: 'paid', paid: 'paid', bayar: 'paid' }
+    const matchesField = (invoice, field, rawValue) => {
+      const value = norm(rawValue)
+      if (!value) return null
+      if (field === 'total') {
+        const test = numberTest(value)
+        return test ? test(Number(invoice.total)) : null
+      }
+      if (field === 'invoice_date') return String(invoice.invoice_date || '').slice(0, 10).includes(value)
+      return value.split(',').map((part) => part.trim()).filter(Boolean).some((choice) => {
+        if (field === 'status') {
+          const wanted = Object.entries(statusWords).find(([word]) => choice.startsWith(word))?.[1] || choice
+          return invoice.status === wanted
+        }
+        if (field === 'items') return (invoice.items || []).some((line) => norm(line.description).includes(choice))
+        return norm(invoice[field]).includes(choice)
+      })
+    }
+    const matchesSearch = (invoice) => {
+      const keyword = String(searchInput.value || '').trim()
+      if (!keyword) return true
+      const markers = resolveMarkers(keyword)
+      const plain = markers.length ? keyword.slice(0, markers[0].index) : keyword
+      for (let index = 0; index < markers.length; index += 1) {
+        const marker = markers[index]
+        const start = marker.index + marker[0].length
+        const end = index + 1 < markers.length ? markers[index + 1].index : keyword.length
+        if (matchesField(invoice, searchAliases[marker[1]], keyword.slice(start, end)) === false) return false
+      }
+      const alternatives = plain.split(',').map((part) => norm(part).split(/\s+/).filter(Boolean)).filter((words) => words.length)
+      if (!alternatives.length) return true
+      const blob = norm([invoice.invoice_no, invoice.title, invoice.client_name, statusLabels[invoice.status]?.label, ...(invoice.items || []).map((line) => line.description)].join(' '))
+      return alternatives.some((words) => words.every((word) => blob.includes(word)))
+    }
+    const visibleInvoices = () => dock.apply(invoices.filter((invoice) => (statusFilter === 'all' || invoice.status === statusFilter) && matchesSearch(invoice)))
+
+    // ---- list ----------------------------------------------------------------------------------------------
+    const renderFilters = () => {
+      const counts = { all: invoices.length, unpaid: 0, paid: 0 }
+      invoices.forEach((invoice) => { counts[invoice.status] = (counts[invoice.status] || 0) + 1 })
+      filterChips.forEach((chip) => {
+        const key = chip.dataset.invoiceFilter
+        const base = { all: 'Semua', unpaid: 'Belum dibayar', paid: 'Lunas' }[key]
+        chip.textContent = `${base} (${counts[key] || 0})`
+        chip.style.outline = key === statusFilter ? '2px solid var(--tblr-primary)' : ''
+      })
+    }
+    const renderTable = () => {
+      dock.prune(invoices)
+      renderFilters()
+      const items = visibleInvoices()
+      table.innerHTML = items.map((invoice) => {
+        const status = statusLabels[invoice.status] || statusLabels.unpaid
+        const lineCount = (invoice.items || []).length
+        return `
+        <div class="col-sm-6 col-lg-4 col-xl-3">
+          <div class="card h-100 invoice-card" data-dock-id="${escapeHtml(invoice.id)}">
+            <div class="invoice-card-top" data-dock-select title="Klik kartu untuk memilih, klik dua kali untuk membuka detail">
+              <span class="fw-semibold invoice-ellipsis">${escapeHtml(invoice.invoice_no)}</span>
+              <span class="d-flex align-items-center gap-1 flex-shrink-0">
+                <span class="badge bg-blue text-blue-fg dock-selected-badge">Terpilih</span>
+                <span class="badge ${status.className}">${escapeHtml(status.label)}</span>
+              </span>
+            </div>
+            <div class="card-body d-flex flex-column" role="button" tabindex="0" data-invoice-id="${escapeHtml(invoice.id)}">
+              <div class="fw-semibold invoice-ellipsis" title="${escapeHtml(invoice.client_name)}">${escapeHtml(invoice.client_name)}</div>
+              ${invoice.title ? `<div class="text-secondary small invoice-ellipsis" title="${escapeHtml(invoice.title)}">${escapeHtml(invoice.title)}</div>` : ''}
+              <div class="text-secondary small mt-2">${escapeHtml(dateShort(invoice.invoice_date))}${invoice.due_date ? ` · jatuh tempo ${escapeHtml(dateShort(invoice.due_date))}` : ''}</div>
+              <div class="text-secondary small">${lineCount} item${(invoice.payment_proofs || []).length ? ` · <span class="text-azure">bukti transfer (${invoice.payment_proofs.length})</span>` : ''}${(invoice.media_entries || []).length ? ` · <span class="text-azure">dokumentasi (${invoice.media_entries.length})${invoice.gallery_id ? ' · di Galeri' : ''}</span>` : ''}</div>
+              <div class="invoice-total mt-2">${escapeHtml(money(invoice.total))}</div>
+              <div class="d-flex gap-2 mt-3 pt-2" style="margin-top:auto">
+                <button class="btn btn-sm flex-fill" type="button" data-print-invoice="${escapeHtml(invoice.id)}">${printIcon} Print</button>
+                <button class="btn btn-sm flex-fill" type="button" data-edit-invoice="${escapeHtml(invoice.id)}" data-role-required="farm-operate">${editIcon} Edit</button>
+                <button class="btn btn-sm btn-outline-danger flex-fill" type="button" data-delete-invoice="${escapeHtml(invoice.id)}" data-role-required="farm-operate">${trashIcon} Hapus</button>
+              </div>
+            </div>
+          </div>
+        </div>`
+      }).join('') || `<div class="col-12 text-secondary">${invoices.length ? 'Tidak ada invoice yang cocok.' : 'Belum ada invoice. Tekan + untuk membuat.'}</div>`
+      dock.refresh()
+    }
+    const loadInvoices = async (silent = false) => {
+      try {
+        const response = await fetch(`${apiUrl}/invoices`)
+        if (!response.ok) throw new Error('Data invoice gagal dimuat')
+        const data = await response.json()
+        const next = JSON.stringify(data)
+        try { localStorage.setItem(cacheKey, next) } catch {}
+        if (silent && next === signature) return
+        signature = next
+        invoices = data
+        renderTable()
+      } catch (error) {
+        if (!silent) table.innerHTML = `<div class="col-12 text-danger">${escapeHtml(error.message)}</div>`
+      }
+    }
+    const loadSources = async () => {
+      if (sourcesLoaded) return
+      try {
+        const sell = await fetch(`${apiUrl}/sell`)
+        if (sell.ok) sellItems = await sell.json()
+        sourcesLoaded = true
+      } catch {}
+    }
+
+    // ---- lines ---------------------------------------------------------------------------------------------
+    const formatMoneyInput = (input) => {
+      const digits = input.value.replace(/[^\d]/g, '')
+      input.value = digits ? Number(digits).toLocaleString('id-ID') : ''
+    }
+    const digitsOf = (value) => Number(String(value || '').replace(/[^\d]/g, '')) || 0
+    const updateTotals = () => {
+      const subtotal = lines.reduce((sum, line) => sum + lineSum(line), 0)
+      const discount = digitsOf(discountInput.value)
+      subtotalBox.textContent = money(subtotal)
+      totalBox.textContent = money(Math.max(0, subtotal - discount))
+      linesBox.querySelectorAll('[data-line-total]').forEach((element) => {
+        const index = Number(element.dataset.lineTotal)
+        element.textContent = money(lineSum(lines[index] || {}))
+      })
+    }
+    const renderLines = () => {
+      linesBox.innerHTML = lines.map((line, index) => `
+        <div class="invoice-line" data-invoice-line="${index}">
+          <input class="form-control" data-line-field="description" value="${escapeHtml(line.description)}" placeholder="Deskripsi item" maxlength="300" ${readonlyMode ? 'disabled' : ''} />
+          <input class="form-control" data-line-field="qty" inputmode="decimal" value="${escapeHtml(line.qty)}" placeholder="Qty" ${readonlyMode ? 'disabled' : ''} />
+          <input class="form-control text-end" data-line-field="unit_price" inputmode="numeric" value="${line.unit_price ? Number(line.unit_price).toLocaleString('id-ID') : ''}" placeholder="0" ${readonlyMode ? 'disabled' : ''} />
+          <div class="invoice-line-total" data-line-total="${index}">${escapeHtml(money(lineSum(line)))}</div>
+          ${readonlyMode ? '<div></div>' : `<button class="btn btn-sm btn-outline-danger btn-icon" type="button" data-line-remove="${index}" aria-label="Hapus baris" title="Hapus baris">${trashIcon}</button>`}
+        </div>`).join('') || '<div class="text-secondary small">Belum ada rincian. Cari ikan atau item di atas, atau tambah item custom.</div>'
+      updateTotals()
+    }
+    const addLine = (line) => {
+      lines.push({ description: '', qty: 1, unit_price: 0, ...line })
+      renderLines()
+    }
+    const koiDescription = (koi) => {
+      const size = Number(koi.current_length_cm)
+      return [koi.code, [koi.variety, koi.bloodline].filter(Boolean).join(' '), Number.isFinite(size) && size > 0 ? `${size.toLocaleString('id-ID', { maximumFractionDigits: 1 })} cm` : ''].filter(Boolean).join(' - ')
+    }
+    let pickerResult = null
+    let pickerBusy = false
+    let pickerToken = 0
+    const renderPickerMenu = () => {
+      const query = norm(pickerInput.value)
+      if (!query || readonlyMode) { pickerMenu.classList.add('d-none'); return }
+      const terms = query.split(/[\s,;]+/).filter(Boolean)
+      const listMode = Boolean(pickerResult?.list_mode)
+      const codeSet = Object.fromEntries((listMode ? pickerResult.tokens : []).map((token) => [token, true]))
+      const sellMatches = sellItems
+        .filter((item) => item.status !== 'sold')
+        .filter((item) => {
+          if (listMode) return (item.koi || []).some((koi) => codeSet[norm(koi.code)])
+          const haystack = norm([item.title, ...(item.koi || []).map((koi) => [koi.code, koi.name, koi.variety].join(' '))].join(' '))
+          return terms.every((term) => haystack.includes(term))
+        })
+        .slice(0, 5)
+      const koiTotal = pickerResult ? pickerResult.total : 0
+      const koiMatches = (pickerResult?.items || []).slice(0, listMode ? 40 : 8)
+      const addAll = listMode && koiTotal > 1
+        ? `<button class="invoice-picker-option" type="button" data-invoice-pick="allkoi:0"><span class="fw-semibold">Tambahkan semua (${koiTotal} ikan)</span></button>` +
+          (pickerResult.missing.length ? `<div class="px-3 pb-1 small text-warning">Tidak ditemukan: ${escapeHtml(pickerResult.missing.slice(0, 6).join(', ').toUpperCase())}</div>` : '')
+        : ''
+      const option = (kind, id, image, title, subtitle) => `
+        <button class="invoice-picker-option" type="button" data-invoice-pick="${kind}:${escapeHtml(id)}">
+          ${image ? `<img class="invoice-thumb" src="${escapeHtml(image)}" alt="" loading="lazy" />` : '<div class="invoice-thumb"></div>'}
+          <span class="min-width-0"><span class="d-block fw-semibold">${escapeHtml(title)}</span><span class="d-block small text-secondary">${escapeHtml(subtitle)}</span></span>
+        </button>`
+      pickerMenu.innerHTML = addAll +
+        (sellMatches.length ? '<div class="px-3 pt-2 small text-secondary">Penjualan</div>' + sellMatches.map((item) => option('sell', item.id, ((item.media_entries || [])[0]?.thumbnail_url) || ((item.koi || [])[0]?.image_url) || '', item.title, `${money(item.price)} · ${(item.koi || []).map((koi) => koi.code).join(', ') || 'foto'}`)).join('') : '') +
+        (koiMatches.length ? '<div class="px-3 pt-2 small text-secondary">Data Ikan</div>' + koiMatches.map((koi) => option('koi', koi.id, koi.image_url, koiDescription(koi), `${koi.sale_price ? money(koi.sale_price) : 'Harga belum diisi'}${koi.status === 'sold' ? ' · Sold' : ''}`)).join('') : '') ||
+        (sourcesLoaded && pickerResult && !pickerBusy ? '<div class="p-3 text-secondary">Tidak ditemukan.</div>' : '<div class="p-3 text-secondary"><span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>Mencari...</div>')
+      pickerMenu.classList.remove('d-none')
+    }
+    const searchPicker = window.KoiPicker.debounce(async () => {
+      const text = pickerInput.value
+      if (!norm(text)) { pickerResult = null; pickerBusy = false; return }
+      const mine = ++pickerToken
+      pickerBusy = true
+      try {
+        const result = await window.KoiPicker.lookup(text, { limit: 40 })
+        if (mine !== pickerToken) return
+        pickerResult = result
+      } catch {
+        if (mine !== pickerToken) return
+        pickerResult = { items: [], total: 0, ids: [], missing: [], list_mode: false, tokens: [] }
+      }
+      pickerBusy = false
+      renderPickerMenu()
+    }, 220)
+
+    // ---- proof of transfer: upload button, paste, drag and drop ------------------------------------------------
+    const readFileAsDataUrl = (file) => new Promise((resolve, reject) => {
+      const reader = new FileReader()
+      reader.addEventListener('load', () => resolve(reader.result))
+      reader.addEventListener('error', () => reject(new Error('File gagal dibaca')))
+      reader.readAsDataURL(file)
+    })
+    const loadImage = (src) => new Promise((resolve, reject) => {
+      const image = new Image()
+      image.addEventListener('load', () => resolve(image))
+      image.addEventListener('error', () => reject(new Error('Gambar gagal diproses')))
+      image.src = src
+    })
+    // larger and sharper than the photo upload, so the numbers on a transfer receipt stay readable
+    const compressProof = async (file) => {
+      const image = await loadImage(await readFileAsDataUrl(file))
+      const scale = Math.min(1, 2000 / Math.max(image.naturalWidth, image.naturalHeight))
+      const canvas = document.createElement('canvas')
+      canvas.width = Math.max(1, Math.round(image.naturalWidth * scale))
+      canvas.height = Math.max(1, Math.round(image.naturalHeight * scale))
+      canvas.getContext('2d').drawImage(image, 0, 0, canvas.width, canvas.height)
+      return canvas.toDataURL('image/jpeg', 0.86)
+    }
+    const renderProofs = () => {
+      proofBox.innerHTML = proofs.map((proof, index) => `
+        <div class="col-6 col-md-3">
+          <img class="invoice-proof-thumb" src="${escapeHtml(proof.previewUrl || proof.url)}" alt="Bukti transfer ${index + 1}" data-proof-zoom="${index}" />
+          <div class="small text-secondary text-truncate mt-1" title="${escapeHtml(proof.name || '')}">${escapeHtml(proof.name || `Bukti ${index + 1}`)}${proof.file ? ' (belum disimpan)' : ''}</div>
+          ${readonlyMode ? '' : `<button class="btn btn-sm btn-outline-danger w-100 mt-1" type="button" data-proof-remove="${index}">Hapus</button>`}
+        </div>`).join('')
+    }
+    const addProofFiles = (files) => {
+      const images = Array.from(files || []).filter((file) => /^image\//.test(file.type))
+      if (!images.length) {
+        proofStatus.textContent = 'Hanya file gambar yang bisa dijadikan bukti transfer.'
+        return
+      }
+      proofStatus.textContent = ''
+      images.forEach((file) => proofs.push({ file, name: file.name || `bukti-${proofs.length + 1}.png`, previewUrl: URL.createObjectURL(file) }))
+      renderProofs()
+    }
+    const uploadProofs = async () => {
+      const saved = []
+      for (const [index, proof] of proofs.entries()) {
+        if (proof.url) { saved.push({ url: proof.url, name: proof.name || '' }); continue }
+        proofStatus.textContent = `Mengupload bukti transfer ${index + 1}/${proofs.length}...`
+        const response = await fetch(`${apiUrl}/images`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ prefix: 'invoice-proof', image_data: await compressProof(proof.file) }) })
+        const data = await response.json().catch(() => ({}))
+        if (!response.ok) throw new Error(data.error || data.detail || 'Bukti transfer gagal diupload')
+        saved.push({ url: data.image_url, name: proof.name || '' })
+      }
+      proofStatus.textContent = ''
+      return saved
+    }
+
+    // ---- documentation: photos and videos (shown in Galeri on request) --------------------------------------------
+    const MAX_VIDEO_BYTES = 40 * 1024 * 1024
+    const compressImage = async (file) => {
+      const image = await loadImage(await readFileAsDataUrl(file))
+      const scale = Math.min(1, 1600 / Math.max(image.naturalWidth, image.naturalHeight))
+      const canvas = document.createElement('canvas')
+      canvas.width = Math.max(1, Math.round(image.naturalWidth * scale))
+      canvas.height = Math.max(1, Math.round(image.naturalHeight * scale))
+      canvas.getContext('2d').drawImage(image, 0, 0, canvas.width, canvas.height)
+      return canvas.toDataURL('image/jpeg', 0.8)
+    }
+    const createVideoThumbnail = (file) => new Promise((resolve) => {
+      const video = document.createElement('video')
+      const canvas = document.createElement('canvas')
+      const objectUrl = URL.createObjectURL(file)
+      video.muted = true
+      video.playsInline = true
+      video.preload = 'metadata'
+      video.addEventListener('loadeddata', () => {
+        canvas.width = video.videoWidth || 640
+        canvas.height = video.videoHeight || 360
+        canvas.getContext('2d').drawImage(video, 0, 0, canvas.width, canvas.height)
+        URL.revokeObjectURL(objectUrl)
+        resolve(canvas.toDataURL('image/webp', 0.82))
+      }, { once: true })
+      video.addEventListener('error', () => { URL.revokeObjectURL(objectUrl); resolve('') }, { once: true })
+      video.src = objectUrl
+    })
+    const renderMedia = () => {
+      mediaBox.innerHTML = mediaFiles.map((item, index) => {
+        const src = item.previewUrl || item.thumbnail_url || item.url || ''
+        return `
+        <div class="col-6 col-md-3" data-invoice-media-item="${index}">
+          ${item.type === 'video' && !src ? '<div class="invoice-proof-thumb d-flex align-items-center justify-content-center">Video</div>' : `<img class="invoice-proof-thumb" src="${escapeHtml(src)}" alt="" data-media-zoom="${index}" />`}
+          ${item.type === 'video' ? '<div class="small text-secondary">Video</div>' : ''}
+          <input class="form-control form-control-sm mt-1" data-invoice-media-notes placeholder="Catatan" value="${escapeHtml(item.notes || '')}" ${readonlyMode ? 'disabled' : ''} />
+          ${readonlyMode ? '' : `<button class="btn btn-sm btn-outline-danger w-100 mt-1" type="button" data-media-remove="${index}">Hapus</button>`}
+        </div>`
+      }).join('')
+    }
+    const collectMediaNotes = () => {
+      mediaBox.querySelectorAll('[data-invoice-media-item]').forEach((element) => {
+        const entry = mediaFiles[Number(element.dataset.invoiceMediaItem)]
+        if (entry) entry.notes = element.querySelector('[data-invoice-media-notes]').value.trim()
+      })
+    }
+    const addMediaFiles = (files) => {
+      collectMediaNotes()
+      let skipped = ''
+      Array.from(files || []).forEach((file) => {
+        const isVideo = /^video\//.test(file.type)
+        if (!isVideo && !/^image\//.test(file.type)) { skipped = 'Hanya file foto atau video yang bisa dilampirkan.'; return }
+        if (isVideo && file.size > MAX_VIDEO_BYTES) { skipped = `Video ${file.name} lebih dari 40 MB dan dilewati.`; return }
+        mediaFiles.push({ file, type: isVideo ? 'video' : 'image', name: file.name || `foto-${mediaFiles.length + 1}.png`, notes: '', previewUrl: isVideo ? '' : URL.createObjectURL(file) })
+      })
+      mediaStatus.textContent = skipped
+      renderMedia()
+    }
+    const uploadMedia = async () => {
+      collectMediaNotes()
+      const entries = []
+      for (const [index, item] of mediaFiles.entries()) {
+        if (item.url) {
+          entries.push({ type: item.type || 'image', url: item.url, thumbnail_url: item.thumbnail_url || item.url, name: item.name || '', notes: item.notes || '' })
+          continue
+        }
+        mediaStatus.textContent = `Mengupload dokumentasi ${index + 1}/${mediaFiles.length}...`
+        if (item.type === 'video') {
+          const [videoData, thumbnailData] = await Promise.all([readFileAsDataUrl(item.file), createVideoThumbnail(item.file)])
+          const response = await fetch(`${apiUrl}/videos`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ prefix: 'invoice-video', video_data: videoData, thumbnail_data: thumbnailData }) })
+          const data = await response.json().catch(() => ({}))
+          if (!response.ok) throw new Error(data.error || data.detail || 'Video gagal diupload')
+          entries.push({ type: 'video', url: data.video_url, thumbnail_url: data.video_thumbnail_url, name: item.name || '', notes: item.notes || '' })
+          continue
+        }
+        const response = await fetch(`${apiUrl}/images`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ prefix: 'invoice-image', image_data: await compressImage(item.file) }) })
+        const data = await response.json().catch(() => ({}))
+        if (!response.ok) throw new Error(data.error || data.detail || 'Gambar gagal diupload')
+        entries.push({ type: 'image', url: data.image_url, thumbnail_url: data.image_url, name: item.name || '', notes: item.notes || '' })
+      }
+      mediaStatus.textContent = ''
+      return entries
+    }
+    const mediaFromServer = (list) => (list || []).map((media) => ({ type: media.type, url: media.url, thumbnail_url: media.thumbnail_url, name: media.name, notes: media.notes, previewUrl: media.thumbnail_url || media.url }))
+
+    // ---- form ----------------------------------------------------------------------------------------------
+    const modalApi = () => window.tabler?.bootstrap?.Modal || window.bootstrap?.Modal
+    const openModal = () => {
+      const api = modalApi()
+      if (api) { api.getOrCreateInstance(modalElement).show(); return }
+      modalElement.classList.add('show')
+      modalElement.style.display = 'block'
+    }
+    const closeModal = () => {
+      const api = modalApi()
+      if (api) { api.getInstance(modalElement)?.hide(); return }
+      modalElement.classList.remove('show')
+      modalElement.style.display = 'none'
+    }
+    const setReadonly = (readonly) => {
+      readonlyMode = readonly
+      form.querySelectorAll('input, textarea').forEach((field) => { if (field.type !== 'hidden') field.disabled = readonly })
+      form.querySelectorAll('[data-invoice-add-custom], [data-invoice-pull], [data-invoice-proof-upload], [data-invoice-proof-paste], [data-invoice-media-upload], [data-invoice-media-paste]').forEach((button) => { button.disabled = readonly })
+      Object.values(zones).forEach((zone) => zone.classList.toggle('d-none', readonly))
+      submitButton.classList.toggle('d-none', readonly)
+    }
+    const readDefaults = () => {
+      try { return JSON.parse(localStorage.getItem(defaultsKey) || '{}') || {} } catch { return {} }
+    }
+    const openForm = async (id, readonly = false) => {
+      const invoice = id ? invoices.find((entry) => String(entry.id) === String(id)) : null
+      form.reset()
+      errorBox.classList.add('d-none')
+      pickerMenu.classList.add('d-none')
+      pickerInput.value = ''
+      const defaults = readDefaults()
+      form.elements.id.value = invoice ? invoice.id : ''
+      modalTitle.textContent = invoice ? (readonly ? `Invoice ${invoice.invoice_no}` : `Formulir Edit Invoice ${invoice.invoice_no}`) : 'Formulir Tambah Invoice'
+      form.elements.invoice_no.value = invoice?.invoice_no || ''
+      form.elements.invoice_date.value = invoice ? String(invoice.invoice_date).slice(0, 10) : today()
+      form.elements.due_date.value = invoice?.due_date ? String(invoice.due_date).slice(0, 10) : ''
+      form.querySelectorAll('[name="status"]').forEach((radio) => { radio.checked = radio.value === (invoice?.status || 'unpaid') })
+      form.elements.client_name.value = invoice?.client_name || ''
+      form.elements.title.value = invoice?.title || ''
+      form.elements.client_contact.value = invoice?.client_contact || ''
+      form.elements.sales_contact.value = invoice ? (invoice.sales_contact || '') : (defaults.sales_contact || '')
+      form.elements.bank_account.value = invoice ? (invoice.bank_account || '') : (defaults.bank_account || '')
+      form.elements.notes.value = invoice?.notes || ''
+      discountInput.value = invoice && Number(invoice.discount) ? Math.round(Number(invoice.discount)).toLocaleString('id-ID') : ''
+      lines = (invoice?.items || []).map((line) => ({ ...line }))
+      proofs = (invoice?.payment_proofs || []).map((proof) => ({ url: proof.url, name: proof.name, previewUrl: proof.url }))
+      proofInput.value = ''
+      proofStatus.textContent = ''
+      mediaFiles = mediaFromServer(invoice?.media_entries)
+      mediaInput.value = ''
+      mediaStatus.textContent = ''
+      activeZone = 'proof'
+      // a collection only exists while there is documentation, so an invoice without any starts ticked
+      form.elements.show_in_gallery.checked = invoice ? (Boolean(invoice.gallery_id) || !(invoice.media_entries || []).length) : true
+      if (!invoice && !lines.length) lines = [{ description: '', qty: 1, unit_price: 0 }]
+      setReadonly(readonly)
+      renderProofs()
+      renderMedia()
+      printFormButton.classList.toggle('d-none', !invoice)
+      printFormButton.dataset.invoiceId = invoice ? invoice.id : ''
+      renderLines()
+      openModal()
+      if (!invoice) {
+        try {
+          const response = await fetch(`${apiUrl}/invoices-next-number?date=${encodeURIComponent(form.elements.invoice_date.value)}`)
+          if (response.ok) form.elements.invoice_no.placeholder = `Otomatis (${(await response.json()).invoice_no})`
+        } catch {}
+      }
+      loadSources()
+    }
+    form.addEventListener('submit', async (event) => {
+      event.preventDefault()
+      errorBox.classList.add('d-none')
+      submitButton.disabled = true
+      try {
+        const id = form.elements.id.value
+        const payload = {
+          invoice_no: form.elements.invoice_no.value.trim(),
+          invoice_date: form.elements.invoice_date.value,
+          due_date: form.elements.due_date.value,
+          status: form.querySelector('[name="status"]:checked')?.value || 'unpaid',
+          client_name: form.elements.client_name.value.trim(),
+          title: form.elements.title.value.trim(),
+          client_contact: form.elements.client_contact.value.trim(),
+          sales_contact: form.elements.sales_contact.value.trim(),
+          bank_account: form.elements.bank_account.value.trim(),
+          notes: form.elements.notes.value.trim(),
+          discount: digitsOf(discountInput.value),
+          items: lines.filter((line) => String(line.description || '').trim()).map((line) => ({
+            description: String(line.description).trim(),
+            qty: qtyNumber(line.qty) || 1,
+            unit_price: Number(line.unit_price) || 0,
+            ...(line.koi_id ? { koi_id: line.koi_id } : {}),
+            ...(line.sell_id ? { sell_id: line.sell_id } : {}),
+          })),
+        }
+        if (!payload.client_name) throw new Error('Nama client atau pembeli wajib diisi')
+        if (!payload.items.length) throw new Error('Isi minimal satu baris rincian')
+        payload.payment_proofs = await uploadProofs()
+        payload.media_entries = await uploadMedia()
+        payload.show_in_gallery = Boolean(form.elements.show_in_gallery.checked)
+        const response = await fetch(id ? `${apiUrl}/invoices/${id}` : `${apiUrl}/invoices`, { method: id ? 'PATCH' : 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(payload) })
+        const data = await response.json().catch(() => ({}))
+        if (!response.ok) throw new Error(data.error || 'Invoice gagal disimpan')
+        try { localStorage.setItem(defaultsKey, JSON.stringify({ sales_contact: payload.sales_contact, bank_account: payload.bank_account })) } catch {}
+        await keepScroll(loadInvoices)
+        if (id) {
+          form.elements.invoice_no.value = data.invoice_no || payload.invoice_no
+          proofs = (data.payment_proofs || []).map((proof) => ({ url: proof.url, name: proof.name, previewUrl: proof.url }))
+          mediaFiles = mediaFromServer(data.media_entries)
+          renderProofs()
+          renderMedia()
+          modalTitle.textContent = `Formulir Edit Invoice ${data.invoice_no || ''}`
+        } else {
+          closeModal()
+        }
+      } catch (error) {
+        errorBox.textContent = error.message
+        errorBox.classList.remove('d-none')
+        proofStatus.textContent = ''
+        mediaStatus.textContent = ''
+      } finally {
+        submitButton.disabled = false
+      }
+    })
+
+    // ---- print ---------------------------------------------------------------------------------------------
+    const printInvoice = (id) => {
+      const invoice = invoices.find((entry) => String(entry.id) === String(id))
+      if (!invoice || !window.KoiPrint) return
+      const e = window.KoiPrint.escapeHtml
+      const items = invoice.items || []
+      const subtotal = invoiceSubtotal(invoice)
+      const discount = Number(invoice.discount) || 0
+      const rows = items.map((line, index) => `<tr>
+        <td class="kp-center">${index + 1}</td>
+        <td>${e(line.description)}</td>
+        <td class="kp-num">${e(Number(line.qty).toLocaleString('id-ID', { maximumFractionDigits: 2 }))}</td>
+        <td class="kp-num">${e(money(line.unit_price))}</td>
+        <td class="kp-num">${e(money(lineSum(line)))}</td></tr>`).join('')
+      const box = (label, value) => (value ? `<div style="border:1px solid #999;padding:6px 8px;break-inside:avoid"><span class="kp-label">${e(label)}</span><div style="white-space:pre-wrap">${e(value)}</div></div>` : '')
+      const notesBlocks = [box('Pembayaran (nomor rekening)', invoice.bank_account), box('Kontak sales', invoice.sales_contact)].filter(Boolean)
+      // documentation (photos, and the cover picture of videos) goes on page 2 onward when its checkbox is ticked
+      const documentation = invoice.media_entries || []
+      const mediaSrc = (url) => (window.KoiAuth?.apiUrl ? window.KoiAuth.apiUrl(url) : url)
+      const documentationBody = documentation.length ? `
+        <section class="kp-section" style="display:grid;grid-template-columns:repeat(2,1fr);gap:10px">
+          ${documentation.map((media, index) => {
+            const isVideo = media.type === 'video'
+            const src = isVideo ? media.thumbnail_url : (media.url || media.thumbnail_url)
+            const caption = [isVideo ? 'Video' : '', media.notes || media.name || ''].filter(Boolean).join(': ')
+            return `<figure style="margin:0;border:1px solid #999;break-inside:avoid;page-break-inside:avoid">
+              ${src ? `<img src="${e(mediaSrc(src))}" alt="" style="display:block;width:100%;max-height:105mm;object-fit:contain;background:#f3f3f3">` : '<div style="height:60mm;display:flex;align-items:center;justify-content:center;background:#eee;color:#666">Video</div>'}
+              <figcaption style="padding:3px 6px;font-size:9px"><strong>${index + 1}.</strong> ${e(caption)}</figcaption>
+            </figure>`
+          }).join('')}
+        </section>` : ''
+      window.KoiPrint.print({
+        attachment: documentation.length ? {
+          key: 'documentation',
+          label: 'Dokumentasi (foto atau video)',
+          heading: 'LAMPIRAN DOKUMENTASI',
+          subheading: invoice.invoice_no,
+          title: `Lampiran invoice ${invoice.invoice_no}`,
+          body: documentationBody,
+        } : null,
+        key: 'invoice',
+        title: `Invoice ${invoice.invoice_no}`,
+        heading: 'INVOICE',
+        subheading: invoice.invoice_no,
+        info: [
+          ['No. Invoice', invoice.invoice_no],
+          ['Tanggal', dateLong(invoice.invoice_date)],
+          ['Jatuh tempo', invoice.due_date ? dateLong(invoice.due_date) : '-'],
+          ['Status', statusLabels[invoice.status]?.label || ''],
+        ],
+        body: `
+          <section class="kp-section" style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+            <div style="border:1px solid #999;padding:6px 8px"><span class="kp-label">Ditagihkan kepada</span>
+              <div style="font-size:13px;font-weight:800">${e(invoice.client_name)}</div>
+              ${invoice.client_contact ? `<div style="white-space:pre-wrap">${e(invoice.client_contact)}</div>` : ''}</div>
+            <div style="border:1px solid #999;padding:6px 8px"><span class="kp-label">Perihal</span>
+              <div style="font-weight:700">${e(invoice.title || '-')}</div></div>
+          </section>
+          <section class="kp-section">
+            <table class="kp-table">
+              <thead><tr><th class="kp-center" style="width:28px">No</th><th>Deskripsi</th><th class="kp-num" style="width:9%">Qty</th><th class="kp-num" style="width:18%">Harga satuan</th><th class="kp-num" style="width:18%">Jumlah</th></tr></thead>
+              <tbody>${rows}</tbody>
+            </table>
+            <table style="width:46%;margin-left:auto;margin-top:6px;border-collapse:collapse">
+              <tr><td style="padding:3px 6px">Subtotal</td><td class="kp-num" style="padding:3px 6px">${e(money(subtotal))}</td></tr>
+              ${discount ? `<tr><td style="padding:3px 6px">Diskon</td><td class="kp-num" style="padding:3px 6px">- ${e(money(discount))}</td></tr>` : ''}
+              <tr><td style="padding:5px 6px;border-top:2px solid #111;font-weight:800">TOTAL</td><td class="kp-num" style="padding:5px 6px;border-top:2px solid #111;font-weight:800;font-size:13px">${e(money(invoice.total))}</td></tr>
+            </table>
+          </section>
+          ${notesBlocks.length ? `<section class="kp-section" style="display:grid;grid-template-columns:repeat(${notesBlocks.length},1fr);gap:10px">${notesBlocks.join('')}</section>` : ''}
+          ${invoice.notes ? `<section class="kp-section">${box('Catatan', invoice.notes)}</section>` : ''}`,
+        signatures: ['Penerima', 'Hormat kami'],
+      })
+    }
+    const printSelected = (ids) => {
+      if (!window.KoiPrint) { window.alert('Modul cetak belum dimuat. Muat ulang halaman.'); return }
+      if (ids.length > 1) window.KoiPrint.printMany(ids, printInvoice, { title: `Invoice (${ids.length} lembar)` })
+      else printInvoice(ids[0])
+    }
+
+    // ---- actions -------------------------------------------------------------------------------------------
+    const deleteInvoices = async (ids) => {
+      const names = ids.map((id) => invoices.find((entry) => String(entry.id) === String(id))?.invoice_no).filter(Boolean)
+      if (!(await window.KoiDialog.confirm(`Hapus ${ids.length} invoice (${names.join(', ')})?`))) return
+      const failed = []
+      for (const id of ids) {
+        try {
+          const response = await fetch(`${apiUrl}/invoices/${id}`, { method: 'DELETE' })
+          if (!response.ok) failed.push(id)
+        } catch { failed.push(id) }
+      }
+      dock.clear()
+      await keepScroll(loadInvoices)
+      if (failed.length) window.alert(`${failed.length} invoice gagal dihapus.`)
+    }
+    const markPaid = async (ids) => {
+      if (!(await window.KoiDialog.confirm(`Tandai ${ids.length} invoice sebagai Lunas?`))) return
+      for (const id of ids) {
+        await fetch(`${apiUrl}/invoices/${id}`, { method: 'PATCH', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ status: 'paid' }) }).catch(() => {})
+      }
+      dock.clear()
+      await keepScroll(loadInvoices)
+    }
+    const dock = window.KoiDock.create({
+      root: table,
+      label: 'invoice',
+      idOf: (invoice) => String(invoice.id),
+      visibleItems: () => visibleInvoices(),
+      render: () => renderTable(),
+      actions: [
+        { key: 'edit', icon: 'edit', title: 'Edit invoice terpilih', role: 'farm-operate', show: (count) => count === 1, onClick: (ids) => openForm(ids[0], false) },
+        { key: 'paid', icon: 'coin', variant: 'success', title: (count) => `Tandai ${count} invoice lunas`, role: 'farm-operate', show: (count) => count >= 1, onClick: (ids) => markPaid(ids) },
+        { key: 'print', icon: 'printer', variant: 'secondary', title: (count) => (count > 1 ? `Cetak ${count} invoice terpilih (satu lembar per invoice)` : 'Cetak invoice terpilih'), show: (count) => count >= 1, onClick: (ids) => printSelected(ids) },
+        { key: 'delete', icon: 'trash', variant: 'danger', title: (count) => `Hapus ${count} invoice terpilih`, role: 'farm-operate', onClick: (ids) => deleteInvoices(ids) },
+      ],
+      add: { title: 'Tambah invoice', role: 'farm-operate', onClick: () => openForm(null, false) },
+    })
+
+    // ---- events --------------------------------------------------------------------------------------------
+    filterChips.forEach((chip) => chip.addEventListener('click', () => {
+      statusFilter = chip.dataset.invoiceFilter
+      try { sessionStorage.setItem(filterKey, statusFilter) } catch {}
+      renderTable()
+    }))
+    searchInput.addEventListener('input', () => renderTable())
+    addButton?.addEventListener('click', () => openForm(null, false))
+    table.addEventListener('click', (event) => {
+      const printButton = event.target.closest('[data-print-invoice]')
+      if (printButton) { printInvoice(printButton.dataset.printInvoice); return }
+      const editButton = event.target.closest('[data-edit-invoice]')
+      if (editButton) { openForm(editButton.dataset.editInvoice, false); return }
+      const deleteButton = event.target.closest('[data-delete-invoice]')
+      if (deleteButton) { deleteInvoices([deleteButton.dataset.deleteInvoice]); return }
+      // anywhere else on the card selects it (several cards can be selected); double-click opens the detail
+      if (event.target.closest('button, a, input')) return
+      const card = event.target.closest('[data-dock-id]')
+      if (card) dock.toggle(card.dataset.dockId)
+    })
+    table.addEventListener('dblclick', (event) => {
+      if (event.target.closest('button, a, input')) return
+      const card = event.target.closest('[data-dock-id]')
+      if (!card) return
+      window.getSelection()?.removeAllRanges()
+      openForm(card.dataset.dockId, true)
+    })
+    table.addEventListener('keydown', (event) => {
+      if (event.key !== 'Enter' && event.key !== ' ') return
+      const row = event.target.closest('[data-invoice-id]')
+      if (row && event.target === row) {
+        event.preventDefault()
+        openForm(row.dataset.invoiceId, true)
+      }
+    })
+    printFormButton.addEventListener('click', () => {
+      if (printFormButton.dataset.invoiceId) printInvoice(printFormButton.dataset.invoiceId)
+    })
+    discountInput.addEventListener('input', () => { formatMoneyInput(discountInput); updateTotals() })
+    linesBox.addEventListener('input', (event) => {
+      const row = event.target.closest('[data-invoice-line]')
+      const field = event.target.dataset.lineField
+      if (!row || !field) return
+      const line = lines[Number(row.dataset.invoiceLine)]
+      if (!line) return
+      if (field === 'unit_price') {
+        formatMoneyInput(event.target)
+        line.unit_price = digitsOf(event.target.value)
+      } else if (field === 'qty') {
+        line.qty = event.target.value
+      } else {
+        line.description = event.target.value
+      }
+      updateTotals()
+    })
+    linesBox.addEventListener('click', (event) => {
+      const remove = event.target.closest('[data-line-remove]')
+      if (!remove) return
+      lines.splice(Number(remove.dataset.lineRemove), 1)
+      renderLines()
+    })
+    form.querySelector('[data-invoice-add-custom]').addEventListener('click', () => addLine({}))
+    form.querySelector('[data-invoice-proof-upload]').addEventListener('click', () => proofInput.click())
+    proofInput.addEventListener('change', () => {
+      addProofFiles(proofInput.files)
+      proofInput.value = ''
+    })
+    form.querySelector('[data-invoice-proof-paste]').addEventListener('click', async () => {
+      try {
+        const clipboardItems = await navigator.clipboard.read()
+        const files = []
+        for (const clipboardItem of clipboardItems) {
+          const type = clipboardItem.types.find((entry) => entry.startsWith('image/'))
+          if (!type) continue
+          const blob = await clipboardItem.getType(type)
+          files.push(new File([blob], `bukti-${Date.now()}-${files.length + 1}.${type.split('/')[1] || 'png'}`, { type }))
+        }
+        if (files.length) addProofFiles(files)
+        else proofStatus.textContent = 'Tidak ada gambar di clipboard.'
+      } catch {
+        proofStatus.textContent = 'Clipboard tidak bisa dibaca. Tempel dengan Ctrl+V atau pilih file.'
+      }
+    })
+    form.querySelector('[data-invoice-media-upload]').addEventListener('click', () => mediaInput.click())
+    mediaInput.addEventListener('change', () => {
+      addMediaFiles(mediaInput.files)
+      mediaInput.value = ''
+    })
+    form.querySelector('[data-invoice-media-paste]').addEventListener('click', async () => {
+      try {
+        const clipboardItems = await navigator.clipboard.read()
+        const files = []
+        for (const clipboardItem of clipboardItems) {
+          const type = clipboardItem.types.find((entry) => entry.startsWith('image/'))
+          if (!type) continue
+          const blob = await clipboardItem.getType(type)
+          files.push(new File([blob], `foto-${Date.now()}-${files.length + 1}.${type.split('/')[1] || 'png'}`, { type }))
+        }
+        if (files.length) addMediaFiles(files)
+        else mediaStatus.textContent = 'Tidak ada gambar di clipboard.'
+      } catch {
+        mediaStatus.textContent = 'Clipboard tidak bisa dibaca. Tempel dengan Ctrl+V atau pilih file.'
+      }
+    })
+    // Two drop targets (bukti transfer and dokumentasi). The one you last pointed at, focused or clicked takes
+    // a Ctrl+V; a drop goes to the box it lands on, and a miss elsewhere in the form goes to the last used box.
+    const sendFiles = (zone, files) => {
+      if (zone === 'media') addMediaFiles(files)
+      else addProofFiles(files)
+    }
+    Object.entries(zones).forEach(([name, zone]) => {
+      ;['mouseenter', 'focusin', 'click', 'dragenter'].forEach((type) => zone.addEventListener(type, () => { activeZone = name }))
+    })
+    const zoneOf = (event) => event.target.closest?.('[data-invoice-zone]')?.dataset.invoiceZone || activeZone
+    modalElement.addEventListener('paste', (event) => {
+      if (readonlyMode) return
+      const files = Array.from(event.clipboardData?.files || []).filter((file) => /^image\//.test(file.type))
+      if (files.length) { event.preventDefault(); sendFiles(activeZone, files) }
+    })
+    const dragHasFiles = (event) => Array.from(event.dataTransfer?.types || []).includes('Files')
+    const clearOver = () => Object.values(zones).forEach((zone) => zone.classList.remove('is-over'))
+    modalElement.addEventListener('dragover', (event) => {
+      if (!dragHasFiles(event)) return
+      event.preventDefault()
+      if (readonlyMode) return
+      clearOver()
+      zones[zoneOf(event)].classList.add('is-over')
+    })
+    modalElement.addEventListener('dragleave', (event) => {
+      if (!modalElement.contains(event.relatedTarget)) clearOver()
+    })
+    modalElement.addEventListener('drop', (event) => {
+      if (!dragHasFiles(event)) return
+      event.preventDefault()
+      clearOver()
+      if (!readonlyMode) sendFiles(zoneOf(event), event.dataTransfer.files)
+    })
+    mediaBox.addEventListener('click', (event) => {
+      const remove = event.target.closest('[data-media-remove]')
+      if (remove) {
+        collectMediaNotes()
+        mediaFiles.splice(Number(remove.dataset.mediaRemove), 1)
+        renderMedia()
+        return
+      }
+      const zoom = event.target.closest('[data-media-zoom]')
+      if (zoom) {
+        const media = mediaFiles[Number(zoom.dataset.mediaZoom)]
+        if (media && media.type !== 'video') window.KoiAuth?.zoomPhoto?.(media.previewUrl || media.url, media.name || 'Dokumentasi invoice', [media.notes ? `Catatan: ${media.notes}` : ''])
+      }
+    })
+    proofBox.addEventListener('click', (event) => {
+      const remove = event.target.closest('[data-proof-remove]')
+      if (remove) {
+        proofs.splice(Number(remove.dataset.proofRemove), 1)
+        renderProofs()
+        return
+      }
+      const zoom = event.target.closest('[data-proof-zoom]')
+      if (zoom) {
+        const proof = proofs[Number(zoom.dataset.proofZoom)]
+        if (proof) window.KoiAuth?.zoomPhoto?.(proof.previewUrl || proof.url, 'Bukti transfer')
+      }
+    })
+    form.querySelector('[data-invoice-pull]').addEventListener('click', async () => {
+      await loadSources()
+      if (!window.KoiPicker) { window.alert('Modul pilih ikan belum dimuat. Muat ulang halaman.'); return }
+      window.KoiPicker.open({
+        title: 'Tarik dari Data Ikan',
+        disabledIds: lines.filter((line) => line.koi_id).map((line) => String(line.koi_id)),
+        confirmLabel: 'Masukkan ke invoice',
+        onConfirm: (ids, picked) => {
+          // an untouched empty first line is replaced instead of left behind
+          if (lines.length === 1 && !String(lines[0].description || '').trim() && !Number(lines[0].unit_price)) lines = []
+          picked.forEach((koi) => {
+            lines.push({ description: koiDescription(koi), qty: 1, unit_price: Math.round(Number(koi.sale_price) || 0), koi_id: koi.id })
+          })
+          renderLines()
+        },
+      })
+    })
+    window.KoiPicker?.fixPaste?.(pickerInput)
+    pickerInput.addEventListener('input', () => {
+      renderPickerMenu()
+      searchPicker()
+      if (!sourcesLoaded) loadSources().then(renderPickerMenu)
+    })
+    form.addEventListener('click', (event) => {
+      const pick = event.target.closest('[data-invoice-pick]')
+      if (!pick) return
+      const [kind, id] = pick.dataset.invoicePick.split(':')
+      if (kind === 'allkoi') {
+        const already = new Set(lines.filter((line) => line.koi_id).map((line) => String(line.koi_id)))
+        const wantedIds = (pickerResult?.ids || []).filter((koiId) => !already.has(String(koiId)))
+        window.KoiPicker.byIds(wantedIds).then((toAdd) => {
+          // an untouched empty first line is replaced instead of left behind
+          if (toAdd.length && lines.length === 1 && !String(lines[0].description || '').trim() && !Number(lines[0].unit_price)) lines = []
+          toAdd.forEach((koi) => lines.push({ description: koiDescription(koi), qty: 1, unit_price: Math.round(Number(koi.sale_price) || 0), koi_id: koi.id }))
+          renderLines()
+        })
+      } else if (kind === 'sell') {
+        const item = sellItems.find((entry) => String(entry.id) === id)
+        if (item) {
+          const codes = (item.koi || []).map((koi) => koi.code).filter(Boolean)
+          addLine({ description: codes.length ? `${item.title} (${codes.join(', ')})` : item.title, qty: 1, unit_price: Math.round(Number(item.price) || 0), sell_id: item.id })
+        }
+      } else {
+        const koi = window.KoiPicker.cache[id]
+        if (koi) addLine({ description: koiDescription(koi), qty: 1, unit_price: Math.round(Number(koi.sale_price) || 0), koi_id: koi.id })
+      }
+      pickerInput.value = ''
+      pickerResult = null
+      pickerMenu.classList.add('d-none')
+    })
+    document.addEventListener('click', (event) => {
+      if (!event.target.closest('[data-invoice-picker]')) pickerMenu.classList.add('d-none')
+    })
+
+    try {
+      const cached = JSON.parse(localStorage.getItem(cacheKey) || '[]')
+      if (Array.isArray(cached) && cached.length) { invoices = cached; signature = JSON.stringify(cached); renderTable() }
+    } catch {}
+    loadInvoices(invoices.length > 0)
+    window.KoiAuth?.registerRealtimeRefresh(() => keepScroll(() => loadInvoices(true)), { intervalMs: 30000 })
+  </script>
+</DefaultLayout>

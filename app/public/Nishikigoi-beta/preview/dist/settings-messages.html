@@ -1,0 +1,17 @@
+<!doctype html>
+<html lang="id">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Pesan - Nishikigoi Farm</title>
+  </head>
+  <body>
+    <p>Membuka pesan... <a href="./farm.html?pesan=1">Klik di sini bila tidak berpindah.</a></p>
+    <script>
+      ;(() => {
+        const user = new URLSearchParams(window.location.search).get("user");
+        window.location.replace("./farm.html?pesan=1" + (user ? "&user=" + encodeURIComponent(user) : ""));
+      })();
+    </script>
+  </body>
+</html>

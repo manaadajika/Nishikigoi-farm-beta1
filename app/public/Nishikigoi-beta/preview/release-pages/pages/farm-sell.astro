@@ -1,0 +1,1281 @@
+---
+import DefaultLayout from '@shared/layouts/DefaultLayout.astro'
+import Icon from '@shared/ui/Icon.astro'
+import icons from '@data/icons.json'
+
+const iconSvg = (name: string) => {
+  const icon = (icons as unknown as Record<string, { svg: Record<string, string> }>)[name]
+  let svg = icon?.svg?.outline ?? ''
+
+  svg = svg.replace(/<path stroke="none" d="M0 0h24v24H0z" fill="none"\s*\/>/, '')
+  svg = svg.replace(/class="[^"]+"/, 'aria-hidden="true" focusable="false" class="icon"')
+
+  return svg
+}
+
+const editIcon = iconSvg('edit')
+const printIcon = iconSvg('printer')
+const trashIcon = iconSvg('trash')
+const saveIcon = iconSvg('device-floppy')
+---
+
+<DefaultLayout title="Katalog" pageHeader="Katalog" pretitle="Penjualan" pageMenu="penjualan.sell">
+  <style is:global>
+    .sell-card { overflow: hidden; }
+    .sell-photo { position: relative; display: block; width: 100%; aspect-ratio: 4 / 5; background: var(--tblr-bg-surface-secondary); overflow: hidden; cursor: pointer; }
+    .sell-photo-grid { display: grid; gap: 2px; width: 100%; height: 100%; }
+    .sell-photo-grid.n1 { grid-template-columns: 1fr; }
+    .sell-photo-grid.n2 { grid-template-columns: 1fr 1fr; }
+    .sell-photo-grid.n3 { grid-template-columns: 1fr 1fr; grid-template-rows: 1fr 1fr; }
+    .sell-photo-grid.n3 > :first-child { grid-row: span 2; }
+    .sell-photo-grid.n4 { grid-template-columns: 1fr 1fr; grid-template-rows: 1fr 1fr; }
+    .sell-photo-cell { position: relative; min-width: 0; min-height: 0; overflow: hidden; background: var(--tblr-bg-surface-secondary); }
+    .sell-photo-cell img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .sell-photo-empty { display: flex; align-items: center; justify-content: center; width: 100%; height: 100%; color: var(--tblr-secondary); }
+    .sell-photo-more { position: absolute; right: .4rem; bottom: .4rem; padding: .1rem .45rem; border-radius: 999px; background: rgba(15, 23, 42, .72); color: #fff; font-size: .75rem; }
+    .sell-photo-video { position: absolute; left: .3rem; bottom: .3rem; padding: 0 .35rem; border-radius: 4px; background: rgba(15, 23, 42, .72); color: #fff; font-size: .7rem; }
+    .sell-card.is-sold .sell-photo-grid { filter: grayscale(.85); opacity: .7; }
+    .sell-status-flag { position: absolute; top: .5rem; left: .5rem; z-index: 1; }
+    .sell-zoom-btn { position: absolute; top: .5rem; right: .5rem; z-index: 1; background: rgba(15, 23, 42, .62); border: 0; color: #fff; }
+    .sell-price { font-size: 1.15rem; font-weight: 700; }
+    .sell-ellipsis { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .sell-card .card-body[data-sell-id] { cursor: pointer; }
+    .sell-fish-list { display: grid; gap: .15rem; }
+    .sell-card-actions { display: flex; gap: .5rem; margin-top: auto; padding-top: .75rem; }
+    .sell-card-actions .btn { flex: 1 1 0; display: inline-flex; align-items: center; justify-content: center; gap: .35rem; min-width: 0; }
+    .sell-filter-chip { cursor: pointer; }
+    .sell-picker { position: relative; }
+    .sell-picker-menu { position: absolute; left: 0; right: 0; top: 100%; z-index: 20; max-height: 18rem; overflow: auto; background: var(--tblr-bg-surface); border: 1px solid var(--tblr-border-color); border-radius: 6px; box-shadow: 0 8px 24px rgba(0, 0, 0, .35); }
+    .sell-picker-option { display: flex; align-items: center; gap: .6rem; width: 100%; padding: .4rem .6rem; border: 0; background: transparent; color: inherit; text-align: left; cursor: pointer; }
+    .sell-picker-option:hover { background: var(--tblr-bg-surface-secondary); }
+    .sell-thumb { width: 36px; height: 54px; object-fit: cover; border-radius: 4px; flex: 0 0 auto; background: var(--tblr-bg-surface-secondary); }
+    .sell-chip { display: flex; align-items: center; gap: .6rem; padding: .35rem .5rem; border: 1px solid var(--tblr-border-color); border-radius: 6px; }
+    .sell-chip-text { min-width: 0; flex: 1 1 auto; }
+    .sell-dropzone { border: 2px dashed var(--tblr-border-color); border-radius: 8px; padding: 1rem; text-align: center; transition: border-color .15s, background .15s; }
+    .sell-dropzone.is-over { border-color: var(--tblr-primary); background: rgba(var(--tblr-primary-rgb), .1); }
+    .sell-media-thumb { width: 100%; aspect-ratio: 4 / 3; object-fit: cover; border-radius: 6px; border: 1px solid var(--tblr-border-color); background: var(--tblr-bg-surface-secondary); }
+  </style>
+
+  <div class="modal modal-blur fade" id="sell-modal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered" role="document">
+      <form class="modal-content" data-sell-form>
+        <div class="modal-header">
+          <h5 class="modal-title" data-sell-modal-title>Formulir Tambah Katalog</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Tutup"></button>
+        </div>
+        <div class="modal-body">
+          <div class="alert alert-danger d-none" data-sell-error></div>
+          <div class="alert alert-success d-none" data-sell-saved></div>
+          <input type="hidden" name="id" />
+          <div class="row g-3">
+            <div class="col-md-8">
+              <label class="form-label">Judul</label>
+              <input class="form-control" name="title" placeholder="Contoh: Kohaku 45 cm atau Paket Showa 3 ekor" maxlength="200" required />
+            </div>
+            <div class="col-md-4">
+              <label class="form-label">Harga (Rp)</label>
+              <input class="form-control" name="price" inputmode="numeric" placeholder="Kosongkan bila belum ada" autocomplete="off" data-sell-price />
+            </div>
+            <div class="col-12">
+              <label class="form-label">Status</label>
+              <div class="btn-group w-100" role="group" data-sell-status-group>
+                <input type="radio" class="btn-check" name="status" id="sell-status-available" value="available" checked />
+                <label class="btn btn-outline-success" for="sell-status-available">Tersedia</label>
+                <input type="radio" class="btn-check" name="status" id="sell-status-reserved" value="reserved" />
+                <label class="btn btn-outline-warning" for="sell-status-reserved">Dipesan</label>
+                <input type="radio" class="btn-check" name="status" id="sell-status-sold" value="sold" />
+                <label class="btn btn-outline-secondary" for="sell-status-sold">Terjual</label>
+              </div>
+            </div>
+            <div class="col-md-6 d-none" data-sell-sold-fields>
+              <label class="form-label">Pembeli</label>
+              <input class="form-control" name="buyer" maxlength="150" placeholder="Nama pembeli (opsional)" />
+            </div>
+            <div class="col-md-6 d-none" data-sell-sold-fields>
+              <label class="form-label">Tanggal Terjual</label>
+              <input class="form-control" type="date" name="sold_at" />
+            </div>
+            <div class="col-12 border-top pt-3">
+              <label class="form-label">Ikan dari Data Ikan</label>
+              <div class="d-flex flex-wrap gap-2">
+                <div class="sell-picker flex-grow-1" data-sell-picker>
+                  <input class="form-control" type="search" placeholder="Cari kode, nama, variety, atau bloodline lalu pilih; boleh tempel beberapa kode" autocomplete="off" data-sell-picker-input />
+                  <div class="sell-picker-menu d-none" data-sell-picker-menu></div>
+                </div>
+                <button class="btn btn-outline-primary" type="button" data-sell-pull>Tarik dari Data Ikan</button>
+              </div>
+              <div class="form-hint">Ketik untuk mencari satu per satu, atau tekan <strong>Tarik dari Data Ikan</strong> untuk mencentang beberapa ikan sekaligus. Satu ikan = item biasa; lebih dari satu = paket dengan satu harga.</div>
+              <div class="vstack gap-2 mt-2" data-sell-chosen></div>
+            </div>
+            <div class="col-12" data-sell-zone="media">
+              <label class="form-label">Foto atau video gabungan (manual)</label>
+              <div class="d-flex flex-wrap gap-2">
+                <input class="form-control flex-grow-1" type="file" accept="image/*,video/mp4,video/webm" multiple data-sell-media-input />
+                <button class="btn btn-outline-primary" type="button" data-sell-media-paste>Paste Gambar</button>
+              </div>
+              <div class="form-hint">Boleh dikosongkan bila memakai foto ikan dari Data Ikan. Foto gabungan tampil lebih dulu di kartu.</div>
+              <div class="row g-2 mt-2" data-sell-media-preview></div>
+              <div class="text-secondary mt-2" data-sell-media-status></div>
+            </div>
+            <div class="col-12 border-top pt-3">
+              <label class="form-label">Dokumentasi (foto atau video)</label>
+              <div class="sell-dropzone" data-sell-zone="docs" tabindex="0">
+                <div class="text-secondary">Tarik dan lepas foto atau video ke sini, tempel gambar dengan Ctrl+V, atau pilih dari tombol di bawah. Video maksimal 40 MB.</div>
+                <div class="d-flex flex-wrap gap-2 justify-content-center mt-2">
+                  <input class="d-none" type="file" accept="image/*,video/mp4,video/webm" multiple data-sell-doc-input />
+                  <button class="btn btn-outline-primary btn-sm" type="button" data-sell-doc-upload>Unggah foto/video</button>
+                  <button class="btn btn-outline-primary btn-sm" type="button" data-sell-doc-paste>Paste gambar</button>
+                </div>
+              </div>
+              <div class="row g-2 mt-2" data-sell-docs></div>
+              <div class="text-secondary mt-1" data-sell-doc-status></div>
+              <label class="form-check mt-2 mb-1"><input class="form-check-input" type="checkbox" name="show_in_gallery" checked /><span class="form-check-label">Tampilkan dokumentasi di Galeri</span></label>
+              <div class="form-hint">Dokumentasi ikut tampil di menu Galeri sebagai satu koleksi (file tidak digandakan). Berbeda dari foto katalog di atas, dokumentasi tidak tampil di kartu.</div>
+            </div>
+            <div class="col-12">
+              <label class="form-label">Catatan / deskripsi</label>
+              <textarea class="form-control" name="description" rows="3" placeholder="Misalnya: kondisi, umur, asal, atau kesepakatan"></textarea>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-icon" data-bs-dismiss="modal" aria-label="Tutup" title="Tutup">
+            <Icon name="x" />
+          </button>
+          <button type="submit" class="btn btn-primary btn-icon" data-sell-submit aria-label="Simpan" title="Simpan">
+            <Icon name="device-floppy" />
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div class="row row-deck row-cards">
+    <div class="col-12">
+      <div class="card">
+        <div class="card-header">
+          <h3 class="card-title">Daftar Katalog</h3>
+          <div class="card-actions">
+            <button class="btn btn-primary btn-icon" type="button" data-add-sell data-role-required="farm-operate" aria-label="Tambah item katalog" title="Tambah item katalog">
+              <Icon name="plus" />
+            </button>
+          </div>
+        </div>
+        <div class="card-body">
+          <div class="d-flex flex-wrap gap-2 mb-3" data-sell-filters>
+            <span class="badge bg-blue-lt sell-filter-chip" data-sell-filter="all">Semua</span>
+            <span class="badge bg-green-lt sell-filter-chip" data-sell-filter="available">Tersedia</span>
+            <span class="badge bg-yellow-lt sell-filter-chip" data-sell-filter="reserved">Dipesan</span>
+            <span class="badge bg-secondary-lt sell-filter-chip" data-sell-filter="sold">Terjual</span>
+          </div>
+          <div class="row g-3" data-sell-table>
+            <div class="col-12 text-secondary"><div class="d-flex flex-column align-items-center justify-content-center gap-2 py-5 text-secondary"><span class="spinner-border text-primary" role="status" aria-hidden="true"></span><span>Memuat data katalog...</span></div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <input class="d-none" id="sell-search" name="sell_search" type="search" data-sell-search aria-hidden="true" tabindex="-1" autocomplete="off" />
+
+  <script src="/assets/vendor/xlsx/xlsx.core.min.js" is:inline></script>
+  <script src="/assets/zip-kit.js?v=20261009g" is:inline></script>
+  <script src="/assets/koi-picker.js?v=20261020b" is:inline></script>
+
+  <script define:vars={{ editIcon, printIcon, trashIcon, saveIcon }}>
+    const apiUrl = '/api'
+    const table = document.querySelector('[data-sell-table]')
+    const searchInput = document.querySelector('[data-sell-search]')
+    const navbarSearchBox = document.querySelector('#navbar-global-search')
+    if (navbarSearchBox) {
+      navbarSearchBox.setAttribute('placeholder', 'Judul, kode ikan, status:tersedia')
+      navbarSearchBox.setAttribute('title', 'Cari bebas: judul, kode ikan, nama, variety, bloodline, ternakan, pembeli. Cari per kolom dengan kolom:isi, boleh digabung: status:tersedia harga:<5000000 tipe:paket. Nama kolom boleh disingkat. Kolom: judul, kode, ikan, variety, bloodline, ternakan, tipe, status, harga, pembeli, terjual, tanggal, catatan.')
+    }
+    const form = document.querySelector('[data-sell-form]')
+    const modalElement = document.querySelector('#sell-modal')
+    const modalTitle = document.querySelector('[data-sell-modal-title]')
+    const errorBox = document.querySelector('[data-sell-error]')
+    const savedBox = document.querySelector('[data-sell-saved]')
+    const submitButton = document.querySelector('[data-sell-submit]')
+    const addButton = document.querySelector('[data-add-sell]')
+    const priceInput = document.querySelector('[data-sell-price]')
+    const soldFields = [...document.querySelectorAll('[data-sell-sold-fields]')]
+    const pickerInput = document.querySelector('[data-sell-picker-input]')
+    const pullButton = document.querySelector('[data-sell-pull]')
+    const pickerMenu = document.querySelector('[data-sell-picker-menu]')
+    const chosenBox = document.querySelector('[data-sell-chosen]')
+    const mediaInput = document.querySelector('[data-sell-media-input]')
+    const mediaPasteButton = document.querySelector('[data-sell-media-paste]')
+    const mediaPreview = document.querySelector('[data-sell-media-preview]')
+    const mediaStatus = document.querySelector('[data-sell-media-status]')
+    const docZone = document.querySelector('[data-sell-zone="docs"]')
+    const docInput = document.querySelector('[data-sell-doc-input]')
+    const docBox = document.querySelector('[data-sell-docs]')
+    const docStatus = document.querySelector('[data-sell-doc-status]')
+    const filterChips = [...document.querySelectorAll('[data-sell-filter]')]
+    const cacheKey = 'nishikigoi-cache:farm-sell'
+    const filterKey = 'nishikigoi-sell-filter'
+
+    let sellItems = []
+    let koiLoaded = false
+    let chosenIds = []
+    let mediaFiles = []
+    let docFiles = []
+    let activeZone = 'media'
+    let readonlyMode = false
+    let statusFilter = 'all'
+    let signature = ''
+    try { statusFilter = sessionStorage.getItem(filterKey) || 'all' } catch {}
+
+    const statusLabels = {
+      available: { label: 'Tersedia', className: 'bg-green text-green-fg' },
+      reserved: { label: 'Dipesan', className: 'bg-yellow text-yellow-fg' },
+      sold: { label: 'Terjual', className: 'bg-secondary text-secondary-fg' },
+    }
+    const typeLabels = { single: 'Satu ikan', package: 'Paket', photo: 'Foto' }
+    const escapeHtml = (value) =>
+      String(value ?? '').replace(/[&<>'"]/g, (char) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' })[char])
+    const formatPrice = (value) => {
+      if (value === null || value === undefined || value === '') return 'Harga belum diisi'
+      const number = Number(value)
+      return Number.isFinite(number) ? `Rp ${Math.round(number).toLocaleString('id-ID')}` : 'Harga belum diisi'
+    }
+    const sizeText = (value) => {
+      const number = Number(value)
+      return value === null || value === undefined || value === '' || !Number.isFinite(number) ? '' : `${number.toLocaleString('id-ID', { maximumFractionDigits: 1 })} cm`
+    }
+    const dateText = (value) => (value ? window.KoiAuth.formatDate(String(value).slice(0, 10)) : '')
+    const keepScroll = async (callback) => {
+      const scrollX = window.scrollX
+      const scrollY = window.scrollY
+      const result = await callback()
+      requestAnimationFrame(() => window.scrollTo(scrollX, scrollY))
+      return result
+    }
+    const koiLabel = (koi) => [koi.code || `ID ${koi.id}`, koi.name].filter(Boolean).join(' - ')
+    const koiLine = (koi) => [koi.code, koi.variety, koi.bloodline, sizeText(koi.current_length_cm)].filter(Boolean).join(' · ')
+
+    // ---- photos shown on a card: manual (combined) photos first, then the fish photos ------------------
+    const itemPhotos = (item) => [
+      ...(item.media_entries || []).map((media) => ({ src: media.type === 'video' ? media.thumbnail_url : (media.thumbnail_url || media.url), full: media.url, video: media.type === 'video', label: media.notes || media.name || '' })),
+      ...(item.koi || []).filter((koi) => koi.image_url).map((koi) => ({ src: koi.image_url, full: koi.image_url, video: false, label: koi.code || '' })),
+    ]
+    const photoGrid = (photos) => {
+      if (!photos.length) return '<div class="sell-photo-empty">Tanpa foto</div>'
+      const shown = photos.slice(0, 4)
+      const cells = shown.map((photo, index) => `
+        <div class="sell-photo-cell">
+          ${photo.src ? `<img src="${escapeHtml(photo.src)}" alt="${escapeHtml(photo.label)}" loading="lazy" decoding="async" />` : '<div class="sell-photo-empty">Video</div>'}
+          ${photo.video ? '<span class="sell-photo-video">Video</span>' : ''}
+          ${index === shown.length - 1 && photos.length > 4 ? `<span class="sell-photo-more">+${photos.length - 4}</span>` : ''}
+        </div>`).join('')
+      return `<div class="sell-photo-grid n${shown.length}">${cells}</div>`
+    }
+
+    // ---- search: plain words + "field:value" -------------------------------------------------------------
+    const searchAliases = {
+      judul: 'title', nama: 'name',
+      kode: 'code', ikan: 'fish',
+      variety: 'variety', varietas: 'variety', jenis: 'variety',
+      bloodline: 'bloodline', darah: 'bloodline',
+      ternakan: 'farm', peternakan: 'farm',
+      tipe: 'type', paket: 'type',
+      status: 'status',
+      harga: 'price',
+      pembeli: 'buyer',
+      terjual: 'sold_at', tanggal: 'created_at',
+      catatan: 'description', deskripsi: 'description',
+    }
+    const norm = (value) => String(value === null || value === undefined ? '' : value).toLowerCase().trim()
+    const resolveMarkers = (keyword) => {
+      const names = Object.keys(searchAliases)
+      const found = []
+      const pattern = /(?:^|[\s,])([a-z]+)\s*:/gi
+      let match
+      while ((match = pattern.exec(keyword))) {
+        const key = match[1].toLowerCase()
+        const name = searchAliases[key] ? key : (key.length >= 2 ? names.find((alias) => alias.startsWith(key)) : null)
+        if (name) {
+          const hit = [match[0], name]
+          hit.index = match.index
+          found.push(hit)
+        }
+      }
+      return found
+    }
+    const numberTest = (value) => {
+      const text = String(value || '').toLowerCase().replace(/rp|\s/g, '')
+      const compare = text.match(/^(>=|<=|>|<)([\d.,]+)$/)
+      const toNumber = (part) => Number(String(part).replace(/\./g, '').replace(',', '.'))
+      if (compare) {
+        const limit = toNumber(compare[2])
+        return { '>=': (n) => n >= limit, '<=': (n) => n <= limit, '>': (n) => n > limit, '<': (n) => n < limit }[compare[1]]
+      }
+      const range = text.match(/^([\d.,]+)-([\d.,]+)$/)
+      if (range) {
+        const [a, b] = [toNumber(range[1]), toNumber(range[2])]
+        return (n) => n >= Math.min(a, b) && n <= Math.max(a, b)
+      }
+      return /^[\d.,]+$/.test(text) ? (n) => n === toNumber(text) : null
+    }
+    const statusWords = { tersedia: 'available', ready: 'available', dipesan: 'reserved', booking: 'reserved', terjual: 'sold', laku: 'sold' }
+    const matchesField = (item, field, rawValue) => {
+      const value = norm(rawValue)
+      if (!value) return null
+      if (field === 'price') {
+        const test = numberTest(value)
+        const number = Number(item.price)
+        if (!test) return null
+        return item.price !== null && item.price !== '' && Number.isFinite(number) && test(number)
+      }
+      if (field === 'sold_at' || field === 'created_at') return String(item[field] || '').slice(0, 10).includes(value)
+      const choices = value.split(',').map((part) => part.trim()).filter(Boolean)
+      return choices.some((choice) => {
+        if (field === 'status') return item.status === (statusWords[choice] || choice) || norm(statusLabels[item.status]?.label).includes(choice)
+        if (field === 'type') {
+          const wanted = /^(paket|package)/.test(choice) ? 'package' : /^(satu|single|ikan)/.test(choice) ? 'single' : /^(foto|photo|gabungan)/.test(choice) ? 'photo' : choice
+          return item.item_type === wanted
+        }
+        const koi = item.koi || []
+        if (field === 'title') return norm(item.title).includes(choice)
+        if (field === 'description') return norm(item.description).includes(choice)
+        if (field === 'buyer') return norm(item.buyer).includes(choice)
+        if (field === 'code') return koi.some((fish) => norm(fish.code).includes(choice))
+        if (field === 'name') return koi.some((fish) => norm(fish.name).includes(choice))
+        if (field === 'variety') return koi.some((fish) => norm(fish.variety).includes(choice))
+        if (field === 'bloodline') return koi.some((fish) => norm(fish.bloodline).includes(choice))
+        if (field === 'farm') return koi.some((fish) => norm(fish.farm_name).includes(choice))
+        if (field === 'fish') return koi.some((fish) => norm([fish.code, fish.name, fish.variety, fish.bloodline, fish.farm_name].join(' ')).includes(choice))
+        return false
+      })
+    }
+    const matchesSearch = (item) => {
+      const keyword = String(searchInput.value || '').trim()
+      if (!keyword) return true
+      const markers = resolveMarkers(keyword)
+      const plain = markers.length ? keyword.slice(0, markers[0].index) : keyword
+      for (let index = 0; index < markers.length; index += 1) {
+        const marker = markers[index]
+        const start = marker.index + marker[0].length
+        const end = index + 1 < markers.length ? markers[index + 1].index : keyword.length
+        if (matchesField(item, searchAliases[marker[1]], keyword.slice(start, end)) === false) return false
+      }
+      const alternatives = plain.split(',').map((part) => norm(part).split(/\s+/).filter(Boolean)).filter((words) => words.length)
+      if (!alternatives.length) return true
+      const blob = norm([
+        item.title, item.buyer, statusLabels[item.status]?.label, typeLabels[item.item_type],
+        ...(item.koi || []).map((fish) => [fish.code, fish.name, fish.variety, fish.bloodline, fish.farm_name].join(' ')),
+      ].join(' '))
+      return alternatives.some((words) => words.every((word) => blob.includes(word)))
+    }
+    const visibleItems = () => dock.apply(sellItems.filter((item) => (statusFilter === 'all' || item.status === statusFilter) && matchesSearch(item)))
+
+    // ---- list ------------------------------------------------------------------------------------------
+    const renderFilters = () => {
+      const counts = { all: sellItems.length, available: 0, reserved: 0, sold: 0 }
+      sellItems.forEach((item) => { counts[item.status] = (counts[item.status] || 0) + 1 })
+      filterChips.forEach((chip) => {
+        const key = chip.dataset.sellFilter
+        const base = { all: 'Semua', available: 'Tersedia', reserved: 'Dipesan', sold: 'Terjual' }[key]
+        chip.textContent = `${base} (${counts[key] || 0})`
+        chip.style.outline = key === statusFilter ? '2px solid var(--tblr-primary)' : ''
+      })
+    }
+
+    const renderTable = () => {
+      dock.prune(sellItems)
+      renderFilters()
+      const items = visibleItems()
+      table.innerHTML = items.map((item) => {
+        const status = statusLabels[item.status] || statusLabels.available
+        const fishRows = (item.koi || []).slice(0, 4).map((koi) => `<div class="small sell-ellipsis" title="${escapeHtml(koiLine(koi))}">${escapeHtml(koiLine(koi))}</div>`).join('')
+        const more = (item.koi || []).length > 4 ? `<div class="small text-secondary">+${item.koi.length - 4} ikan lain</div>` : ''
+        const photos = itemPhotos(item)
+        return `
+        <div class="col-sm-6 col-lg-4 col-xl-3">
+          <div class="card h-100 sell-card${item.status === 'sold' ? ' is-sold' : ''}" data-dock-id="${escapeHtml(item.id)}">
+            <div class="sell-photo" data-dock-select title="Klik kartu untuk memilih, klik dua kali untuk membuka detail">
+              <span class="badge sell-status-flag ${status.className}">${escapeHtml(status.label)}</span>
+              ${photos[0]?.full && !photos[0].video ? `<button class="btn btn-icon btn-sm sell-zoom-btn" type="button" data-zoom-image="${escapeHtml(photos[0].full)}" aria-label="Zoom foto" title="Zoom foto">${window.KoiDock.icon('zoom-in')}</button>` : ''}
+              ${photoGrid(photos)}
+            </div>
+            <div class="card-body d-flex flex-column" role="button" tabindex="0" data-sell-id="${escapeHtml(item.id)}">
+              <div class="d-flex align-items-start justify-content-between gap-2 mb-1">
+                <div class="fw-semibold sell-ellipsis" title="${escapeHtml(item.title)}">${escapeHtml(item.title)}</div>
+                <span class="badge bg-blue text-blue-fg dock-selected-badge">Terpilih</span>
+              </div>
+              <div class="sell-price">${escapeHtml(formatPrice(item.price))}</div>
+              <div class="text-secondary small mb-2">${escapeHtml(typeLabels[item.item_type] || '')}${item.koi?.length ? ` · ${item.koi.length} ikan` : ''}${item.status === 'sold' && item.buyer ? ` · ${escapeHtml(item.buyer)}` : ''}${item.status === 'sold' && item.sold_at ? ` · ${escapeHtml(dateText(item.sold_at))}` : ''}</div>
+              <div class="sell-fish-list">${fishRows}${more}</div>
+              ${item.description ? `<div class="small text-secondary mt-2 sell-ellipsis" title="${escapeHtml(item.description)}">${escapeHtml(item.description)}</div>` : ''}
+              <div class="sell-card-actions">
+                <button class="btn btn-sm" type="button" data-print-sell="${escapeHtml(item.id)}">${printIcon} Print</button>
+                <button class="btn btn-sm" type="button" data-edit-sell="${escapeHtml(item.id)}" data-role-required="farm-operate">${editIcon} Edit</button>
+                <button class="btn btn-sm btn-outline-danger" type="button" data-delete-sell="${escapeHtml(item.id)}" data-role-required="farm-operate">${trashIcon} Hapus</button>
+              </div>
+            </div>
+          </div>
+        </div>`
+      }).join('') || `<div class="col-12 text-secondary">${sellItems.length ? 'Tidak ada item yang cocok.' : 'Katalog masih kosong. Tekan + untuk menambah.'}</div>`
+      dock.refresh()
+    }
+
+    const loadSell = async (silent = false) => {
+      try {
+        const response = await fetch(`${apiUrl}/sell`)
+        if (!response.ok) throw new Error('Data katalog gagal dimuat')
+        const items = await response.json()
+        const next = JSON.stringify(items)
+        try { localStorage.setItem(cacheKey, next) } catch {}
+        if (silent && next === signature) return
+        signature = next
+        sellItems = items
+        renderTable()
+      } catch (error) {
+        if (!silent) table.innerHTML = `<div class="col-12 text-danger">${escapeHtml(error.message)}</div>`
+      }
+    }
+
+    const loadKoi = async () => {
+      // the fish in this form are fetched by id (the pickers search on the server, the whole list is never downloaded)
+      koiLoaded = true
+      try { await window.KoiPicker.byIds(chosenIds) } catch {}
+    }
+
+    // ---- fish picker (mention from Data Ikan) ------------------------------------------------------------
+    const koiById = (id) => window.KoiPicker.cache[String(id)] || sellItems.flatMap((item) => item.koi || []).find((koi) => String(koi.id) === String(id))
+    const renderChosen = () => {
+      chosenBox.innerHTML = chosenIds.map((id) => {
+        const koi = koiById(id)
+        if (!koi) return `<div class="sell-chip"><div class="sell-chip-text">Ikan ID ${escapeHtml(id)} (tidak ditemukan)</div>${readonlyMode ? '' : `<button class="btn btn-sm btn-outline-danger" type="button" data-sell-remove-koi="${escapeHtml(id)}">Hapus</button>`}</div>`
+        return `
+        <div class="sell-chip">
+          ${koi.image_url ? `<img class="sell-thumb" src="${escapeHtml(koi.image_url)}" alt="${escapeHtml(koi.code)}" loading="lazy" />` : '<div class="sell-thumb"></div>'}
+          <div class="sell-chip-text">
+            <div class="fw-semibold sell-ellipsis">${escapeHtml(koiLabel(koi))}</div>
+            <div class="small text-secondary sell-ellipsis">${escapeHtml([koi.variety, koi.bloodline, koi.farm_name, sizeText(koi.current_length_cm)].filter(Boolean).join(' · '))}</div>
+            ${koi.status === 'sold' ? '<div class="small text-warning">Di Data Ikan statusnya sudah Sold</div>' : ''}
+          </div>
+          ${readonlyMode ? '' : `<button class="btn btn-sm btn-outline-danger" type="button" data-sell-remove-koi="${escapeHtml(id)}" aria-label="Hapus ikan dari item" title="Hapus">${trashIcon}</button>`}
+        </div>`
+      }).join('')
+    }
+    let pickerResult = null
+    let pickerBusy = false
+    let pickerToken = 0
+    const renderPickerMenu = () => {
+      const query = norm(pickerInput.value)
+      if (!query || readonlyMode) { pickerMenu.classList.add('d-none'); return }
+      const listMode = Boolean(pickerResult?.list_mode)
+      const all = (pickerResult?.items || []).filter((koi) => !chosenIds.includes(String(koi.id)))
+      const matches = all.slice(0, listMode ? 40 : 8)
+      const total = pickerResult ? pickerResult.total : 0
+      const addAll = listMode && total > 1
+        ? `<button class="sell-picker-option" type="button" data-sell-pick="__all__"><span class="fw-semibold">Tambahkan semua (${total} ikan)</span></button>` +
+          (pickerResult.missing.length ? `<div class="px-3 pb-1 small text-warning">Tidak ditemukan: ${escapeHtml(pickerResult.missing.slice(0, 6).join(', ').toUpperCase())}</div>` : '')
+        : ''
+      pickerMenu.innerHTML = addAll + matches.map((koi) => `
+        <button class="sell-picker-option" type="button" data-sell-pick="${escapeHtml(koi.id)}">
+          ${koi.image_url ? `<img class="sell-thumb" src="${escapeHtml(koi.image_url)}" alt="" loading="lazy" />` : '<div class="sell-thumb"></div>'}
+          <span class="min-width-0">
+            <span class="d-block fw-semibold">${escapeHtml(koiLabel(koi))}</span>
+            <span class="d-block small text-secondary">${escapeHtml([koi.variety, koi.bloodline, sizeText(koi.current_length_cm), koi.status === 'sold' ? 'Sold' : ''].filter(Boolean).join(' · '))}</span>
+          </span>
+        </button>`).join('') || (pickerResult && !pickerBusy ? '<div class="p-3 text-secondary">Ikan tidak ditemukan.</div>' : '<div class="p-3 text-secondary"><span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>Mencari ikan...</div>')
+      pickerMenu.classList.remove('d-none')
+    }
+    const searchPicker = window.KoiPicker.debounce(async () => {
+      const text = pickerInput.value
+      if (!norm(text)) { pickerResult = null; pickerBusy = false; return }
+      const mine = ++pickerToken
+      pickerBusy = true
+      try {
+        const result = await window.KoiPicker.lookup(text, { limit: 40, exclude: chosenIds })
+        if (mine !== pickerToken) return
+        pickerResult = result
+      } catch {
+        if (mine !== pickerToken) return
+        pickerResult = { items: [], total: 0, ids: [], missing: [], list_mode: false }
+      }
+      pickerBusy = false
+      renderPickerMenu()
+    }, 220)
+
+    // ---- manual photos / videos ----------------------------------------------------------------------------
+    const readFileAsDataUrl = (file) => new Promise((resolve, reject) => {
+      const reader = new FileReader()
+      reader.addEventListener('load', () => resolve(reader.result))
+      reader.addEventListener('error', () => reject(new Error('File gagal dibaca')))
+      reader.readAsDataURL(file)
+    })
+    const loadImage = (src) => new Promise((resolve, reject) => {
+      const image = new Image()
+      image.addEventListener('load', () => resolve(image))
+      image.addEventListener('error', () => reject(new Error('Gambar gagal diproses')))
+      image.src = src
+    })
+    const compressImage = async (file) => {
+      const image = await loadImage(await readFileAsDataUrl(file))
+      const scale = Math.min(1, 1600 / Math.max(image.naturalWidth, image.naturalHeight))
+      const canvas = document.createElement('canvas')
+      canvas.width = Math.max(1, Math.round(image.naturalWidth * scale))
+      canvas.height = Math.max(1, Math.round(image.naturalHeight * scale))
+      canvas.getContext('2d').drawImage(image, 0, 0, canvas.width, canvas.height)
+      return canvas.toDataURL('image/jpeg', 0.8)
+    }
+    const createVideoThumbnail = (file) => new Promise((resolve) => {
+      const video = document.createElement('video')
+      const canvas = document.createElement('canvas')
+      const objectUrl = URL.createObjectURL(file)
+      video.muted = true
+      video.playsInline = true
+      video.preload = 'metadata'
+      video.addEventListener('loadeddata', () => {
+        canvas.width = video.videoWidth || 640
+        canvas.height = video.videoHeight || 360
+        canvas.getContext('2d').drawImage(video, 0, 0, canvas.width, canvas.height)
+        URL.revokeObjectURL(objectUrl)
+        resolve(canvas.toDataURL('image/webp', 0.82))
+      }, { once: true })
+      video.addEventListener('error', () => { URL.revokeObjectURL(objectUrl); resolve('') }, { once: true })
+      video.src = objectUrl
+    })
+    const renderMediaPreview = () => {
+      mediaPreview.innerHTML = mediaFiles.map((item, index) => {
+        const src = item.previewUrl || item.thumbnail_url || item.url || ''
+        return `
+        <div class="col-6 col-md-4" data-sell-media-item="${index}">
+          ${item.type === 'video' && !src ? '<div class="sell-media-thumb d-flex align-items-center justify-content-center">Video</div>' : `<img class="sell-media-thumb" src="${escapeHtml(src)}" alt="" />`}
+          <input class="form-control form-control-sm mt-1" data-sell-media-notes placeholder="Catatan foto" value="${escapeHtml(item.notes || '')}" ${readonlyMode ? 'disabled' : ''} />
+          ${readonlyMode ? '' : `<button class="btn btn-sm btn-outline-danger w-100 mt-1" type="button" data-sell-media-remove="${index}">Hapus</button>`}
+        </div>`
+      }).join('')
+    }
+    const addMediaFiles = (files) => {
+      Array.from(files || []).forEach((file) => {
+        if (!/^image\//.test(file.type) && !/^video\//.test(file.type)) return
+        const isVideo = /^video\//.test(file.type)
+        mediaFiles.push({ file, type: isVideo ? 'video' : 'image', name: file.name, notes: '', previewUrl: isVideo ? '' : URL.createObjectURL(file) })
+      })
+      renderMediaPreview()
+    }
+    const collectMediaNotes = () => {
+      mediaPreview.querySelectorAll('[data-sell-media-item]').forEach((element) => {
+        const index = Number(element.dataset.sellMediaItem)
+        if (mediaFiles[index]) mediaFiles[index].notes = element.querySelector('[data-sell-media-notes]').value.trim()
+      })
+    }
+    const uploadMedia = async () => {
+      collectMediaNotes()
+      const entries = []
+      for (const [index, item] of mediaFiles.entries()) {
+        if (item.url) {
+          entries.push({ type: item.type || 'image', url: item.url, thumbnail_url: item.thumbnail_url || item.url, name: item.name || '', notes: item.notes || '' })
+          continue
+        }
+        mediaStatus.textContent = `Mengupload ${index + 1}/${mediaFiles.length}...`
+        if (item.type === 'video') {
+          const [videoData, thumbnailData] = await Promise.all([readFileAsDataUrl(item.file), createVideoThumbnail(item.file)])
+          const response = await fetch(`${apiUrl}/videos`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ prefix: 'sell-video', video_data: videoData, thumbnail_data: thumbnailData }) })
+          const data = await response.json().catch(() => ({}))
+          if (!response.ok) throw new Error(data.error || data.detail || 'Video gagal diupload')
+          entries.push({ type: 'video', url: data.video_url, thumbnail_url: data.video_thumbnail_url, name: item.name || '', notes: item.notes || '' })
+          continue
+        }
+        const response = await fetch(`${apiUrl}/images`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ prefix: 'sell-image', image_data: await compressImage(item.file) }) })
+        const data = await response.json().catch(() => ({}))
+        if (!response.ok) throw new Error(data.error || data.detail || 'Gambar gagal diupload')
+        entries.push({ type: 'image', url: data.image_url, thumbnail_url: data.image_url, name: item.name || '', notes: item.notes || '' })
+      }
+      mediaStatus.textContent = ''
+      return entries
+    }
+
+    // ---- documentation: photos and videos (shown in Galeri on request) ---------------------------------------
+    const MAX_VIDEO_BYTES = 40 * 1024 * 1024
+    const renderDocs = () => {
+      docBox.innerHTML = docFiles.map((item, index) => {
+        const src = item.previewUrl || item.thumbnail_url || item.url || ''
+        return `
+        <div class="col-6 col-md-3" data-sell-doc-item="${index}">
+          ${item.type === 'video' && !src ? '<div class="sell-media-thumb d-flex align-items-center justify-content-center">Video</div>' : `<img class="sell-media-thumb" src="${escapeHtml(src)}" alt="" data-sell-doc-zoom="${index}" />`}
+          ${item.type === 'video' ? '<div class="small text-secondary">Video</div>' : ''}
+          <input class="form-control form-control-sm mt-1" data-sell-doc-notes placeholder="Catatan" value="${escapeHtml(item.notes || '')}" ${readonlyMode ? 'disabled' : ''} />
+          ${readonlyMode ? '' : `<button class="btn btn-sm btn-outline-danger w-100 mt-1" type="button" data-sell-doc-remove="${index}">Hapus</button>`}
+        </div>`
+      }).join('')
+    }
+    const collectDocNotes = () => {
+      docBox.querySelectorAll('[data-sell-doc-item]').forEach((element) => {
+        const entry = docFiles[Number(element.dataset.sellDocItem)]
+        if (entry) entry.notes = element.querySelector('[data-sell-doc-notes]').value.trim()
+      })
+    }
+    const addDocFiles = (files) => {
+      collectDocNotes()
+      let skipped = ''
+      Array.from(files || []).forEach((file) => {
+        const isVideo = /^video\//.test(file.type)
+        if (!isVideo && !/^image\//.test(file.type)) { skipped = 'Hanya file foto atau video yang bisa dilampirkan.'; return }
+        if (isVideo && file.size > MAX_VIDEO_BYTES) { skipped = `Video ${file.name} lebih dari 40 MB dan dilewati.`; return }
+        docFiles.push({ file, type: isVideo ? 'video' : 'image', name: file.name || `foto-${docFiles.length + 1}.png`, notes: '', previewUrl: isVideo ? '' : URL.createObjectURL(file) })
+      })
+      docStatus.textContent = skipped
+      renderDocs()
+    }
+    const uploadDocs = async () => {
+      collectDocNotes()
+      const entries = []
+      for (const [index, item] of docFiles.entries()) {
+        if (item.url) {
+          entries.push({ type: item.type || 'image', url: item.url, thumbnail_url: item.thumbnail_url || item.url, name: item.name || '', notes: item.notes || '' })
+          continue
+        }
+        docStatus.textContent = `Mengupload dokumentasi ${index + 1}/${docFiles.length}...`
+        if (item.type === 'video') {
+          const [videoData, thumbnailData] = await Promise.all([readFileAsDataUrl(item.file), createVideoThumbnail(item.file)])
+          const response = await fetch(`${apiUrl}/videos`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ prefix: 'sell-video', video_data: videoData, thumbnail_data: thumbnailData }) })
+          const data = await response.json().catch(() => ({}))
+          if (!response.ok) throw new Error(data.error || data.detail || 'Video gagal diupload')
+          entries.push({ type: 'video', url: data.video_url, thumbnail_url: data.video_thumbnail_url, name: item.name || '', notes: item.notes || '' })
+          continue
+        }
+        const response = await fetch(`${apiUrl}/images`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ prefix: 'sell-image', image_data: await compressImage(item.file) }) })
+        const data = await response.json().catch(() => ({}))
+        if (!response.ok) throw new Error(data.error || data.detail || 'Gambar gagal diupload')
+        entries.push({ type: 'image', url: data.image_url, thumbnail_url: data.image_url, name: item.name || '', notes: item.notes || '' })
+      }
+      docStatus.textContent = ''
+      return entries
+    }
+    const docsFromServer = (list) => (list || []).map((media) => ({ type: media.type, url: media.url, thumbnail_url: media.thumbnail_url, name: media.name, notes: media.notes, previewUrl: media.thumbnail_url || media.url }))
+
+    // ---- form ------------------------------------------------------------------------------------------------
+    const modalApi = () => window.tabler?.bootstrap?.Modal || window.bootstrap?.Modal
+    const openModal = () => {
+      const api = modalApi()
+      if (api) { api.getOrCreateInstance(modalElement).show(); return }
+      modalElement.classList.add('show')
+      modalElement.style.display = 'block'
+    }
+    const closeModal = () => {
+      const api = modalApi()
+      if (api) { api.getInstance(modalElement)?.hide(); return }
+      modalElement.classList.remove('show')
+      modalElement.style.display = 'none'
+    }
+    const formatPriceInput = () => {
+      const digits = priceInput.value.replace(/[^\d]/g, '')
+      priceInput.value = digits ? Number(digits).toLocaleString('id-ID') : ''
+    }
+    const syncSoldFields = () => {
+      const sold = form.querySelector('[name="status"]:checked')?.value === 'sold'
+      soldFields.forEach((element) => element.classList.toggle('d-none', !sold))
+    }
+    const setReadonly = (readonly) => {
+      readonlyMode = readonly
+      form.querySelectorAll('input, textarea').forEach((field) => { if (!field.matches('[type="hidden"]')) field.disabled = readonly })
+      form.querySelectorAll('[data-sell-media-paste], [data-sell-doc-upload], [data-sell-doc-paste]').forEach((button) => { button.disabled = readonly })
+      docZone.classList.toggle('d-none', readonly)
+      pullButton.disabled = readonly
+      submitButton.classList.toggle('d-none', readonly)
+    }
+    const openForm = async (id, readonly = false) => {
+      const item = id ? sellItems.find((entry) => String(entry.id) === String(id)) : null
+      form.reset()
+      errorBox.classList.add('d-none')
+      savedBox.classList.add('d-none')
+      mediaStatus.textContent = ''
+      pickerMenu.classList.add('d-none')
+      pickerInput.value = ''
+      form.elements.id.value = item ? item.id : ''
+      modalTitle.textContent = item ? (readonly ? 'Detail Katalog' : 'Formulir Edit Katalog') : 'Formulir Tambah Katalog'
+      form.elements.title.value = item?.title || ''
+      priceInput.value = item && item.price !== null && item.price !== '' ? Math.round(Number(item.price)).toLocaleString('id-ID') : ''
+      const statusValue = item?.status || 'available'
+      form.querySelectorAll('[name="status"]').forEach((radio) => { radio.checked = radio.value === statusValue })
+      form.elements.buyer.value = item?.buyer || ''
+      form.elements.sold_at.value = item?.sold_at ? String(item.sold_at).slice(0, 10) : ''
+      form.elements.description.value = item?.description || ''
+      chosenIds = (item?.koi_ids || []).map(String)
+      mediaFiles = (item?.media_entries || []).map((media) => ({ type: media.type, url: media.url, thumbnail_url: media.thumbnail_url, name: media.name, notes: media.notes, previewUrl: media.thumbnail_url || media.url }))
+      mediaInput.value = ''
+      docFiles = docsFromServer(item?.documentation_entries)
+      docInput.value = ''
+      docStatus.textContent = ''
+      activeZone = 'media'
+      // a collection only exists while there is documentation, so an item without any starts ticked
+      form.elements.show_in_gallery.checked = item ? (Boolean(item.gallery_id) || !(item.documentation_entries || []).length) : true
+      syncSoldFields()
+      setReadonly(readonly)
+      renderChosen()
+      renderMediaPreview()
+      renderDocs()
+      openModal()
+      await loadKoi()
+      renderChosen()
+    }
+
+    form.addEventListener('submit', async (event) => {
+      event.preventDefault()
+      errorBox.classList.add('d-none')
+      savedBox.classList.add('d-none')
+      submitButton.disabled = true
+      try {
+        const id = form.elements.id.value
+        const status = form.querySelector('[name="status"]:checked')?.value || 'available'
+        const payload = {
+          title: form.elements.title.value.trim(),
+          price: priceInput.value.replace(/[^\d]/g, ''),
+          status,
+          description: form.elements.description.value.trim(),
+          koi_ids: chosenIds.map(Number),
+          media_entries: await uploadMedia(),
+          documentation_entries: await uploadDocs(),
+          show_in_gallery: Boolean(form.elements.show_in_gallery.checked),
+          buyer: status === 'sold' ? form.elements.buyer.value.trim() : '',
+          sold_at: status === 'sold' ? form.elements.sold_at.value : '',
+        }
+        if (!payload.title) throw new Error('Judul wajib diisi')
+        const response = await fetch(id ? `${apiUrl}/sell/${id}` : `${apiUrl}/sell`, { method: id ? 'PATCH' : 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(payload) })
+        const data = await response.json().catch(() => ({}))
+        if (!response.ok) throw new Error(data.error || 'Item katalog gagal disimpan')
+        await keepScroll(loadSell)
+        if (id) {
+          // editing keeps the form open; the photos are stored now, so saving again does not upload twice
+          const saved = sellItems.find((entry) => String(entry.id) === String(id)) || data
+          mediaFiles = (saved.media_entries || []).map((media) => ({ type: media.type, url: media.url, thumbnail_url: media.thumbnail_url, name: media.name, notes: media.notes, previewUrl: media.thumbnail_url || media.url }))
+          renderMediaPreview()
+          docFiles = docsFromServer(saved.documentation_entries)
+          renderDocs()
+        } else {
+          closeModal()
+        }
+      } catch (error) {
+        errorBox.textContent = error.message
+        errorBox.classList.remove('d-none')
+        mediaStatus.textContent = ''
+        docStatus.textContent = ''
+      } finally {
+        submitButton.disabled = false
+      }
+    })
+
+    // ---- actions -----------------------------------------------------------------------------------------------
+    const deleteItems = async (ids) => {
+      const names = ids.map((id) => sellItems.find((entry) => String(entry.id) === String(id))?.title).filter(Boolean)
+      if (!(await window.KoiDialog.confirm(`Hapus ${ids.length} item katalog (${names.join(', ')})? Ikan di Data Ikan tidak ikut terhapus.`))) return
+      const failed = []
+      for (const id of ids) {
+        try {
+          const response = await fetch(`${apiUrl}/sell/${id}`, { method: 'DELETE' })
+          if (!response.ok) failed.push(id)
+        } catch { failed.push(id) }
+      }
+      dock.clear()
+      await keepScroll(loadSell)
+      if (failed.length) window.alert(`${failed.length} item gagal dihapus.`)
+    }
+    const setStatus = async (ids, status) => {
+      const labelText = statusLabels[status].label
+      if (!(await window.KoiDialog.confirm(`Tandai ${ids.length} item sebagai ${labelText}?`))) return
+      for (const id of ids) {
+        await fetch(`${apiUrl}/sell/${id}`, { method: 'PATCH', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ status }) }).catch(() => {})
+      }
+      dock.clear()
+      await keepScroll(loadSell)
+    }
+    const chosenItems = (ids) => (ids.length ? sellItems.filter((item) => ids.includes(String(item.id))) : visibleItems())
+
+    const whatsappText = (items) => items.map((item) => {
+      const lines = [`*${item.title}*`]
+      const fish = (item.koi || []).map((koi) => `- ${koiLine(koi)}`)
+      if (fish.length) lines.push(...fish)
+      lines.push(`Harga: ${formatPrice(item.price)}`)
+      lines.push(`Status: ${statusLabels[item.status]?.label || ''}`)
+      if (item.description) lines.push(item.description)
+      return lines.join('\n')
+    }).join('\n\n')
+
+    const printCatalog = (items) => {
+      if (!window.KoiPrint) { window.alert('Modul cetak belum dimuat. Muat ulang halaman.'); return }
+      if (!items.length) { window.alert('Tidak ada item untuk dicetak.'); return }
+      const e = window.KoiPrint.escapeHtml
+      const rows = items.map((item, index) => {
+        const photo = itemPhotos(item)[0]
+        const fish = (item.koi || []).map((koi) => e(koiLine(koi))).join('<br>') || '-'
+        return `<tr>
+          <td class="kp-center">${index + 1}</td>
+          <td>${window.KoiPrint.photo(photo?.src || '', item.title)}</td>
+          <td><strong>${e(item.title)}</strong><br><span class="kp-muted">${fish}</span></td>
+          <td>${e(typeLabels[item.item_type] || '')}</td>
+          <td class="kp-num">${e(formatPrice(item.price))}</td>
+          <td>${e(statusLabels[item.status]?.label || '')}</td>
+        </tr>`
+      }).join('')
+      window.KoiPrint.print({
+        key: 'sell-catalog',
+        title: `Katalog (${items.length} item)`,
+        heading: 'KATALOG IKAN DIJUAL',
+        subheading: `${items.length} item`,
+        info: [['Jumlah item', items.length], ['Tersedia', items.filter((item) => item.status === 'available').length], ['Terjual', items.filter((item) => item.status === 'sold').length]],
+        body: `<table class="kp-table"><thead><tr><th class="kp-center" style="width:28px">No</th><th style="width:44px">Foto</th><th>Judul / Ikan</th><th style="width:12%">Jenis</th><th class="kp-num" style="width:16%">Harga</th><th style="width:11%">Status</th></tr></thead><tbody>${rows}</tbody></table>`,
+      })
+    }
+    const printItem = (id) => {
+      const item = sellItems.find((entry) => String(entry.id) === String(id))
+      if (!item || !window.KoiPrint) return
+      const e = window.KoiPrint.escapeHtml
+      const fishRows = (item.koi || []).map((koi) => `<tr>
+        <td>${window.KoiPrint.photo(koi.image_url || '', koi.code)}</td>
+        <td><strong>${e(koi.code || '-')}</strong></td><td>${e(koi.name || '-')}</td><td>${e(koi.variety || '-')}</td>
+        <td>${e(koi.bloodline || '-')}</td><td>${e(koi.farm_name || '-')}</td><td class="kp-num">${e(sizeText(koi.current_length_cm) || '-')}</td></tr>`).join('')
+      const media = (item.media_entries || []).map((entry) => `<figure style="margin:0;border:1px solid #999;break-inside:avoid">
+        ${entry.thumbnail_url ? `<img src="${e(entry.thumbnail_url)}" style="display:block;width:100%;height:60mm;object-fit:cover">` : '<div style="height:60mm;background:#eee"></div>'}
+        <figcaption style="padding:3px 5px;font-size:8.5px">${e((entry.type === 'video' ? '[Video] ' : '') + (entry.notes || entry.name || ''))}</figcaption></figure>`).join('')
+      window.KoiPrint.print({
+        key: 'sell-item',
+        title: `Katalog ${item.title}`,
+        heading: 'IKAN DIJUAL',
+        subheading: item.title,
+        info: [['Judul', item.title], ['Harga', formatPrice(item.price)], ['Status', statusLabels[item.status]?.label || ''], ['Jenis', typeLabels[item.item_type] || ''], item.buyer ? ['Pembeli', item.buyer] : null, item.sold_at ? ['Tanggal terjual', dateText(item.sold_at)] : null].filter(Boolean),
+        notes: item.description || '',
+        body: (fishRows ? `<section class="kp-section"><h2>Ikan (${item.koi.length})</h2><table class="kp-table"><thead><tr><th style="width:44px">Foto</th><th>Kode</th><th>Nama</th><th>Variety</th><th>Bloodline</th><th>Ternakan</th><th class="kp-num">Ukuran</th></tr></thead><tbody>${fishRows}</tbody></table></section>` : '') +
+          (media ? `<section class="kp-section"><h2>Foto gabungan</h2><div style="display:grid;grid-template-columns:repeat(2,1fr);gap:6px">${media}</div></section>` : ''),
+      })
+    }
+
+    // ---- Excel / ZIP ------------------------------------------------------------------------------------------------
+    const excelColumns = ['ID', 'Judul', 'Jenis', 'Harga', 'Status', 'Ikan (Kode)', 'Pembeli', 'Tanggal Terjual', 'Catatan']
+    const exportRows = (items) => items.map((item) => [
+      item.id, item.title || '', typeLabels[item.item_type] || '', item.price === null || item.price === '' ? '' : Math.round(Number(item.price)),
+      statusLabels[item.status]?.label || '', (item.koi || []).map((koi) => koi.code).filter(Boolean).join(', '),
+      item.buyer || '', item.sold_at ? String(item.sold_at).slice(0, 10) : '', item.description || '',
+    ])
+    const exportSell = async (ids, zipMode = false) => {
+      if (!window.XLSX) { window.KoiDock.showResult('Export Excel', 'Pustaka Excel belum termuat. Muat ulang halaman.'); return }
+      const chosen = chosenItems(ids)
+      if (!chosen.length) { window.KoiDock.showResult('Export Excel', 'Belum ada data katalog untuk diexport.'); return }
+      const rows = exportRows(chosen)
+      if (zipMode) {
+        const progress = window.KoiZip.progress('Unduh ZIP Katalog')
+        try {
+          const result = await window.KoiZip.exportPackage({
+            sheetName: 'Katalog', header: excelColumns, rows, keyHeader: 'ID', xlsxName: 'data-katalog.xlsx',
+            docs: chosen.map((item) => ({ key: String(item.id), media: item.media_entries || [] })),
+            onProgress: (text) => progress.set(text),
+          })
+          window.KoiZip.download(result.blob, `zip-katalog-${window.KoiZip.today()}.zip`)
+          window.KoiDock.showResult('Unduh ZIP Katalog', `Selesai: ${chosen.length} item, ${result.photos} foto, ${result.videos} video.`, result.problems)
+        } catch (error) {
+          window.KoiDock.showResult('Unduh ZIP Katalog', error.message || 'ZIP gagal dibuat.')
+        } finally {
+          progress.close()
+        }
+        return
+      }
+      const sheet = XLSX.utils.aoa_to_sheet([excelColumns, ...rows])
+      sheet['!cols'] = excelColumns.map((column) => ({ wch: Math.max(14, column.length + 2) }))
+      const workbook = XLSX.utils.book_new()
+      XLSX.utils.book_append_sheet(workbook, sheet, 'Katalog')
+      const blob = new Blob([XLSX.write(workbook, { type: 'array', bookType: 'xlsx' })], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' })
+      const link = document.createElement('a')
+      const objectUrl = URL.createObjectURL(blob)
+      link.href = objectUrl
+      link.download = `data-katalog-${new Date().toISOString().slice(0, 10)}.xlsx`
+      document.body.appendChild(link)
+      link.click()
+      link.remove()
+      setTimeout(() => URL.revokeObjectURL(objectUrl), 1000)
+    }
+
+    // ID filled = that item is updated with the columns that are filled in; ID empty = new item. Fish are Kode Ikan
+    // from Data Ikan. Two passes like the other menus: check everything first (preview), write only after "Lanjutkan".
+    const readRecords = async (file) => {
+      const workbook = XLSX.read(await file.arrayBuffer(), { type: 'array', cellDates: true, dateNF: 'yyyy-mm-dd' })
+      const rawRows = XLSX.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]], { defval: '', raw: false })
+      return rawRows.map((row) => Object.fromEntries(Object.entries(row).map(([key, value]) => [String(key).trim().toLowerCase(), String(value ?? '').trim().replace(/^[-–—]+$/, '')])))
+    }
+    const dateFromText = (value) => {
+      const typed = String(value || '').trim()
+      const iso = typed.match(/^(\d{4})-(\d{1,2})-(\d{1,2})/)
+      const dmy = typed.match(/^(\d{1,2})[\/.-](\d{1,2})[\/.-](\d{4})$/)
+      const parts = iso ? iso.slice(1, 4) : dmy ? dmy.slice(1, 4).reverse() : null
+      if (!parts) return ''
+      const [year, month, day] = parts.map(Number)
+      const date = new Date(year, month - 1, day)
+      return date.getFullYear() === year && date.getMonth() === month - 1 && date.getDate() === day
+        ? `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}` : ''
+    }
+    const runImport = async (records, pkg, dryRun, progress) => {
+      const problems = []
+      let inserted = 0
+      let updated = 0
+      let docsAdded = 0
+      let docsSkipped = 0
+      let docsPlanned = 0
+      const wantedCodes = records.flatMap((record) => (record['ikan (kode)'] ? String(record['ikan (kode)']).split(/[,;\n]+/) : [])).map((code) => code.trim()).filter(Boolean)
+      const koiByCode = new Map((await window.KoiPicker.byCodes(wantedCodes, { scope: 'active' })).map((koi) => [String(koi.code || '').trim().toUpperCase(), koi]))
+      const statusFrom = (value) => ({ tersedia: 'available', available: 'available', dipesan: 'reserved', reserved: 'reserved', terjual: 'sold', sold: 'sold' })[String(value || '').trim().toLowerCase()] || ''
+      const seen = new Set()
+
+      for (const [index, record] of records.entries()) {
+        const line = index + 2
+        const rowId = record.id ? String(record.id).replace(/[^\d]/g, '') : ''
+        if (pkg && rowId) pkg.markUsed(rowId)
+        const existing = rowId ? sellItems.find((item) => String(item.id) === rowId) : null
+        const bad = []
+        const fields = {}
+        if (rowId && !existing) bad.push(`ID ${rowId} tidak ada di Katalog`)
+        if (record.judul) fields.title = record.judul
+        if (record.harga !== '') {
+          const price = Number(String(record.harga).replace(/rp/i, '').replace(/\./g, '').replace(',', '.').trim())
+          if (!Number.isFinite(price) || price < 0) bad.push(`Harga "${record.harga}" tidak valid`)
+          else fields.price = Math.round(price)
+        }
+        if (record.status) {
+          const status = statusFrom(record.status)
+          if (status) fields.status = status
+          else bad.push(`Status "${record.status}" tidak dikenal (Tersedia, Dipesan, Terjual)`)
+        }
+        if (record.pembeli) fields.buyer = record.pembeli
+        if (record['tanggal terjual']) {
+          const day = dateFromText(record['tanggal terjual'])
+          if (day) fields.sold_at = day
+          else bad.push(`Tanggal terjual "${record['tanggal terjual']}" tidak valid`)
+        }
+        if (record.catatan) fields.description = record.catatan
+        if (record['ikan (kode)']) {
+          const codes = record['ikan (kode)'].split(/[,;\n]+/).map((code) => code.trim()).filter(Boolean)
+          const found = codes.map((code) => ({ code, koi: koiByCode.get(code.toUpperCase()) }))
+          const missing = found.filter((entry) => !entry.koi).map((entry) => entry.code)
+          if (missing.length) bad.push(`Ikan ${missing.join(', ')} tidak ada di Data Ikan`)
+          else fields.koi_ids = found.map((entry) => Number(entry.koi.id))
+        }
+        if (!existing && !fields.title) bad.push('Judul wajib diisi untuk item baru')
+        if (bad.length) { problems.push(`Baris ${line}${rowId ? ` (ID ${rowId})` : ''}: ${bad.join('; ')}`); continue }
+
+        if (!existing) {
+          const key = `${String(fields.title).toLowerCase()}|${(fields.koi_ids || []).join(',')}|${fields.price ?? ''}`
+          const twin = sellItems.find((item) => `${String(item.title).toLowerCase()}|${(item.koi_ids || []).join(',')}|${item.price === null || item.price === '' ? '' : Math.round(Number(item.price))}` === key)
+          if (twin || seen.has(key)) {
+            problems.push(`Baris ${line}: item "${fields.title}" dengan ikan dan harga yang sama sudah ada${twin ? ` (ID ${twin.id})` : ' di file ini'}, dilewati`)
+            continue
+          }
+          seen.add(key)
+        }
+
+        let docs = null
+        if (pkg) {
+          const found = await pkg.docsForRow(record.dokumentasi, rowId)
+          docs = found.docs
+          problems.push(...found.problems.map((message) => `Baris ${line}: ${message}`))
+        }
+        if (docs && docs.length) docsPlanned += docs.length
+        if (existing && !Object.keys(fields).length && !(docs && docs.length)) {
+          problems.push(`Baris ${line} (ID ${rowId}): tidak ada kolom yang terisi untuk diperbarui`)
+          continue
+        }
+        if (dryRun) { if (existing) updated += 1; else inserted += 1; continue }
+
+        if (docs && docs.length) {
+          const known = existing ? (existing.media_entries || []) : []
+          progress?.set(`Baris ${line}: ${docs.length} dokumentasi`)
+          const uploaded = await window.KoiZip.uploadEntries(docs, { imagePrefix: 'sell-image', videoPrefix: 'sell-video', existingUrls: known.map((entry) => entry.url) })
+          problems.push(...uploaded.problems.map((message) => `Baris ${line}: ${message}`))
+          docsAdded += uploaded.entries.length
+          docsSkipped += uploaded.duplicates
+          if (uploaded.entries.length) fields.media_entries = [...known, ...uploaded.entries]
+        }
+        if (existing && !Object.keys(fields).length) continue
+        try {
+          const response = existing
+            ? await fetch(`${apiUrl}/sell/${existing.id}`, { method: 'PATCH', headers: { 'content-type': 'application/json' }, body: JSON.stringify(fields) })
+            : await fetch(`${apiUrl}/sell`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ status: 'available', ...fields }) })
+          if (response.ok) { if (existing) updated += 1; else inserted += 1 }
+          else {
+            const result = await response.json().catch(() => ({}))
+            problems.push(`Baris ${line}: ${result.error || 'gagal disimpan'}`)
+          }
+        } catch {
+          problems.push(`Baris ${line}: gagal disimpan`)
+        }
+      }
+      if (pkg) for (const key of pkg.unusedKeys()) problems.push(`Folder dokumentasi "${key}" tidak dipakai: tidak ada baris data yang memakainya`)
+      return { inserted, updated, docsAdded, docsSkipped, docsPlanned, problems }
+    }
+    const importSell = async (file) => {
+      if (!window.XLSX) { window.KoiDock.showResult('Import Excel', 'Pustaka Excel belum termuat. Muat ulang halaman.'); return }
+      let progress = null
+      try {
+        await loadKoi()
+        progress = window.KoiZip.progress('Memeriksa file Katalog')
+        let pkg = null
+        const packageProblems = []
+        if (/\.zip$/i.test(file.name)) {
+          pkg = await window.KoiZip.readPackage(file)
+          file = pkg.xlsxFile
+          packageProblems.push(...pkg.problems)
+        } else {
+          pkg = await window.KoiZip.plainPackage()
+        }
+        const records = await readRecords(file)
+        if (!records.length) { window.KoiDock.showResult('Import Excel', 'File tidak berisi data. Kolom yang dikenali: ' + excelColumns.join(', ') + '.'); return }
+        const plan = await runImport(records, pkg, true, progress)
+        progress.close()
+        progress = null
+        const planProblems = [...packageProblems, ...plan.problems]
+        if (!plan.inserted && !plan.updated) { window.KoiDock.showResult('Import Excel Katalog', 'Tidak ada data yang bisa diimport.', planProblems); return }
+        const summary = `Item baru: ${plan.inserted}\nItem diperbarui: ${plan.updated}` +
+          (pkg.isZip || plan.docsPlanned ? `\nDokumentasi: ${plan.docsPlanned} file (yang sudah ada dilewati otomatis)` : '') +
+          (planProblems.length ? '\nBaris atau file bermasalah dilewati.' : '')
+        const go = await window.KoiDock.showResult('Pratinjau import Katalog', summary, planProblems, { confirm: true, okLabel: planProblems.length ? 'Lanjutkan (lewati yang bermasalah)' : 'Lanjutkan' })
+        if (!go) return
+        progress = window.KoiZip.progress('Import Katalog')
+        const result = await runImport(records, pkg, false, progress)
+        const allProblems = [...packageProblems, ...result.problems]
+        window.KoiDock.showResult('Import Excel Katalog', `Baru ${result.inserted}, diperbarui ${result.updated}, bermasalah ${allProblems.length}.${pkg.isZip || result.docsPlanned ? ` Dokumentasi ditambahkan ${result.docsAdded}, sudah ada ${result.docsSkipped}.` : ''}`, allProblems)
+        await keepScroll(loadSell)
+      } catch (error) {
+        window.KoiDock.showResult('Import Excel Katalog', error.message || 'File tidak dapat dibaca.')
+      } finally {
+        progress?.close()
+      }
+    }
+    const importInput = document.createElement('input')
+    importInput.type = 'file'
+    importInput.accept = '.xlsx,.xls,.zip'
+    importInput.hidden = true
+    importInput.addEventListener('change', async () => {
+      const [file] = Array.from(importInput.files || [])
+      importInput.value = ''
+      if (file) await importSell(file)
+    })
+    document.body.appendChild(importInput)
+
+    // ---- dock ------------------------------------------------------------------------------------------------------
+    const dock = window.KoiDock.create({
+      root: table,
+      label: 'item katalog',
+      idOf: (item) => String(item.id),
+      visibleItems: () => visibleItems(),
+      render: () => renderTable(),
+      actions: [
+        { key: 'edit', icon: 'edit', title: 'Edit item terpilih', role: 'farm-operate', show: (count) => count === 1, onClick: (ids) => openForm(ids[0], false) },
+        { key: 'sold', icon: 'coin', variant: 'warning', title: (count) => `Tandai ${count} item terjual`, role: 'farm-operate', show: (count) => count >= 1, onClick: (ids) => setStatus(ids, 'sold') },
+        {
+          key: 'whatsapp', icon: 'brand-whatsapp', variant: 'success', always: true,
+          title: (count) => (count ? `Salin teks WhatsApp (${count} terpilih)` : 'Salin teks WhatsApp (yang tampil dan belum terjual)'),
+          onClick: async (ids, button) => {
+            // nothing selected: the items that are shown and still for sale (sold ones are left out)
+            const items = ids.length ? chosenItems(ids) : visibleItems().filter((item) => item.status !== 'sold')
+            const copied = items.length ? await window.KoiDock.copyText(whatsappText(items)) : false
+            button.setAttribute('title', copied ? `Teks ${items.length} item tersalin` : 'Tidak ada yang bisa disalin')
+          },
+        },
+        { key: 'print', icon: 'printer', variant: 'secondary', always: true, title: (count) => (count ? `Cetak katalog (${count} terpilih)` : 'Cetak katalog (semua yang tampil)'), onClick: (ids) => printCatalog(chosenItems(ids)) },
+        { key: 'delete', icon: 'trash', variant: 'danger', title: (count) => `Hapus ${count} item terpilih`, role: 'farm-operate', onClick: (ids) => deleteItems(ids) },
+        { key: 'export', icon: 'file-spreadsheet', variant: 'success', title: (count) => (count ? `Export Excel (${count} terpilih)` : 'Export Excel'), always: true, onClick: (ids) => exportSell(ids) },
+        { key: 'zip', icon: 'file-zip', variant: 'success', title: (count) => (count ? `Unduh ZIP (${count} terpilih)` : 'Unduh ZIP (Excel + dokumentasi)'), always: true, onClick: (ids) => exportSell(ids, true) },
+        { key: 'import', icon: 'upload', variant: 'success', title: 'Import Excel atau ZIP', role: 'farm-operate', always: true, show: (count) => count === 0, onClick: () => importInput.click() },
+      ],
+      add: { title: 'Tambah item katalog', role: 'farm-operate', onClick: () => openForm(null, false) },
+    })
+
+    // ---- events ----------------------------------------------------------------------------------------------------------
+    filterChips.forEach((chip) => chip.addEventListener('click', () => {
+      statusFilter = chip.dataset.sellFilter
+      try { sessionStorage.setItem(filterKey, statusFilter) } catch {}
+      renderTable()
+    }))
+    searchInput.addEventListener('input', () => renderTable())
+    table.addEventListener('click', (event) => {
+      const zoom = event.target.closest('[data-zoom-image]')
+      if (zoom) {
+        event.stopPropagation()
+        {
+          const sellCard = zoom.closest('[data-dock-id]')
+          const sellItem = sellCard ? sellItems.find((entry) => String(entry.id) === String(sellCard.dataset.dockId)) : null
+          const sellZoomLines = sellItem
+            ? [typeLabels[sellItem.item_type] || '', ...(sellItem.koi || []).slice(0, 8).map((koi) => koiLine(koi)), `Harga: ${formatPrice(sellItem.price)}`, sellItem.description || ''].filter(Boolean)
+            : []
+          window.KoiAuth?.zoomPhoto?.(zoom.dataset.zoomImage, sellItem?.title || '', sellZoomLines)
+        }
+        return
+      }
+      const printButton = event.target.closest('[data-print-sell]')
+      if (printButton) { printItem(printButton.dataset.printSell); return }
+      const editButton = event.target.closest('[data-edit-sell]')
+      if (editButton) { openForm(editButton.dataset.editSell, false); return }
+      const deleteButton = event.target.closest('[data-delete-sell]')
+      if (deleteButton) { deleteItems([deleteButton.dataset.deleteSell]); return }
+      // anywhere else on the card selects it (several cards can be selected); double-click opens the detail
+      if (event.target.closest('button, a, input')) return
+      const card = event.target.closest('[data-dock-id]')
+      if (card) dock.toggle(card.dataset.dockId)
+    })
+    table.addEventListener('dblclick', (event) => {
+      if (event.target.closest('button, a, input')) return
+      const card = event.target.closest('[data-dock-id]')
+      if (!card) return
+      window.getSelection()?.removeAllRanges()
+      openForm(card.dataset.dockId, true)
+    })
+    table.addEventListener('keydown', (event) => {
+      if (event.key !== 'Enter' && event.key !== ' ') return
+      const row = event.target.closest('[data-sell-id]')
+      if (row && event.target === row) {
+        event.preventDefault()
+        openForm(row.dataset.sellId, true)
+      }
+    })
+    form.addEventListener('change', (event) => {
+      if (event.target.matches('[name="status"]')) {
+        syncSoldFields()
+        if (event.target.value === 'sold' && !form.elements.sold_at.value) form.elements.sold_at.value = new Date().toISOString().slice(0, 10)
+      }
+      if (event.target.matches('[data-sell-media-input]')) {
+        addMediaFiles(event.target.files)
+        event.target.value = ''
+      }
+    })
+    addButton?.addEventListener('click', () => openForm(null, false))
+    pullButton.addEventListener('click', async () => {
+      await loadKoi()
+      if (!window.KoiPicker) { window.alert('Modul pilih ikan belum dimuat. Muat ulang halaman.'); return }
+      window.KoiPicker.open({
+        title: 'Tarik dari Data Ikan',
+        disabledIds: chosenIds,
+        confirmLabel: 'Tambahkan',
+        onConfirm: (ids) => {
+          ids.forEach((id) => { if (!chosenIds.includes(String(id))) chosenIds.push(String(id)) })
+          renderChosen()
+        },
+      })
+    })
+    priceInput.addEventListener('input', formatPriceInput)
+    window.KoiPicker?.fixPaste?.(pickerInput)
+    pickerInput.addEventListener('input', () => {
+      renderPickerMenu()
+      searchPicker()
+    })
+    form.addEventListener('click', (event) => {
+      const pick = event.target.closest('[data-sell-pick]')
+      if (pick) {
+        const id = String(pick.dataset.sellPick)
+        if (id === '__all__') {
+          (pickerResult?.ids || []).forEach((koiId) => { if (!chosenIds.includes(String(koiId))) chosenIds.push(String(koiId)) })
+        } else if (!chosenIds.includes(id)) {
+          chosenIds.push(id)
+        }
+        pickerInput.value = ''
+        pickerResult = null
+        pickerMenu.classList.add('d-none')
+        renderChosen()
+        loadKoi().then(renderChosen)
+        return
+      }
+      const removeKoi = event.target.closest('[data-sell-remove-koi]')
+      if (removeKoi) {
+        chosenIds = chosenIds.filter((id) => id !== String(removeKoi.dataset.sellRemoveKoi))
+        renderChosen()
+        return
+      }
+      const removeMedia = event.target.closest('[data-sell-media-remove]')
+      if (removeMedia) {
+        collectMediaNotes()
+        mediaFiles.splice(Number(removeMedia.dataset.sellMediaRemove), 1)
+        renderMediaPreview()
+      }
+    })
+    mediaPasteButton.addEventListener('click', async () => {
+      try {
+        const clipboardItems = await navigator.clipboard.read()
+        const files = []
+        for (const clipboardItem of clipboardItems) {
+          const type = clipboardItem.types.find((entry) => entry.startsWith('image/'))
+          if (!type) continue
+          const blob = await clipboardItem.getType(type)
+          files.push(new File([blob], `paste-sell-${Date.now()}-${files.length + 1}.${type.split('/')[1] || 'png'}`, { type }))
+        }
+        if (files.length) addMediaFiles(files)
+        else mediaStatus.textContent = 'Tidak ada gambar di clipboard.'
+      } catch {
+        mediaStatus.textContent = 'Clipboard tidak bisa dibaca. Pilih file atau tempel dengan Ctrl+V.'
+      }
+    })
+    // Ctrl+V goes to the last used box (catalog photos by default, documentation after you touched its box)
+    ;['mouseenter', 'focusin', 'click'].forEach((type) => {
+      docZone.addEventListener(type, () => { activeZone = 'docs' })
+      form.querySelector('[data-sell-zone="media"]').addEventListener(type, () => { activeZone = 'media' })
+    })
+    modalElement.addEventListener('paste', (event) => {
+      if (readonlyMode) return
+      const files = Array.from(event.clipboardData?.files || []).filter((file) => /^image\//.test(file.type))
+      if (files.length) { event.preventDefault(); if (activeZone === 'docs') addDocFiles(files); else addMediaFiles(files) }
+    })
+    form.querySelector('[data-sell-doc-upload]').addEventListener('click', () => docInput.click())
+    docInput.addEventListener('change', () => {
+      addDocFiles(docInput.files)
+      docInput.value = ''
+    })
+    form.querySelector('[data-sell-doc-paste]').addEventListener('click', async () => {
+      try {
+        const clipboardItems = await navigator.clipboard.read()
+        const files = []
+        for (const clipboardItem of clipboardItems) {
+          const type = clipboardItem.types.find((entry) => entry.startsWith('image/'))
+          if (!type) continue
+          const blob = await clipboardItem.getType(type)
+          files.push(new File([blob], `dokumentasi-${Date.now()}-${files.length + 1}.${type.split('/')[1] || 'png'}`, { type }))
+        }
+        if (files.length) addDocFiles(files)
+        else docStatus.textContent = 'Tidak ada gambar di clipboard.'
+      } catch {
+        docStatus.textContent = 'Clipboard tidak bisa dibaca. Tempel dengan Ctrl+V atau pilih file.'
+      }
+    })
+    // drag and drop: the dashed box takes documentation; a drop anywhere else in the form adds catalog photos
+    const dragHasFiles = (event) => Array.from(event.dataTransfer?.types || []).includes('Files')
+    modalElement.addEventListener('dragover', (event) => {
+      if (!dragHasFiles(event)) return
+      event.preventDefault()
+      docZone.classList.toggle('is-over', !readonlyMode && Boolean(event.target.closest('[data-sell-zone="docs"]')))
+    })
+    modalElement.addEventListener('dragleave', (event) => {
+      if (!modalElement.contains(event.relatedTarget)) docZone.classList.remove('is-over')
+    })
+    modalElement.addEventListener('drop', (event) => {
+      if (!dragHasFiles(event)) return
+      event.preventDefault()
+      docZone.classList.remove('is-over')
+      if (readonlyMode) return
+      if (event.target.closest('[data-sell-zone="docs"]')) addDocFiles(event.dataTransfer.files)
+      else addMediaFiles(event.dataTransfer.files)
+    })
+    docBox.addEventListener('click', (event) => {
+      const remove = event.target.closest('[data-sell-doc-remove]')
+      if (remove) {
+        collectDocNotes()
+        docFiles.splice(Number(remove.dataset.sellDocRemove), 1)
+        renderDocs()
+        return
+      }
+      const zoom = event.target.closest('[data-sell-doc-zoom]')
+      if (zoom) {
+        const media = docFiles[Number(zoom.dataset.sellDocZoom)]
+        if (media && media.type !== 'video') window.KoiAuth?.zoomPhoto?.(media.previewUrl || media.url, media.name || 'Dokumentasi penjualan', [media.notes ? `Catatan: ${media.notes}` : ''])
+      }
+    })
+    document.addEventListener('click', (event) => {
+      if (!event.target.closest('[data-sell-picker]')) pickerMenu.classList.add('d-none')
+    })
+
+    try {
+      const cached = JSON.parse(localStorage.getItem(cacheKey) || '[]')
+      if (Array.isArray(cached) && cached.length) { sellItems = cached; signature = JSON.stringify(cached); renderTable() }
+    } catch {}
+    loadSell(sellItems.length > 0)
+    window.KoiAuth?.registerRealtimeRefresh(() => keepScroll(() => loadSell(true)), { intervalMs: 30000 })
+  </script>
+</DefaultLayout>

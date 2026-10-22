@@ -1,0 +1,22 @@
+---
+// The front matter uses `menu: base.wysiwyg` (not `page-menu`), so no pageMenu prop.
+import DefaultLayout from '@shared/layouts/DefaultLayout.astro'
+import Card from '@ui/Card.astro'
+import CardBody from '@ui/CardBody.astro'
+import Wysiwyg from '@ui/Wysiwyg.astro'
+import FormGroup from '@ui/FormGroup.astro'
+---
+
+<DefaultLayout title="HugeRTE" pageHeader="HugeRTE" pageLibs={['hugerte']}>
+  <Card>
+    <CardBody>
+      <FormGroup label="Your name" for="wysiwyg-name">
+        <input type="text" class="form-control" id="wysiwyg-name" placeholder="Name" />
+      </FormGroup>
+
+      <FormGroup label="Description" for="hugerte-description">
+        <Wysiwyg id="description" />
+      </FormGroup>
+    </CardBody>
+  </Card>
+</DefaultLayout>

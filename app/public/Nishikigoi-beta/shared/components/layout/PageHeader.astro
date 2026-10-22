@@ -1,0 +1,134 @@
+---
+// Layout front-matter flags are plain props here.
+// TODO: layout-navbar-overlap && layout-navbar-dark → extra text-white class
+// on .page-header — both unset on the homepage.
+import Icon from '@ui/Icon.astro';
+import HeaderActionsButtons from './HeaderActionsButtons.astro';
+import HeaderActionsPrint from './HeaderActionsPrint.astro';
+import HeaderActionsPhotos from './HeaderActionsPhotos.astro';
+import HeaderActionsBreadcrumb from './HeaderActionsBreadcrumb.astro';
+import HeaderActionsAddBoard from './HeaderActionsAddBoard.astro';
+import HeaderActionsAddJob from './HeaderActionsAddJob.astro';
+import HeaderActionsUsers from './HeaderActionsUsers.astro';
+import HeaderProfile from './HeaderProfile.astro';
+import HeaderUptime from './HeaderUptime.astro';
+
+interface Props {
+	/** page-header — the page title; without it the whole block is not rendered */
+	title?: string | undefined;
+	/** page-header-pretitle */
+	pretitle?: string | undefined;
+	/** page-header-description */
+	description?: string | undefined;
+	/** page-header-actions — name of an include from layout/header-actions/, e.g. "buttons" */
+	actions?: string | undefined;
+	/** page-header-class */
+	class?: string;
+	/** page-header-icon */
+	icon?: string;
+	/** page-header-file — name of an include from layout/headers/, e.g. "profile" */
+	file?: string | undefined;
+	/** layout-navbar-overlap && layout-navbar-dark → text-white on .page-header */
+	textWhite?: boolean | undefined;
+}
+
+const { title, pretitle, description, actions, class: className, icon, file, textWhite } = Astro.props;
+---
+
+{file === 'profile' && <HeaderProfile />}
+{file === 'uptime' && <HeaderUptime />}
+{
+	!file && title && (
+		<div class={`page-header${className ? ` ${className}` : ''} d-print-none${textWhite ? ' text-white' : ''}`}>
+			<div class="container-xl">
+				<div class="row g-0 align-items-center">
+					<div class="col page-header-compact-title">
+						<div class="page-title-line">
+							{icon && <Icon name={icon} />}
+							<span class="page-title-line-title">{[pretitle, title].filter(Boolean).join(' ')}</span>
+						</div>
+
+						{description && <div class="text-secondary mt-1 text-center">{description}</div>}
+					</div>
+
+					{actions && (
+						<Fragment>
+							<!-- Page title actions -->
+							<div class="col-auto ms-auto d-print-none">
+								{actions === 'buttons' && <HeaderActionsButtons dark={textWhite} />}
+								{actions === 'print' && <HeaderActionsPrint />}
+								{actions === 'photos' && <HeaderActionsPhotos />}
+								{actions === 'breadcrumb' && <HeaderActionsBreadcrumb />}
+								{actions === 'add-board' && <HeaderActionsAddBoard />}
+								{actions === 'add-job' && <HeaderActionsAddJob />}
+									{actions === 'users' && <HeaderActionsUsers />}
+							</div>
+						</Fragment>
+					)}
+				</div>
+			</div>
+		</div>
+	)
+}
+
+<style>
+	.page-header {
+		padding-block: 0;
+		margin: 0;
+	}
+
+	.page-header :global(.container-xl) {
+		min-height: 1.35rem;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+	}
+
+	.page-header :global(.row) {
+		width: 100%;
+		margin-top: 0;
+		margin-bottom: 0;
+	}
+
+	.page-header + :global(.page-body) {
+		margin-top: 0;
+	}
+
+	.page-header-compact-title {
+		min-width: 0;
+		text-align: center;
+	}
+
+	.page-title-line {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		gap: 0.08rem;
+		min-width: 0;
+		font-size: 0.7rem;
+		font-weight: 400;
+		line-height: 1;
+		letter-spacing: 0.02em;
+		white-space: nowrap;
+		text-align: center;
+		text-transform: uppercase;
+	}
+
+	.page-title-line .icon {
+		width: 0.9rem;
+		height: 0.9rem;
+		flex: 0 0 auto;
+	}
+
+	.page-title-line-pretitle,
+	.page-title-line-title {
+		font-size: inherit;
+		font-weight: inherit;
+		line-height: inherit;
+	}
+
+	.page-title-line-title {
+		overflow: hidden;
+		text-overflow: ellipsis;
+	}
+</style>

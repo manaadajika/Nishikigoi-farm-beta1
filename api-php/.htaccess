@@ -1,0 +1,33 @@
+# Deny direct static access to non-PHP source/data files that may exist
+# under api-php/ (schema.sql, JSON dumps, config notes, etc). The rewrite
+# rule below only fires for requests that don't map to an existing file, so
+# without this block Apache would serve these file types' raw contents.
+<FilesMatch "\.(sql|json|md|ini)$">
+    Require all denied
+</FilesMatch>
+
+# Berkas gambar punya dua jawaban (berkas asli untuk <img>, halaman penampil bermerek untuk tab baru), jadi peramban
+# harus membedakan salinan tersimpannya menurut Accept.
+<IfModule mod_headers.c>
+    <If "%{REQUEST_URI} =~ m#^/api/uploads/#">
+        Header append Vary Accept
+    </If>
+</IfModule>
+
+RewriteEngine On
+# Gambar yang dibuka sebagai halaman sendiri (klik kanan, buka di tab baru) dijawab halaman penampil bermerek
+# (lihat handlers/uploads.php); pemuatan sebagai <img>, fetch, dan unduhan tetap berkas aslinya.
+RewriteCond %{HTTP:Accept} text/html [NC]
+RewriteCond %{QUERY_STRING} !(^|&)raw=1(&|$)
+RewriteRule ^uploads/.+\.(jpe?g|png|webp|gif)$ index.php [L,NC]
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule ^ index.php [L]
+
+# Upload/body limits (backup ZIP restore sends the whole ZIP, so not tiny). Default PHP value was 2G.
+<IfModule mod_php.c>
+    php_value upload_max_filesize 512M
+    php_value post_max_size 512M
+    php_value max_input_time 120
+    php_flag display_errors off
+</IfModule>

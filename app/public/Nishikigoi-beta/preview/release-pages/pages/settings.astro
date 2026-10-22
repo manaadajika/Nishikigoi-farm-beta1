@@ -1,0 +1,234 @@
+---
+import CardSubtitle from '@ui/CardSubtitle.astro'
+import SettingsLayout from '@shared/layouts/SettingsLayout.astro'
+import ButtonList from '@ui/ButtonList.astro'
+import Check from '@ui/form/Check.astro'
+import FormGroup from '@ui/FormGroup.astro'
+import CardTitle from '@ui/CardTitle.astro'
+---
+
+<SettingsLayout active="settings" title="Account Settings">
+  <div class="card-body">
+    <h2 class="mb-4">Account Settings</h2>
+
+    <CardTitle>Profile Details</CardTitle>
+
+    <div class="row align-items-center">
+      <div class="col-auto">
+        <div data-avatar-preview>
+          <span class="avatar avatar-xl">HA</span>
+        </div>
+      </div>
+      <div class="col-auto">
+        <input type="file" class="d-none" id="avatar-upload" accept="image/*" />
+        <button type="button" class="btn" data-action="change-avatar">Change Photo Profile</button>
+      </div>
+      <div class="col-auto"><button type="button" class="btn btn-ghost-danger" data-action="delete-avatar">Delete Photo Profile</button></div>
+    </div>
+
+    <CardTitle class="mt-4">Account Profile</CardTitle>
+
+    <div class="row g-3">
+      <FormGroup label="Nama akun" for="account-name" class="col-md-6">
+          <input type="text" class="form-control" id="account-name" name="account-name" value="" data-profile-field />
+      </FormGroup>
+      <FormGroup label="Username" for="account-username" class="col-md-6">
+        <input type="text" class="form-control" id="account-username" name="account-username" value="" readonly />
+      </FormGroup>
+    </div>
+
+    <CardTitle class="mt-4">Email</CardTitle>
+    <CardSubtitle>This contact will be shown to others publicly, so choose it carefully.</CardSubtitle>
+
+    <div>
+      <div class="row g-2">
+        <FormGroup label="Email" for="email" labelClass="visually-hidden" class="col-auto">
+          <input type="email" class="form-control w-auto" id="email" name="email" value="" placeholder="Belum diisi" readonly data-profile-field />
+        </FormGroup>
+        <div class="col-auto"><button type="button" class="btn" data-action="change-email">Change</button></div>
+      </div>
+    </div>
+
+    <CardTitle class="mt-4">Password</CardTitle>
+    <CardSubtitle>You can set a permanent password if you don't want to use temporary login codes.</CardSubtitle>
+    <div>
+      <button type="button" class="btn" data-action="show-password-form">Set new password</button>
+    </div>
+    <div class="row g-3 mt-1 d-none" data-password-form>
+      <FormGroup label="New password" for="new-password" class="col-md-6">
+        <input type="password" class="form-control" id="new-password" autocomplete="new-password" />
+      </FormGroup>
+      <FormGroup label="Confirm password" for="confirm-password" class="col-md-6">
+        <input type="password" class="form-control" id="confirm-password" autocomplete="new-password" />
+      </FormGroup>
+    </div>
+
+    <CardTitle class="mt-4">Public profile</CardTitle>
+    <CardSubtitle> Making your profile public means that anyone on the Dashkit network will be able to find you. </CardSubtitle>
+    <div>
+      <Check switch size="lg" titleOn="You're currently visible" titleOff="You're currently invisible" />
+    </div>
+  </div>
+  <div class="card-footer bg-transparent mt-auto">
+    <div class="alert alert-success d-none mb-3" role="alert" data-settings-message></div>
+    <ButtonList class="justify-content-end">
+      <button type="button" class="btn" data-action="reset-account-settings">Cancel</button>
+      <button type="button" class="btn btn-primary" data-action="save-account-settings">Submit</button>
+    </ButtonList>
+  </div>
+
+  <script>
+    // @ts-nocheck
+    const session = window.KoiAuth?.getSession()
+    const accountsKey = window.KoiAuth?.accountsKey || 'koi-farm-master-accounts'
+    const account = window.KoiAuth?.getAccounts().find((item) => item.username === session?.username) || session || {}
+    const storageKey = `koi-farm-account-settings-${account.username || 'guest'}`
+    const initials = (source) => String(source || 'User').split(/\s+/).filter(Boolean).slice(0, 2).map((part) => part.charAt(0).toUpperCase()).join('') || 'U'
+    // DEAD CODE (diperiksa 2026-10-14): storedProfile tidak dipanggil di mana pun. Aman dihapus; sengaja belum dihapus.
+    const storedProfile = JSON.parse(localStorage.getItem(storageKey) || 'null') || {}
+    const currentAccountProfile = {
+      accountName: account.name || '',
+      username: account.username || '',
+      email: account.email || '',
+      avatar: account.avatar || '',
+    }
+
+    const showMessage = (message, variant = 'success') => {
+      const messageEl = document.querySelector('[data-settings-message]')
+      if (!messageEl) return
+      messageEl.textContent = message
+      messageEl.className = `alert alert-${variant} mb-3`
+    }
+
+    const setAvatar = (dataUrl) => {
+      const preview = document.querySelector('[data-avatar-preview]')
+      if (!preview) return
+      preview.removeAttribute('data-avatar-deleted')
+      if (dataUrl === '__deleted__') {
+        preview.setAttribute('data-avatar-deleted', 'true')
+        preview.innerHTML = `<span class="avatar avatar-xl">${initials(document.getElementById('account-name')?.value || account.username)}</span>`
+        return
+      }
+      if (!dataUrl) {
+        preview.innerHTML = `<span class="avatar avatar-xl">${initials(document.getElementById('account-name')?.value || account.username)}</span>`
+        return
+      }
+      preview.innerHTML = `<span class="avatar avatar-xl" style="background-image: url(${dataUrl})"></span>`
+    }
+
+    const readProfile = () => ({
+      accountName: document.getElementById('account-name')?.value || '',
+      username: document.getElementById('account-username')?.value || '',
+      email: document.getElementById('email')?.value || '',
+      avatar: document.querySelector('[data-avatar-preview]')?.getAttribute('data-avatar-deleted') === 'true'
+        ? '__deleted__'
+        : document.querySelector('[data-avatar-preview] .avatar')?.style.backgroundImage?.slice(5, -2) || '',
+    })
+
+    const applyProfile = (profile) => {
+      document.getElementById('account-name').value = profile.accountName
+      document.getElementById('account-username').value = profile.username
+      document.getElementById('email').value = profile.email
+      setAvatar(profile.avatar)
+    }
+
+    const updateCurrentAccount = async (profile, password) => {
+      const accounts = window.KoiAuth?.getAccounts() || []
+      const remoteAccounts = window.KoiAuth?.getRemoteAccounts ? await window.KoiAuth.getRemoteAccounts().catch(() => []) : []
+      const remoteAccount = remoteAccounts.find((item) => item.username === account.username)
+      const localAccount = accounts.find((item) => item.username === account.username)
+      const currentAccount = remoteAccount || localAccount || account
+      const updatedAccount = {
+        ...currentAccount,
+        username: currentAccount.username || account.username,
+        name: profile.accountName,
+        email: profile.email,
+        avatar: profile.avatar === '__deleted__' ? '' : profile.avatar,
+        password: password || currentAccount.password,
+        role: currentAccount.role || account.role,
+        status: currentAccount.status || 'Active',
+      }
+
+      if (window.KoiAuth?.saveRemoteAccount && updatedAccount.id) {
+        await window.KoiAuth.saveRemoteAccount(updatedAccount)
+      }
+
+      const updatedAccounts = accounts.some((item) => item.username === account.username)
+        ? accounts.map((item) => item.username === account.username ? updatedAccount : item)
+        : [...accounts, updatedAccount]
+
+      localStorage.setItem(accountsKey, JSON.stringify(updatedAccounts))
+      window.KoiAuth.updateStoredSession({
+        name: updatedAccount.name,
+        avatar: updatedAccount.avatar,
+      })
+      window.KoiAuth.updateUserMenu()
+    }
+
+    applyProfile(currentAccountProfile)
+
+    document.querySelector('[data-action="change-avatar"]')?.addEventListener('click', () => {
+      document.getElementById('avatar-upload')?.click()
+    })
+
+    document.getElementById('avatar-upload')?.addEventListener('change', (event) => {
+      const file = event.target.files?.[0]
+      if (!file) return
+      const reader = new FileReader()
+      reader.addEventListener('load', () => {
+        setAvatar(String(reader.result || ''))
+        showMessage('Photo Profile siap disimpan. Klik Submit untuk memperbarui Master Akun.')
+      })
+      reader.readAsDataURL(file)
+    })
+
+    document.querySelector('[data-action="delete-avatar"]')?.addEventListener('click', () => {
+      setAvatar('__deleted__')
+      showMessage('Photo Profile dihapus. Klik Submit untuk menyimpan.')
+    })
+
+    document.querySelector('[data-action="change-email"]')?.addEventListener('click', () => {
+      const email = document.getElementById('email')
+      email.readOnly = false
+      email.focus()
+      showMessage('Email sekarang bisa diedit.')
+    })
+
+    document.querySelector('[data-action="show-password-form"]')?.addEventListener('click', () => {
+      document.querySelector('[data-password-form]')?.classList.toggle('d-none')
+    })
+
+    document.getElementById('account-name')?.addEventListener('input', () => {
+      const avatar = document.querySelector('[data-avatar-preview] .avatar')
+      if (avatar && !avatar.style.backgroundImage) {
+        avatar.textContent = initials(document.getElementById('account-name')?.value || account.username)
+      }
+    })
+
+    document.querySelector('[data-action="reset-account-settings"]')?.addEventListener('click', () => {
+      applyProfile(currentAccountProfile)
+      document.querySelector('[data-password-form]')?.classList.add('d-none')
+      showMessage('Perubahan dibatalkan.')
+    })
+
+    document.querySelector('[data-action="save-account-settings"]')?.addEventListener('click', async () => {
+      const password = document.getElementById('new-password')?.value || ''
+      const confirmation = document.getElementById('confirm-password')?.value || ''
+      if ((password || confirmation) && password !== confirmation) {
+        showMessage('Konfirmasi password belum sama.', 'danger')
+        return
+      }
+      const profile = readProfile()
+      localStorage.setItem(storageKey, JSON.stringify(profile))
+      try {
+        await updateCurrentAccount(profile, password)
+      } catch (error) {
+        showMessage(error.message || 'Account Settings gagal disimpan.', 'danger')
+        return
+      }
+      document.getElementById('email').readOnly = true
+      document.querySelector('[data-password-form]')?.classList.add('d-none')
+      showMessage('Account Settings berhasil disimpan.')
+    })
+  </script>
+</SettingsLayout>

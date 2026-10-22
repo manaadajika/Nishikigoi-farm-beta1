@@ -1,0 +1,291 @@
+---
+import DefaultLayout from '@shared/layouts/DefaultLayout.astro'
+---
+
+<DefaultLayout title="Log" pageHeader="Log" pretitle="Etc" pageMenu="management.log">
+  <div class="card">
+    <div class="card-header d-flex align-items-center justify-content-between gap-3 flex-wrap">
+      <h3 class="card-title">Log Sistem</h3>
+      <div class="d-flex gap-2 align-items-center flex-wrap">
+        <select class="form-select w-auto" id="log-type-filter" name="log_type_filter" data-log-type-filter aria-label="Filter tipe log">
+          <option value="">Semua Tipe</option>
+        </select>
+        <button type="button" class="btn btn-icon btn-danger d-none" title="Hapus log terpilih" aria-label="Hapus log terpilih" data-action="delete-selected-logs"><svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M4 7l16 0"/><path d="M10 11l0 6"/><path d="M14 11l0 6"/><path d="M5 7l1 12a2 2 0 0 0 2 2h8a2 2 0 0 0 2 -2l1 -12"/><path d="M9 7v-3a1 1 0 0 1 1 -1h4a1 1 0 0 1 1 1v3"/></svg></button>
+        <button type="button" class="btn" data-action="refresh-logs">Refresh</button>
+      </div>
+    </div>
+    <div class="table-responsive">
+      <table class="table table-vcenter card-table">
+        <thead>
+          <tr>
+            <th class="w-1"><input class="form-check-input m-0 align-middle" name="select_all_logs" type="checkbox" aria-label="Pilih semua log" data-select-all-logs /></th>
+            <th>Waktu</th>
+            <th>Tipe</th>
+            <th>User</th>
+            <th>Aksi</th>
+            <th>Target</th>
+            <th>Judul</th>
+            <th>Pesan / Detail</th>
+            <th>Status</th>
+            <th class="w-1">Edit</th>
+          </tr>
+        </thead>
+        <tbody data-logs-table>
+          <tr><td colspan="10" class="text-secondary">Memuat log.</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="card-footer d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-2">
+      <div class="text-secondary" data-log-page-summary>Menampilkan 0 log.</div>
+      <ul class="pagination m-0" data-log-pagination></ul>
+    </div>
+  </div>
+
+  <script is:inline>
+    document.addEventListener('DOMContentLoaded', () => {
+      const table = document.querySelector('[data-logs-table]')
+      const selectAll = document.querySelector('[data-select-all-logs]')
+      const deleteButton = document.querySelector('[data-action="delete-selected-logs"]')
+      const typeFilter = document.querySelector('[data-log-type-filter]')
+      let logs = []
+      let typeOptions = new Set()
+      let currentPage = 1
+      let totalLogs = 0
+      const pageSize = 50
+      const logsCacheKey = 'nishikigoi-cache:farm-log'
+
+      const escapeHtml = (value) => String(value || '-')
+        .replaceAll('&', '&amp;')
+        .replaceAll('<', '&lt;')
+        .replaceAll('>', '&gt;')
+        .replaceAll('"', '&quot;')
+        .replaceAll("'", '&#039;')
+
+      const parseDetails = (value) => {
+        if (!value) return ''
+        try {
+          const parsed = JSON.parse(value)
+          if (!parsed || typeof parsed !== 'object') return String(value)
+          return Object.entries(parsed)
+            .map(([key, item]) => {
+              if (item && typeof item === 'object' && ('before' in item || 'after' in item)) {
+                return `${key}: ${item.before ?? '-'} -> ${item.after ?? '-'}`
+              }
+              return `${key}: ${item}`
+            })
+            .join('; ')
+        } catch {
+          return String(value)
+        }
+      }
+
+      const selectedIds = () => [...table.querySelectorAll('[data-log-checkbox]:checked')]
+        .map((checkbox) => Number(checkbox.value))
+        .filter((id) => Number.isInteger(id) && id > 0)
+
+      const updateTypeOptions = () => {
+        const current = typeFilter.value
+        typeOptions = new Set([...typeOptions, ...logs.map((log) => log.type).filter(Boolean)])
+        typeFilter.innerHTML = '<option value="">Semua Tipe</option>' + [...typeOptions].sort().map((type) => `<option value="${escapeHtml(type)}">${escapeHtml(type)}</option>`).join('')
+        typeFilter.value = current
+      }
+
+      const updateSelectionState = () => {
+        const checkboxes = [...table.querySelectorAll('[data-log-checkbox]')]
+        const checked = checkboxes.filter((checkbox) => checkbox.checked)
+        deleteButton.disabled = checked.length === 0
+        deleteButton.classList.toggle('d-none', checked.length === 0)
+        selectAll.checked = checkboxes.length > 0 && checked.length === checkboxes.length
+        selectAll.indeterminate = checked.length > 0 && checked.length < checkboxes.length
+      }
+
+      const renderLogs = () => {
+        updateTypeOptions()
+        if (!logs.length) {
+          table.innerHTML = '<tr><td colspan="10" class="text-secondary">Belum ada log.</td></tr>'
+          updateSelectionState()
+          renderPagination()
+          return
+        }
+
+        table.innerHTML = logs.map((log) => {
+          const detail = parseDetails(log.details)
+          const target = log.target_label || log.target_id || ''
+          const actor = [log.actor, log.role ? `(${log.role})` : ''].filter(Boolean).join(' ')
+          return `
+            <tr>
+              <td><input class="form-check-input m-0 align-middle" name="selected_log" type="checkbox" value="${log.id}" aria-label="Pilih log" data-log-checkbox /></td>
+              <td>${escapeHtml(log.created_at)}</td>
+              <td><span class="badge bg-azure-lt">${escapeHtml(log.type)}</span></td>
+              <td>${escapeHtml(actor || 'System')}</td>
+              <td>${escapeHtml(log.action || '-')}</td>
+              <td>${escapeHtml(target || '-')}</td>
+              <td>${escapeHtml(log.title)}</td>
+              <td>${escapeHtml(detail || log.message || '-')}</td>
+              <td><span class="badge bg-${log.status === 'read' ? 'secondary' : 'blue'}-lt">${escapeHtml(log.status)}</span></td>
+              <td><button type="button" class="btn btn-icon" title="Edit status log" data-action="edit-log" data-id="${log.id}">Edit</button></td>
+            </tr>
+          `
+        }).join('')
+        updateSelectionState()
+        renderPagination()
+      }
+
+      const renderPagination = () => {
+        const summary = document.querySelector('[data-log-page-summary]')
+        const pagination = document.querySelector('[data-log-pagination]')
+        const totalPages = Math.max(Math.ceil(totalLogs / pageSize), 1)
+        const start = totalLogs ? ((currentPage - 1) * pageSize) + 1 : 0
+        const end = totalLogs ? Math.min(currentPage * pageSize, totalLogs) : 0
+
+        if (summary) {
+          summary.textContent = totalLogs
+            ? `Menampilkan ${start}-${end} dari ${totalLogs} log.`
+            : 'Menampilkan 0 log.'
+        }
+
+        if (!pagination) return
+        const pages = []
+        const firstPage = Math.max(1, currentPage - 2)
+        const lastPage = Math.min(totalPages, currentPage + 2)
+
+        pages.push(`
+          <li class="page-item ${currentPage <= 1 ? 'disabled' : ''}">
+            <button class="page-link" type="button" data-log-page="${currentPage - 1}" aria-label="Sebelumnya">Prev</button>
+          </li>
+        `)
+        for (let page = firstPage; page <= lastPage; page += 1) {
+          pages.push(`
+            <li class="page-item ${page === currentPage ? 'active' : ''}">
+              <button class="page-link" type="button" data-log-page="${page}">${page}</button>
+            </li>
+          `)
+        }
+        pages.push(`
+          <li class="page-item ${currentPage >= totalPages ? 'disabled' : ''}">
+            <button class="page-link" type="button" data-log-page="${currentPage + 1}" aria-label="Berikutnya">Next</button>
+          </li>
+        `)
+        pagination.innerHTML = totalPages > 1 ? pages.join('') : ''
+      }
+
+      const loadLogs = async (silent = false) => {
+        try {
+          if (!silent) {
+            table.innerHTML = '<tr><td colspan="10" class="text-secondary">Memuat log.</td></tr>'
+          }
+          const params = new URLSearchParams({ limit: String(pageSize), offset: String((currentPage - 1) * pageSize) })
+          if (typeFilter.value) params.set('type', typeFilter.value)
+          const response = await window.KoiAuth.apiRequest(`/notifications?${params.toString()}`)
+          const data = response.ok ? await response.json() : []
+          logs = Array.isArray(data) ? data : data.items || []
+          totalLogs = Array.isArray(data) ? logs.length : Number(data.total || 0)
+          localStorage.setItem(logsCacheKey, JSON.stringify({ logs, totalLogs, currentPage, type: typeFilter.value || '' }))
+          renderLogs()
+        } catch {
+          if (!silent) {
+            table.innerHTML = '<tr><td colspan="10" class="text-danger">Log gagal dimuat.</td></tr>'
+          }
+        }
+      }
+
+      const restoreLogsCache = () => {
+        try {
+          const cached = JSON.parse(localStorage.getItem(logsCacheKey) || 'null')
+          if (!cached || !Array.isArray(cached.logs) || cached.logs.length === 0) return
+          logs = cached.logs
+          totalLogs = Number(cached.totalLogs || cached.logs.length)
+          currentPage = Number(cached.currentPage || 1)
+          if (cached.type && typeFilter) typeFilter.value = cached.type
+          renderLogs()
+          return true
+        } catch {
+          localStorage.removeItem(logsCacheKey)
+          return false
+        }
+      }
+
+      selectAll?.addEventListener('change', () => {
+        table.querySelectorAll('[data-log-checkbox]').forEach((checkbox) => {
+          checkbox.checked = selectAll.checked
+        })
+        updateSelectionState()
+      })
+
+      typeFilter?.addEventListener('change', () => {
+        currentPage = 1
+        loadLogs()
+      })
+
+      table?.addEventListener('change', (event) => {
+        if (event.target?.matches('[data-log-checkbox]')) {
+          updateSelectionState()
+        }
+      })
+
+      table?.addEventListener('click', async (event) => {
+        const button = event.target?.closest('[data-action="edit-log"]')
+        if (!button) return
+
+        const log = logs.find((item) => Number(item.id) === Number(button.dataset.id))
+        if (!log) return
+
+        const nextStatus = log.status === 'read' ? 'unread' : 'read'
+        button.disabled = true
+        try {
+          const response = await window.KoiAuth.apiRequest(`/notifications/${log.id}`, {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ status: nextStatus }),
+          })
+          if (!response.ok) throw new Error('Log gagal diperbarui')
+          log.status = nextStatus
+          renderLogs()
+        } catch (error) {
+          alert(error.message || 'Log gagal diperbarui')
+          button.disabled = false
+        }
+      })
+
+      deleteButton?.addEventListener('click', async () => {
+        const ids = selectedIds()
+        if (!ids.length) return
+        if (!confirm(`Hapus ${ids.length} log terpilih?`)) return
+
+        deleteButton.disabled = true
+        try {
+          const response = await window.KoiAuth.apiRequest('/notifications', {
+            method: 'DELETE',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ ids }),
+          })
+          if (!response.ok) throw new Error('Log gagal dihapus')
+          logs = logs.filter((log) => !ids.includes(Number(log.id)))
+          totalLogs = Math.max(totalLogs - ids.length, 0)
+          if (selectAll) {
+            selectAll.checked = false
+            selectAll.indeterminate = false
+          }
+          renderLogs()
+        } catch (error) {
+          alert(error.message || 'Log gagal dihapus')
+        } finally {
+          deleteButton.disabled = false
+          updateSelectionState()
+        }
+      })
+
+      document.querySelector('[data-action="refresh-logs"]')?.addEventListener('click', loadLogs)
+      document.querySelector('[data-log-pagination]')?.addEventListener('click', (event) => {
+        const button = event.target?.closest('[data-log-page]')
+        if (!button || button.closest('.disabled')) return
+        const nextPage = Number(button.dataset.logPage)
+        if (!Number.isInteger(nextPage) || nextPage < 1 || nextPage === currentPage) return
+        currentPage = nextPage
+        loadLogs()
+      })
+      const hasCachedLogs = restoreLogsCache()
+      loadLogs(hasCachedLogs)
+    })
+  </script>
+</DefaultLayout>
