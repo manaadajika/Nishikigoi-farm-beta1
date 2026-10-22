@@ -39,9 +39,9 @@ Bila PHP dan MariaDB belum ada, skrip memasangnya lewat pengelola paket sistem (
   pkg update && pkg install -y git
   git clone https://github.com/manaadajika/Nishikigoi-farm-beta1.git Nishikigoi-farm-beta1
   cd Nishikigoi-farm-beta1
-  ./nishikigoi.sh start --lan
+  ./nishikigoi.sh start
   ```
-  `--lan` membuat program bisa dibuka dari perangkat lain di Wi-Fi yang sama (alamat `http://IP-HP:2000`). Agar tidak mati saat layar padam: `termux-wake-lock`.
+  Setelah kata sandi `admin` diganti (lalu jalankan ulang), program bisa dibuka dari perangkat lain di Wi-Fi yang sama (alamat `http://IP-HP:2000`). Agar tidak mati saat layar padam: `termux-wake-lock`.
 - **Linux di Android** (UserLAnd, Andronix, atau proot-distro dengan Debian/Ubuntu): langkahnya sama dengan Linux di atas.
 
 ## Perintah sehari-hari
@@ -51,8 +51,9 @@ Ganti `./nishikigoi.sh` dengan `.\nishikigoi.bat` di Windows.
 | Perintah | Fungsi |
 |---|---|
 | `./nishikigoi.sh` | Memasang bila perlu, lalu menjalankan program |
-| `./nishikigoi.sh start` | Menjalankan (database menyala otomatis). `CTRL+C` menghentikan server web |
-| `./nishikigoi.sh start --lan` | Menjalankan dan mengizinkan perangkat lain di jaringan yang sama |
+| `./nishikigoi.sh start` | Menjalankan (database menyala otomatis). `CTRL+C` menghentikan server web. Perangkat lain di jaringan yang sama otomatis boleh membuka setelah kata sandi `admin` diganti |
+| `./nishikigoi.sh start --lan` | Memaksa perangkat lain boleh membuka (walau kata sandi masih bawaan, tidak disarankan) |
+| `./nishikigoi.sh start --local` | Hanya perangkat ini yang boleh membuka |
 | `./nishikigoi.sh start --port=2100` | Memakai port lain (bawaan 2000) |
 | `./nishikigoi.sh stop` | Mematikan database pribadi |
 | `./nishikigoi.sh status` | Melihat yang sedang jalan |
@@ -60,7 +61,7 @@ Ganti `./nishikigoi.sh` dengan `.\nishikigoi.bat` di Windows.
 | `./nishikigoi.sh passwd USER SANDI` | Mengganti kata sandi akun (misalnya bila lupa) |
 | `./nishikigoi.sh setup` | Pemasangan pertama saja (tabel dan akun `admin`); aman diulang |
 
-**Keamanan.** Bawaannya program hanya bisa dibuka dari perangkat itu sendiri (`127.0.0.1`). Pakai `--lan` hanya di jaringan yang Anda percayai, dan **ganti kata sandi `admin` lebih dulu**.
+**Keamanan.** Selama kata sandi `admin` masih bawaan, program hanya bisa dibuka dari perangkat itu sendiri (`127.0.0.1`). **Begitu kata sandinya diganti, jalankan ulang: perangkat lain di jaringan yang sama otomatis boleh membuka** (dengan alamat IP perangkat itu, mis. `http://192.168.1.20:2000`). Pakai `--local` bila ingin tetap hanya satu perangkat. Windows mungkin menanyakan izin firewall pada saat itu; izinkan untuk jaringan pribadi.
 
 ## Data Anda
 

@@ -3,7 +3,7 @@
 #
 #   ./nishikigoi.sh                 pasang bila perlu, lalu jalankan (http://localhost:2000)
 #   ./nishikigoi.sh setup           pemasangan pertama (database pribadi + akun admin / admin)
-#   ./nishikigoi.sh start --lan     jalankan; perangkat lain di jaringan yang sama boleh membuka
+#   ./nishikigoi.sh start --local   jalankan hanya untuk perangkat ini (bawaan: perangkat lain boleh setelah kata sandi admin diganti)
 #   ./nishikigoi.sh stop | status | passwd USER PASS
 #
 # Bila PHP atau MariaDB belum ada, skrip ini memasangnya lewat pengelola paket sistem (apt, dnf, pacman, zypper, apk, brew, pkg).

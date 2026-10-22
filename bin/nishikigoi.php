@@ -10,7 +10,8 @@
 //   php bin/nishikigoi.php update [--check] looks for a newer version on GitHub and installs it (--check only reports)
 //   php bin/nishikigoi.php passwd USER PASS sets a new password (when it was forgotten)
 //
-// Options of start:  --port=2000   --host=127.0.0.1 (this device only, default)   --lan  (= --host=0.0.0.0: other devices on the Wi-Fi may connect)
+// Options of start:  --port=2000   --lan (other devices on the network may connect)   --local (this device only)   --host=ADDRESS
+// Without them: other devices may connect once the starting password of "admin" has been changed, and not before.
 //
 // The database is a private MariaDB/MySQL instance kept in storage/mysql on port 3307 (override: NISHIKIGOI_DB_PORT). It listens on this
 // device only, has no password of its own, and never touches another MySQL on the same computer.
@@ -210,6 +211,18 @@ function db_stop(?array $t, int $port, string $runDir): bool {
 }
 function embedded(string $dataDir): bool { return is_dir($dataDir . '/mysql'); }
 
+// True while the account "admin" still has the starting password "admin" (or when that cannot be told: then be careful).
+function default_password_in_use(string $root): bool {
+    try {
+        $config = require $root . '/api-php/config.php';
+        $pdo = new PDO(sprintf('mysql:host=%s;port=%d;dbname=%s;charset=utf8mb4', $config['db_host'], $config['db_port'], $config['db_name']), $config['db_user'], $config['db_pass'], [PDO::ATTR_TIMEOUT => 3, PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION]);
+        $row = $pdo->query("SELECT password FROM accounts WHERE username = 'admin' LIMIT 1")->fetch(PDO::FETCH_ASSOC);
+        return $row ? password_verify('admin', (string)$row['password']) : false;
+    } catch (Throwable $e) {
+        return true;
+    }
+}
+
 // ---- commands ------------------------------------------------------------------------------------------------------------------
 switch ($command) {
     case 'run': {   // double-click / no command: install first when needed, then start
@@ -249,18 +262,29 @@ switch ($command) {
 
     case 'start': {
         if (!is_file($root . '/api-php/config.local.php')) fail('Belum dipasang. Jalankan dulu:  nishikigoi setup');
-        $host = isset($opts['lan']) ? '0.0.0.0' : ($opts['host'] ?? '127.0.0.1');
         $port = (int)($opts['port'] ?? getenv('PORT') ?: 2000);
         if (embedded($dataDir)) {
             $t = db_tools($root);
             if (!$t) fail('Server database tidak ditemukan. ' . install_hint(), 2);
             if (!db_up($dbPort)) { say('Menyalakan database...'); db_start($t, $dataDir, $runDir, $logDir, $dbPort); }
         }
+        // Who may connect: other devices on the network are welcome as soon as the starting password is changed; until then this device only.
+        $host = isset($opts['lan']) ? '0.0.0.0' : (isset($opts['local']) ? '127.0.0.1' : ($opts['host'] ?? null));
+        $lanNote = '';
+        if ($host === null) {
+            if (default_password_in_use($root)) {
+                $host = '127.0.0.1';
+                $lanNote = "Perangkat lain belum diizinkan karena kata sandi admin masih 'admin'. Ganti di Pengaturan, lalu jalankan ulang: setelah itu perangkat lain di jaringan yang sama otomatis boleh membuka.";
+            } else {
+                $host = '0.0.0.0';
+            }
+        }
         if (port_open('127.0.0.1', $port)) fail("Port $port sudah dipakai. Pilih port lain, mis.  nishikigoi start --port=2100");
         $flags = ['-d', 'memory_limit=512M', '-d', 'post_max_size=512M', '-d', 'upload_max_filesize=512M', '-d', 'max_execution_time=300', '-d', 'date.timezone=Asia/Jakarta'];
         if (extension_loaded('Zend OPcache')) $flags = array_merge($flags, ['-d', 'opcache.enable=1', '-d', 'opcache.validate_timestamps=1', '-d', 'opcache.revalidate_freq=2', '-d', 'opcache.memory_consumption=64']);
         $cmd = array_merge([PHP_BINARY], php_flags_for_missing_extensions(), $flags, ['-S', "$host:$port", '-t', $webRoot, $root . '/bin/router.php']);
-        say('Nishikigoi jalan di http://localhost:' . $port . ($host === '0.0.0.0' ? '  (juga bisa dibuka dari perangkat lain di jaringan yang sama)' : '  (hanya dari perangkat ini; tambahkan --lan untuk perangkat lain)'));
+        say('Nishikigoi jalan di http://localhost:' . $port . ($host === '0.0.0.0' ? '  (juga bisa dibuka dari perangkat lain di jaringan yang sama lewat alamat IP perangkat ini; pakai --local untuk membatasi)' : '  (hanya dari perangkat ini)'));
+        if ($lanNote !== '') say($lanNote);
         say('Tekan CTRL+C untuk menghentikan server web. Database tetap menyala; matikan dengan:  nishikigoi stop');
         // NISHIKIGOI_SELF_UPDATE=1 turns on "versi baru tersedia / Perbarui sekarang" in the program (api-php/lib/update.php)
         $env = array_merge(getenv(), ['NISHIKIGOI_REEXEC' => '1', 'NISHIKIGOI_SELF_UPDATE' => '1']);
