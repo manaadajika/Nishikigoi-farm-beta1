@@ -1286,9 +1286,11 @@
   function installDateInputs() {
     var style = document.createElement('style')
     style.id = 'koi-date-inputs'
-    style.textContent = 'input[data-koi-date]::-webkit-datetime-edit{color:transparent}' +
+    // The browser's own date text must never show: the program's text sits over it. Chrome on Android draws that text without the
+    // desktop pseudo-elements, so the field's own text color is made transparent as well (the calendar icon is not text).
+    style.textContent = 'input[data-koi-date]{color:transparent!important;-webkit-text-fill-color:transparent!important;text-shadow:none!important;caret-color:transparent}' +
+      'input[data-koi-date]::-webkit-datetime-edit,input[data-koi-date]::-webkit-datetime-edit-text,input[data-koi-date]::-webkit-datetime-edit-month-field,input[data-koi-date]::-webkit-datetime-edit-day-field,input[data-koi-date]::-webkit-datetime-edit-year-field{color:transparent!important;-webkit-text-fill-color:transparent!important}' +
       'input[data-koi-date]::-webkit-datetime-edit-fields-wrapper{opacity:0}' +
-      'input[data-koi-date]{caret-color:transparent}' +
       '.koi-date-text{position:absolute;display:flex;align-items:center;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;pointer-events:none;z-index:1;color:var(--tblr-body-color,inherit)}' +
       '.koi-date-text.is-empty{color:var(--tblr-secondary-color,rgb(150,160,175))}'
     document.head.appendChild(style)
