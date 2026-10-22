@@ -262,7 +262,8 @@ switch ($command) {
         $cmd = array_merge([PHP_BINARY], php_flags_for_missing_extensions(), $flags, ['-S', "$host:$port", '-t', $webRoot, $root . '/bin/router.php']);
         say('Nishikigoi jalan di http://localhost:' . $port . ($host === '0.0.0.0' ? '  (juga bisa dibuka dari perangkat lain di jaringan yang sama)' : '  (hanya dari perangkat ini; tambahkan --lan untuk perangkat lain)'));
         say('Tekan CTRL+C untuk menghentikan server web. Database tetap menyala; matikan dengan:  nishikigoi stop');
-        $env = array_merge(getenv(), ['NISHIKIGOI_REEXEC' => '1']);
+        // NISHIKIGOI_SELF_UPDATE=1 turns on "versi baru tersedia / Perbarui sekarang" in the program (api-php/lib/update.php)
+        $env = array_merge(getenv(), ['NISHIKIGOI_REEXEC' => '1', 'NISHIKIGOI_SELF_UPDATE' => '1']);
         if (!$isWindows) $env['PHP_CLI_SERVER_WORKERS'] = getenv('PHP_CLI_SERVER_WORKERS') ?: '4';
         $proc = proc_open($cmd, [0 => STDIN, 1 => STDOUT, 2 => STDERR], $pipes, $root, $env);
         exit(is_resource($proc) ? proc_close($proc) : 1);

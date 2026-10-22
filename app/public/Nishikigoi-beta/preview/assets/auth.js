@@ -801,7 +801,7 @@
   // Every successful save / update / delete in any menu shows a short popup, so nobody has to refresh the page to
   // know it worked. It is done here, on the API calls, so every menu gets it. Uploads, drafts, login, messages and
   // maintenance jobs have their own feedback and stay silent; a burst of calls (bulk edit, import) becomes one popup.
-  var toastSilent = /\/(auth|drafts|notifications|messages|images|koi-images|videos|maintenance|feedback|status|jobs|koi\/page|koi\/batch|print-settings|my-theme)(\/|\?|$)/
+  var toastSilent = /\/(auth|drafts|notifications|system|messages|images|koi-images|videos|maintenance|feedback|status|jobs|koi\/page|koi\/batch|print-settings|my-theme)(\/|\?|$)/
   var toastState = { timer: null, save: 0, update: 0, remove: 0 }
 
   // Small notice in the top right corner (Tabler / Bootstrap "toast" look): one line, themed background, a coloured edge, gone
@@ -2851,4 +2851,123 @@
   }
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', show)
   else show()
+})()
+
+// ---- "Versi baru tersedia": a slim bar for the Master Admin when GitHub has a newer version, and the "Perbarui sekarang" button ----------
+// The server answers { enabled: false } where this does not apply (Apache/Laragon, a copy that is not a git clone); every other role is
+// refused (403) and sees nothing. The update itself runs on the server (api-php/lib/update.php); the new files are used right away.
+;(function () {
+  var snoozeKey = 'koi-update-snooze'
+  var bar = null
+  var running = false
+
+  function session() {
+    try { return window.KoiAuth && window.KoiAuth.getSession && window.KoiAuth.getSession() } catch (error) { return null }
+  }
+  function esc(value) {
+    return String(value === null || value === undefined ? '' : value).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c] })
+  }
+  function snoozed() {
+    try { return Number(localStorage.getItem(snoozeKey) || 0) > Date.now() } catch (error) { return false }
+  }
+  function snooze() {
+    try { localStorage.setItem(snoozeKey, String(Date.now() + 6 * 3600 * 1000)) } catch (error) { /* only a convenience */ }
+  }
+  function ask(path, options) {
+    return window.KoiAuth.apiRequest(path, options).then(function (response) {
+      return response.json().catch(function () { return {} }).then(function (data) { return { ok: response.ok, status: response.status, data: data } })
+    })
+  }
+
+  function removeBar() {
+    if (bar) { bar.remove(); bar = null }
+  }
+
+  function overlay(text) {
+    var box = document.createElement('div')
+    box.setAttribute('data-koi-update-overlay', '')
+    box.style.cssText = 'position:fixed;inset:0;z-index:7000;display:flex;align-items:center;justify-content:center;padding:16px;background:rgba(8,12,20,.78);color:#fff;text-align:center;font-size:1.05rem'
+    box.innerHTML = '<div><div class="spinner-border mb-3" role="status"></div><div data-koi-update-text>' + esc(text) + '</div><div class="small mt-2" style="opacity:.75">Jangan tutup halaman ini.</div></div>'
+    document.body.appendChild(box)
+    return box
+  }
+
+  function applyUpdate() {
+    if (running) return
+    running = true
+    var box = overlay('Mengambil pembaruan...')
+    function fail(message) {
+      running = false
+      box.remove()
+      window.KoiDialog.alert(message || 'Pembaruan gagal.')
+    }
+    ask('/system/update/apply', { method: 'POST', body: '{}' }).then(function (result) {
+      if (!result.ok) return fail(result.data.error || 'Pembaruan gagal dimulai.')
+      var tries = 0
+      var timer = window.setInterval(function () {
+        tries += 1
+        ask('/system/update').then(function (poll) {
+          var state = poll.data && poll.data.apply && poll.data.apply.state
+          if (state === 'done') {
+            window.clearInterval(timer)
+            box.querySelector('[data-koi-update-text]').textContent = 'Versi terbaru terpasang. Memuat ulang...'
+            window.setTimeout(function () { window.location.reload() }, 1200)
+          } else if (state === 'error') {
+            window.clearInterval(timer)
+            fail(poll.data.apply.message)
+          } else if (tries > 90) {
+            window.clearInterval(timer)
+            fail('Pembaruan memakan waktu terlalu lama. Muat ulang halaman dan periksa lagi.')
+          }
+        }).catch(function () { /* the server may be busy for a moment: try again on the next tick */ })
+      }, 2000)
+    }).catch(function () { fail('Tidak bisa menghubungi server.') })
+  }
+
+  function openDialog(info) {
+    if (info.dirty) {
+      window.KoiDialog.alert('Ada berkas program yang diubah di komputer ini, jadi pembaruan otomatis tidak bisa dipasang supaya perubahan itu tidak tertimpa.')
+      return
+    }
+    var lines = (info.changes || []).slice(0, 10).map(function (change) { return '- ' + (change.date ? change.date + ': ' : '') + change.subject })
+    var more = info.behind > lines.length ? '\n- dan ' + (info.behind - lines.length) + ' pembaruan lainnya' : ''
+    window.KoiDialog.confirm({
+      title: 'Perbarui ke versi terbaru?',
+      message: info.behind + ' pembaruan tersedia:\n' + lines.join('\n') + more + '\n\nSebaiknya buat Backup dulu (Pengaturan > Master Akun). Pembaruan hanya mengganti berkas program; data Anda tidak disentuh.',
+      confirmText: 'Perbarui sekarang',
+      danger: false,
+    }).then(function (yes) { if (yes) applyUpdate() })
+  }
+
+  function showBar(info) {
+    if (bar || snoozed() || document.querySelector('[data-koi-update-overlay]')) return
+    bar = document.createElement('div')
+    bar.setAttribute('data-koi-update-bar', '')
+    bar.style.cssText = 'display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:.6rem;padding:.4rem 1rem;background:#1688ff;color:#fff;font-size:.9rem'
+    bar.innerHTML = '<span>Versi baru tersedia (' + esc(info.behind) + ' pembaruan).</span>' +
+      '<button type="button" class="btn btn-sm btn-light" data-koi-update-open>Lihat dan perbarui</button>' +
+      '<button type="button" class="btn btn-sm btn-ghost-light" data-koi-update-later style="color:#fff">Nanti</button>'
+    document.body.insertBefore(bar, document.body.firstChild)
+    bar.querySelector('[data-koi-update-open]').addEventListener('click', function () { openDialog(info) })
+    bar.querySelector('[data-koi-update-later]').addEventListener('click', function () { snooze(); removeBar() })
+  }
+
+  function check(attempt) {
+    ask('/system/update').then(function (result) {
+      var info = result.data
+      if (!result.ok || !info || !info.enabled) return
+      if (info.behind > 0) showBar(info)
+      else removeBar()
+      // the first look at GitHub runs in the background: ask again shortly
+      if (info.checking && (attempt || 0) < 6) window.setTimeout(function () { check((attempt || 0) + 1) }, 5000)
+    }).catch(function () { /* offline or not allowed: nothing to show */ })
+  }
+
+  function start() {
+    var me = session()
+    if (!me || me.role !== 'Master Admin' || !window.KoiAuth || !window.KoiAuth.apiRequest) return
+    check(0)
+  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', start)
+  else window.setTimeout(start, 600)
 })()

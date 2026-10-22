@@ -95,7 +95,7 @@ function required_write_level(string $path): int {
     foreach (['/feedback', '/messages', '/posts'] as $prefix) {
         if (str_starts_with($path, $prefix)) return 0;
     }
-    foreach (['/app-settings', '/accounts', '/account-sessions', '/login-history', '/maintenance', '/jobs', '/notifications'] as $prefix) {
+    foreach (['/app-settings', '/accounts', '/account-sessions', '/login-history', '/maintenance', '/jobs', '/notifications', '/system/update'] as $prefix) {
         if (str_starts_with($path, $prefix)) return 3;
     }
     foreach (['/ponds', '/breeding', '/farm-reports', '/drafts', '/sell', '/invoices', '/inventory'] as $prefix) {
@@ -112,7 +112,7 @@ function enforce_role_access(string $method, string $path): void {
 
     // POST /koi/page and /koi/batch only read (they take their filters/ids in the body)
     $isRead = $method === 'GET' || ($method === 'POST' && in_array($path, ['/koi/page', '/koi/batch'], true));
-    $masterOnlyRead = in_array($path, ['/account-sessions', '/dashboard/account-sessions', '/login-history'], true);
+    $masterOnlyRead = in_array($path, ['/account-sessions', '/dashboard/account-sessions', '/login-history', '/system/update'], true);
     // Reads need a valid session too, except what the sign-in page and the file URLs need.
     // /app-settings returns only the brand name/icon when nobody is logged in (see its handler).
     // Uploaded files stay reachable by their long random URL, because <img> tags cannot send the session header.
@@ -123,7 +123,7 @@ function enforce_role_access(string $method, string $path): void {
     if ($role === null) send_error(401, 'Sesi tidak valid atau kedaluwarsa');
 
     if ($masterOnlyRead) {
-        if (role_level($role) < 3) send_error(403, 'Hanya Master Admin yang boleh melihat sesi dan riwayat login.');
+        if (role_level($role) < 3) send_error(403, 'Hanya Master Admin yang boleh melihat ini.');
         return;
     }
     if ($isRead) return; // any valid session may read
