@@ -237,7 +237,8 @@ switch ($command) {
     case 'setup': {
         say('== Nishikigoi: pemasangan ==');
         if (version_compare(PHP_VERSION, '8.1.0', '<')) fail('Butuh PHP 8.1 atau lebih baru (terpasang ' . PHP_VERSION . ').');
-        if ($missing = missing_extensions()) fail('Ekstensi PHP belum aktif: ' . implode(', ', $missing) . ". Aktifkan di php.ini (hapus ';' di depan extension=...).");
+        // exit code 3 = "PHP lacks an extension": nishikigoi.sh then installs the missing package and tries once more
+        if ($missing = missing_extensions()) fail('Ekstensi PHP belum aktif: ' . implode(', ', $missing) . ". Aktifkan di php.ini (hapus ';' di depan extension=...), atau pasang paketnya (Termux: pkg install php-gd).", 3);
         say('1/3 PHP ' . PHP_VERSION . ' dan ekstensinya lengkap.');
 
         say('2/3 Database pribadi (port ' . $dbPort . ')...');

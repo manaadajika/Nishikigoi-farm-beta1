@@ -20,7 +20,7 @@ if [ "$(id -u)" != "0" ] && have sudo; then SUDO="sudo"; fi
 install_packages() {
   echo "Memasang PHP dan MariaDB yang belum ada..."
   if [ -n "${TERMUX_VERSION:-}" ] || [ "${PREFIX#*com.termux}" != "${PREFIX:-}" ]; then
-    pkg install -y php mariadb
+    pkg install -y php php-gd mariadb
   elif have brew; then
     brew install php mariadb
   elif have apt-get; then
@@ -49,4 +49,10 @@ case "$CMD" in
     ;;
 esac
 
-exec php bin/nishikigoi.php "$@"
+php bin/nishikigoi.php "$@"
+code=$?
+# exit code 3: PHP lacks an extension (for example gd on Termux): install the packages, then try once more
+if [ "$code" -eq 3 ]; then
+  install_packages && exec php bin/nishikigoi.php "$@"
+fi
+exit "$code"
