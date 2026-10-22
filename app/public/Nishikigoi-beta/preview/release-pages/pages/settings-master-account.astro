@@ -44,6 +44,24 @@ import FormGroup from '@ui/FormGroup.astro'
       </div>
     </div>
 
+    <div class="border rounded p-3 mb-4" data-update-card hidden>
+      <div class="d-flex flex-column gap-3">
+        <div>
+          <CardTitle>Versi Program</CardTitle>
+          <CardSubtitle>Program memeriksa GitHub paling sering tiap 3 jam selama Master Admin membuka program. Pembaruan hanya mengganti berkas program; data tidak disentuh.</CardSubtitle>
+          <div class="text-secondary small mt-2">
+            <div>Versi terpasang: <strong data-update-head>Memuat...</strong></div>
+            <div>Terakhir diperiksa: <strong data-update-checked>Memuat...</strong></div>
+            <div data-update-status></div>
+          </div>
+        </div>
+        <div class="btn-list">
+          <button type="button" class="btn" data-update-refresh>Periksa pembaruan sekarang</button>
+          <button type="button" class="btn btn-primary" data-update-open hidden>Lihat dan perbarui</button>
+        </div>
+      </div>
+    </div>
+
     <div class="border rounded p-3 mb-4" id="system-backup" data-system-backup-panel>
       <div class="d-flex flex-column gap-3">
         <div>

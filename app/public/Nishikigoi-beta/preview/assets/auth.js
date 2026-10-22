@@ -2954,15 +2954,42 @@
     bar.querySelector('[data-koi-update-later]').addEventListener('click', function () { snooze(); removeBar() })
   }
 
-  function check(attempt) {
-    ask('/system/update').then(function (result) {
+  // the "Versi Program" card of Master Akun (shown only where updating from the program applies)
+  function fillCard(info) {
+    var card = document.querySelector('[data-update-card]')
+    if (!card) return
+    if (!info || !info.enabled) { card.hidden = true; return }
+    card.hidden = false
+    var head = info.head ? info.head.sha + ' (' + info.head.date + ') ' + info.head.subject : '-'
+    card.querySelector('[data-update-head]').textContent = head
+    var when = info.checked_at ? new Date(info.checked_at * 1000) : null
+    card.querySelector('[data-update-checked]').textContent = info.checking ? 'sedang memeriksa...' : when ? (window.KoiAuth.formatDateTime ? window.KoiAuth.formatDateTime(when) : when.toLocaleString()) : 'belum pernah'
+    var status = card.querySelector('[data-update-status]')
+    status.className = info.error ? 'text-danger' : info.behind > 0 ? 'text-warning fw-semibold' : 'text-success'
+    status.textContent = info.error ? info.error : info.behind > 0 ? info.behind + ' pembaruan tersedia.' : info.checking ? '' : 'Sudah versi terbaru.'
+    var open = card.querySelector('[data-update-open]')
+    open.hidden = !(info.behind > 0)
+    open.onclick = function () { openDialog(info) }
+    var refresh = card.querySelector('[data-update-refresh]')
+    refresh.disabled = !!info.checking
+    refresh.onclick = function () {
+      refresh.disabled = true
+      status.className = 'text-secondary'
+      status.textContent = 'Memeriksa GitHub...'
+      check(0, true)
+    }
+  }
+
+  function check(attempt, force) {
+    ask('/system/update' + (force && !attempt ? '?refresh=1' : '')).then(function (result) {
       var info = result.data
-      if (!result.ok || !info || !info.enabled) return
+      if (!result.ok || !info || !info.enabled) { fillCard(null); return }
       if (info.behind > 0) showBar(info)
       else removeBar()
+      fillCard(info)
       // the first look at GitHub runs in the background: ask again shortly
-      if (info.checking && (attempt || 0) < 6) window.setTimeout(function () { check((attempt || 0) + 1) }, 5000)
-    }).catch(function () { /* offline or not allowed: nothing to show */ })
+      if (info.checking && (attempt || 0) < 8) window.setTimeout(function () { check((attempt || 0) + 1, force) }, force ? 3000 : 5000)
+    }).catch(function () { fillCard(null) })
   }
 
   function start() {

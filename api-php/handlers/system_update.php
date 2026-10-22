@@ -13,9 +13,9 @@ route('GET', '/system/update', function () {
     $checking = isset($state['checking_since']) && $now - (int)$state['checking_since'] < 120;
     $applying = ($apply['state'] ?? '') === 'running' && $now - (int)($apply['started_at'] ?? 0) < 300;
     $age = $now - (int)($state['checked_at'] ?? 0);
-    // looked up at most once a day, or when asked (not more than once a minute); the job runs on its own, this answer never waits for it
+    // looked up at most every 3 hours (when a Master Admin has the program open), or when asked (not more than once a minute); the job runs on its own, this answer never waits for it
     $asked = isset($_GET['refresh']) && $age > 60;
-    if (!$checking && !$applying && (!isset($state['checked_at']) || $age > 86400 || $asked)) {
+    if (!$checking && !$applying && (!isset($state['checked_at']) || $age > 10800 || $asked)) {
         $state['checking_since'] = $now;
         update_write(update_state_file(), $state);
         update_spawn('check');

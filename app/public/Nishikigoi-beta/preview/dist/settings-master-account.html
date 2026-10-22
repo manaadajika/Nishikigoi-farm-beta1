@@ -137,7 +137,7 @@
     <!-- END GLOBAL THEME SCRIPT -->
 
     <!-- BEGIN APP AUTH SCRIPT -->
-    <script src="./assets/auth.js?v=20261027b"></script>
+    <script src="./assets/auth.js?v=20261027c"></script>
     <script src="./assets/drafts.js?v=20261024b"></script>
     <script src="./assets/theme-sync.js?v=20261014b"></script>
     <script src="./assets/print-kit.js?v=20261024a"></script>
@@ -1283,6 +1283,24 @@
                         </div>
                       </div>
                     </div>
+
+                  <div class="border rounded p-3 mb-4" data-update-card hidden>
+                    <div class="d-flex flex-column gap-3">
+                      <div>
+                        <h3 class="card-title">Versi Program</h3>
+                        <p class="card-subtitle">Program memeriksa GitHub paling sering tiap 3 jam selama Master Admin membuka program. Pembaruan hanya mengganti berkas program; data tidak disentuh.</p>
+                        <div class="text-secondary small mt-2">
+                          <div>Versi terpasang: <strong data-update-head>Memuat...</strong></div>
+                          <div>Terakhir diperiksa: <strong data-update-checked>Memuat...</strong></div>
+                          <div data-update-status></div>
+                        </div>
+                      </div>
+                      <div class="btn-list">
+                        <button type="button" class="btn" data-update-refresh>Periksa pembaruan sekarang</button>
+                        <button type="button" class="btn btn-primary" data-update-open hidden>Lihat dan perbarui</button>
+                      </div>
+                    </div>
+                  </div>
 
                     <div
                       class="border rounded p-3 mb-4"
