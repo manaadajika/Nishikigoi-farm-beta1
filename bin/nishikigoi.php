@@ -282,7 +282,17 @@ switch ($command) {
         }
         if (port_open('127.0.0.1', $port)) fail("Port $port sudah dipakai. Pilih port lain, mis.  nishikigoi start --port=2100");
         $flags = ['-d', 'memory_limit=512M', '-d', 'post_max_size=512M', '-d', 'upload_max_filesize=512M', '-d', 'max_execution_time=300', '-d', 'date.timezone=Asia/Jakarta', '-d', 'display_errors=0', '-d', 'log_errors=1', '-d', 'error_log=' . $logDir . '/php-error.log', '-d', 'error_reporting=E_ALL & ~E_DEPRECATED & ~E_NOTICE'];
-        if (extension_loaded('Zend OPcache')) $flags = array_merge($flags, ['-d', 'opcache.enable=1', '-d', 'opcache.validate_timestamps=1', '-d', 'opcache.revalidate_freq=2', '-d', 'opcache.memory_consumption=64']);
+        // OPcache makes pages answer faster, but on Termux (Android) it cannot create its lock file and stops the server ("Cannot create lock"),
+        // so it stays off there unless NISHIKIGOI_OPCACHE=1; where it is on, its lock file goes to storage/run (always writable)
+        if (!is_dir($runDir)) @mkdir($runDir, 0775, true);
+        $onTermux = strpos((string)getenv('PREFIX'), 'com.termux') !== false;
+        $opcachePref = getenv('NISHIKIGOI_OPCACHE');
+        $useOpcache = $opcachePref === '1' || ($opcachePref !== '0' && !$onTermux);
+        if (extension_loaded('Zend OPcache')) {
+            $flags = $useOpcache
+                ? array_merge($flags, ['-d', 'opcache.enable=1', '-d', 'opcache.lockfile_path=' . $runDir, '-d', 'opcache.validate_timestamps=1', '-d', 'opcache.revalidate_freq=2', '-d', 'opcache.memory_consumption=64'])
+                : array_merge($flags, ['-d', 'opcache.enable=0']);
+        }
         $cmd = array_merge([PHP_BINARY], php_flags_for_missing_extensions(), $flags, ['-S', "$host:$port", '-t', $webRoot, $root . '/bin/router.php']);
         say('Nishikigoi jalan di http://localhost:' . $port . ($host === '0.0.0.0' ? '  (juga bisa dibuka dari perangkat lain di jaringan yang sama lewat alamat IP perangkat ini; pakai --local untuk membatasi)' : '  (hanya dari perangkat ini)'));
         if ($lanNote !== '') say($lanNote);

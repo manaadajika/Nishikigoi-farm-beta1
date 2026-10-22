@@ -5,6 +5,11 @@ require_once __DIR__ . '/cache.php';
 
 const KOI_SCHEMA_REV = 20261026;
 
+// PHP 8.5 renamed the MySQL driver constants (Pdo\Mysql::ATTR_*); older versions only know PDO::MYSQL_ATTR_*.
+function koi_pdo_init_command(): int {
+    return class_exists('Pdo\\Mysql') ? constant('Pdo\\Mysql::ATTR_INIT_COMMAND') : PDO::MYSQL_ATTR_INIT_COMMAND;
+}
+
 function db(): PDO {
     static $pdo = null;
     if ($pdo !== null) return $pdo;
@@ -27,7 +32,7 @@ function db(): PDO {
         PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
         PDO::ATTR_EMULATE_PREPARES => false,
         PDO::ATTR_PERSISTENT => $persistent,
-        PDO::MYSQL_ATTR_INIT_COMMAND => "SET time_zone = '" . date('P') . "'",
+        koi_pdo_init_command() => "SET time_zone = '" . date('P') . "'",
     ]);
     if ($persistent) {
         // a reused connection must start clean: nothing left open or switched off by a request that died half way
@@ -61,7 +66,7 @@ function db_read(): PDO {
             PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
             PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
             PDO::ATTR_EMULATE_PREPARES => false,
-            PDO::MYSQL_ATTR_INIT_COMMAND => "SET time_zone = '" . date('P') . "'",
+            koi_pdo_init_command() => "SET time_zone = '" . date('P') . "'",
         ]);
     } catch (Throwable $e) {
         error_log('[nishikigoi-api] read replica unreachable, using the main database: ' . $e->getMessage());
