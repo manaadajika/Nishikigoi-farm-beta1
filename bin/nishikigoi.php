@@ -165,7 +165,7 @@ function db_init(array $t, string $dataDir): void {
     if ($t['flavor'] === 'mysql') {
         [$code, $out] = run_capture([$t['server'], '--no-defaults', '--initialize-insecure', '--basedir=' . $t['basedir'], '--datadir=' . $dataDir]);
     } elseif ($t['install']) {
-        [$code, $out] = run_capture([$t['install'], '--no-defaults', '--datadir=' . $dataDir, '--basedir=' . $t['basedir'], '--auth-root-authentication-method=normal', '--skip-test-db']);
+        [$code, $out] = run_capture([$t['install'], '--no-defaults', '--datadir=' . $dataDir, '--auth-root-authentication-method=normal', '--skip-test-db']);
     } else {
         fail('Alat pembuat data MariaDB (mariadb-install-db) tidak ditemukan di ' . $t['basedir'] . '.');
     }
@@ -281,7 +281,7 @@ switch ($command) {
             }
         }
         if (port_open('127.0.0.1', $port)) fail("Port $port sudah dipakai. Pilih port lain, mis.  nishikigoi start --port=2100");
-        $flags = ['-d', 'memory_limit=512M', '-d', 'post_max_size=512M', '-d', 'upload_max_filesize=512M', '-d', 'max_execution_time=300', '-d', 'date.timezone=Asia/Jakarta'];
+        $flags = ['-d', 'memory_limit=512M', '-d', 'post_max_size=512M', '-d', 'upload_max_filesize=512M', '-d', 'max_execution_time=300', '-d', 'date.timezone=Asia/Jakarta', '-d', 'display_errors=0', '-d', 'log_errors=1', '-d', 'error_log=' . $logDir . '/php-error.log', '-d', 'error_reporting=E_ALL & ~E_DEPRECATED & ~E_NOTICE'];
         if (extension_loaded('Zend OPcache')) $flags = array_merge($flags, ['-d', 'opcache.enable=1', '-d', 'opcache.validate_timestamps=1', '-d', 'opcache.revalidate_freq=2', '-d', 'opcache.memory_consumption=64']);
         $cmd = array_merge([PHP_BINARY], php_flags_for_missing_extensions(), $flags, ['-S', "$host:$port", '-t', $webRoot, $root . '/bin/router.php']);
         say('Nishikigoi jalan di http://localhost:' . $port . ($host === '0.0.0.0' ? '  (juga bisa dibuka dari perangkat lain di jaringan yang sama lewat alamat IP perangkat ini; pakai --local untuk membatasi)' : '  (hanya dari perangkat ini)'));
