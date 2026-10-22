@@ -74,7 +74,11 @@ Folder-folder ini **tidak ikut Git**. Untuk memindahkan data ke perangkat lain: 
 
 ## Memperbarui program
 
-GitHub **tidak** mengirim pembaruan sendiri dan program tidak memeriksanya otomatis. Untuk melihat dan mengambil versi terbaru, jalankan di folder program (di Windows ganti `./nishikigoi.sh` dengan `.
+**Dari dalam program (paling mudah).** Akun **Master Admin** akan melihat bilah biru "Versi baru tersedia" di bagian atas halaman bila ada pembaruan di GitHub (akun dengan role lain tidak melihat apa pun). Program memeriksa GitHub paling sering sekali sehari selama ada internet. Klik **Lihat dan perbarui** untuk melihat daftar perubahannya, lalu **Perbarui sekarang**: versi baru langsung dipakai dan halaman dimuat ulang. Perubahan database ditambahkan otomatis, data tidak tersentuh. Sebaiknya buat Backup dulu.
+
+Syarat: program hasil `git clone` yang dijalankan lewat `nishikigoi`, Git terpasang, dan ada internet. Bila ada berkas program yang diubah di komputer itu, pembaruan otomatis dibatalkan supaya tidak menimpanya.
+
+**Lewat perintah**, di folder program (di Windows ganti `./nishikigoi.sh` dengan `.
 ishikigoi.bat`):
 
 ```bash
@@ -82,9 +86,7 @@ ishikigoi.bat`):
 ./nishikigoi.sh update            # mengambil dan memasangnya
 ```
 
-Setelah itu hentikan program yang sedang jalan (`CTRL+C`) dan jalankan lagi. Perubahan struktur database ditambahkan otomatis saat program dibuka, data tidak tersentuh. Butuh internet, Git, dan login GitHub (repositori privat). Cara manualnya sama saja: `git pull`.
-
-Bila pembaruan gagal diambil, biasanya ada berkas program yang diubah di komputer itu; jangan mengedit berkas program di perangkat hasil clone.
+Cara manualnya sama saja: `git pull`. Bila pembaruan mengubah pengelola di folder `bin/`, hentikan program (`CTRL+C`) dan jalankan lagi.
 
 ## Ringan dan efisien
 
