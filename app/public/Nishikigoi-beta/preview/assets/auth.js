@@ -1427,21 +1427,22 @@
         ? '<div style="margin-top:8px;padding:6px 8px;border-radius:6px;background:var(--tblr-bg-surface-secondary,rgba(128,150,172,.12));font-size:.8rem;overflow-wrap:anywhere">' + dialogRichText(options.details) + '</div>'
         : ''
       var inputHtml = kind === 'prompt'
-        ? '<input type="text" data-dialog-input data-no-clear autocomplete="off" class="form-control mt-2" placeholder="' + dialogEscapeHtml(options.placeholder || (expected ? 'Ketik ' + expected : '')) + '">'
+        ? '<input type="text" data-dialog-input data-no-clear autocomplete="off" class="form-control mt-3" style="text-align:left" placeholder="' + dialogEscapeHtml(options.placeholder || (expected ? 'Ketik ' + expected : '')) + '">'
         : ''
-      var smallIcon = options.danger || kind === 'alert'
-        ? '<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="' + accent + '" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex:0 0 auto;margin-top:1px">' + icon + '</svg>'
-        : ''
+      var iconCircle = '<span style="display:inline-flex;width:40px;height:40px;border-radius:50%;align-items:center;justify-content:center;background:color-mix(in srgb,' + accent + ' 14%,transparent);color:' + accent + '">' +
+        '<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + icon + '</svg></span>'
+      // centered, like a small card: icon, title, text, and two buttons of equal width (the cancel button is the plain one)
       overlay.innerHTML =
-        '<div style="width:min(92vw,22rem);max-height:90vh;overflow:auto;border-radius:var(--tblr-border-radius-lg,8px);background:var(--tblr-bg-surface,#1b2330);color:var(--tblr-body-color,#e6e8eb);border:1px solid var(--tblr-border-color,rgba(128,150,172,.3));box-shadow:0 8px 28px rgba(0,0,0,.35)">' +
-        '<div style="padding:14px 16px 4px">' +
-        '<div style="display:flex;gap:8px;align-items:flex-start;font-size:1rem;font-weight:600;line-height:1.35;overflow-wrap:anywhere">' + smallIcon + '<span style="min-width:0">' + dialogRichText(options.title) + '</span></div>' +
-        (options.message ? '<div style="margin-top:6px;font-size:.875rem;line-height:1.45;color:var(--tblr-secondary,inherit);overflow-wrap:anywhere">' + dialogRichText(options.message) + '</div>' : '') +
+        '<div style="width:min(92vw,22.5rem);max-height:90vh;overflow:auto;text-align:center;border-radius:var(--tblr-border-radius-lg,10px);background:var(--tblr-bg-surface,#1b2330);color:var(--tblr-body-color,#e6e8eb);border:1px solid var(--tblr-border-color,rgba(128,150,172,.3));box-shadow:0 8px 28px rgba(0,0,0,.35)">' +
+        '<div style="padding:18px 20px 6px">' +
+        iconCircle +
+        '<div style="margin-top:10px;font-size:1rem;font-weight:600;line-height:1.35;overflow-wrap:anywhere">' + dialogRichText(options.title) + '</div>' +
+        (options.message ? '<div style="margin-top:6px;font-size:.85rem;line-height:1.45;color:var(--tblr-secondary,inherit);overflow-wrap:anywhere">' + dialogRichText(options.message) + '</div>' : '') +
         detailsHtml + inputHtml +
         '</div>' +
-        '<div style="display:flex;gap:8px;justify-content:flex-end;padding:12px 16px 14px">' +
-        (kind === 'alert' ? '' : '<button type="button" data-dialog-cancel class="btn btn-sm" style="min-width:4.5rem">' + dialogEscapeHtml(options.cancelText) + '</button>') +
-        '<button type="button" data-dialog-ok class="btn btn-sm ' + (options.danger ? 'btn-danger' : 'btn-primary') + '" style="min-width:5.5rem">' + dialogEscapeHtml(options.confirmText) + '</button>' +
+        '<div style="display:flex;gap:10px;padding:14px 20px 18px">' +
+        (kind === 'alert' ? '' : '<button type="button" data-dialog-cancel class="btn btn-sm" style="flex:1 1 0">' + dialogEscapeHtml(options.cancelText) + '</button>') +
+        '<button type="button" data-dialog-ok class="btn btn-sm ' + (options.danger ? 'btn-danger' : 'btn-primary') + '" style="flex:1 1 0">' + dialogEscapeHtml(options.confirmText) + '</button>' +
         '</div></div>'
       var okButton = overlay.querySelector('[data-dialog-ok]')
       var cancelButton = overlay.querySelector('[data-dialog-cancel]')
