@@ -1360,9 +1360,8 @@
   installDateInputs()
 
   // ---- Dialogs: confirm / prompt / alert in the program's own look ----------------------------------------------------------------
-  // The browser's own popups are small, easy to click through by accident and say "localhost:1000 says". These are large, show the
-  // count of what is about to change in a big badge, put the safe button (Batal) first for risky actions and need a typed word
-  // (e.g. HAPUS) when the message asks for it.
+  // The browser's own popups are easy to click through by accident and say "localhost says". These are small and plain, in the colors of
+  // the theme, put the safe button (Batal) first for risky actions and need a typed word (e.g. HAPUS) when the message asks for it.
   //   KoiDialog.confirm('Hapus 4 ikan terpilih?')                    -> Promise<boolean>
   //   KoiDialog.confirm({ title, message, danger, confirmText, details })
   //   KoiDialog.prompt('Nama draft', 'isi awal')                      -> Promise<string|null>
@@ -1416,39 +1415,33 @@
       overlay.setAttribute('role', kind === 'alert' ? 'alertdialog' : 'dialog')
       overlay.setAttribute('aria-modal', 'true')
       overlay.setAttribute('aria-label', String(options.title))
-      overlay.style.cssText = 'position:fixed;inset:0;z-index:6000;display:flex;align-items:center;justify-content:center;padding:16px;background:rgba(8,12,20,.72)'
+      overlay.style.cssText = 'position:fixed;inset:0;z-index:6000;display:flex;align-items:center;justify-content:center;padding:12px;background:rgba(8,12,20,.55)'
       var accent = options.danger ? 'var(--tblr-danger,#d63939)' : kind === 'alert' ? 'var(--tblr-warning,#f59f00)' : 'var(--tblr-primary,#066fd1)'
       var icon = options.danger || kind === 'alert'
         ? '<path d="M12 9v4"/><path d="M10.363 3.591l-8.106 13.534a1.914 1.914 0 0 0 1.636 2.871h16.214a1.914 1.914 0 0 0 1.636 -2.87l-8.106 -13.536a1.914 1.914 0 0 0 -3.274 0z"/><path d="M12 16h.01"/>'
         : '<path d="M12 9h.01"/><path d="M11 12h1v4h1"/><path d="M12 3c7.2 0 9 1.8 9 9s-1.8 9 -9 9s-9 -1.8 -9 -9s1.8 -9 9 -9z"/>'
       var expectMatch = kind === 'prompt' ? String(options.message + ' ' + options.title).match(/ketik\s+["“]?([A-Za-z0-9]+)/i) : null
       var expected = expectMatch ? expectMatch[1] : ''
-      var countHtml = options.count !== undefined && options.count !== '' && kind !== 'alert'
-        ? '<div style="display:flex;align-items:baseline;gap:8px;margin:2px 0 12px;padding:10px 14px;border-radius:10px;background:color-mix(in srgb,' + accent + ' 14%,transparent);border:1px solid color-mix(in srgb,' + accent + ' 45%,transparent)">' +
-          '<span style="font-size:2rem;font-weight:800;line-height:1;color:' + accent + '">' + dialogEscapeHtml(options.count) + '</span>' +
-          '<span style="font-size:1.05rem;font-weight:600">' + dialogEscapeHtml(options.unit || '') + (options.countNote ? ' ' + dialogEscapeHtml(options.countNote) : ' terpengaruh') + '</span></div>'
-        : ''
+      // plain and small, in the colors of the theme: a title, the text, and two ordinary buttons (the count of what changes is in the text itself)
       var detailsHtml = options.details
-        ? '<div style="margin-top:10px;padding:8px 10px;border-radius:8px;background:var(--tblr-bg-surface-secondary,rgba(128,150,172,.12));font-size:.85rem;overflow-wrap:anywhere">' + dialogRichText(options.details) + '</div>'
+        ? '<div style="margin-top:8px;padding:6px 8px;border-radius:6px;background:var(--tblr-bg-surface-secondary,rgba(128,150,172,.12));font-size:.8rem;overflow-wrap:anywhere">' + dialogRichText(options.details) + '</div>'
         : ''
       var inputHtml = kind === 'prompt'
-        ? '<input type="text" data-dialog-input data-no-clear autocomplete="off" class="form-control mt-3" style="font-size:1rem" placeholder="' + dialogEscapeHtml(options.placeholder || (expected ? 'Ketik ' + expected : '')) + '">'
+        ? '<input type="text" data-dialog-input data-no-clear autocomplete="off" class="form-control mt-2" placeholder="' + dialogEscapeHtml(options.placeholder || (expected ? 'Ketik ' + expected : '')) + '">'
+        : ''
+      var smallIcon = options.danger || kind === 'alert'
+        ? '<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="' + accent + '" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex:0 0 auto;margin-top:1px">' + icon + '</svg>'
         : ''
       overlay.innerHTML =
-        '<div style="width:min(94vw,30rem);max-height:92vh;overflow:auto;border-radius:14px;background:var(--tblr-bg-surface,#1b2330);color:var(--tblr-body-color,#e6e8eb);border:1px solid var(--tblr-border-color,rgba(128,150,172,.3));box-shadow:0 20px 60px rgba(0,0,0,.55)">' +
-        '<div style="height:5px;border-radius:14px 14px 0 0;background:' + accent + '"></div>' +
-        '<div style="padding:20px 22px 8px">' +
-        '<div style="display:flex;gap:14px;align-items:flex-start;margin-bottom:12px">' +
-        '<span style="flex:0 0 auto;display:inline-flex;width:44px;height:44px;border-radius:50%;align-items:center;justify-content:center;background:color-mix(in srgb,' + accent + ' 18%,transparent);color:' + accent + '">' +
-        '<svg xmlns="http://www.w3.org/2000/svg" width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + icon + '</svg></span>' +
-        '<div style="min-width:0;font-size:1.2rem;font-weight:700;line-height:1.3;overflow-wrap:anywhere;padding-top:2px">' + dialogRichText(options.title) + '</div></div>' +
-        countHtml +
-        (options.message ? '<div style="font-size:.97rem;line-height:1.5;overflow-wrap:anywhere">' + dialogRichText(options.message) + '</div>' : '') +
+        '<div style="width:min(92vw,22rem);max-height:90vh;overflow:auto;border-radius:var(--tblr-border-radius-lg,8px);background:var(--tblr-bg-surface,#1b2330);color:var(--tblr-body-color,#e6e8eb);border:1px solid var(--tblr-border-color,rgba(128,150,172,.3));box-shadow:0 8px 28px rgba(0,0,0,.35)">' +
+        '<div style="padding:14px 16px 4px">' +
+        '<div style="display:flex;gap:8px;align-items:flex-start;font-size:1rem;font-weight:600;line-height:1.35;overflow-wrap:anywhere">' + smallIcon + '<span style="min-width:0">' + dialogRichText(options.title) + '</span></div>' +
+        (options.message ? '<div style="margin-top:6px;font-size:.875rem;line-height:1.45;color:var(--tblr-secondary,inherit);overflow-wrap:anywhere">' + dialogRichText(options.message) + '</div>' : '') +
         detailsHtml + inputHtml +
         '</div>' +
-        '<div style="display:flex;gap:12px;justify-content:flex-end;padding:16px 22px 20px">' +
-        (kind === 'alert' ? '' : '<button type="button" data-dialog-cancel class="btn" style="min-width:7rem;min-height:2.75rem;font-weight:600">' + dialogEscapeHtml(options.cancelText) + '</button>') +
-        '<button type="button" data-dialog-ok class="btn ' + (options.danger ? 'btn-danger' : 'btn-primary') + '" style="min-width:8rem;min-height:2.75rem;font-weight:700">' + dialogEscapeHtml(options.confirmText) + '</button>' +
+        '<div style="display:flex;gap:8px;justify-content:flex-end;padding:12px 16px 14px">' +
+        (kind === 'alert' ? '' : '<button type="button" data-dialog-cancel class="btn btn-sm" style="min-width:4.5rem">' + dialogEscapeHtml(options.cancelText) + '</button>') +
+        '<button type="button" data-dialog-ok class="btn btn-sm ' + (options.danger ? 'btn-danger' : 'btn-primary') + '" style="min-width:5.5rem">' + dialogEscapeHtml(options.confirmText) + '</button>' +
         '</div></div>'
       var okButton = overlay.querySelector('[data-dialog-ok]')
       var cancelButton = overlay.querySelector('[data-dialog-cancel]')
@@ -1504,7 +1497,7 @@
     return run
   }
   var koiDialogStyle = document.createElement('style')
-  koiDialogStyle.textContent = '.koi-dialog-num{color:var(--tblr-primary,#4299e1);font-weight:800}.koi-dialog-warn{color:var(--tblr-danger,#e55353);font-weight:800}'
+  koiDialogStyle.textContent = '.koi-dialog-num{color:var(--tblr-primary,#4299e1);font-weight:700}.koi-dialog-warn{color:var(--tblr-danger,#e55353);font-weight:700}'
   document.head.appendChild(koiDialogStyle)
   window.KoiDialog = {
     confirm: function (input, extra) { return dialogQueue(dialogNormalize(Object.assign({}, typeof input === 'object' && input !== null ? input : { message: input }, extra || {}), 'confirm'), 'confirm') },
