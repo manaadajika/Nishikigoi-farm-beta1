@@ -268,7 +268,7 @@ switch ($command) {
             if (!$t) fail('Server database tidak ditemukan. ' . install_hint(), 2);
             if (!db_up($dbPort)) { say('Menyalakan database...'); db_start($t, $dataDir, $runDir, $logDir, $dbPort); }
         }
-        // Who may connect: other devices on the network always may (Wi-Fi, Tailscale...); --local keeps it to this device. While the starting
+        // Who may connect: other devices on the network always may (Wi-Fi, VPN...); --local keeps it to this device. While the starting
         // password "admin" is unchanged the banner says so.
         $host = isset($opts['local']) ? '127.0.0.1' : ($opts['host'] ?? '0.0.0.0');
         $lanNote = '';
