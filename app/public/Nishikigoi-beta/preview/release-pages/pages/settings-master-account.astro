@@ -14,7 +14,6 @@ import FormGroup from '@ui/FormGroup.astro'
         <h2 class="mb-1">Master Akun</h2>
         <CardSubtitle>Menu ini khusus untuk role Master Admin.</CardSubtitle>
       </div>
-      <button type="button" class="btn btn-primary" data-action="new-account">Tambah akun</button>
     </div>
 
     <div class="border rounded p-3 mb-4" id="program-identity" data-brand-settings-panel>
@@ -88,7 +87,10 @@ import FormGroup from '@ui/FormGroup.astro'
         <div class="progress-bar progress-bar-indeterminate"></div>
       </div>
     </div>
-    <CardTitle>Daftar Akun</CardTitle>
+    <div class="d-flex align-items-center justify-content-between gap-3 mb-2">
+      <CardTitle>Daftar Akun</CardTitle>
+      <button type="button" class="btn btn-primary" data-action="new-account">Tambah akun</button>
+    </div>
 
     <div class="table-responsive mb-4">
       <table class="table card-table table-vcenter">

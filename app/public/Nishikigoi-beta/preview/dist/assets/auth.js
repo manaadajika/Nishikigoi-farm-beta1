@@ -2924,6 +2924,7 @@
           var apply = (poll.data && poll.data.apply) || {}
           if (apply.state === 'done') {
             window.clearInterval(timer)
+            try { sessionStorage.removeItem('koi-app-version') } catch (error) { /* only a convenience */ }
             setBar(100)
             text.textContent = 'Versi terbaru terpasang' + (apply.files ? ' (' + apply.files + ' berkas)' : '') + '. Memuat ulang... · ' + elapsed()
             window.setTimeout(function () { window.location.reload() }, 1200)
@@ -3016,4 +3017,26 @@
   }
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', start)
   else window.setTimeout(start, 600)
+})()
+
+// ---- The version in the footers and the Change Log: V<major>-<date>-<GitHub commit>, from /api/version ---------------------------------
+// The page has a fixed text (V2-261024); the server adds the 7 letters of the GitHub commit this program is on (V2-261024-a3a285e).
+;(function () {
+  var cacheKey = 'koi-app-version'
+  function paint(text) {
+    Array.prototype.forEach.call(document.querySelectorAll('[data-app-version]'), function (element) { element.textContent = text })
+  }
+  function start() {
+    if (!document.querySelector('[data-app-version]')) return
+    var cached = null
+    try { cached = JSON.parse(sessionStorage.getItem(cacheKey) || 'null') } catch (error) { cached = null }
+    if (cached && cached.full && cached.at > Date.now() - 300000) { paint(cached.full); return }
+    window.fetch('/api/version').then(function (response) { return response.ok ? response.json() : null }).then(function (data) {
+      if (!data || !data.full) return
+      paint(data.full)
+      try { sessionStorage.setItem(cacheKey, JSON.stringify({ full: data.full, at: Date.now() })) } catch (error) { /* only a convenience */ }
+    }).catch(function () { /* offline: the text of the page stays */ })
+  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', start)
+  else start()
 })()

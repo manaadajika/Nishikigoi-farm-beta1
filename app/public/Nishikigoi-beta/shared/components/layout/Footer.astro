@@ -1,6 +1,6 @@
 ---
 const now = new Date()
-const appVersion = 'V1-261018' // V<major>-<YYMMDD of the release>; bump the date on every release
+const appVersion = 'V2-261024' // V<major>-<YYMMDD of the release>; bump the date on every release. The GitHub commit is added by the program (data-app-version)
 ---
 
 <!--  BEGIN FOOTER  -->
@@ -19,7 +19,7 @@ const appVersion = 'V1-261018' // V<major>-<YYMMDD of the release>; bump the dat
       <div class="col-12 col-lg-auto mt-3 mt-lg-0">
         <ul class="list-inline mb-0">
           <li class="list-inline-item">
-            Copyright &copy; {now.getUTCFullYear()} <span data-brand-owner>Nishikigoi Farm</span>. All rights reserved. {appVersion}
+            Copyright &copy; {now.getUTCFullYear()} <span data-brand-owner>Nishikigoi Farm</span>. All rights reserved. <span data-app-version>{appVersion}</span>
           </li>
         </ul>
       </div>

@@ -116,7 +116,7 @@ function enforce_role_access(string $method, string $path): void {
     // Reads need a valid session too, except what the sign-in page and the file URLs need.
     // /app-settings returns only the brand name/icon when nobody is logged in (see its handler).
     // Uploaded files stay reachable by their long random URL, because <img> tags cannot send the session header.
-    $publicRead = in_array($path, ['/health', '/ready', '/status', '/app-settings', '/manifest', '/favicon'], true) || str_starts_with($path, '/uploads/') || str_starts_with($path, '/uploads-v/') || str_starts_with($path, '/uploads-f/') || str_starts_with($path, '/thumb/');
+    $publicRead = in_array($path, ['/health', '/ready', '/status', '/version', '/app-settings', '/manifest', '/favicon'], true) || str_starts_with($path, '/uploads/') || str_starts_with($path, '/uploads-v/') || str_starts_with($path, '/uploads-f/') || str_starts_with($path, '/thumb/');
     if ($isRead && !$masterOnlyRead && $publicRead) return;
 
     $role = current_session_role();

@@ -1,10 +1,17 @@
 <?php
 // api-php/handlers/health.php
 require_once __DIR__ . '/../lib/cache.php';
+require_once __DIR__ . '/../lib/version.php';
 require_once __DIR__ . '/../lib/storage.php';
 
 route('GET', '/health', function () {
     send_json(200, ['ok' => true]);
+});
+
+// The version shown in the footers (V2-261024-a3a285e), public like /health.
+route('GET', '/version', function () {
+    require_once __DIR__ . '/../lib/version.php';
+    send_json(200, app_version());
 });
 
 // For a load balancer / monitor: 200 when this server can reach its database, 503 otherwise. No details, public.
