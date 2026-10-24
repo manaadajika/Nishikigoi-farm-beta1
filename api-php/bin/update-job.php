@@ -59,7 +59,7 @@ if ($job === 'apply') {
         return number_format($value, 1, ',', '.') . ' MB';
     };
 
-    $report(1, 'memeriksa GitHub', null, '', true);
+    $report(1, 'memeriksa GitHub', null, 'menghubungi GitHub', true);
     // stage 2: download. git prints "Receiving objects: 45% (1672/2786), 2.52 MiB | 2.47 MiB/s" while it works.
     [$code, $out] = update_git_stream(['fetch', '--progress'], 180, function (string $line) use ($report, $mb) {
         if (preg_match('/Receiving objects:\s+(\d+)% \((\d+)\/(\d+)\)(?:, ([\d.]+) (KiB|MiB|GiB))?/', $line, $m)) {
@@ -69,6 +69,8 @@ if ($job === 'apply') {
             $report(2, 'menyusun pembaruan', (int)$m[1], number_format((int)$m[2], 0, ',', '.') . ' dari ' . number_format((int)$m[3], 0, ',', '.') . ' bagian (' . $m[1] . '%)');
         } elseif (preg_match('/(Counting|Compressing) objects:\s+(\d+)%/', $line, $m)) {
             $report(2, 'GitHub menyiapkan paket pembaruan', (int)$m[2], $m[2] . '%');
+        } elseif (preg_match('/Enumerating objects:\s+(\d+)/', $line, $m)) {
+            $report(2, 'GitHub menyiapkan paket pembaruan', null, number_format((int)$m[1], 0, ',', '.') . ' objek');
         }
     });
     if ($code !== 0) {
@@ -76,10 +78,15 @@ if ($job === 'apply') {
         exit(1);
     }
 
+    // a small update flies by: keep the finished download on screen for a moment so the stage can be seen
+    $report(2, 'mengunduh pembaruan', 100, 'unduhan selesai (100%)', true);
+    usleep(900000);
+
     // stage 3: put the new files in place
     [, $names] = update_git(['diff', '--name-only', 'HEAD..@{u}'], 15);
     $files = count(array_filter(explode("\n", $names)));
     $report(3, 'memasang berkas', null, $files > 0 ? number_format($files, 0, ',', '.') . ' berkas diganti' : '', true);
+    usleep(600000);
     [$code, $out] = update_git(['pull', '--ff-only'], 180);
     $state = update_read(update_state_file()) ?? [];
     if ($code !== 0) {
