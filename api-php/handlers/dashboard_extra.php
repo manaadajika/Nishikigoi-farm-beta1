@@ -103,8 +103,8 @@ route('GET', '/summary-extra', function () {
     }
     $out['size_spread'] = $spread;
 
-    // latest activity of every menu (the card shows the newest 4)
-    $out['recent'] = dashboard_activity_feed(4);
+    // latest activity of every menu (the card shows the newest 5)
+    $out['recent'] = dashboard_activity_feed(5);
 
     // breeding in progress
     $breeding = ['proses' => 0, 'planning' => 0, 'avg_days' => null];
@@ -235,10 +235,19 @@ function dashboard_activity_feed(int $limit): array {
         $verb = $g['label'] === 'Ikan baru' ? 'ditambahkan' : ($g['label'] === 'Ikan diarsipkan' ? 'diarsipkan' : 'diedit');
         $add($g['label'], $count . $more . ' ikan ' . $verb, implode(', ', $codes) . ($count > 4 ? ' dan lainnya' : ''), $g['at'], $page, ($g['label'] === 'Ikan diedit' ? 'terakhir diedit:' : '') . $day, (string)($withPhoto['image_url'] ?? ''), $withPhoto ? $fish($withPhoto) : null);
     }
-    // progress photos
-    foreach (query("SELECT g.created_at, g.length_cm, g.image_url AS progress_image, koi.code, koi.name, koi.variety, koi.bloodline, koi.gender, koi.current_length_cm, koi.image_url, koi.archived_at, ponds.name AS pond_name FROM koi_growth_logs g JOIN koi ON koi.id = g.koi_id LEFT JOIN ponds ON ponds.id = koi.pond_id ORDER BY g.created_at DESC, g.id DESC LIMIT $limit") as $r) {
+    // progress photos: new or changed; the photos of one fish saved or re-ordered in the same minute are one row
+    $progress = [];
+    foreach (query("SELECT g.created_at, g.updated_at, g.length_cm, g.image_url AS progress_image, koi.code, koi.name, koi.variety, koi.bloodline, koi.gender, koi.current_length_cm, koi.image_url, koi.archived_at, ponds.name AS pond_name FROM koi_growth_logs g JOIN koi ON koi.id = g.koi_id LEFT JOIN ponds ON ponds.id = koi.pond_id ORDER BY COALESCE(g.updated_at, g.created_at) DESC, g.id DESC LIMIT " . ($limit * 6)) as $r) {
+        [$isNew, $at] = $when($r);
+        $key = $r['code'] . '|' . ($isNew ? 'n' : 'c') . '|' . (int)floor(strtotime($at) / 60);
+        if (isset($progress[$key])) { $progress[$key]['count']++; continue; }
+        $progress[$key] = ['row' => $r, 'new' => $isNew, 'at' => $at, 'count' => 1];
+    }
+    foreach ($progress as $p) {
+        $r = $p['row'];
         $size = (float)$r['length_cm'] > 0 ? rtrim(rtrim(number_format((float)$r['length_cm'], 1, ',', ''), '0'), ',') . ' cm' : '';
-        $add('Foto progress', $name($r), $size, $r['created_at'], $r['archived_at'] ? 'farm-koi.html?arsip=1' : 'farm-koi.html', (string)$r['code'], (string)($r['progress_image'] ?: $r['image_url'] ?: ''), $fish($r));
+        $label = $p['new'] ? 'Foto progress' : 'Foto progress diubah';
+        $add($label, $name($r), $p['count'] > 1 ? $p['count'] . ' foto' : $size, $p['at'], $r['archived_at'] ? 'farm-koi.html?arsip=1' : 'farm-koi.html', (string)$r['code'], (string)($r['progress_image'] ?: $r['image_url'] ?: ''), $fish($r));
     }
     // breeding
     foreach (query("SELECT b.batch_code, b.session_name, b.status, b.created_at, b.updated_at, COALESCE(NULLIF(f.image_url, ''), m.image_url) AS image_url FROM breeding_batches b LEFT JOIN koi f ON f.id = b.female_koi_id LEFT JOIN koi m ON m.id = b.male_koi_id ORDER BY GREATEST(b.created_at, COALESCE(b.updated_at, b.created_at)) DESC, b.id DESC LIMIT $limit") as $r) {
@@ -250,16 +259,25 @@ function dashboard_activity_feed(int $limit): array {
         [$isNew, $at] = $when($r);
         $add($isNew ? 'Kolam baru' : 'Kolam diubah', (string)$r['name'], '', $at, 'farm-ponds.html', (string)$r['name']);
     }
-    foreach (query("SELECT d.display_name, d.image_url, d.media_type, d.thumbnail_url, d.created_at, ponds.name AS pond_name FROM pond_documentation d LEFT JOIN ponds ON ponds.id = d.pond_id ORDER BY d.created_at DESC, d.id DESC LIMIT $limit") as $r) {
+    foreach (query("SELECT d.display_name, d.image_url, d.media_type, d.thumbnail_url, d.created_at, d.updated_at, ponds.name AS pond_name FROM pond_documentation d LEFT JOIN ponds ON ponds.id = d.pond_id ORDER BY COALESCE(d.updated_at, d.created_at) DESC, d.id DESC LIMIT $limit") as $r) {
         $isImage = (string)($r['media_type'] ?? 'image') !== 'video';
-        $add('Dokumentasi kolam', (string)($r['pond_name'] ?: $r['display_name']), (string)($r['display_name'] ?? ''), $r['created_at'], 'farm-ponds.html', (string)($r['pond_name'] ?? ''), $isImage ? (string)($r['image_url'] ?? '') : (string)($r['thumbnail_url'] ?? ''));
+        [$isNew, $at] = $when($r);
+        $add($isNew ? 'Dokumentasi kolam' : 'Dokumentasi kolam diubah', (string)($r['pond_name'] ?: $r['display_name']), (string)($r['display_name'] ?? ''), $at, 'farm-ponds.html', (string)($r['pond_name'] ?? ''), $isImage ? (string)($r['image_url'] ?? '') : (string)($r['thumbnail_url'] ?? ''));
+    }
+    foreach (query("SELECT h.created_at, ponds.name AS pond_name FROM pond_note_history h LEFT JOIN ponds ON ponds.id = h.pond_id ORDER BY h.created_at DESC, h.id DESC LIMIT $limit") as $r) {
+        $add('Catatan kolam diubah', (string)($r['pond_name'] ?? 'Kolam'), '', $r['created_at'], 'farm-ponds.html', (string)($r['pond_name'] ?? ''));
     }
     // reports and gallery
     $reportTypes = ['ikan_datang' => 'Laporan ikan datang', 'data_ulang' => 'Laporan data ulang', 'panen' => 'Laporan panen', 'kegiatan' => 'Laporan kegiatan'];
-    foreach (query("SELECT report_type, report_title, batch_code, created_at FROM farm_reports ORDER BY created_at DESC, id DESC LIMIT $limit") as $r) {
+    foreach (query("SELECT report_type, report_title, batch_code, created_at, updated_at FROM farm_reports ORDER BY COALESCE(updated_at, created_at) DESC, id DESC LIMIT $limit") as $r) {
         $type = (string)$r['report_type'];
         $title = (string)($r['report_title'] ?: $r['batch_code'] ?: str_replace('_', ' ', $type));
-        $add($reportTypes[$type] ?? 'Laporan ' . str_replace('_', ' ', $type), $title, '', $r['created_at'], 'farm-reports.html', (string)($r['report_title'] ?: $r['batch_code'] ?: ''));
+        [$isNew, $at] = $when($r);
+        $add(($reportTypes[$type] ?? 'Laporan ' . str_replace('_', ' ', $type)) . ($isNew ? '' : ' diubah'), $title, '', $at, 'farm-reports.html', (string)($r['report_title'] ?: $r['batch_code'] ?: ''));
+    }
+    foreach (query("SELECT gc.title AS collection, gi.image_url, gi.media_type, gi.thumbnail_url, gi.created_at FROM gallery_images gi JOIN gallery_collections gc ON gc.id = gi.gallery_id ORDER BY gi.created_at DESC, gi.id DESC LIMIT $limit") as $r) {
+        $isImage = (string)($r['media_type'] ?? 'image') !== 'video';
+        $add('Foto galeri', (string)$r['collection'], '', $r['created_at'], 'farm-gallery.html', (string)$r['collection'], $isImage ? (string)($r['image_url'] ?? '') : (string)($r['thumbnail_url'] ?? ''));
     }
     foreach (query("SELECT title, created_at, updated_at, archived_at, (SELECT gi.image_url FROM gallery_images gi WHERE gi.gallery_id = gallery_collections.id AND gi.media_type <> 'video' ORDER BY gi.sort_order, gi.id LIMIT 1) AS image_url FROM gallery_collections ORDER BY GREATEST(created_at, COALESCE(updated_at, created_at)) DESC, id DESC LIMIT $limit") as $r) {
         [$isNew, $at] = $when($r);

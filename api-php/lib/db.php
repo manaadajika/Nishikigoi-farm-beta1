@@ -3,7 +3,7 @@
 require_once __DIR__ . '/../config.php';
 require_once __DIR__ . '/cache.php';
 
-const KOI_SCHEMA_REV = 20261026;
+const KOI_SCHEMA_REV = 20261030;
 
 // PHP 8.5 renamed the MySQL driver constants (Pdo\Mysql::ATTR_*); older versions only know PDO::MYSQL_ATTR_*.
 function koi_pdo_init_command(): int {
@@ -103,6 +103,7 @@ function ensure_all_schemas(PDO $pdo): void {
     ensure_report_panen_schema($pdo);
     ensure_security_schema($pdo);
     ensure_pond_notes_date_schema($pdo);
+    ensure_activity_updated_schema($pdo);
     ensure_sell_schema($pdo);
     ensure_invoice_schema($pdo);
     ensure_inventory_schema($pdo);
@@ -141,6 +142,21 @@ function ensure_security_schema(PDO $pdo): void {
 }
 
 // Data Kolam: the date shown beside "Catatan Formulir" (day - [month] Month - year).
+// "Aktivitas terbaru" of the Dashboard shows edits too: these tables only knew when a row was made. updated_at starts as the creation time
+// of every existing row and moves on every later change (rows made from now on start empty: made and changed are the same moment).
+function ensure_activity_updated_schema(PDO $pdo): void {
+    foreach (['farm_reports', 'pond_documentation', 'koi_growth_logs'] as $table) {
+        try {
+            if ($pdo->query("SHOW COLUMNS FROM $table LIKE 'updated_at'")->fetch()) continue;
+            $pdo->exec("ALTER TABLE $table ADD COLUMN updated_at DATETIME NULL");
+            $pdo->exec("UPDATE $table SET updated_at = created_at");
+            $pdo->exec("ALTER TABLE $table MODIFY updated_at DATETIME NULL ON UPDATE CURRENT_TIMESTAMP");
+        } catch (Throwable $e) {
+            // Another request may have added the column first.
+        }
+    }
+}
+
 function ensure_pond_notes_date_schema(PDO $pdo): void {
     try {
         if ($pdo->query("SHOW COLUMNS FROM ponds LIKE 'notes_date'")->fetch()) return;
