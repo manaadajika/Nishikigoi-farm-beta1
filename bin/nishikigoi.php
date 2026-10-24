@@ -10,8 +10,7 @@
 //   php bin/nishikigoi.php update [--check] looks for a newer version on GitHub and installs it (--check only reports)
 //   php bin/nishikigoi.php passwd USER PASS sets a new password (when it was forgotten)
 //
-// Options of start:  --port=2000   --lan (other devices on the network may connect)   --local (this device only)   --host=ADDRESS
-// Without them: other devices may connect once the starting password of "admin" has been changed, and not before.
+// Options of start:  --port=2000   --local (this device only)   --host=ADDRESS   (--lan = the default: other devices on the network may connect)
 //
 // The database is a private MariaDB/MySQL instance kept in storage/mysql on port 3307 (override: NISHIKIGOI_DB_PORT). It listens on this
 // device only, has no password of its own, and never touches another MySQL on the same computer.
@@ -211,7 +210,7 @@ function db_stop(?array $t, int $port, string $runDir): bool {
 }
 function embedded(string $dataDir): bool { return is_dir($dataDir . '/mysql'); }
 
-// True while the account "admin" still has the starting password "admin" (or when that cannot be told: then be careful).
+// True while the account "admin" still has the starting password "admin" (for the warning in the banner).
 function default_password_in_use(string $root): bool {
     try {
         $config = require $root . '/api-php/config.php';
@@ -219,7 +218,7 @@ function default_password_in_use(string $root): bool {
         $row = $pdo->query("SELECT password FROM accounts WHERE username = 'admin' LIMIT 1")->fetch(PDO::FETCH_ASSOC);
         return $row ? password_verify('admin', (string)$row['password']) : false;
     } catch (Throwable $e) {
-        return true;
+        return false;   // only used for a warning in the banner: when it cannot be told, say nothing
     }
 }
 
@@ -269,16 +268,12 @@ switch ($command) {
             if (!$t) fail('Server database tidak ditemukan. ' . install_hint(), 2);
             if (!db_up($dbPort)) { say('Menyalakan database...'); db_start($t, $dataDir, $runDir, $logDir, $dbPort); }
         }
-        // Who may connect: other devices on the network are welcome as soon as the starting password is changed; until then this device only.
-        $host = isset($opts['lan']) ? '0.0.0.0' : (isset($opts['local']) ? '127.0.0.1' : ($opts['host'] ?? null));
+        // Who may connect: other devices on the network always may (Wi-Fi, Tailscale...); --local keeps it to this device. While the starting
+        // password "admin" is unchanged the banner says so.
+        $host = isset($opts['local']) ? '127.0.0.1' : ($opts['host'] ?? '0.0.0.0');
         $lanNote = '';
-        if ($host === null) {
-            if (default_password_in_use($root)) {
-                $host = '127.0.0.1';
-                $lanNote = "Perangkat lain belum diizinkan karena kata sandi admin masih 'admin'. Ganti di Pengaturan, lalu jalankan ulang: setelah itu perangkat lain di jaringan yang sama otomatis boleh membuka.";
-            } else {
-                $host = '0.0.0.0';
-            }
+        if ($host !== '127.0.0.1' && default_password_in_use($root)) {
+            $lanNote = "Perhatian: kata sandi akun 'admin' masih 'admin' dan program terbuka untuk perangkat lain di jaringan ini. Segera ganti di Pengaturan.";
         }
         if (port_open('127.0.0.1', $port)) fail("Port $port sudah dipakai. Pilih port lain, mis.  nishikigoi start --port=2100");
         $flags = ['-d', 'memory_limit=512M', '-d', 'post_max_size=512M', '-d', 'upload_max_filesize=512M', '-d', 'max_execution_time=300', '-d', 'date.timezone=Asia/Jakarta', '-d', 'display_errors=0', '-d', 'log_errors=1', '-d', 'error_log=' . $logDir . '/php-error.log', '-d', 'error_reporting=E_ALL & ~E_DEPRECATED & ~E_NOTICE'];

@@ -2,7 +2,7 @@
 #
 #   .\nishikigoi.ps1                 pasang bila perlu, lalu jalankan  (http://localhost:2000)
 #   .\nishikigoi.ps1 setup           pemasangan pertama (database pribadi + akun admin / admin)
-#   .\nishikigoi.ps1 start --local   jalankan hanya untuk perangkat ini (bawaan: perangkat lain boleh setelah kata sandi admin diganti)
+#   .\nishikigoi.ps1 start --local   jalankan hanya untuk perangkat ini (bawaan: perangkat lain di jaringan boleh membuka)
 #   .\nishikigoi.ps1 stop | status | passwd USER PASS
 #
 # Bila PHP atau server database (MariaDB) belum ada di komputer ini, skrip ini mengunduh versi portabelnya dari situs resmi
