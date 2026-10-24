@@ -41,7 +41,7 @@ Bila PHP dan MariaDB belum ada, skrip memasangnya lewat pengelola paket sistem (
   cd Nishikigoi-farm-beta1
   ./nishikigoi.sh start
   ```
-  Program bisa dibuka dari perangkat lain di Wi-Fi atau Tailscale yang sama (alamat `http://IP-HP:2000`). Agar tidak mati saat layar padam: `termux-wake-lock`.
+  Program bisa dibuka dari perangkat lain di Wi-Fi atau jaringan pribadi (VPN) yang sama (alamat `http://IP-HP:2000`). Agar tidak mati saat layar padam: `termux-wake-lock`.
 - **Linux di Android** (UserLAnd, Andronix, atau proot-distro dengan Debian/Ubuntu): langkahnya sama dengan Linux di atas.
 
 ## Perintah sehari-hari
@@ -51,7 +51,7 @@ Ganti `./nishikigoi.sh` dengan `.\nishikigoi.bat` di Windows.
 | Perintah | Fungsi |
 |---|---|
 | `./nishikigoi.sh` | Memasang bila perlu, lalu menjalankan program |
-| `./nishikigoi.sh start` | Menjalankan (database menyala otomatis). `CTRL+C` menghentikan server web. Perangkat lain di jaringan yang sama (Wi-Fi, Tailscale) boleh membuka |
+| `./nishikigoi.sh start` | Menjalankan (database menyala otomatis). `CTRL+C` menghentikan server web. Perangkat lain di jaringan yang sama (Wi-Fi atau VPN pribadi) boleh membuka |
 | `./nishikigoi.sh start --local` | Hanya perangkat ini yang boleh membuka (tidak terbuka untuk jaringan) |
 | `./nishikigoi.sh start --port=2100` | Memakai port lain (bawaan 2000) |
 | `./nishikigoi.sh stop` | Mematikan database pribadi |
@@ -60,7 +60,7 @@ Ganti `./nishikigoi.sh` dengan `.\nishikigoi.bat` di Windows.
 | `./nishikigoi.sh passwd USER SANDI` | Mengganti kata sandi akun (misalnya bila lupa) |
 | `./nishikigoi.sh setup` | Pemasangan pertama saja (tabel dan akun `admin`); aman diulang |
 
-**Keamanan.** Perangkat lain di jaringan yang sama boleh membuka program, dengan alamat IP perangkat server, mis. `http://192.168.1.20:2000` atau alamat Tailscale `http://100.x.x.x:2000`. Selama kata sandi `admin` masih bawaan, banner saat menyala mengingatkan untuk menggantinya di Pengaturan. Pakai `--local` bila ingin tetap hanya satu perangkat. Windows mungkin menanyakan izin firewall pada saat pertama; izinkan untuk jaringan pribadi.
+**Keamanan.** Perangkat lain di jaringan yang sama boleh membuka program, dengan alamat IP perangkat server, mis. `http://192.168.1.20:2000` atau alamat VPN pribadi seperti `http://100.x.x.x:2000`. Selama kata sandi `admin` masih bawaan, banner saat menyala mengingatkan untuk menggantinya di Pengaturan. Pakai `--local` bila ingin tetap hanya satu perangkat. Windows mungkin menanyakan izin firewall pada saat pertama; izinkan untuk jaringan pribadi.
 
 ## Data Anda
 
