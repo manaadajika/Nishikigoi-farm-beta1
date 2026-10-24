@@ -2879,11 +2879,16 @@
     if (bar) { bar.remove(); bar = null }
   }
 
-  function overlay(text) {
+  // A card in the middle of the screen like the backup and restore progress: stage, what is happening, how far it is, and a stopwatch.
+  function overlay() {
     var box = document.createElement('div')
     box.setAttribute('data-koi-update-overlay', '')
-    box.style.cssText = 'position:fixed;inset:0;z-index:7000;display:flex;align-items:center;justify-content:center;padding:16px;background:rgba(8,12,20,.78);color:#fff;text-align:center;font-size:1.05rem'
-    box.innerHTML = '<div><div class="spinner-border mb-3" role="status"></div><div data-koi-update-text>' + esc(text) + '</div><div class="small mt-2" style="opacity:.75">Jangan tutup halaman ini.</div></div>'
+    box.style.cssText = 'position:fixed;inset:0;z-index:7000;display:flex;align-items:center;justify-content:center;padding:12px;background:rgba(8,12,20,.55)'
+    box.innerHTML = '<div style="width:min(92vw,24rem);padding:18px 20px;border-radius:var(--tblr-border-radius-lg,10px);background:var(--tblr-bg-surface,#1b2330);color:var(--tblr-body-color,#e6e8eb);border:1px solid var(--tblr-border-color,rgba(128,150,172,.3));box-shadow:0 8px 28px rgba(0,0,0,.35);text-align:center">' +
+      '<div style="font-weight:600;margin-bottom:6px">Memperbarui program</div>' +
+      '<div class="small" data-koi-update-text style="min-height:2.7em;overflow-wrap:anywhere"></div>' +
+      '<div class="progress progress-sm mt-3"><div class="progress-bar progress-bar-indeterminate" data-koi-update-bar></div></div>' +
+      '<div class="small text-secondary mt-2">Jangan tutup halaman ini.</div></div>'
     document.body.appendChild(box)
     return box
   }
@@ -2891,32 +2896,50 @@
   function applyUpdate() {
     if (running) return
     running = true
-    var box = overlay('Mengambil pembaruan...')
+    var box = overlay()
+    var text = box.querySelector('[data-koi-update-text]')
+    var bar = box.querySelector('[data-koi-update-bar]')
+    var startedAt = Date.now()
+    function elapsed() {
+      var seconds = Math.floor((Date.now() - startedAt) / 1000)
+      return ('0' + Math.floor(seconds / 60)).slice(-2) + ':' + ('0' + (seconds % 60)).slice(-2)
+    }
+    function setBar(percent) {
+      if (percent === null || percent === undefined) { bar.classList.add('progress-bar-indeterminate'); bar.style.width = ''; return }
+      bar.classList.remove('progress-bar-indeterminate')
+      bar.style.width = Math.max(0, Math.min(100, Math.floor(percent))) + '%'
+    }
     function fail(message) {
       running = false
       box.remove()
       window.KoiDialog.alert(message || 'Pembaruan gagal.')
     }
+    text.textContent = 'Pembaruan sedang berjalan. Tahap 1/3: memeriksa GitHub · ' + elapsed()
     ask('/system/update/apply', { method: 'POST', body: '{}' }).then(function (result) {
       if (!result.ok) return fail(result.data.error || 'Pembaruan gagal dimulai.')
       var tries = 0
       var timer = window.setInterval(function () {
         tries += 1
         ask('/system/update').then(function (poll) {
-          var state = poll.data && poll.data.apply && poll.data.apply.state
-          if (state === 'done') {
+          var apply = (poll.data && poll.data.apply) || {}
+          if (apply.state === 'done') {
             window.clearInterval(timer)
-            box.querySelector('[data-koi-update-text]').textContent = 'Versi terbaru terpasang. Memuat ulang...'
+            setBar(100)
+            text.textContent = 'Versi terbaru terpasang' + (apply.files ? ' (' + apply.files + ' berkas)' : '') + '. Memuat ulang... · ' + elapsed()
             window.setTimeout(function () { window.location.reload() }, 1200)
-          } else if (state === 'error') {
+          } else if (apply.state === 'error') {
             window.clearInterval(timer)
-            fail(poll.data.apply.message)
-          } else if (tries > 90) {
+            fail(apply.message)
+          } else if (apply.state === 'running') {
+            text.textContent = 'Pembaruan sedang berjalan. Tahap ' + (apply.stage || 1) + '/3: ' + (apply.stage_label || 'mengambil pembaruan') + (apply.detail ? ', ' + apply.detail : '') + ' · ' + elapsed()
+            setBar(apply.percent === undefined ? null : apply.percent)
+          }
+          if (tries > 300) {
             window.clearInterval(timer)
             fail('Pembaruan memakan waktu terlalu lama. Muat ulang halaman dan periksa lagi.')
           }
         }).catch(function () { /* the server may be busy for a moment: try again on the next tick */ })
-      }, 2000)
+      }, 1000)
     }).catch(function () { fail('Tidak bisa menghubungi server.') })
   }
 

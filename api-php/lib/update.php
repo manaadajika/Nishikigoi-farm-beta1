@@ -56,6 +56,42 @@ function update_git(array $args, int $timeoutSeconds = 30): array {
     return [$code, trim($out)];
 }
 
+// Like update_git(), but hands every progress line git prints (Receiving objects: 45% (12/27), 2.5 MiB | ...) to $onLine while it runs.
+// git separates those lines with a carriage return, not a newline. [exit code, last output]
+function update_git_stream(array $args, int $timeoutSeconds, callable $onLine): array {
+    $git = update_git_binary();
+    if ($git === null) return [127, 'Git belum terpasang'];
+    $proc = @proc_open(array_merge([$git, '-C', update_root()], $args), [1 => ['pipe', 'w'], 2 => ['pipe', 'w']], $pipes, null, array_merge(getenv() ?: [], ['GIT_TERMINAL_PROMPT' => '0', 'LC_ALL' => 'C']));
+    if (!is_resource($proc)) return [127, 'Git tidak bisa dijalankan'];
+    stream_set_blocking($pipes[1], false);
+    stream_set_blocking($pipes[2], false);
+    $buffer = '';
+    $all = '';
+    $deadline = microtime(true) + $timeoutSeconds;
+    $drain = function () use (&$buffer, &$all, $pipes, $onLine) {
+        $chunk = (string)stream_get_contents($pipes[1]) . (string)stream_get_contents($pipes[2]);
+        if ($chunk === '') return;
+        $all .= $chunk;
+        $buffer .= $chunk;
+        $parts = preg_split('/[
+]+/', $buffer);
+        $buffer = (string)array_pop($parts);
+        foreach ($parts as $line) if (trim($line) !== '') $onLine(trim($line));
+    };
+    while (true) {
+        $drain();
+        $status = proc_get_status($proc);
+        if (!$status['running']) break;
+        if (microtime(true) > $deadline) { proc_terminate($proc); proc_close($proc); return [124, 'Git terlalu lama menjawab (internet bermasalah?)']; }
+        usleep(150000);
+    }
+    $drain();
+    if (trim($buffer) !== '') $onLine(trim($buffer));
+    $code = $status['exitcode'];
+    proc_close($proc);
+    return [$code, trim(substr($all, -600))];
+}
+
 function update_read(string $file): ?array {
     $raw = @file_get_contents($file);
     $data = $raw !== false ? json_decode($raw, true) : null;

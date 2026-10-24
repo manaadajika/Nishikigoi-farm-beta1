@@ -46,12 +46,44 @@ if ($job === 'check') {
 
 if ($job === 'apply') {
     $started = time();
-    update_write(update_apply_file(), ['state' => 'running', 'started_at' => $started, 'message' => 'Mengambil pembaruan...']);
-    update_git(['fetch', '--quiet'], 60);
+    $last = 0.0;
+    // what the screen shows: stage (1-3), what is happening, how far that stage is (null = not countable), and a detail line
+    $report = function (int $stage, string $label, ?int $percent, string $detail = '', bool $force = false) use ($started, &$last) {
+        $now = microtime(true);
+        if (!$force && $now - $last < 0.4) return;
+        $last = $now;
+        update_write(update_apply_file(), ['state' => 'running', 'started_at' => $started, 'stage' => $stage, 'stage_label' => $label, 'percent' => $percent, 'detail' => $detail, 'message' => 'Tahap ' . $stage . '/3: ' . $label]);
+    };
+    $mb = function (string $size, string $unit): string {
+        $value = (float)$size * ['KiB' => 1 / 1024, 'MiB' => 1, 'GiB' => 1024][$unit];
+        return number_format($value, 1, ',', '.') . ' MB';
+    };
+
+    $report(1, 'memeriksa GitHub', null, '', true);
+    // stage 2: download. git prints "Receiving objects: 45% (1672/2786), 2.52 MiB | 2.47 MiB/s" while it works.
+    [$code, $out] = update_git_stream(['fetch', '--progress'], 180, function (string $line) use ($report, $mb) {
+        if (preg_match('/Receiving objects:\s+(\d+)% \((\d+)\/(\d+)\)(?:, ([\d.]+) (KiB|MiB|GiB))?/', $line, $m)) {
+            $size = isset($m[4]) ? $mb($m[4], $m[5]) . ', ' : '';
+            $report(2, 'mengunduh pembaruan', (int)$m[1], $size . number_format((int)$m[2], 0, ',', '.') . ' dari ' . number_format((int)$m[3], 0, ',', '.') . ' objek (' . $m[1] . '%)');
+        } elseif (preg_match('/Resolving deltas:\s+(\d+)% \((\d+)\/(\d+)\)/', $line, $m)) {
+            $report(2, 'menyusun pembaruan', (int)$m[1], number_format((int)$m[2], 0, ',', '.') . ' dari ' . number_format((int)$m[3], 0, ',', '.') . ' bagian (' . $m[1] . '%)');
+        } elseif (preg_match('/(Counting|Compressing) objects:\s+(\d+)%/', $line, $m)) {
+            $report(2, 'GitHub menyiapkan paket pembaruan', (int)$m[2], $m[2] . '%');
+        }
+    });
+    if ($code !== 0) {
+        update_write(update_apply_file(), ['state' => 'error', 'started_at' => $started, 'finished_at' => time(), 'message' => 'Pembaruan gagal diambil: ' . strtok($out, "\n")]);
+        exit(1);
+    }
+
+    // stage 3: put the new files in place
+    [, $names] = update_git(['diff', '--name-only', 'HEAD..@{u}'], 15);
+    $files = count(array_filter(explode("\n", $names)));
+    $report(3, 'memasang berkas', null, $files > 0 ? number_format($files, 0, ',', '.') . ' berkas diganti' : '', true);
     [$code, $out] = update_git(['pull', '--ff-only'], 180);
     $state = update_read(update_state_file()) ?? [];
     if ($code !== 0) {
-        update_write(update_apply_file(), ['state' => 'error', 'started_at' => $started, 'finished_at' => time(), 'message' => 'Pembaruan gagal diambil: ' . strtok($out, "\n")]);
+        update_write(update_apply_file(), ['state' => 'error', 'started_at' => $started, 'finished_at' => time(), 'message' => 'Pembaruan gagal dipasang: ' . strtok($out, "\n")]);
         exit(1);
     }
     [$behind, $changes] = update_pending();
@@ -61,7 +93,7 @@ if ($job === 'apply') {
     $state['checked_at'] = time();
     $state['head'] = update_head();
     update_write(update_state_file(), $state);
-    update_write(update_apply_file(), ['state' => 'done', 'started_at' => $started, 'finished_at' => time(), 'message' => 'Versi terbaru terpasang.', 'head' => $state['head']]);
+    update_write(update_apply_file(), ['state' => 'done', 'started_at' => $started, 'finished_at' => time(), 'stage' => 3, 'percent' => 100, 'message' => 'Versi terbaru terpasang.', 'head' => $state['head'], 'files' => $files]);
     exit(0);
 }
 
