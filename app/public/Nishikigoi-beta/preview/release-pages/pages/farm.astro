@@ -232,7 +232,7 @@ keys.forEach((key) => {
         cards.push(extraCard('Nilai stok ikan', lines, 'col-sm-6 col-lg-6', 'stock_value'))
       }
       const months = (extra.monthly || []).filter((month) => month.count > 0).map((month) => ({ label: dateText(`${month.month}-01`).replace(/ - 01$/, ''), count: month.count }))
-      if (months.length) cards.push(extraCard('Pertambahan ikan per bulan (6 bulan)', `<div class="mt-2">${barRows(months)}</div>`, 'col-sm-6 col-lg-6'))
+      if (months.length) cards.push(extraCard('Pertambahan ikan per bulan (12 bulan)', `<div class="mt-2">${barRows(months)}</div>`, 'col-sm-6 col-lg-6'))
       box.innerHTML = cards.concat(bottom).join('')
       box.querySelectorAll('[data-photo-zoom]').forEach((button) => button.addEventListener('click', () => {
         const [set, at] = button.dataset.photoZoom.split(':')

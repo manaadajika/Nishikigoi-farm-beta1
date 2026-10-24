@@ -141,11 +141,11 @@ route('GET', '/summary-extra', function () {
         query("SELECT koi.code, koi.name, koi.variety, koi.bloodline, koi.gender, koi.current_length_cm, koi.image_url, ponds.name AS pond_name FROM koi LEFT JOIN ponds ON ponds.id = koi.pond_id WHERE (koi.purchase_price > 0 OR koi.sale_price > 0) AND koi.image_url IS NOT NULL AND koi.image_url <> '' ORDER BY GREATEST(COALESCE(koi.purchase_price, 0), COALESCE(koi.sale_price, 0)) DESC, koi.code ASC LIMIT 6"));
     $out['stock_value'] = ['buy' => (float)$value['buy'], 'sale' => (float)$value['sale'], 'buy_n' => (int)$value['buy_n'], 'sale_n' => (int)$value['sale_n']];
 
-    // fish added per month, last six months (months without fish are 0)
+    // fish added per month, last twelve months (months without fish are 0)
     $rows = [];
-    foreach (query("SELECT DATE_FORMAT(created_at, '%Y-%m') AS m, COUNT(*) AS c FROM koi WHERE created_at >= DATE_FORMAT(NOW() - INTERVAL 5 MONTH, '%Y-%m-01') GROUP BY m") as $r) $rows[$r['m']] = (int)$r['c'];
+    foreach (query("SELECT DATE_FORMAT(created_at, '%Y-%m') AS m, COUNT(*) AS c FROM koi WHERE created_at >= DATE_FORMAT(NOW() - INTERVAL 11 MONTH, '%Y-%m-01') GROUP BY m") as $r) $rows[$r['m']] = (int)$r['c'];
     $months = [];
-    for ($i = 5; $i >= 0; $i--) {
+    for ($i = 11; $i >= 0; $i--) {
         $key = date('Y-m', strtotime("first day of -$i month"));
         $months[] = ['month' => $key, 'count' => $rows[$key] ?? 0];
     }
