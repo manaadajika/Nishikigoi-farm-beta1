@@ -92,7 +92,7 @@ const MAINTENANCE_TABLE_COLUMNS = [
 // app_settings holds two kinds of rows. These belong to the SYSTEM data (the list of pond areas and its order, a one-time marker of the gallery);
 // every other row is a SETTING of the program or of an account (brand identity, print settings, each account's theme) and travels with the
 // account backup instead. The two stamps below are per device and are in neither backup.
-const SYSTEM_SETTING_KEYS = ['pond_areas', 'pond_area_order', 'gallery_sources_backfill', 'breeding_parents_backfill', 'breeding_auto_indukan'];
+const SYSTEM_SETTING_KEYS = ['pond_areas', 'pond_area_order', 'pond_area_colors', 'gallery_sources_backfill', 'breeding_parents_backfill', 'breeding_auto_indukan'];
 const ACCOUNT_BACKUP_FORMAT = 'nishikigoi-account-backup';
 const ACCOUNT_BACKUP_JSON = 'nishikigoi-account-backup.json';
 

@@ -698,6 +698,10 @@ const clipboardIcon = iconSvg('clipboard')
       text-align: center;
     }
 
+    .pond-area-heading.has-color {
+      background: color-mix(in srgb, var(--area-color) 20%, var(--tblr-bg-surface-secondary)); border-bottom: 3px solid var(--area-color);
+    }
+
     .pond-card .card-body {
       padding: .75rem;
     }
@@ -846,6 +850,7 @@ const clipboardIcon = iconSvg('clipboard')
     }
     let pondsData = []
     let areaOrder = JSON.parse(localStorage.getItem('pondAreaOrder') || '[]')
+    let areaColors = {}
     let searchQuery = ''
     let sortState = { key: 'name', direction: 'asc' }
     const pondViewKey = 'nishikigoi-view:farm-ponds'
@@ -1732,7 +1737,7 @@ const clipboardIcon = iconSvg('clipboard')
       table.innerHTML = orderedAreas(Array.from(groups.keys())).map((area) => {
         const items = groups.get(area) || []
         return `
-        <div class="col-12"><div class="pond-area-heading">${escapeHtml(area)}</div></div>
+        <div class="col-12"><div class="pond-area-heading${/^#[0-9a-f]{6}$/i.test(areaColors[area] || '') ? ' has-color' : ''}"${/^#[0-9a-f]{6}$/i.test(areaColors[area] || '') ? ` style="--area-color:${areaColors[area]}"` : ''}>${escapeHtml(area)}</div></div>
         ${items.map((item) => {
           const status = statusLabels[item.status] || { label: text(item.status), className: 'bg-secondary-lt' }
           return `
@@ -1786,6 +1791,10 @@ const clipboardIcon = iconSvg('clipboard')
           if (settingsResponse.ok) {
             const settings = await settingsResponse.json()
             const serverOrder = typeof settings.pond_area_order === 'string' ? JSON.parse(settings.pond_area_order) : null
+            try {
+              const parsedColors = typeof settings.pond_area_colors === 'string' ? JSON.parse(settings.pond_area_colors) : null
+              areaColors = parsedColors && typeof parsedColors === 'object' ? parsedColors : {}
+            } catch { areaColors = {} }
             if (Array.isArray(serverOrder)) {
               areaOrder = serverOrder
               localStorage.setItem('pondAreaOrder', JSON.stringify(serverOrder))
@@ -1795,7 +1804,7 @@ const clipboardIcon = iconSvg('clipboard')
           // keep the locally cached order when the server order cannot be read
         }
         const signature = JSON.stringify(ponds)
-        const changeKey = `${signature}|${JSON.stringify(areaOrder)}`
+        const changeKey = `${signature}|${JSON.stringify(areaOrder)}|${JSON.stringify(areaColors)}`
         if (silent && changeKey === pondsRealtimeSignature) {
           return
         }
@@ -3122,6 +3131,6 @@ const clipboardIcon = iconSvg('clipboard')
     loadPonds(hasCachedPonds)
     window.KoiAuth?.registerRealtimeRefresh(() => keepScroll(() => loadPonds(true)), { intervalMs: 25000 })
   </script>
-  <script is:inline src="/assets/pond-areas.js?v=20261024b"></script>
+  <script is:inline src="/assets/pond-areas.js?v=20261026a"></script>
 </DefaultLayout>
 

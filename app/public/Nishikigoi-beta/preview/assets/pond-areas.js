@@ -58,7 +58,12 @@
       if (!legacy) { try { legacy = parseList(window.localStorage.getItem('pondAreaOrder')) } catch (error) {} }
       var base = saved || (legacy || []).filter(function (name) { return counts[name] !== undefined })
       var names = unique(base.concat(present.filter(function (name) { return base.indexOf(name) === -1 }).sort(alpha)))
-      return { names: names, counts: counts }
+      var colors = {}
+      try {
+        var parsed = typeof settings.pond_area_colors === 'string' ? JSON.parse(settings.pond_area_colors) : settings.pond_area_colors
+        if (parsed && typeof parsed === 'object') Object.keys(parsed).forEach(function (key) { if (/^#[0-9a-f]{6}$/i.test(parsed[key])) colors[key] = parsed[key] })
+      } catch (error) {}
+      return { names: names, counts: counts, colors: colors }
     })
   }
 
@@ -128,7 +133,9 @@
       '.area-editor.is-reordering .area-row:not(.is-dragging){transition:transform .2s ease}' +
       '.area-row.is-dragging{cursor:grabbing;z-index:5;transition:none;background:var(--tblr-bg-surface);box-shadow:0 6px 18px rgba(0,0,0,.35)}' +
       '.area-row.is-dragging .area-grip{cursor:grabbing}' +
-      '.area-row.is-new{border-left:3px solid var(--tblr-primary)}'
+      '.area-row.is-new{border-left:3px solid var(--tblr-primary)}' +
+      '.area-color{width:2rem;height:2rem;padding:2px;border-radius:6px;flex:0 0 auto;cursor:pointer;background:transparent}' +
+      '.area-color.is-unset{opacity:.4}'
     document.head.appendChild(style)
 
     var editorWrap = document.createElement('div')
@@ -162,7 +169,7 @@
     var saving = false
 
     function signature() {
-      return JSON.stringify(draft.map(function (item) { return [item.original, item.name] }))
+      return JSON.stringify(draft.map(function (item) { return [item.original, item.name, item.color] }))
     }
     function isDirty() { return signature() !== initial }
     function showError(message) {
@@ -185,6 +192,7 @@
               : '<div class="fw-medium text-truncate" title="' + escapeHtml(item.name) + '">' + escapeHtml(item.name) +
                 (item.original !== null && item.original !== item.name ? ' <span class="text-secondary small">(sebelumnya ' + escapeHtml(item.original) + ')</span>' : '') + '</div>') +
           '</div>' +
+          '<input type="color" class="form-control form-control-color area-color' + (item.color ? '' : ' is-unset') + '" value="' + (item.color || '#6c7a91') + '" data-area-color title="Warna aksen area (klik kanan untuk menghapus warna)" aria-label="Warna aksen area">' +
           '<span class="badge bg-secondary-lt">' + item.count + ' kolam</span>' +
           '<button class="btn btn-sm btn-icon" type="button" data-area-rename title="Ganti nama" aria-label="Ganti nama">' + icons.edit + '</button>' +
           '<button class="btn btn-sm btn-icon btn-outline-danger" type="button" data-area-delete ' + (inUse ? 'disabled title="Masih dipakai ' + item.count + ' kolam. Pindahkan kolamnya dulu."' : 'title="Hapus area"') + ' aria-label="Hapus area">' + icons.trash + '</button>' +
@@ -201,7 +209,7 @@
       input.value = ''
       editor.innerHTML = '<div class="list-group-item text-secondary">Memuat area...</div>'
       return loadAreas().then(function (areas) {
-        draft = areas.names.map(function (name) { return { name: name, original: name, count: areas.counts[name] || 0 } })
+        draft = areas.names.map(function (name) { return { name: name, original: name, count: areas.counts[name] || 0, color: areas.colors[name] || '' } })
         initial = signature()
         render()
       }).catch(function (error) {
@@ -215,7 +223,7 @@
       if (name.length > MAX_NAME) { showError('Nama area maksimal ' + MAX_NAME + ' huruf.'); return }
       if (nameTaken(name, -1)) { showError('Area "' + name + '" sudah ada.'); return }
       showError('')
-      draft.push({ name: name, original: null, count: 0 })
+      draft.push({ name: name, original: null, count: 0, color: '' })
       input.value = ''
       render()
       editor.scrollTop = editor.scrollHeight
@@ -246,6 +254,20 @@
         showError('')
         render()
       }
+    })
+    editorWrap.addEventListener('input', function (event) {
+      var picker = event.target.closest('[data-area-color]')
+      if (!picker) return
+      draft[Number(picker.closest('[data-area-row]').dataset.areaRow)].color = picker.value
+      picker.classList.remove('is-unset')
+      saveButton.disabled = saving || !isDirty()
+    })
+    editorWrap.addEventListener('contextmenu', function (event) {
+      var picker = event.target.closest('[data-area-color]')
+      if (!picker) return
+      event.preventDefault()
+      draft[Number(picker.closest('[data-area-row]').dataset.areaRow)].color = ''
+      render()
     })
     input.addEventListener('keydown', function (event) {
       if (event.key === 'Enter') { event.preventDefault(); addArea() }
@@ -365,6 +387,8 @@
       var renames = draft.filter(function (item) { return item.original !== null && item.original !== item.name })
         .map(function (item) { return { from: item.original, to: item.name } })
       var names = draft.map(function (item) { return item.name })
+      var colors = {}
+      draft.forEach(function (item) { if (item.color) colors[item.name] = item.color })
       var step = renames.length
         ? request('/ponds-rename-area', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ renames: renames }) })
         : Promise.resolve()
@@ -372,7 +396,7 @@
         return request('/app-settings', {
           method: 'PATCH',
           headers: { 'content-type': 'application/json' },
-          body: JSON.stringify({ pond_areas: JSON.stringify(names), pond_area_order: JSON.stringify(names) }),
+          body: JSON.stringify({ pond_areas: JSON.stringify(names), pond_area_order: JSON.stringify(names), pond_area_colors: JSON.stringify(colors) }),
         })
       }).then(function () {
         try { window.localStorage.setItem('pondAreaOrder', JSON.stringify(names)) } catch (error) {}

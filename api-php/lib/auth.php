@@ -143,7 +143,7 @@ function enforce_role_access(string $method, string $path): void {
     // Pond area order (Data Kolam) is farm work, not program identity: Operator and up may save it.
     if ($method === 'PATCH' && $path === '/app-settings') {
         $keys = array_keys(read_json_body());
-        if ($keys && !array_diff($keys, ['pond_area_order', 'pond_areas'])) $needed = 1;
+        if ($keys && !array_diff($keys, ['pond_area_order', 'pond_areas', 'pond_area_colors'])) $needed = 1;
     }
     if (role_level($role) < $needed) {
         $label = [1 => 'Operator', 2 => 'Admin', 3 => 'Master Admin'][$needed];
