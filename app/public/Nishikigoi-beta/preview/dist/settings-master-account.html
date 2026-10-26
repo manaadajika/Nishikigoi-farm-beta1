@@ -143,6 +143,7 @@
     <script src="./assets/print-kit.js?v=20261024a"></script>
     <script src="./assets/brand-slots.js?v=20261014a"></script>
     <script src="./assets/account-password.js?v=20261026a"></script>
+    <script src="./assets/master-account-tabs.js?v=20261026a"></script>
     <script src="./assets/action-dock.js?v=20261015f"></script>
     <!-- END APP AUTH SCRIPT -->
 
@@ -2309,11 +2310,11 @@
                       const loadLoginHistory = async () => {
                         try {
                           const response = await fetch(
-                            window.KoiAuth.apiUrl("/api/login-history"),
+                            window.KoiAuth.apiUrl("/api/login-history" + (window.koiHistoryParams ? window.koiHistoryParams() : "")),
                           );
-                          renderLoginHistory(
-                            response.ok ? await response.json() : [],
-                          );
+                          const rows = response.ok ? await response.json() : [];
+                          if (window.koiHistoryLoaded) window.koiHistoryLoaded(rows.length, Number(response.headers.get("X-Total-Count") || rows.length));
+                          renderLoginHistory(rows);
                         } catch (error) {
                           renderLoginHistory([]);
                         }

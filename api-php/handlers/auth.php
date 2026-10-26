@@ -53,10 +53,23 @@ route('POST', '/auth/logout', function () {
 });
 
 // Master Admin: recent sign-in attempts (successful and failed) for spotting password guessing.
+// ?limit= (default 100, at most 2000) and ?q= (part of a username or an IP address). The total that matches is sent in X-Total-Count.
 route('GET', '/login-history', function () {
+    $limit = max(1, min(2000, (int)($_GET['limit'] ?? 100)));
+    $q = trim((string)($_GET['q'] ?? ''));
+    $where = '';
+    $params = [];
+    if ($q !== '') {
+        $like = '%' . addcslashes(mb_substr($q, 0, 100), '\\%_') . '%';
+        $where = ' WHERE username LIKE ? OR ip_address LIKE ?';
+        $params = [$like, $like];
+    }
+    $total = query_one('SELECT COUNT(*) AS n FROM login_attempts' . $where, $params);
+    header('X-Total-Count: ' . (int)($total['n'] ?? 0));
     send_json(200, query(
         'SELECT id, username, ip_address, success, user_agent, created_at
-         FROM login_attempts ORDER BY id DESC LIMIT 100'
+         FROM login_attempts' . $where . ' ORDER BY id DESC LIMIT ' . $limit,
+        $params
     ));
 });
 

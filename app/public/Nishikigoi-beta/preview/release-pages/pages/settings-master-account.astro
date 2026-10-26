@@ -234,6 +234,7 @@ import FormGroup from '@ui/FormGroup.astro'
 
 <script is:inline src="/assets/brand-slots.js?v=20261014a"></script>
 <script is:inline src="/assets/account-password.js?v=20261026a"></script>
+<script is:inline src="/assets/master-account-tabs.js?v=20261026a"></script>
 <script is:inline>
     // @ts-nocheck
     document.addEventListener('DOMContentLoaded', () => {
@@ -765,8 +766,10 @@ import FormGroup from '@ui/FormGroup.astro'
 
       const loadLoginHistory = async () => {
       try {
-        const response = await fetch(window.KoiAuth.apiUrl('/api/login-history'))
-        renderLoginHistory(response.ok ? await response.json() : [])
+        const response = await fetch(window.KoiAuth.apiUrl('/api/login-history' + (window.koiHistoryParams ? window.koiHistoryParams() : '')))
+        const rows = response.ok ? await response.json() : []
+        if (window.koiHistoryLoaded) window.koiHistoryLoaded(rows.length, Number(response.headers.get('X-Total-Count') || rows.length))
+        renderLoginHistory(rows)
       } catch (error) {
         renderLoginHistory([])
       }
