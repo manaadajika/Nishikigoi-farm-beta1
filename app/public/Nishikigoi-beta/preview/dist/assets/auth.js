@@ -2842,8 +2842,8 @@
     if (!flag) return
     var box = document.querySelector('[data-login-message]')
     if (!box) return
-    box.textContent = 'Sesi Anda sudah berakhir: sudah kedaluwarsa (1 hari tanpa "Ingat saya"), atau akun lain masuk di browser ini. Silakan masuk lagi. Centang "Ingat saya di perangkat ini" agar sesi bertahan 7 hari.'
-    box.className = 'alert alert-warning'
+    box.textContent = 'Sesi Anda sudah berakhir.'
+    box.className = 'small text-secondary text-center mb-3'
   }
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', show)
   else show()
