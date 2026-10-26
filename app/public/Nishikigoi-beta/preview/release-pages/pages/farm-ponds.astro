@@ -702,6 +702,15 @@ const clipboardIcon = iconSvg('clipboard')
       background: color-mix(in srgb, var(--area-color) 20%, var(--tblr-bg-surface-secondary)); border-bottom: 3px solid var(--area-color);
     }
 
+
+    .pond-card.has-area-color {
+      border-top: 4px solid var(--area-color);
+    }
+
+    .pond-card.has-area-color .pond-card-stat {
+      background: color-mix(in srgb, var(--area-color) 16%, var(--tblr-bg-surface-secondary));
+    }
+
     .pond-card .card-body {
       padding: .75rem;
     }
@@ -1336,6 +1345,19 @@ const clipboardIcon = iconSvg('clipboard')
       return String(item[key] || '').toLowerCase()
     }
 
+    const pdWords = (part) => part.replace(/([a-z])(\d)/g, '$1 $2').replace(/(\d)\s*-\s*(\d)/g, '$1-$2').split(/\s+/).filter(Boolean)
+    // a word matches the name/area text; a number matches the numbers of the name ("2" finds "VAT 02"), and "2-5" any number from 2 to 5
+    const pdWordMatch = (word, item, haystack) => {
+      const numbers = (String(item.name || '').match(/\d+/g) || []).map(Number)
+      const range = word.match(/^(\d+)-(\d+)$/)
+      if (range) {
+        const low = Math.min(Number(range[1]), Number(range[2]))
+        const high = Math.max(Number(range[1]), Number(range[2]))
+        return numbers.some((number) => number >= low && number <= high)
+      }
+      return haystack.includes(word) || (/^\d+$/.test(word) && numbers.includes(Number(word)))
+    }
+
     const pondSearchText = (item) => [item.name, item.location].filter(Boolean).join(' ').toLowerCase()
 
     // The navbar search feeds the hidden [data-pond-search] input. Spaces mean "all of these words" (so "mudpond 14"
@@ -1355,10 +1377,10 @@ const clipboardIcon = iconSvg('clipboard')
         notesPhrase = searchQuery.slice(searchQuery.indexOf(':', marker) + 1).trim()
       }
 
-      const alternatives = main.split(',').map((part) => part.split(/\s+/).filter(Boolean)).filter((words) => words.length)
+      const alternatives = main.split(',').map((part) => pdWords(part)).filter((words) => words.length)
       const searchableText = pondSearchText(item)
 
-      if (alternatives.length && !alternatives.some((words) => words.every((word) => searchableText.includes(word)))) {
+      if (alternatives.length && !alternatives.some((words) => words.every((word) => pdWordMatch(word, item, searchableText)))) {
         return false
       }
 
@@ -1742,7 +1764,7 @@ const clipboardIcon = iconSvg('clipboard')
           const status = statusLabels[item.status] || { label: text(item.status), className: 'bg-secondary-lt' }
           return `
           <div class="col-sm-6 col-lg-4 col-xl-3" data-search-text="${escapeHtml(pondSearchText(item))}">
-            <div class="card h-100 pond-card" data-dock-id="${escapeHtml(item.id)}">
+            <div class="card h-100 pond-card${/^#[0-9a-f]{6}$/i.test(areaColors[area] || '') ? ' has-area-color' : ''}"${/^#[0-9a-f]{6}$/i.test(areaColors[area] || '') ? ` style="--area-color:${areaColors[area]}"` : ''} data-dock-id="${escapeHtml(item.id)}">
               <div class="pond-card-stat" data-dock-select title="Klik untuk memilih">
                 <div class="pond-card-qty">${totalPondQty(item)}</div>
                 <div class="text-secondary small">Qty Total</div>
@@ -2481,6 +2503,50 @@ const clipboardIcon = iconSvg('clipboard')
       overlay.querySelector('[data-bulk-text]').focus()
     }
 
+    // Ubah status masal: the same status for every selected pond.
+    const openPondBulkStatus = (ids) => {
+      document.querySelector('[data-pond-bulk-status]')?.remove()
+      const overlay = document.createElement('div')
+      overlay.setAttribute('data-pond-bulk-status', '')
+      overlay.style.cssText = 'position:fixed;inset:0;z-index:4900;display:flex;align-items:center;justify-content:center;padding:16px;background:rgba(0,0,0,.6)'
+      overlay.innerHTML = `
+        <div class="card" style="max-width:24rem;width:100%">
+          <div class="card-header"><h3 class="card-title">Ubah Status (${ids.length} kolam)</h3><div class="card-actions"><button type="button" class="btn-close" data-bulk-cancel aria-label="Tutup"></button></div></div>
+          <div class="card-body">
+            <div class="form-label">Status baru untuk kolam terpilih</div>
+            ${[['active', 'Aktif'], ['kosong', 'Kosong'], ['perbaikan', 'Perbaikan']].map(([value, label], index) => `<label class="form-check"><input class="form-check-input" type="radio" name="pond-bulk-status" value="${value}" ${index === 0 ? 'checked' : ''} /><span class="form-check-label">${label}</span></label>`).join('')}
+            <div class="text-danger small mt-2" data-bulk-error></div>
+          </div>
+          <div class="card-footer d-flex justify-content-end gap-2"><button type="button" class="btn" data-bulk-cancel>Batal</button><button type="button" class="btn btn-primary" data-bulk-save>Ubah</button></div>
+        </div>`
+      overlay.addEventListener('click', async (event) => {
+        if (event.target === overlay || event.target.closest('[data-bulk-cancel]')) {
+          overlay.remove()
+          return
+        }
+        if (!event.target.closest('[data-bulk-save]')) return
+        const status = overlay.querySelector('input[name="pond-bulk-status"]:checked')?.value
+        if (!status) return
+        const saveButton = overlay.querySelector('[data-bulk-save]')
+        saveButton.disabled = true
+        saveButton.textContent = 'Menyimpan'
+        let failed = 0
+        for (const id of ids) {
+          try {
+            const response = await fetch(`/api/ponds/${id}`, { method: 'PATCH', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ status }) })
+            if (!response.ok) failed += 1
+          } catch {
+            failed += 1
+          }
+        }
+        overlay.remove()
+        dock.clear()
+        await keepScroll(loadPonds)
+        if (failed) alert(`${failed} kolam gagal diubah statusnya.`)
+      })
+      document.body.appendChild(overlay)
+    }
+
     const sortLabel = () => (sortState.direction === 'asc' ? 'A/Z' : 'Z/A')
     const sortTitle = () => (sortState.direction === 'asc' ? 'Urutan A ke Z (klik untuk Z ke A)' : 'Urutan Z ke A (klik untuk A ke Z)')
 
@@ -2493,6 +2559,7 @@ const clipboardIcon = iconSvg('clipboard')
       render: () => renderPonds(),
       actions: [
         { key: 'edit', icon: 'edit', title: 'Edit kolam terpilih', role: 'farm-operate', show: (count) => count === 1, onClick: (ids) => openPondForm(ids[0]) },
+        { key: 'bulk-status', icon: 'arrows-exchange', title: 'Ubah status kolam terpilih', role: 'farm-operate', onClick: (ids) => openPondBulkStatus(ids) },
         { key: 'bulk-note', icon: 'note', title: 'Catatan masal kolam terpilih', role: 'farm-operate', onClick: (ids) => openPondBulkNote(ids) },
         {
           key: 'print-one',
