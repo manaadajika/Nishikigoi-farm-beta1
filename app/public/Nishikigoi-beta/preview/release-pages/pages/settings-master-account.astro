@@ -655,6 +655,7 @@ import FormGroup from '@ui/FormGroup.astro'
         role: account.role || 'Viewer',
         status: account.status || 'Active',
         avatar: account.avatar || '',
+        locked: Boolean(account.locked),
       }))
 
       return normalized
@@ -897,9 +898,10 @@ import FormGroup from '@ui/FormGroup.astro'
           <td class="text-secondary">${escapeHtml(account.email || '-')}</td>
           <td class="text-secondary">${escapeHtml(account.phone || "-")}</td>
           <td><span class="badge bg-${roleBadge(account.role)}-lt">${escapeHtml(account.role)}</span></td>
-          <td><span class="badge bg-${statusBadge(account.status)}-lt">${escapeHtml(account.status)}</span></td>
+          <td><span class="badge bg-${statusBadge(account.status)}-lt">${escapeHtml(account.status)}</span>${account.locked ? ' <span class="badge bg-red-lt" title="Terlalu banyak password salah">Terkunci</span>' : ''}</td>
           <td class="text-end">
             <div class="btn-list flex-nowrap">
+              ${account.locked ? `<button type="button" class="btn btn-sm btn-outline-warning" data-action="unlock-account" data-account-id="${account.id}">Buka kunci</button>` : ''}
               <button type="button" class="btn btn-sm" data-action="edit-account" data-account-id="${account.id}">Edit</button>
               <button type="button" class="btn btn-sm btn-ghost-danger" data-action="delete-account" data-account-id="${account.id}">Delete</button>
             </div>
@@ -1035,6 +1037,16 @@ import FormGroup from '@ui/FormGroup.astro'
       if (action === 'remove-avatar') {
         setAvatarPreview('')
         showMessage('Photo Profile akun dihapus. Klik Submit untuk menyimpan.')
+      }
+
+      if (action === 'unlock-account') {
+        const response = await window.KoiAuth.apiRequest('/accounts/' + accountId + '/unlock', { method: 'POST', body: '{}' })
+        if (response.ok) {
+          await loadAccounts()
+          showMessage('Kunci akun dibuka. Akun ini bisa masuk lagi.')
+        } else {
+          showMessage('Kunci akun gagal dibuka.', 'danger')
+        }
       }
 
       if (action === 'delete-account') {

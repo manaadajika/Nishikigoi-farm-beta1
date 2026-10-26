@@ -104,6 +104,23 @@ function record_login_attempt(string $username, bool $success): void {
     );
 }
 
+// Usernames (lower case) that are locked out right now from at least one device.
+function login_locked_usernames(): array {
+    $rows = query(
+        'SELECT LOWER(username) AS username FROM login_attempts
+         WHERE success = 0 AND created_at > DATE_SUB(NOW(), INTERVAL ' . LOGIN_LOCK_MINUTES . ' MINUTE)
+         GROUP BY ip_address, LOWER(username) HAVING COUNT(*) >= ' . LOGIN_MAX_FAILS_PER_ACCOUNT
+    );
+    return array_values(array_unique(array_column($rows, 'username')));
+}
+
+function login_unlock_username(string $username): void {
+    execute(
+        'DELETE FROM login_attempts WHERE success = 0 AND LOWER(username) = ? AND created_at > DATE_SUB(NOW(), INTERVAL ' . LOGIN_LOCK_MINUTES . ' MINUTE)',
+        [strtolower($username)]
+    );
+}
+
 function enforce_login_lockout(string $username): void {
     $ip = client_ip();
     $window = 'created_at > DATE_SUB(NOW(), INTERVAL ' . LOGIN_LOCK_MINUTES . ' MINUTE) AND success = 0';

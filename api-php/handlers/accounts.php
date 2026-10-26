@@ -18,8 +18,15 @@ function account_store_image($value, string $prefix): ?string {
 }
 
 route('GET', '/accounts', function () {
-    require_account();
-    send_json(200, query('SELECT id, username, name, email, phone, role, status, avatar, cover FROM accounts ORDER BY created_at DESC'));
+    $session = require_account();
+    $accounts = query('SELECT id, username, name, email, phone, role, status, avatar, cover FROM accounts ORDER BY created_at DESC');
+    // only the Master Admin sees which accounts are locked out after too many wrong passwords (it is what the Unlock button is for)
+    if (role_level($session['account_role'] ?? $session['role'] ?? null) >= 3) {
+        $locked = array_flip(login_locked_usernames());
+        foreach ($accounts as &$account) $account['locked'] = isset($locked[strtolower((string)$account['username'])]);
+        unset($account);
+    }
+    send_json(200, $accounts);
 });
 
 route('POST', '/accounts', function () {
@@ -102,6 +109,15 @@ route_pattern('PATCH', '#^/accounts/(\d+)$#', function (array $m) {
     }
     if ($stale) delete_upload_files_if_unused($stale);
     send_json(200, $account);
+});
+
+// Master Admin: lift the login lockout of an account (forget its recent wrong passwords).
+route_pattern('POST', '#^/accounts/(\d+)/unlock$#', function (array $m) {
+    require_account();
+    $account = query_one('SELECT username FROM accounts WHERE id = ?', [$m[1]]);
+    if (!$account) send_error(404, 'Akun tidak ditemukan');
+    login_unlock_username((string)$account['username']);
+    send_json(200, ['ok' => true]);
 });
 
 route_pattern('DELETE', '#^/accounts/(\d+)$#', function (array $m) {
