@@ -335,6 +335,60 @@ function koi_plain_terms(string $plain): array {
     return ['id' => $idTerms, 'size' => $sizeTests];
 }
 
+// The plain part of a search text, as groups: a comma or a period separates alternatives (OR), spaces inside a group mean
+// "all of these" (AND). A period between two digits stays a decimal point ("45.5cm"). JS twin: splitSearchGroups.
+function koi_plain_groups(string $plain): array {
+    $plain = preg_replace('/(\d)\.(?=\d)/', '$1' . chr(1), $plain);
+    $groups = [];
+    foreach (preg_split('/[,.]+/u', $plain) as $chunk) {
+        $chunk = str_replace(chr(1), '.', $chunk);
+        // a pasted list of fish codes separated by spaces or new lines ("26CY8E 26EQ6M") lists those fish: each code is its own group
+        $words = array_values(array_filter(preg_split('/\s+/u', koi_norm($chunk)), fn($w) => $w !== ''));
+        $codes = count($words) > 1;
+        foreach ($words as $word) {
+            if (!preg_match('/^\d{2}[a-z0-9]{2,}$/u', $word) || preg_match('/cm$/', $word)) { $codes = false; break; }
+        }
+        foreach ($codes ? $words : [$chunk] as $piece) {
+            $parts = koi_plain_terms($piece);
+            if ($parts['id'] || $parts['size']) $groups[] = $parts;
+        }
+    }
+    return $groups;
+}
+
+// One group of koi_plain_groups against a fish: every word must be found (code, name, bloodline, ternakan, or the number
+// shown on the card), and the size has to fit one of the size tests when there are any.
+function koi_group_matches(array $item, array $parts, array &$ctx): bool
+{
+    if ($parts['id']) {
+        $values = [koi_norm($item['code'] ?? null), koi_norm($item['name'] ?? null), koi_norm($item['bloodline'] ?? null), koi_norm($item['farm_name'] ?? null)];
+        foreach ($parts['id'] as $term) {
+            $hit = false;
+            // a number alone also means "the fish at that position"
+            if (preg_match('/^\d+$/', $term) && koi_rank_id($ctx, (int)$term) === (int)$item['id']) $hit = true;
+            if (!$hit) {
+                foreach ($values as $v) {
+                    if (koi_has($v, $term)) { $hit = true; break; }
+                }
+            }
+            if (!$hit) return false;
+        }
+    }
+
+    if ($parts['size']) {
+        $raw = $item['current_length_cm'] ?? null;
+        $size = ($raw === null || $raw === '') ? 0.0 : (is_numeric($raw) ? (float)$raw : null);
+        if ($size === null) return false;
+        $ok = false;
+        foreach ($parts['size'] as $test) {
+            $hit = $test[0] === 'range' ? ($size >= $test[1] && $size <= $test[2]) : ($test[2] ? floor($size) == $test[1] : $size == $test[1]);
+            if ($hit) { $ok = true; break; }
+        }
+        if (!$ok) return false;
+    }
+    return true;
+}
+
 // JS matchesKoiSearch
 function koi_matches_search(array $item, string $keyword, array &$ctx): bool
 {
@@ -352,37 +406,12 @@ function koi_matches_search(array $item, string $keyword, array &$ctx): bool
         if ($result === false) return false;
     }
 
-    $parts = koi_plain_terms($plain);
-
-    if ($parts['id']) {
-        $values = [koi_norm($item['code'] ?? null), koi_norm($item['name'] ?? null), koi_norm($item['bloodline'] ?? null), koi_norm($item['farm_name'] ?? null)];
-        $matched = false;
-        foreach ($parts['id'] as $term) {
-            $hit = false;
-            // a number alone also means "the fish at that position"
-            if (preg_match('/^\d+$/', $term) && koi_rank_id($ctx, (int)$term) === (int)$item['id']) $hit = true;
-            if (!$hit) {
-                foreach ($values as $v) {
-                    if (koi_has($v, $term)) { $hit = true; break; }
-                }
-            }
-            if ($hit) { $matched = true; break; }
-        }
-        if (!$matched) return false;
+    $groups = koi_plain_groups($plain);
+    if (!$groups) return true;
+    foreach ($groups as $parts) {
+        if (koi_group_matches($item, $parts, $ctx)) return true;
     }
-
-    if ($parts['size']) {
-        $raw = $item['current_length_cm'] ?? null;
-        $size = ($raw === null || $raw === '') ? 0.0 : (is_numeric($raw) ? (float)$raw : null);
-        if ($size === null) return false;
-        $ok = false;
-        foreach ($parts['size'] as $test) {
-            $hit = $test[0] === 'range' ? ($size >= $test[1] && $size <= $test[2]) : ($test[2] ? floor($size) == $test[1] : $size == $test[1]);
-            if ($hit) { $ok = true; break; }
-        }
-        if (!$ok) return false;
-    }
-    return true;
+    return false;
 }
 
 // ---- SQL pre-filter of a search text (always wider than, or equal to, the exact search) --------------------------------
@@ -503,9 +532,9 @@ function koi_search_prefilter(string $keyword, array &$ctx): array {
         if ($cond !== null) $conds[] = $cond;
     }
 
-    $parts = koi_plain_terms($plain);
-    if ($parts['id']) {
-        $any = [];
+    $groupSql = [];
+    foreach (koi_plain_groups($plain) as $parts) {
+        $own = [];
         foreach ($parts['id'] as $term) {
             $one = [];
             foreach (['koi.code', 'koi.name', 'koi.bloodline', 'koi.farm_name'] as $column) $one[] = koi_like($column, $term, $params);
@@ -513,27 +542,28 @@ function koi_search_prefilter(string $keyword, array &$ctx): array {
                 $id = koi_rank_id($ctx, (int)$term);
                 if ($id !== null) { $one[] = 'koi.id = ?'; $params[] = $id; }
             }
-            $any[] = '(' . implode(' OR ', $one) . ')';
+            $own[] = '(' . implode(' OR ', $one) . ')';
         }
-        $conds[] = '(' . implode(' OR ', $any) . ')';
-    }
-    if ($parts['size']) {
-        $any = [];
-        $size = 'IFNULL(koi.current_length_cm, 0)';
-        foreach ($parts['size'] as $test) {
-            if ($test[0] === 'range') {
-                array_push($params, $test[1] - 0.0001, $test[2] + 0.0001);
-                $any[] = "($size BETWEEN ? AND ?)";
-            } elseif ($test[2]) {
-                array_push($params, $test[1] - 0.0001, $test[1] + 1 - 0.0001);
-                $any[] = "($size >= ? AND $size < ?)";
-            } else {
-                array_push($params, $test[1] - 0.0001, $test[1] + 0.0001);
-                $any[] = "($size BETWEEN ? AND ?)";
+        if ($parts['size']) {
+            $any = [];
+            $size = 'IFNULL(koi.current_length_cm, 0)';
+            foreach ($parts['size'] as $test) {
+                if ($test[0] === 'range') {
+                    array_push($params, $test[1] - 0.0001, $test[2] + 0.0001);
+                    $any[] = "($size BETWEEN ? AND ?)";
+                } elseif ($test[2]) {
+                    array_push($params, $test[1] - 0.0001, $test[1] + 1 - 0.0001);
+                    $any[] = "($size >= ? AND $size < ?)";
+                } else {
+                    array_push($params, $test[1] - 0.0001, $test[1] + 0.0001);
+                    $any[] = "($size BETWEEN ? AND ?)";
+                }
             }
+            $own[] = '(' . implode(' OR ', $any) . ')';
         }
-        $conds[] = '(' . implode(' OR ', $any) . ')';
+        $groupSql[] = '(' . implode(' AND ', $own) . ')';
     }
+    if ($groupSql) $conds[] = '(' . implode(' OR ', $groupSql) . ')';
     return [$conds ? implode(' AND ', $conds) : '', $params];
 }
 
@@ -847,7 +877,8 @@ function koi_picker_lookup(array $in): array {
         if (trim($id) !== '' && ctype_digit(trim($id))) $exclude[] = (int)trim($id);
     }
 
-    $tokens = array_values(array_filter(preg_split('/[\s,;]+/u', koi_norm($query)), fn($t) => $t !== ''));
+    // a period between two digits stays a decimal point (45.5), any other period separates like a comma
+    $tokens = array_values(array_map(fn($t) => str_replace(chr(1), '.', $t), array_filter(preg_split('/[\s,;.]+/u', preg_replace('/(\d)\.(?=\d)/', '$1' . chr(1), koi_norm($query))), fn($t) => $t !== '')));
     $known = [];
     if (count($tokens) > 1) {
         foreach (array_chunk(array_values(array_unique($tokens)), 500) as $chunk) {

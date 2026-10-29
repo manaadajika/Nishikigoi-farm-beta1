@@ -2913,7 +2913,7 @@
                   title: 'Salin kode batch terpilih',
                   onClick: async (ids, button) => {
                     const codes = ids.map((id) => breedingItems.find((entry) => String(entry.id) === String(id))?.batch_code).filter(Boolean)
-                    const copied = await copyText(codes.join('\n'))
+                    const copied = await copyText(codes.join(', '))
                     button.classList.toggle('btn-outline-primary', false)
                     button.classList.toggle(copied ? 'btn-success' : 'btn-danger', true)
                     button.setAttribute('title', copied ? 'Kode batch tersalin' : 'Kode batch gagal disalin')

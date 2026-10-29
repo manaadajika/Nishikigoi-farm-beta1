@@ -1958,7 +1958,7 @@
                   <button class="btn btn-outline-primary" type="button" data-pull-koi-ids-button>Tarik</button>
                 </div>
               </div>
-              <div class="form-hint" data-pull-koi-ids-status>Boleh tempel banyak kode, pisahkan dengan spasi, koma, atau baris baru.</div>
+              <div class="form-hint" data-pull-koi-ids-status>Boleh tempel banyak kode, pisahkan dengan spasi, koma, titik, atau baris baru.</div>
             </section>
           </div>
                     <div class="table-responsive koi-entry-table-wrap">
@@ -2906,6 +2906,8 @@ const pageSizeSelect = document.querySelector('[data-koi-page-size-select]');
                 const copySelectedIdsButton = document.querySelector(
                   "[data-copy-selected-koi-ids]",
                 );
+    // A list of codes may be separated by spaces, new lines, commas, semicolons or periods (a period between two digits stays a decimal point).
+    const splitCodeList = (text) => String(text || '').replace(/(\d)\.(?=\d)/g, '$1\u0001').split(/[\s,;.]+/).map((part) => part.replace(/\u0001/g, '.').trim()).filter(Boolean)
                 const bulkPondButton = document.querySelector(
                   "[data-bulk-pond-change]",
                 );
@@ -3172,7 +3174,7 @@ const pageSizeSelect = document.querySelector('[data-koi-page-size-select]');
     const updateArchiveHint = () => {
       archiveHint.classList.add('d-none')
       const query = searchInput.value.trim()
-      const tokens = query.split(/[\s,;]+/).filter(Boolean)
+      const tokens = splitCodeList(query)
       const idsOnly = tokens.length > 0 && tokens.length <= 50 && tokens.every((token) => /^[A-Za-z0-9][A-Za-z0-9_-]{3,}$/.test(token))
       if (archiveMode || !idsOnly || !window.KoiPicker) return
       const mine = ++archiveHintToken
@@ -5843,10 +5845,7 @@ Perubahan ini berlaku untuk SEMUA ikan terpilih, bukan hanya yang tampil di laya
                   );
 
                   if (fieldName === "code") {
-                    const codes = rawBulkValue
-                      .split(/[\s,;]+/)
-                      .map((code) => code.trim())
-                      .filter(Boolean);
+                    const codes = splitCodeList(rawBulkValue);
                     const uniqueCodes = new Set(
                       codes.map((code) => code.toUpperCase()),
                     );
@@ -6259,11 +6258,7 @@ items.forEach((item) => {
       return pullKoiCache.get(token) || null
     }
 
-                const pullKoiTokens = () =>
-                  String(pullKoiIdsInput?.value || "")
-                    .split(/\s+/)
-                    .map((item) => item.trim())
-                    .filter(Boolean);
+                const pullKoiTokens = () => splitCodeList(pullKoiIdsInput?.value);
                 const closePullKoiMenu = () => {
                   document
                     .querySelector("[data-pull-koi-menu]")
@@ -6275,7 +6270,7 @@ items.forEach((item) => {
       if (!menu || !pullKoiIdsInput) return
 
       const tokens = pullKoiTokens()
-      const currentWord = String(pullKoiIdsInput.value || '').split(/\s+/).pop().trim().toLowerCase()
+      const currentWord = /[\s,;.]$/.test(String(pullKoiIdsInput.value || '')) ? '' : (tokens[tokens.length - 1] || '').toLowerCase()
       const selected = new Set(tokens.map((token) => token.toLowerCase()))
       const mine = ++pullMenuToken
       window.KoiPicker.lookup(currentWord, { limit: 10, scope: archiveMode ? 'archived' : 'active' }).then((result) => {
@@ -6310,7 +6305,7 @@ items.forEach((item) => {
                   );
                   const rawValue = String(pullKoiIdsInput.value || "");
                   const shouldReplaceLast =
-                    !/\s$/.test(rawValue) && tokens.length > 0;
+                    !/[\s,;.]$/.test(rawValue) && tokens.length > 0;
                   const nextTokens = exists
                     ? tokens
                     : shouldReplaceLast
@@ -6318,7 +6313,7 @@ items.forEach((item) => {
                       : [...tokens, code];
 
                   pullKoiIdsInput.value =
-                    nextTokens.filter(Boolean).join(" ") + " ";
+                    nextTokens.filter(Boolean).join(", ") + ", ";
                   pullKoiIdsStatus.textContent = `${nextTokens.length} ID/kode dipilih.`;
                   pullKoiIdsInput.focus();
                   renderPullKoiMenu();
@@ -7333,50 +7328,64 @@ items.forEach((item) => {
                   }
 
                   // "49 - 70 cm" / "49cm-70cm" are written without spaces so the split below keeps a range in one piece
-                  const terms = parseSearchTerms(plain.replace(/\b(?:size|ukuran|panjang)\s*(?=\d)/gi, "").replace(/(\d)\s+cm(?![a-z])/gi, '$1cm').replace(/(\d)\s*(?:cm)?\s*-\s*(\d)/gi, '$1-$2'))
-                  const idTerms = []
-                  const sizeTests = []
+      // Spaces mean "all of these words"; a comma or a period starts an alternative (OR). A list of bare fish codes ("26CY8E 26EQ6M") lists those fish.
+      const cleaned = plain.replace(/\b(?:size|ukuran|panjang)\s*(?=\d)/gi, "").replace(/(\d)\s+cm(?![a-z])/gi, '$1cm').replace(/(\d)\s*(?:cm)?\s*-\s*(\d)/gi, '$1-$2')
+      const groups = []
+      cleaned.replace(/(\d)\.(?=\d)/g, '$1\u0001').split(/[,.]+/).forEach((chunk) => {
+        const words = parseSearchTerms(chunk.replace(/\u0001/g, '.'))
+        const codeList = words.length > 1 && words.every((word) => /^\d{2}[a-z0-9]{2,}$/.test(word) && !/cm$/.test(word))
+        ;(codeList ? words.map((word) => [word]) : [words]).forEach((group) => {
+          if (group.length) groups.push(group)
+        })
+      })
 
-                  terms.forEach((term) => {
-                    const range = term.match(/^(\d+(?:[.,]\d+)?)-(\d+(?:[.,]\d+)?)(?:cm)?$/)
-                    const single = term.match(/^(\d+(?:[.,]\d+)?)cm$/)
+      const groupMatches = (terms) => {
+        const idTerms = []
+        const sizeTests = []
 
-                    if (range) {
-                      const first = Number(range[1].replace(',', '.'))
-                      const second = Number(range[2].replace(',', '.'))
-                      const [min, max] = [Math.min(first, second), Math.max(first, second)]
-                      sizeTests.push((size) => size >= min && size <= max)
-                    } else if (single) {
-                      const wanted = Number(single[1].replace(',', '.'))
-                      sizeTests.push((size) => (Number.isInteger(wanted) ? Math.floor(size) === wanted : size === wanted))
-                    } else {
-                      idTerms.push(term)
-                    }
-                  })
+        terms.forEach((term) => {
+          const range = term.match(/^(\d+(?:[.,]\d+)?)-(\d+(?:[.,]\d+)?)(?:cm)?$/)
+          const single = term.match(/^(\d+(?:[.,]\d+)?)cm$/)
 
-                  // kode, nama, bloodline, ternakan, and the number shown on the card (a bare number is that nomor urut)
-                  if (idTerms.length) {
-                    const searchableValues = [item.code, item.name, item.bloodline, item.farm_name].map(normalizeSearchText)
-                    const sequence = koiSequenceIndex(item)
-                    const matched = idTerms.some((term) => /^\d+$/.test(term)
-                      ? Number(term) === sequence || searchableValues.some((value) => value.includes(term))
-                      : searchableValues.some((value) => value.includes(term)))
+          if (range) {
+            const first = Number(range[1].replace(',', '.'))
+            const second = Number(range[2].replace(',', '.'))
+            const [min, max] = [Math.min(first, second), Math.max(first, second)]
+            sizeTests.push((size) => size >= min && size <= max)
+          } else if (single) {
+            const wanted = Number(single[1].replace(',', '.'))
+            sizeTests.push((size) => (Number.isInteger(wanted) ? Math.floor(size) === wanted : size === wanted))
+          } else {
+            idTerms.push(term)
+          }
+        })
 
-                    if (!matched) {
-                      return false
-                    }
-                  }
+        // kode, nama, bloodline, ternakan, and the number shown on the card (a bare number is that nomor urut): every word has to be found
+        if (idTerms.length) {
+          const searchableValues = [item.code, item.name, item.bloodline, item.farm_name].map(normalizeSearchText)
+          const sequence = koiSequenceIndex(item)
+          const matched = idTerms.every((term) => /^\d+$/.test(term)
+            ? Number(term) === sequence || searchableValues.some((value) => value.includes(term))
+            : searchableValues.some((value) => value.includes(term)))
 
-                  if (sizeTests.length) {
-                    const size = Number(item.current_length_cm)
+          if (!matched) {
+            return false
+          }
+        }
 
-                    if (!Number.isFinite(size) || !sizeTests.some((test) => test(size))) {
-                      return false
-                    }
-                  }
+        if (sizeTests.length) {
+          const size = Number(item.current_length_cm)
 
-                  return true
-                }
+          if (!Number.isFinite(size) || !sizeTests.some((test) => test(size))) {
+            return false
+          }
+        }
+
+        return true
+      }
+
+      return groups.length === 0 || groups.some(groupMatches)
+    }
 
                 const selectedGenderFilter = () => Array.from(genderSelect?.selectedOptions || []).map((option) => option.value).filter(Boolean).join(',')
 
@@ -7797,7 +7806,7 @@ if (pageSizeSelect) pageSizeSelect.value = String(pageSize);
                     return;
                   }
 
-                  const copied = await copyText(ids.join("\n"));
+                  const copied = await copyText(ids.join(", "));
                   copySelectedIdsButton.classList.toggle(
                     "btn-outline-primary",
                     !copied,

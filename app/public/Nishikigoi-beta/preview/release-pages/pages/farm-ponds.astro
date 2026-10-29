@@ -1377,7 +1377,7 @@ const clipboardIcon = iconSvg('clipboard')
         notesPhrase = searchQuery.slice(searchQuery.indexOf(':', marker) + 1).trim()
       }
 
-      const alternatives = main.split(',').map((part) => pdWords(part)).filter((words) => words.length)
+      const alternatives = main.split(/,|\.(?!\d)/).map((part) => pdWords(part)).filter((words) => words.length)
       const searchableText = pondSearchText(item)
 
       if (alternatives.length && !alternatives.some((words) => words.every((word) => pdWordMatch(word, item, searchableText)))) {
@@ -3187,7 +3187,7 @@ const clipboardIcon = iconSvg('clipboard')
     const navbarSearchBox = document.querySelector('#navbar-global-search')
     if (navbarSearchBox) {
       navbarSearchBox.setAttribute('placeholder', 'Nama kolam, area, catatan:kata')
-      navbarSearchBox.setAttribute('title', 'Cari nama kolam atau area. Beberapa kata = semuanya harus cocok (mudpond 14). Pisahkan dengan koma untuk beberapa kolam (konkret 01, konkret 02). Cari di catatan: catatan:kata')
+      navbarSearchBox.setAttribute('title', 'Cari nama kolam atau area. Beberapa kata = semuanya harus cocok (mudpond 14). Pisahkan dengan koma atau titik untuk beberapa kolam (konkret 01, konkret 02). Cari di catatan: catatan:kata')
     }
     pondSearchInput?.addEventListener('input', () => {
       searchQuery = pondSearchInput.value.trim().toLowerCase()

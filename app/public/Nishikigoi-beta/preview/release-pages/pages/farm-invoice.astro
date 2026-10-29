@@ -460,7 +460,7 @@ const trashIcon = iconSvg('trash')
     const renderPickerMenu = () => {
       const query = norm(pickerInput.value)
       if (!query || readonlyMode) { pickerMenu.classList.add('d-none'); return }
-      const terms = query.split(/[\s,;]+/).filter(Boolean)
+      const terms = query.replace(/(\d)\.(?=\d)/g, '$1\u0001').split(/[\s,;.]+/).map((part) => part.replace(/\u0001/g, '.')).filter(Boolean)
       const listMode = Boolean(pickerResult?.list_mode)
       const codeSet = Object.fromEntries((listMode ? pickerResult.tokens : []).map((token) => [token, true]))
       const sellMatches = sellItems
