@@ -1270,7 +1270,7 @@
     options = options || {}
     var parts = dateParts(value)
     if (parts && parts.y > 0 && (parts.m === 0 || parts.d === 0)) {
-      if (parts.m === 0) return String(parts.y)
+      if (parts.m === 0) return parts.d === 0 ? String(parts.y) : parts.y + ' - tanggal ' + parts.d   // the month was forgotten, the day is known
       if (parts.m <= 12) return parts.y + ' - [' + pad2(parts.m) + '] ' + DATE_MONTH_NAMES[parts.m - 1]
     }
     var date = parseDateValue(value)
@@ -1287,7 +1287,7 @@
   function dateShort(value) {
     var parts = dateParts(value)
     if (!parts) return value === null || value === undefined ? '' : String(value).slice(0, 10)
-    if (parts.m === 0) return String(parts.y)
+    if (parts.m === 0) return parts.d === 0 ? String(parts.y) : parts.y + '-00-' + pad2(parts.d)
     if (parts.d === 0) return parts.y + '-' + pad2(parts.m)
     return parts.y + '-' + pad2(parts.m) + '-' + pad2(parts.d)
   }
@@ -1313,7 +1313,7 @@
     if (!parts) return ''
     var year = Number(parts[0]), month = Number(parts[1]), day = Number(parts[2])
     if (year < 1000) return ''
-    if (month === 0) return day === 0 ? year + '-00-00' : ''
+    if (month === 0) return day <= 31 ? year + '-00-' + pad2(day) : ''
     if (month > 12) return ''
     if (day === 0) return year + '-' + pad2(month) + '-00'
     var date = new Date(year, month - 1, day)
@@ -1398,7 +1398,7 @@
       }
 
       function fillDays() {
-        var chosen = month.value ? day.value : ''   // no month: no day
+        var chosen = day.value
         var total = 31
         if (month.value) {
           var y = /^\d{4}$/.test(year.value) ? Number(year.value) : 2000   // 2000 is a leap year: February has 29 days until the year is known
@@ -1408,7 +1408,7 @@
         for (var n = 1; n <= total; n++) html += '<option value="' + pad2(n) + '">' + n + '</option>'
         day.innerHTML = html
         day.value = chosen && Number(chosen) <= total ? chosen : ''
-        day.disabled = !month.value || input.disabled
+        day.disabled = input.disabled
       }
       // the three boxes -> the hidden input
       function compose(fire) {
@@ -1416,7 +1416,7 @@
         if (yearText !== year.value) year.value = yearText
         year.setCustomValidity(yearText && yearText.length < 4 ? 'Tahun harus 4 angka, contoh 2025' : '')
         fillDays()
-        var text = yearText.length === 4 ? yearText + '-' + (month.value || '00') + '-' + (month.value ? (day.value || '00') : '00') : ''
+        var text = yearText.length === 4 ? yearText + '-' + (month.value || '00') + '-' + (day.value || '00') : ''
         if (nativeValue.get.call(input) !== text) {
           nativeValue.set.call(input, text)
           if (fire) {
@@ -1442,7 +1442,7 @@
         year.disabled = month.disabled = input.disabled
         year.readOnly = input.readOnly
         clear.disabled = input.disabled || input.readOnly
-        day.disabled = input.disabled || input.readOnly || !month.value
+        day.disabled = input.disabled || input.readOnly
         if (input.readOnly) month.disabled = true
         clear.classList.toggle('d-none', input.disabled || input.readOnly || !(year.value || month.value))
       }

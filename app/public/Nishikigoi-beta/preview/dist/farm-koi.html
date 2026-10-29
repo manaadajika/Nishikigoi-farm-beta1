@@ -157,7 +157,7 @@
     <!-- END GLOBAL THEME SCRIPT -->
 
     <!-- BEGIN APP AUTH SCRIPT -->
-    <script src="./assets/auth.js?v=20261029e"></script>
+    <script src="./assets/auth.js?v=20261029f"></script>
     <script src="./assets/drafts.js?v=20261029b"></script>
     <script src="./assets/theme-sync.js?v=20261014b"></script>
     <script src="./assets/print-kit.js?v=20261024a"></script>
@@ -8242,7 +8242,7 @@ if (pageSizeSelect) pageSizeSelect.value = String(pageSize);
 
                   // only the year (2025), or the year and month (2025-03, 03/2025, Maret 2025): kept as 2025-00-00 / 2025-03-00
                   const partialDate = window.KoiAuth.dateFromText(textValue);
-                  if (/-00$/.test(partialDate)) {
+                  if (/-00$|-00-\d{2}$/.test(partialDate)) {
                     return partialDate;
                   }
 

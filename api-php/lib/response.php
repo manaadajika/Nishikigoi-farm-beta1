@@ -1,11 +1,12 @@
 <?php
 
-// A date the person knew only in part: 2025-00-00 (only the year), 2025-03-00 (year and month) or 2025-03-14 (the whole date).
+// A date the person knew only in part: 2025-00-00 (only the year), 2025-03-00 (year and month), 2025-00-12 (year and day, month forgotten)
+// or 2025-03-14 (the whole date).
 function koi_valid_partial_date(string $date): bool {
     if (!preg_match('/^(\d{4})-(\d{2})-(\d{2})$/', $date, $m)) return false;
     [$year, $month, $day] = [(int)$m[1], (int)$m[2], (int)$m[3]];
     if ($year < 1) return false;
-    if ($month === 0) return $day === 0;
+    if ($month === 0) return $day <= 31;   // the day may be known when the month is not (2025-00-12)
     if ($month > 12) return false;
     return $day === 0 || checkdate($month, $day, $year);
 }

@@ -1197,7 +1197,7 @@ const clipboardIcon = iconSvg('clipboard')
       // only the year has to be filled in; a month or day that is not known is left empty and stored as 00
       const yearOk = Number.isInteger(year) && year >= 1900 && year <= 2100
       const monthOk = !monthText || month >= 1
-      const dayOk = !dayText || (month >= 1 && Number.isInteger(day) && day >= 1 && day <= new Date(year, month, 0).getDate())
+      const dayOk = !dayText || (Number.isInteger(day) && day >= 1 && day <= (month >= 1 ? new Date(year, month, 0).getDate() : 31))   // the day may be known when the month is not
       notesDay.classList.toggle('is-invalid', !dayOk)
       notesMonth.classList.toggle('is-invalid', !monthOk)
       notesYear.classList.toggle('is-invalid', !yearOk)

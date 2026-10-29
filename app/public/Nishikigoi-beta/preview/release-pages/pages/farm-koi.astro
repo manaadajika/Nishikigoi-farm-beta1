@@ -6463,7 +6463,7 @@ items.forEach((item) => {
 
       // only the year (2025), or the year and month (2025-03, 03/2025, Maret 2025): kept as 2025-00-00 / 2025-03-00
       const partialDate = window.KoiAuth.dateFromText(textValue)
-      if (/-00$/.test(partialDate)) {
+      if (/-00$|-00-\d{2}$/.test(partialDate)) {
         return partialDate
       }
 
