@@ -530,7 +530,7 @@ const clipboardIcon = iconSvg('clipboard')
             <div class="card-body">
               <div class="row g-3">
                 <div class="col-md-4">
-                  <label class="form-label" for="pond-detail-unphotographed">Qty Belum Difoto</label>
+                  <label class="form-label" for="pond-detail-unphotographed">Qty Manual</label>
                   <input class="form-control" id="pond-detail-unphotographed" name="unphotographed_fish_qty" type="number" min="0" step="1" />
                   <div class="row g-3 mt-0">
                     <div class="col-sm-6">
@@ -1707,7 +1707,7 @@ const clipboardIcon = iconSvg('clipboard')
         title: `Isi Kolam ${pond.name || ''}`,
         heading: 'Daftar Ikan dalam Kolam',
         subheading: pond.name || '',
-        info: [['Nama Kolam', pond.name], ['Area', pond.location], ['Ikan terdata', fish.length], ['Belum difoto', Number(pond.unphotographed_fish_qty || 0)], ['Qty Total', totalPondQty(pond)]],
+        info: [['Nama Kolam', pond.name], ['Area', pond.location], ['Ikan terdata', fish.length], ['Manual', Number(pond.unphotographed_fish_qty || 0)], ['Qty Total', totalPondQty(pond)]],
         notes: pond.notes || '',
         body: `<table class="kp-table"><thead><tr>
           <th class="kp-center" style="width:28px">No</th><th class="kp-center" style="width:48px">Foto</th><th style="width:13%">Kode</th><th>Nama</th>
@@ -1783,7 +1783,7 @@ const clipboardIcon = iconSvg('clipboard')
                 </div>
                 <div class="row g-2 small">
                   <div class="col-6"><span class="text-secondary">Terfoto</span><div>${Number(item.koi_count || 0)}</div></div>
-                  <div class="col-6"><span class="text-secondary">Belum Difoto</span><div>${Number(item.unphotographed_fish_qty || 0)}</div></div>
+                  <div class="col-6"><span class="text-secondary">Manual</span><div>${Number(item.unphotographed_fish_qty || 0)}</div></div>
                   <div class="col-12"><span class="text-secondary">Catatan</span>${item.notes_date ? `<div style="font-size:.75rem;color:var(--tblr-secondary)">${escapeHtml(formatNotesDate(item.notes_date))}</div>` : ''}<div class="pond-card-notes">${escapeHtml(text(item.notes))}</div></div>
                 </div>
                 <div class="pond-card-actions">
@@ -1949,7 +1949,7 @@ const clipboardIcon = iconSvg('clipboard')
         <div class="col-sm-6 col-lg-3"><span class="text-secondary">Area</span><div>${text(pond.location)}</div></div>
         <div class="col-sm-6 col-lg-3" data-print-hidden><span class="text-secondary">Status</span><div>${statusLabels[pond.status]?.label || text(pond.status)}</div></div>
         <div class="col-sm-6 col-lg-3"><span class="text-secondary">Qty Total</span><div>${totalPondQty(pond)}</div></div>
-        <div class="col-sm-6 col-lg-3" data-print-hidden><span class="text-secondary">Terfoto / Belum Difoto</span><div>${Number(pond.koi_count || 0)} / ${Number(pond.unphotographed_fish_qty || 0)}</div></div>
+        <div class="col-sm-6 col-lg-3" data-print-hidden><span class="text-secondary">Terfoto / Manual</span><div>${Number(pond.koi_count || 0)} / ${Number(pond.unphotographed_fish_qty || 0)}</div></div>
       `
       detailFish.innerHTML = fish.map((item) => `
         <tr style="cursor: pointer">
@@ -2098,7 +2098,7 @@ const clipboardIcon = iconSvg('clipboard')
       document.body.classList.remove('printing-pond-list')
     })
 
-    const pondExcelColumns = ['Area', 'Nama Kolam', 'Status', 'Terfoto', 'Belum Difoto', 'Qty Total', 'Tanggal Catatan', 'Catatan']
+    const pondExcelColumns = ['Area', 'Nama Kolam', 'Status', 'Terfoto', 'Manual', 'Qty Total', 'Tanggal Catatan', 'Catatan']
     const pondStatusFromText = (value) => {
       const typed = String(value || '').trim().toLowerCase()
       if (typed === 'aktif' || typed === 'active') return 'active'
@@ -2233,7 +2233,7 @@ const clipboardIcon = iconSvg('clipboard')
           name: String(record['nama kolam'] ?? record.nama ?? record.name ?? '').trim(),
           location: String(record.area ?? record.lokasi ?? record.location ?? '').trim(),
           status: pondStatusFromText(record.status),
-          unphotographed: String(record['belum difoto'] ?? record.unphotographed_fish_qty ?? '').trim(),
+          unphotographed: String(record['manual'] ?? record['belum difoto'] ?? record.unphotographed_fish_qty ?? '').trim(),
           notesDate: pondNoteDateFromText(record['tanggal catatan']),
           notes: String(record.catatan ?? record.notes ?? '').trim(),
           docsCell: String(record.dokumentasi ?? '').trim(),
@@ -2360,7 +2360,7 @@ const clipboardIcon = iconSvg('clipboard')
         const items = await pondsFromFile(file)
 
         if (items.length === 0) {
-          throw new Error('File tidak berisi data kolam. Kolom yang dikenali: Area, Nama Kolam, Status, Belum Difoto, Tanggal Catatan, Catatan.')
+          throw new Error('File tidak berisi data kolam. Kolom yang dikenali: Area, Nama Kolam, Status, Manual, Tanggal Catatan, Catatan.')
         }
 
         // pass 1: check everything, write nothing
