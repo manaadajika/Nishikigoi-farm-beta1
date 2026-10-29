@@ -1170,7 +1170,7 @@
       if (!input || input.tagName !== 'INPUT' || input.dataset.koiClearDone) return false
       var type = (input.getAttribute('type') || 'text').toLowerCase()
       if (!okTypes[type] || !input.classList.contains('form-control')) return false
-      if (input.readOnly || input.disabled || input.hasAttribute('data-no-clear') || input.matches('[data-koi-search],[data-pond-search],[data-gallery-search],[data-report-search],[data-breeding-search],[data-log-search],[data-sell-search],[data-invoice-search],[data-inventory-search]') || input.hasAttribute('hidden')) return false
+      if (input.readOnly || input.disabled || input.hasAttribute('data-no-clear') || input.hasAttribute('data-date-parts') || input.matches('[data-koi-search],[data-pond-search],[data-gallery-search],[data-report-search],[data-breeding-search],[data-log-search],[data-sell-search],[data-invoice-search],[data-inventory-search]') || input.hasAttribute('hidden')) return false
       if (input.closest('.navbar, .navbar-global-search, .dropdown-menu, #offcanvas-settings, .input-icon, .form-floating, [data-no-clear]')) return false
       var parent = input.parentElement
       if (!parent) return false
@@ -1329,11 +1329,12 @@
     style.id = 'koi-date-inputs'
     style.textContent = '.koi-date-parts{display:flex;flex-wrap:wrap;gap:.35rem;width:100%;align-items:stretch}' +
       '.koi-date-parts>*{min-width:0}' +
-      '.koi-date-parts .koi-dp-year{flex:1 1 4.6rem;max-width:7rem}' +
-      '.koi-date-parts .koi-dp-month{flex:2 1 7.2rem}' +
-      '.koi-date-parts .koi-dp-day{flex:1 1 4.6rem;max-width:7rem}' +
+      '.koi-date-parts .koi-dp-year{flex:0 1 4.6rem}' +
+      '.koi-date-parts .koi-dp-month{flex:2 1 8.2rem}' +
+      '.koi-date-parts .koi-dp-day{flex:0 1 5rem}' +
       '.koi-date-parts .form-select{padding-right:1.9rem;background-position:right .5rem center}' +
-      '.koi-date-parts .koi-dp-clear{flex:0 0 auto;padding-left:.6rem;padding-right:.6rem}'
+      '.koi-date-parts .koi-dp-btn{flex:0 0 auto;padding-left:.6rem;padding-right:.6rem}' +
+      '.koi-date-parts .koi-dp-today{margin-left:auto}'
     document.head.appendChild(style)
     var nativeValue = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value')
 
@@ -1377,19 +1378,27 @@
       day.className = 'form-select koi-dp-day'
       day.setAttribute('data-native-select', '')
       day.setAttribute('aria-label', 'Tanggal')
+      var today = document.createElement('button')
+      today.type = 'button'
+      today.className = 'btn koi-dp-btn koi-dp-today'
+      today.tabIndex = -1
+      today.textContent = 'Hari ini'
+      today.title = 'Isi dengan tanggal hari ini'
+      today.setAttribute('aria-label', 'Isi dengan tanggal hari ini')
       var clear = document.createElement('button')
       clear.type = 'button'
-      clear.className = 'btn koi-dp-clear d-none'
+      clear.className = 'btn koi-dp-btn d-none'
       clear.tabIndex = -1
       clear.title = 'Kosongkan tanggal'
       clear.setAttribute('aria-label', 'Kosongkan tanggal')
       clear.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 6l-12 12"/><path d="M6 6l12 12"/></svg>'
       var monthHtml = '<option value="">Bulan -</option>'
-      DATE_MONTH_NAMES.forEach(function (name, index) { monthHtml += '<option value="' + pad2(index + 1) + '">' + name + '</option>' })
+      DATE_MONTH_NAMES.forEach(function (name, index) { monthHtml += '<option value="' + pad2(index + 1) + '">[' + pad2(index + 1) + '] ' + name + '</option>' })
       month.innerHTML = monthHtml
       box.appendChild(year)
       box.appendChild(month)
       box.appendChild(day)
+      box.appendChild(today)
       box.appendChild(clear)
       input.insertAdjacentElement('afterend', box)
       if (input.id) {
@@ -1404,7 +1413,7 @@
           var y = /^\d{4}$/.test(year.value) ? Number(year.value) : 2000   // 2000 is a leap year: February has 29 days until the year is known
           total = new Date(y, Number(month.value), 0).getDate()
         }
-        var html = '<option value="">Tanggal -</option>'
+        var html = '<option value="">Tgl -</option>'
         for (var n = 1; n <= total; n++) html += '<option value="' + pad2(n) + '">' + n + '</option>'
         day.innerHTML = html
         day.value = chosen && Number(chosen) <= total ? chosen : ''
@@ -1424,7 +1433,7 @@
             input.dispatchEvent(new Event('change', { bubbles: true }))
           }
         }
-        clear.classList.toggle('d-none', !(year.value || month.value))
+        clear.classList.toggle('d-none', !(year.value || month.value || day.value))
         input.title = text ? formatDate(text, { weekday: true }) : ''
       }
       // the hidden input -> the three boxes (code that fills the field with input.value = ..., or a form reset)
@@ -1435,16 +1444,17 @@
         fillDays()
         day.value = parts && parts.d ? pad2(parts.d) : ''
         year.setCustomValidity('')
-        clear.classList.toggle('d-none', !(year.value || month.value))
+        clear.classList.toggle('d-none', !(year.value || month.value || day.value))
         input.title = year.value ? formatDate(nativeValue.get.call(input), { weekday: true }) : ''
       }
       function syncDisabled() {
         year.disabled = month.disabled = input.disabled
         year.readOnly = input.readOnly
-        clear.disabled = input.disabled || input.readOnly
+        clear.disabled = today.disabled = input.disabled || input.readOnly
         day.disabled = input.disabled || input.readOnly
         if (input.readOnly) month.disabled = true
-        clear.classList.toggle('d-none', input.disabled || input.readOnly || !(year.value || month.value))
+        clear.classList.toggle('d-none', input.disabled || input.readOnly || !(year.value || month.value || day.value))
+        today.classList.toggle('d-none', input.disabled || input.readOnly)
       }
       Object.defineProperty(input, 'value', {
         configurable: true,
@@ -1460,6 +1470,14 @@
       year.addEventListener('input', function () { compose(true) })
       month.addEventListener('change', function () { compose(true) })
       day.addEventListener('change', function () { compose(true) })
+      today.addEventListener('click', function () {
+        var now = new Date()
+        year.value = String(now.getFullYear())
+        month.value = pad2(now.getMonth() + 1)
+        fillDays()
+        day.value = pad2(now.getDate())
+        compose(true)
+      })
       clear.addEventListener('click', function () {
         year.value = ''
         month.value = ''
