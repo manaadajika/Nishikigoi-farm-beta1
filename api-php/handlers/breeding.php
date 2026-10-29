@@ -165,9 +165,10 @@ function create_breeding_code(string $requestedCode, string $breedingDate): stri
     if ($code !== '') return $code;
 
     [$year, $month] = $breedingDate !== '' ? koi_date_parts($breedingDate) : [(int)date('Y'), (int)date('n')];
-    $prefix = 'BR' . substr((string)$year, -2) . str_pad((string)$month, 2, '0', STR_PAD_LEFT);
+    // a session known only by its year (2025-00-00) is numbered by the year alone: BR2501 (the two wildcard characters keep it apart from BR250301)
+    $prefix = 'BR' . substr((string)$year, -2) . ($month > 0 ? str_pad((string)$month, 2, '0', STR_PAD_LEFT) : '');
 
-    $counter = query_one('SELECT COUNT(*) AS total FROM breeding_batches WHERE batch_code LIKE ?', [$prefix . '%']);
+    $counter = query_one('SELECT COUNT(*) AS total FROM breeding_batches WHERE batch_code LIKE ?', [$prefix . ($month > 0 ? '%' : '__')]);
     $nextCount = (int)($counter['total'] ?? 0) + 1;
 
     for ($attempt = $nextCount; $attempt <= $nextCount + 20; $attempt++) {

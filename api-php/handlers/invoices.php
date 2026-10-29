@@ -109,9 +109,9 @@ function invoice_clean_date($value, bool $required, string $label): ?string {
 
 // INV-YYMM-001: the number counts per month. A manual number is kept as typed.
 function invoice_next_number(string $date): string {
-    // a date known only in part (2025-00-00) numbers by the year and the month that is known, 00 for the one that is not
+    // a date known only by its year (2025-00-00) numbers by the year alone: INV-25-001
     [$year, $month] = koi_date_parts($date);
-    $prefix = 'INV-' . substr((string)$year, -2) . str_pad((string)$month, 2, '0', STR_PAD_LEFT) . '-';
+    $prefix = 'INV-' . substr((string)$year, -2) . ($month > 0 ? str_pad((string)$month, 2, '0', STR_PAD_LEFT) : '') . '-';
     $last = query_one('SELECT invoice_no FROM invoices WHERE invoice_no LIKE ? ORDER BY invoice_no DESC LIMIT 1', [$prefix . '%']);
     $number = $last ? ((int)substr((string)$last['invoice_no'], strlen($prefix)) + 1) : 1;
     return $prefix . str_pad((string)$number, 3, '0', STR_PAD_LEFT);
