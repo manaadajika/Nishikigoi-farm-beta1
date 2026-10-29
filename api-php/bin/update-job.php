@@ -47,52 +47,99 @@ if ($job === 'check') {
 if ($job === 'apply') {
     $started = time();
     $last = 0.0;
+    $steps = [];   // what each finished stage came to, shown ticked on the screen: [1 => 'ada 3 pembaruan', 2 => '4,2 MB, 120 objek']
     // what the screen shows: stage (1-3), what is happening, how far that stage is (null = not countable), and a detail line
-    $report = function (int $stage, string $label, ?int $percent, string $detail = '', bool $force = false) use ($started, &$last) {
+    $report = function (int $stage, string $label, ?int $percent, string $detail = '', bool $force = false) use ($started, &$last, &$steps) {
         $now = microtime(true);
         if (!$force && $now - $last < 0.4) return;
         $last = $now;
-        update_write(update_apply_file(), ['state' => 'running', 'started_at' => $started, 'stage' => $stage, 'stage_label' => $label, 'percent' => $percent, 'detail' => $detail, 'message' => 'Tahap ' . $stage . '/3: ' . $label]);
+        update_write(update_apply_file(), ['state' => 'running', 'started_at' => $started, 'stage' => $stage, 'stage_label' => $label, 'percent' => $percent, 'detail' => $detail, 'steps' => $steps, 'message' => 'Tahap ' . $stage . '/3: ' . $label]);
     };
     $mb = function (string $size, string $unit): string {
         $value = (float)$size * ['KiB' => 1 / 1024, 'MiB' => 1, 'GiB' => 1024][$unit];
         return number_format($value, 1, ',', '.') . ' MB';
     };
+    $mbOf = fn(int $bytes): string => number_format($bytes / 1048576, 1, ',', '.') . ' MB';
+    $num = fn(int $n): string => number_format($n, 0, ',', '.');
 
     $report(1, 'memeriksa GitHub', null, 'menghubungi GitHub', true);
     // stage 2: download. git prints "Receiving objects: 45% (1672/2786), 2.52 MiB | 2.47 MiB/s" while it works.
-    [$code, $out] = update_git_stream(['fetch', '--progress'], 180, function (string $line) use ($report, $mb) {
+    $downloaded = '';
+    [$code, $out] = update_git_stream(['fetch', '--progress'], 180, function (string $line) use ($report, $mb, $num, &$downloaded) {
         if (preg_match('/Receiving objects:\s+(\d+)% \((\d+)\/(\d+)\)(?:, ([\d.]+) (KiB|MiB|GiB))?/', $line, $m)) {
-            $size = isset($m[4]) ? $mb($m[4], $m[5]) . ', ' : '';
-            $report(2, 'mengunduh pembaruan', (int)$m[1], $size . number_format((int)$m[2], 0, ',', '.') . ' dari ' . number_format((int)$m[3], 0, ',', '.') . ' objek (' . $m[1] . '%)');
+            $size = isset($m[4]) ? $mb($m[4], $m[5]) : '';
+            $downloaded = ($size !== '' ? $size . ', ' : '') . $num((int)$m[3]) . ' objek';
+            $report(2, 'mengunduh paket', (int)$m[1], ($size !== '' ? $size . ', ' : '') . $num((int)$m[2]) . ' dari ' . $num((int)$m[3]) . ' objek (' . $m[1] . '%)');
         } elseif (preg_match('/Resolving deltas:\s+(\d+)% \((\d+)\/(\d+)\)/', $line, $m)) {
-            $report(2, 'menyusun pembaruan', (int)$m[1], number_format((int)$m[2], 0, ',', '.') . ' dari ' . number_format((int)$m[3], 0, ',', '.') . ' bagian (' . $m[1] . '%)');
+            $report(2, 'menyusun paket', (int)$m[1], $num((int)$m[2]) . ' dari ' . $num((int)$m[3]) . ' bagian (' . $m[1] . '%)');
         } elseif (preg_match('/(Counting|Compressing) objects:\s+(\d+)%/', $line, $m)) {
-            $report(2, 'GitHub menyiapkan paket pembaruan', (int)$m[2], $m[2] . '%');
+            $report(2, 'GitHub menyiapkan paket', (int)$m[2], $m[2] . '%');
         } elseif (preg_match('/Enumerating objects:\s+(\d+)/', $line, $m)) {
-            $report(2, 'GitHub menyiapkan paket pembaruan', null, number_format((int)$m[1], 0, ',', '.') . ' objek');
+            $report(2, 'GitHub menyiapkan paket', null, $num((int)$m[1]) . ' objek');
         }
     });
     if ($code !== 0) {
         update_write(update_apply_file(), ['state' => 'error', 'started_at' => $started, 'finished_at' => time(), 'message' => 'Pembaruan gagal diambil: ' . strtok($out, "\n")]);
         exit(1);
     }
-
+    [$behind] = update_pending();
+    $steps[1] = $behind > 0 ? $num($behind) . ' pembaruan tersedia' : 'sudah terbaru';
+    $steps[2] = $downloaded !== '' ? $downloaded : 'paket kecil';
     // a small update flies by: keep the finished download on screen for a moment so the stage can be seen
-    $report(2, 'mengunduh pembaruan', 100, 'unduhan selesai (100%)', true);
-    usleep(900000);
+    $report(2, 'mengunduh paket', 100, $steps[2] . ' (100%)', true);
+    usleep(700000);
 
-    // stage 3: put the new files in place
-    [, $names] = update_git(['diff', '--name-only', 'HEAD..@{u}'], 15);
-    $files = count(array_filter(explode("\n", $names)));
-    $report(3, 'memasang berkas', null, $files > 0 ? number_format($files, 0, ',', '.') . ' berkas diganti' : '', true);
-    usleep(600000);
-    [$code, $out] = update_git(['pull', '--ff-only'], 180);
+    // stage 3: put the changed files in place, a few at a time, so the screen can count them
+    [, $listing] = update_git(['diff', '--name-status', 'HEAD..@{u}'], 15);
+    $present = [];
+    $removed = 0;
+    foreach (array_filter(explode("\n", $listing)) as $row) {
+        $cols = explode("\t", $row);
+        $status = $cols[0][0] ?? '';
+        if ($status === 'D') $removed++;
+        else $present[] = end($cols);
+    }
+    $total = count($present) + $removed;
+    $sizes = [];
+    if ($present) {
+        [, $tree] = update_git(['ls-tree', '-r', '-l', '@{u}'], 30);
+        $wanted = array_flip($present);
+        foreach (array_filter(explode("\n", $tree)) as $row) {
+            $tab = strpos($row, "\t");
+            if ($tab === false) continue;
+            $path = substr($row, $tab + 1);
+            if (isset($wanted[$path])) $sizes[$path] = (int)(preg_split('/\s+/', trim(substr($row, 0, $tab)))[3] ?? 0);
+        }
+    }
+    $bytesTotal = array_sum($sizes);
+    $done = 0;
+    $bytesDone = 0;
+    $detail = function () use (&$done, &$bytesDone, $total, $bytesTotal, $num, $mbOf): string {
+        return $num($done) . ' dari ' . $num($total) . ' berkas' . ($bytesTotal > 0 ? ', ' . $mbOf($bytesDone) . ' dari ' . $mbOf($bytesTotal) : '') . ' (' . ($total > 0 ? (int)floor(100 * $done / $total) : 100) . '%)';
+    };
+    $report(3, 'memasang berkas', 0, $detail(), true);
+    $batch = max(8, (int)ceil(count($present) / 40));
+    foreach (array_chunk($present, $batch) as $chunk) {
+        [$code, $out] = update_git(array_merge(['checkout', '@{u}', '--'], $chunk), 120);
+        if ($code !== 0) {
+            update_write(update_apply_file(), ['state' => 'error', 'started_at' => $started, 'finished_at' => time(), 'message' => 'Pembaruan gagal dipasang: ' . strtok($out, "\n")]);
+            exit(1);
+        }
+        foreach ($chunk as $path) { $done++; $bytesDone += $sizes[$path] ?? 0; }
+        $report(3, 'memasang berkas', $total > 0 ? (int)floor(100 * $done / $total) : 100, $detail());
+    }
+    // files that no longer exist are removed and the branch moves to the new version in one last step
+    [$code, $out] = update_git(['merge', '--ff-only', '@{u}'], 120);
     $state = update_read(update_state_file()) ?? [];
     if ($code !== 0) {
         update_write(update_apply_file(), ['state' => 'error', 'started_at' => $started, 'finished_at' => time(), 'message' => 'Pembaruan gagal dipasang: ' . strtok($out, "\n")]);
         exit(1);
     }
+    $done = $total;
+    $bytesDone = $bytesTotal;
+    $steps[3] = $num($total) . ' berkas' . ($removed > 0 ? ' (' . $num($removed) . ' dihapus)' : '') . ($bytesTotal > 0 ? ', ' . $mbOf($bytesTotal) : '');
+    $report(3, 'memasang berkas', 100, $detail(), true);
+    usleep(500000);
     [$behind, $changes] = update_pending();
     $state['behind'] = $behind;
     $state['changes'] = $changes;
@@ -100,7 +147,7 @@ if ($job === 'apply') {
     $state['checked_at'] = time();
     $state['head'] = update_head();
     update_write(update_state_file(), $state);
-    update_write(update_apply_file(), ['state' => 'done', 'started_at' => $started, 'finished_at' => time(), 'stage' => 3, 'percent' => 100, 'message' => 'Versi terbaru terpasang.', 'head' => $state['head'], 'files' => $files]);
+    update_write(update_apply_file(), ['state' => 'done', 'started_at' => $started, 'finished_at' => time(), 'stage' => 3, 'percent' => 100, 'steps' => $steps, 'message' => 'Versi terbaru terpasang.', 'head' => $state['head'], 'files' => $total]);
     exit(0);
 }
 

@@ -34,7 +34,7 @@ route('GET', '/system/update', function () {
         'error' => $state['error'] ?? null,
         'dirty' => $dirty,
         'can_apply' => $behind > 0 && !$dirty && !$applying,
-        'apply' => ['state' => $apply['state'] ?? null, 'message' => $apply['message'] ?? null, 'finished_at' => $apply['finished_at'] ?? null, 'stage' => $apply['stage'] ?? null, 'stage_label' => $apply['stage_label'] ?? null, 'percent' => $apply['percent'] ?? null, 'detail' => $apply['detail'] ?? null, 'files' => $apply['files'] ?? null],
+        'apply' => ['state' => $apply['state'] ?? null, 'message' => $apply['message'] ?? null, 'finished_at' => $apply['finished_at'] ?? null, 'stage' => $apply['stage'] ?? null, 'stage_label' => $apply['stage_label'] ?? null, 'percent' => $apply['percent'] ?? null, 'detail' => $apply['detail'] ?? null, 'steps' => $apply['steps'] ?? null, 'files' => $apply['files'] ?? null],
     ]);
 });
 

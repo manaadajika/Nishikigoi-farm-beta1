@@ -2879,18 +2879,46 @@
     if (bar) { bar.remove(); bar = null }
   }
 
-  // A card in the middle of the screen like the backup and restore progress: stage, what is happening, how far it is, and a stopwatch.
+  // A card in the middle of the screen like the backup and restore progress: the three stages as a list (done ticked with what it came to),
+  // the one running with its own counts, a bar for that stage, and a stopwatch.
+  var STEP_NAMES = ['Memeriksa GitHub', 'Mengunduh paket', 'Memasang berkas']
+  var CHECK = '<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12l5 5l10 -10"/></svg>'
   function overlay() {
     var box = document.createElement('div')
     box.setAttribute('data-koi-update-overlay', '')
     box.style.cssText = 'position:fixed;inset:0;z-index:7000;display:flex;align-items:center;justify-content:center;padding:12px;background:rgba(8,12,20,.55)'
-    box.innerHTML = '<div style="width:min(92vw,24rem);padding:18px 20px;border-radius:var(--tblr-border-radius-lg,10px);background:var(--tblr-bg-surface,#1b2330);color:var(--tblr-body-color,#e6e8eb);border:1px solid var(--tblr-border-color,rgba(128,150,172,.3));box-shadow:0 8px 28px rgba(0,0,0,.35);text-align:center">' +
-      '<div style="font-weight:600;margin-bottom:6px">Memperbarui program</div>' +
-      '<div class="small" data-koi-update-text style="min-height:2.7em;overflow-wrap:anywhere"></div>' +
+    var rows = STEP_NAMES.map(function (name, index) {
+      return '<div data-koi-update-step="' + (index + 1) + '" style="display:flex;align-items:flex-start;gap:10px;padding:7px 0">' +
+        '<span data-koi-update-icon style="flex:0 0 20px;height:20px;display:inline-flex;align-items:center;justify-content:center"></span>' +
+        '<span style="flex:1 1 auto;min-width:0"><span data-koi-update-name style="display:block;font-weight:500">' + name + '</span>' +
+        '<span data-koi-update-info class="small text-secondary" style="display:block;overflow-wrap:anywhere"></span></span></div>'
+    }).join('')
+    box.innerHTML = '<div style="width:min(92vw,26rem);padding:18px 20px;border-radius:var(--tblr-border-radius-lg,10px);background:var(--tblr-bg-surface,#1b2330);color:var(--tblr-body-color,#e6e8eb);border:1px solid var(--tblr-border-color,rgba(128,150,172,.3));box-shadow:0 8px 28px rgba(0,0,0,.35)">' +
+      '<div style="font-weight:600;font-size:1.05rem;margin-bottom:8px;text-align:center">Memperbarui program</div>' +
+      '<div>' + rows + '</div>' +
       '<div class="progress progress-sm mt-3"><div class="progress-bar progress-bar-indeterminate" data-koi-update-bar></div></div>' +
-      '<div class="small text-secondary mt-2">Jangan tutup halaman ini.</div></div>'
+      '<div class="d-flex justify-content-between small text-secondary mt-2"><span data-koi-update-text></span><span data-koi-update-clock></span></div>' +
+      '<div class="small text-secondary mt-1">Jangan tutup halaman ini.</div></div>'
     document.body.appendChild(box)
     return box
+  }
+  // marks each stage done / running / waiting; `steps` holds the summary of the finished ones, `detail` the counts of the running one
+  function paintSteps(box, stage, steps, detail, finished) {
+    STEP_NAMES.forEach(function (name, index) {
+      var number = index + 1
+      var row = box.querySelector('[data-koi-update-step="' + number + '"]')
+      var icon = row.querySelector('[data-koi-update-icon]')
+      var info = row.querySelector('[data-koi-update-info]')
+      var state = finished || number < stage ? 'done' : number === stage ? 'running' : 'waiting'
+      if (row.dataset.state !== state) {
+        row.dataset.state = state
+        icon.innerHTML = state === 'done' ? '<span class="text-success">' + CHECK + '</span>'
+          : state === 'running' ? '<span class="spinner-border spinner-border-sm text-primary" role="status" aria-hidden="true"></span>'
+          : '<span style="width:8px;height:8px;border-radius:50%;background:currentColor;opacity:.35"></span>'
+        row.style.opacity = state === 'waiting' ? '.55' : ''
+      }
+      info.textContent = state === 'done' ? ((steps && steps[number]) || '') : state === 'running' ? (detail || '') : ''
+    })
   }
 
   function applyUpdate() {
@@ -2898,6 +2926,7 @@
     running = true
     var box = overlay()
     var text = box.querySelector('[data-koi-update-text]')
+    var clock = box.querySelector('[data-koi-update-clock]')
     var bar = box.querySelector('[data-koi-update-bar]')
     var startedAt = Date.now()
     function elapsed() {
@@ -2914,7 +2943,9 @@
       box.remove()
       window.KoiDialog.alert(message || 'Pembaruan gagal.')
     }
-    text.textContent = 'Pembaruan sedang berjalan. Tahap 1/3: memeriksa GitHub · ' + elapsed()
+    paintSteps(box, 1, null, 'menghubungi GitHub', false)
+    text.textContent = 'Tahap 1/3'
+    clock.textContent = elapsed()
     ask('/system/update/apply', { method: 'POST', body: '{}' }).then(function (result) {
       if (!result.ok) return fail(result.data.error || 'Pembaruan gagal dimulai.')
       var tries = 0
@@ -2926,13 +2957,17 @@
             window.clearInterval(timer)
             try { sessionStorage.removeItem('koi-app-version') } catch (error) { /* only a convenience */ }
             setBar(100)
-            text.textContent = 'Versi terbaru terpasang' + (apply.files ? ' (' + apply.files + ' berkas)' : '') + '. Memuat ulang... · ' + elapsed()
+            paintSteps(box, 3, apply.steps, '', true)
+            text.textContent = 'Versi terbaru terpasang. Memuat ulang...'
+            clock.textContent = elapsed()
             window.setTimeout(function () { window.location.reload() }, 1200)
           } else if (apply.state === 'error') {
             window.clearInterval(timer)
             fail(apply.message)
           } else if (apply.state === 'running') {
-            text.textContent = 'Pembaruan sedang berjalan. Tahap ' + (apply.stage || 1) + '/3: ' + (apply.stage_label || 'mengambil pembaruan') + (apply.detail ? ', ' + apply.detail : '') + ' · ' + elapsed()
+            paintSteps(box, apply.stage || 1, apply.steps, apply.detail || apply.stage_label, false)
+            text.textContent = 'Tahap ' + (apply.stage || 1) + '/3: ' + (apply.stage_label || 'mengambil pembaruan')
+            clock.textContent = elapsed()
             setBar(apply.percent === undefined ? null : apply.percent)
           }
           if (tries > 300) {
