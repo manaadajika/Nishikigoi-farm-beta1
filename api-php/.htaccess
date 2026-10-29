@@ -1,3 +1,6 @@
+# Folder contents (the uploaded photos) are never listed; a photo can only be opened by its exact address.
+Options -Indexes
+
 # Deny direct static access to non-PHP source/data files that may exist
 # under api-php/ (schema.sql, JSON dumps, config notes, etc). The rewrite
 # rule below only fires for requests that don't map to an existing file, so

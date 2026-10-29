@@ -48,6 +48,7 @@ function client_ip(): string {
 }
 
 function send_security_headers(): void {
+    header_remove('X-Powered-By');   // the PHP version is nobody's business
     header('X-Content-Type-Options: nosniff');
     header('X-Frame-Options: SAMEORIGIN');
     header('Referrer-Policy: same-origin');
