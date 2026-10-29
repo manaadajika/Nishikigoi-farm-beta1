@@ -350,6 +350,8 @@ function koi_plain_groups(string $plain): array {
         }
         foreach ($codes ? $words : [$chunk] as $piece) {
             $parts = koi_plain_terms($piece);
+            // the words typed together (spaces) are one phrase, found whole in one of the fields
+            if (count($parts['id']) > 1) $parts['id'] = [implode(' ', $parts['id'])];
             if ($parts['id'] || $parts['size']) $groups[] = $parts;
         }
     }

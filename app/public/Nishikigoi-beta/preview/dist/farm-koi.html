@@ -7360,7 +7360,10 @@ items.forEach((item) => {
           }
         })
 
-        // kode, nama, bloodline, ternakan, and the number shown on the card (a bare number is that nomor urut): every word has to be found
+        // the words typed together (spaces) are ONE phrase; only a comma or a period starts another search
+        if (idTerms.length > 1) idTerms.splice(0, idTerms.length, idTerms.join(' '))
+
+        // kode, nama, bloodline, ternakan, and the number shown on the card (a bare number is that nomor urut): the whole phrase has to be found in one of them
         if (idTerms.length) {
           const searchableValues = [item.code, item.name, item.bloodline, item.farm_name].map(normalizeSearchText)
           const sequence = koiSequenceIndex(item)
