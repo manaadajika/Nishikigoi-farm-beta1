@@ -169,7 +169,8 @@ route('POST', '/koi/bulk-update', function () {
             continue;
         }
         $sets[] = "koi.$col = ?";
-        $params[] = in_array($col, $nullable, true) ? blank_to_null($value) : (string)$value;
+        $params[] = $col === 'birth_date' || $col === 'purchase_date' ? koi_clean_partial_date($value, $col === 'birth_date' ? 'Tanggal lahir' : 'Tanggal beli')
+            : (in_array($col, $nullable, true) ? blank_to_null($value) : (string)$value);
     }
     if (!$sets) send_error(400, 'Tidak ada kolom untuk diubah');
 
@@ -288,7 +289,7 @@ route('POST', '/koi', function () {
                         blank_to_null($item['pond_id'] ?? null), $code, $item['name'] ?? null, $item['variety'] ?? null,
                         $item['farm_name'] ?? null, $item['breeder'] ?? null, $item['bloodline'] ?? null,
                         $item['gender'] ?? 'unknown', $item['parent_type'] ?? 'non_indukan', $item['image_url'] ?? null,
-                        blank_to_null($item['birth_date'] ?? null), blank_to_null($item['purchase_date'] ?? null),
+                        koi_clean_partial_date($item['birth_date'] ?? null, 'Tanggal lahir'), koi_clean_partial_date($item['purchase_date'] ?? null, 'Tanggal beli'),
                         blank_to_null($item['purchase_price'] ?? null), blank_to_null($item['current_length_cm'] ?? null),
                         blank_to_null($item['current_weight_g'] ?? null), $item['status'] ?? 'active',
                         $item['notes'] ?? null, blank_to_null($item['sale_price'] ?? null), $item['parent_info'] ?? null,
@@ -360,7 +361,8 @@ route_pattern('PATCH', '#^/koi/(\d+)$#', function (array $m) {
     foreach ($cols as $col) {
         if (array_key_exists($col, $body)) {
             $fields[] = "$col = ?";
-            $params[] = in_array($col, $numericOrDateCols, true) ? blank_to_null($body[$col]) : $body[$col];
+            $params[] = $col === 'birth_date' || $col === 'purchase_date' ? koi_clean_partial_date($body[$col], $col === 'birth_date' ? 'Tanggal lahir' : 'Tanggal beli')
+                : (in_array($col, $numericOrDateCols, true) ? blank_to_null($body[$col]) : $body[$col]);
         }
     }
     if (!$fields) send_error(400, 'Tidak ada field untuk diupdate');

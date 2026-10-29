@@ -164,8 +164,8 @@ function create_breeding_code(string $requestedCode, string $breedingDate): stri
     $code = strtoupper(trim($requestedCode));
     if ($code !== '') return $code;
 
-    $date = $breedingDate !== '' ? strtotime($breedingDate) : time();
-    $prefix = 'BR' . date('y', $date) . date('m', $date);
+    [$year, $month] = $breedingDate !== '' ? koi_date_parts($breedingDate) : [(int)date('Y'), (int)date('n')];
+    $prefix = 'BR' . substr((string)$year, -2) . str_pad((string)$month, 2, '0', STR_PAD_LEFT);
 
     $counter = query_one('SELECT COUNT(*) AS total FROM breeding_batches WHERE batch_code LIKE ?', [$prefix . '%']);
     $nextCount = (int)($counter['total'] ?? 0) + 1;
@@ -195,6 +195,10 @@ route('POST', '/breeding', function () {
     $breedingDate = trim((string)($body['breeding_date'] ?? ''));
     if ($breedingDate === '') $breedingDate = trim((string)($body['spawning_started_at'] ?? ''));
     if ($breedingDate === '') send_error(400, 'Awal Pijah wajib diisi');
+    $breedingDate = koi_clean_partial_date($breedingDate, 'Awal Pijah');
+    foreach (['spawning_started_at' => 'Awal Pijah', 'fish_separated_at' => 'Akhir Pijah', 'larva_released_at' => 'Tanggal Release Larva', 'last_update_date' => 'Update Terakhir'] as $dateCol => $dateLabel) {
+        if (array_key_exists($dateCol, $body)) $body[$dateCol] = koi_clean_partial_date($body[$dateCol], $dateLabel);
+    }
     $spawningStart = blank_to_null($body['spawning_started_at'] ?? null) ?? $breedingDate;
 
     try {
@@ -268,8 +272,12 @@ route_pattern('PATCH', '#^/breeding/(\d+)$#', function (array $m) {
                 $params[] = json_encode($body[$col]);
             } elseif ($col === 'officer_name') {
                 $params[] = blank_to_null(mb_substr(trim((string)$body[$col]), 0, 255));
-            } elseif (in_array($col, $numericCols, true) || in_array($col, $optionalDateCols, true)) {
+            } elseif (in_array($col, $optionalDateCols, true)) {
+                $params[] = koi_clean_partial_date($body[$col], $col === 'fish_separated_at' ? 'Akhir Pijah' : ($col === 'larva_released_at' ? 'Tanggal Release Larva' : ($col === 'last_update_date' ? 'Update Terakhir' : 'Awal Pijah')));
+            } elseif (in_array($col, $numericCols, true)) {
                 $params[] = blank_to_null($body[$col]);
+            } elseif ($col === 'breeding_date') {
+                $params[] = koi_clean_partial_date($body[$col], 'Awal Pijah');
             } else {
                 $params[] = $body[$col];
             }

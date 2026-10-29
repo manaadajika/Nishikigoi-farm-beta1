@@ -91,8 +91,7 @@ function sell_clean_price($value) {
 function sell_clean_date($value): ?string {
     $value = trim((string)blank_to_null($value));
     if ($value === '') return null;
-    if (!preg_match('/^\d{4}-\d{2}-\d{2}/', $value)) send_error(400, 'Tanggal terjual tidak valid');
-    return substr($value, 0, 10);
+    return koi_clean_partial_date($value, 'Tanggal terjual');
 }
 
 // Adds the fish of each item (code, name, photo, size, ...) so the page does not need a second request.

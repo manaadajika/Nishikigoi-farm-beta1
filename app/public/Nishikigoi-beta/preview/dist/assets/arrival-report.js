@@ -285,7 +285,7 @@
       '<div class="alert alert-danger d-none" data-arrival-error style="white-space:pre-line"></div>' +
       '<div class="row g-3">' +
       '<div class="col-md-6"><label class="form-label">Nama laporan <span class="text-secondary small">(opsional)</span></label><input class="form-control" name="judul" placeholder="Contoh: Kedatangan Showa dari Dainichi" autocomplete="off"></div>' +
-      '<div class="col-md-3"><label class="form-label required">Tanggal datang</label><input class="form-control" type="date" name="tanggal"></div>' +
+      '<div class="col-md-3"><label class="form-label required">Tanggal datang</label><input class="form-control" type="text" data-date-parts name="tanggal"></div>' +
       '<div class="col-md-3"><label class="form-label">Ikan dari mana <span class="text-secondary small">(opsional)</span></label><input class="form-control" name="asal" list="arrival-origins" placeholder="Farm / kota / pemasok" autocomplete="off"><datalist id="arrival-origins"></datalist></div>' +
       '<div class="col-12"><div class="d-flex align-items-center justify-content-between"><label class="form-label mb-0">Ikan yang datang <span class="text-secondary small">(opsional, satu kotak = satu ekor)</span></label>' +
       '<div class="d-flex align-items-center gap-2"><span class="text-secondary small">Total: <strong data-arrival-total>0</strong> ekor</span><button type="button" class="btn btn-sm btn-outline-primary" data-arrival-add-line>Tambah ikan</button></div></div>' +

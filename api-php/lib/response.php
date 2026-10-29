@@ -1,4 +1,29 @@
 <?php
+
+// A date the person knew only in part: 2025-00-00 (only the year), 2025-03-00 (year and month) or 2025-03-14 (the whole date).
+function koi_valid_partial_date(string $date): bool {
+    if (!preg_match('/^(\d{4})-(\d{2})-(\d{2})$/', $date, $m)) return false;
+    [$year, $month, $day] = [(int)$m[1], (int)$m[2], (int)$m[3]];
+    if ($year < 1) return false;
+    if ($month === 0) return $day === 0;
+    if ($month > 12) return false;
+    return $day === 0 || checkdate($month, $day, $year);
+}
+
+// The date as saved: '' / null stay empty, a good date (whole or in part) is kept as YYYY-MM-DD, anything else is refused.
+function koi_clean_partial_date($value, string $label = 'Tanggal'): ?string {
+    $text = trim((string)($value ?? ''));
+    if ($text === '') return null;
+    $text = substr($text, 0, 10);
+    if (!koi_valid_partial_date($text)) send_error(422, "$label tidak valid");
+    return $text;
+}
+
+// [year, month, day] of such a date; a month or day that is not known is 0
+function koi_date_parts(string $date): array {
+    if (!preg_match('/^(\d{4})-(\d{2})-(\d{2})/', $date, $m)) return [(int)date('Y'), (int)date('n'), (int)date('j')];
+    return [(int)$m[1], (int)$m[2], (int)$m[3]];
+}
 // api-php/lib/response.php
 
 function send_json(int $status, array $data): void {

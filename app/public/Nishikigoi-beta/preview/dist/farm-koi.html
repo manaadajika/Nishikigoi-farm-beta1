@@ -69,7 +69,7 @@
       @import url("https://rsms.me/inter/inter.css");
     </style>
     <!-- END CUSTOM FONT -->
-    <link rel="stylesheet" href="/_astro/farm-koi.d1025k33.css?v=20261025e" />
+    <link rel="stylesheet" href="/_astro/farm-koi.d1029k34.css?v=20261025e" />
     <style>
       .nishikigoi-brand-link[data-astro-cid-flr2tpzy],
       .nishikigoi-brand-link[data-astro-cid-flr2tpzy]:hover,
@@ -157,7 +157,7 @@
     <!-- END GLOBAL THEME SCRIPT -->
 
     <!-- BEGIN APP AUTH SCRIPT -->
-    <script src="./assets/auth.js?v=20261029b"></script>
+    <script src="./assets/auth.js?v=20261029e"></script>
     <script src="./assets/drafts.js?v=20261029b"></script>
     <script src="./assets/theme-sync.js?v=20261014b"></script>
     <script src="./assets/print-kit.js?v=20261024a"></script>
@@ -2534,7 +2534,7 @@
                         <label class="form-label">Tanggal Lahir</label>
                         <input
                           class="form-control"
-                          type="date"
+                          type="text" data-date-parts
                           name="birth_date"
                         />
                       </div>
@@ -2542,7 +2542,7 @@
                         <label class="form-label">Tanggal Beli</label>
                         <input
                           class="form-control"
-                          type="date"
+                          type="text" data-date-parts
                           name="purchase_date"
                         />
                       </div>
@@ -3477,8 +3477,8 @@ const pageSizeSelect = document.querySelector('[data-koi-page-size-select]');
           <option value="dead">Mati</option>
         </select>
       `,
-                  birth_date: () => `<input class="form-control" type="date" data-bulk-value />`,
-                  purchase_date: () => `<input class="form-control" type="date" data-bulk-value />`,
+                  birth_date: () => `<input class="form-control" type="text" data-date-parts data-bulk-value />`,
+                  purchase_date: () => `<input class="form-control" type="text" data-date-parts data-bulk-value />`,
                   purchase_price: () =>
                     '<input class="form-control" type="text" inputmode="numeric" data-bulk-value data-money-input placeholder="0" />',
                   sale_price: () =>
@@ -4193,7 +4193,7 @@ const pageSizeSelect = document.querySelector('[data-koi-page-size-select]');
                     // Aksi masal and Tarik data ikan: their text fields get the same clear (x) button as the fields of the entries.
     // Fields that already have their own (kolam, parent) are left alone.
     const wrapBulkClearables = () => {
-      document.querySelectorAll('.koi-bulk-card input.form-control:not([type="hidden"]):not([type="file"]):not([type="date"])').forEach((input) => {
+      document.querySelectorAll('.koi-bulk-card input.form-control:not([type="hidden"]):not([type="file"]):not([data-date-parts])').forEach((input) => {
         if (input.dataset.bulkClearReady || input.closest('.koi-help-field')) return
         if (input.parentElement?.querySelector('[data-pond-clear], [data-parent-clear]')) return
         input.dataset.bulkClearReady = 'true'
@@ -4247,7 +4247,7 @@ const pageSizeSelect = document.querySelector('[data-koi-page-size-select]');
                     }
 
                     const control = field.querySelector(
-                      'input.form-control:not([type="hidden"]):not([type="file"]):not([type="date"]), textarea.form-control',
+                      'input.form-control:not([type="hidden"]):not([type="file"]):not([data-date-parts]), textarea.form-control',
                     );
 
                     if (!control || control.disabled || control.readOnly) {
@@ -5087,13 +5087,13 @@ const pageSizeSelect = document.querySelector('[data-koi-page-size-select]');
             </div>
             <div>
               <div class="koi-help-field">
-                <input class="form-control" type="date" name="birth_date" aria-label="Tanggal Lahir" />
+                <input class="form-control" type="text" data-date-parts name="birth_date" aria-label="Tanggal Lahir" />
                 <button class="form-help" type="button" data-bs-toggle="popover" data-bs-trigger="focus" data-bs-placement="top" data-bs-content="Isi tanggal lahir ikan jika diketahui" aria-label="Bantuan tanggal lahir">!</button>
               </div>
             </div>
             <div>
               <div class="koi-help-field">
-                <input class="form-control" type="date" name="purchase_date" aria-label="Tanggal Beli" />
+                <input class="form-control" type="text" data-date-parts name="purchase_date" aria-label="Tanggal Beli" />
                 <button class="form-help" type="button" data-bs-toggle="popover" data-bs-trigger="focus" data-bs-placement="top" data-bs-content="Isi tanggal ikan dibeli atau masuk koleksi" aria-label="Bantuan tanggal beli">!</button>
               </div>
             </div>
@@ -8240,6 +8240,12 @@ if (pageSizeSelect) pageSizeSelect.value = String(pageSize);
                     return "";
                   }
 
+                  // only the year (2025), or the year and month (2025-03, 03/2025, Maret 2025): kept as 2025-00-00 / 2025-03-00
+                  const partialDate = window.KoiAuth.dateFromText(textValue);
+                  if (/-00$/.test(partialDate)) {
+                    return partialDate;
+                  }
+
                   const isoMatch = textValue.match(
                     /^(\d{4})[-/](\d{1,2})[-/](\d{1,2})$/,
                   );
@@ -8322,7 +8328,8 @@ if (pageSizeSelect) pageSizeSelect.value = String(pageSize);
                   return (
                     !textValue ||
                     /^\d{4}[-/]\d{1,2}[-/]\d{1,2}$/.test(textValue) ||
-                    /^\d{1,2}[-/]\d{1,2}[-/]\d{4}$/.test(textValue)
+                    /^\d{1,2}[-/]\d{1,2}[-/]\d{4}$/.test(textValue) ||
+                    Boolean(window.KoiAuth.dateFromText(textValue))
                   );
                 };
                 const isValidImportNumberText = (value) => {
@@ -8362,10 +8369,10 @@ if (pageSizeSelect) pageSizeSelect.value = String(pageSize);
         throw new Error(`${rowLabel}: Status "${rawItem.status}" tidak dikenali. Isi Aktif, Non-Aktif, Karantina, Terjual, atau Mati.`)
       }
       if (!isValidImportDateText(rawItem.birth_date)) {
-        throw new Error(`${rowLabel}: Tanggal Lahir "${rawItem.birth_date}" salah. Tulis seperti 2026-09-27 atau 27/09/2026.`)
+        throw new Error(`${rowLabel}: Tanggal Lahir "${rawItem.birth_date}" salah. Tulis seperti 2026-09-27, 27/09/2026, atau hanya 2026 / 2026-09.`)
       }
       if (!isValidImportDateText(rawItem.purchase_date)) {
-        throw new Error(`${rowLabel}: Tanggal Beli "${rawItem.purchase_date}" salah. Tulis seperti 2026-09-27 atau 27/09/2026.`)
+        throw new Error(`${rowLabel}: Tanggal Beli "${rawItem.purchase_date}" salah. Tulis seperti 2026-09-27, 27/09/2026, atau hanya 2026 / 2026-09.`)
       }
       if (!isValidImportNumberText(rawItem.current_length_cm)) {
         throw new Error(`${rowLabel}: Ukuran Saat Ini harus angka, contoh 45 atau 45.5.`)
@@ -8602,7 +8609,7 @@ if (pageSizeSelect) pageSizeSelect.value = String(pageSize);
       parent_type: 'Isi: Indukan atau Bukan Indukan. Kosong = Bukan Indukan.',
       status: 'Isi salah satu: Aktif, Non-Aktif, Karantina, Terjual, Mati (aktif / karantina / terjual / mati juga diterima). Kosong = Aktif.',
       birth_date: 'Tulis tahun-bulan-tanggal, contoh 2026-09-27, atau tanggal/bulan/tahun, contoh 27/09/2026. Boleh kosong.',
-      purchase_date: 'Sama seperti Tanggal Lahir: contoh 2026-09-27 atau 27/09/2026. Boleh kosong.',
+      purchase_date: 'Sama seperti Tanggal Lahir: contoh 2026-09-27, 27/09/2026, atau hanya 2026 / 2026-09. Boleh kosong.',
       purchase_price: 'Angka saja tanpa Rp dan tanpa titik, contoh 1500000. Boleh kosong.',
       sale_price: 'Angka saja tanpa Rp dan tanpa titik, contoh 2500000. Boleh kosong.',
       current_length_cm: 'Ukuran dalam cm, angka saja, contoh 45 atau 45.5. Kalau ada foto, ukuran ini ikut tercatat di foto progress.',
@@ -9056,20 +9063,8 @@ items.forEach((item) => {
                       (item) => labels[item.parent_type] || item.parent_type,
                     ],
                     ["Status", (item) => labels[item.status] || item.status],
-                    [
-                      "Tanggal Lahir",
-                      (item) =>
-                        item.birth_date
-                          ? String(item.birth_date).slice(0, 10)
-                          : "",
-                    ],
-                    [
-                      "Tanggal Beli",
-                      (item) =>
-                        item.purchase_date
-                          ? String(item.purchase_date).slice(0, 10)
-                          : "",
-                    ],
+                    ["Tanggal Lahir", (item) => window.KoiAuth.dateShort(item.birth_date)],
+                    ["Tanggal Beli", (item) => window.KoiAuth.dateShort(item.purchase_date)],
                     ["Harga Beli", (item) => item.purchase_price],
                     ["Harga Jual", (item) => item.sale_price],
                     [
@@ -9485,7 +9480,7 @@ items.forEach((item) => {
         '- OTOMATIS: isi Sesi breeding (contoh BR260903), kosongkan Indukan Betina/Jantan -> betina dari sesi, jantan = mix.',
         '- MANUAL: kosongkan Sesi breeding, isi Indukan Betina/Jantan dengan Kode Koi yang ada di Data Ikan (contoh 26RLZI).',
         '',
-        'Tanggal: tulis 2026-09-27 atau 27/09/2026. Kelamin: unknown, male, female (jantan/betina juga boleh).',
+        'Tanggal: tulis 2026-09-27, 27/09/2026, atau hanya 2026 / 2026-09. Kelamin: unknown, male, female (jantan/betina juga boleh).',
       ].join('\r\n')
       const samplePng = base64ToUint8Array('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAFgwJ/lD86bQAAAABJRU5ErkJggg==')
       const zipBlob = createZip([

@@ -32,8 +32,7 @@ function inv_number($value, string $label, bool $allowNull = true) {
 function inv_clean_date($value): string {
     $value = trim((string)$value);
     if ($value === '') return date('Y-m-d');
-    if (!preg_match('/^\d{4}-\d{2}-\d{2}/', $value)) send_error(400, 'Tanggal tidak valid');
-    return substr($value, 0, 10);
+    return koi_clean_partial_date($value, 'Tanggal') ?? date('Y-m-d');
 }
 
 function inv_text($value, int $max): ?string {

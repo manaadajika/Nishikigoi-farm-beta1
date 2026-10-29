@@ -509,7 +509,7 @@
     <!-- END GLOBAL THEME SCRIPT -->
 
     <!-- BEGIN APP AUTH SCRIPT -->
-    <script src="./assets/auth.js?v=20261029b"></script>
+    <script src="./assets/auth.js?v=20261029e"></script>
     <script src="./assets/drafts.js?v=20261029b"></script>
     <script src="./assets/theme-sync.js?v=20261014b"></script>
     <script src="./assets/print-kit.js?v=20261024a"></script>
@@ -1583,7 +1583,7 @@
                 </div>
                 <div class="col-md-3">
                   <label class="form-label">Tanggal masuk</label>
-                  <input class="form-control" type="date" name="initial_date" />
+                  <input class="form-control" type="text" data-date-parts name="initial_date" />
                 </div>
                 <div class="col-md-3">
                   <label class="form-label">Lokasi</label>
@@ -1623,7 +1623,7 @@
           <div class="row g-3">
             <div class="col-6">
               <label class="form-label">Tanggal</label>
-              <input class="form-control" type="date" name="movement_date" required />
+              <input class="form-control" type="text" data-date-parts name="movement_date" required />
             </div>
             <div class="col-6" data-move-only="qty">
               <label class="form-label" data-move-qty-label>Jumlah</label>
@@ -2410,7 +2410,7 @@ const packageIcon = "\u003csvg xmlns=\"http://www.w3.org/2000/svg\" width=\"24\"
       const rows = list.map((item) => [
         item.name, kindLabels[item.kind]?.label || '', item.category || '', item.unit || '', Number(item.stock), Number(item.good), Number(item.damaged),
         item.min_stock ?? '', item.monthly_need ?? '', statusText(item), item.last_location || '', item.last_price ?? '',
-        item.last_in_date ? String(item.last_in_date).slice(0, 10) : '', item.last_supplier || '', Number(item.total_spent), item.notes || '',
+        window.KoiAuth.dateShort(item.last_in_date), item.last_supplier || '', Number(item.total_spent), item.notes || '',
       ])
       const sheet = XLSX.utils.aoa_to_sheet([header, ...rows])
       sheet['!cols'] = header.map((title, index) => ({ wch: index === 0 || index === 15 ? 32 : 16 }))

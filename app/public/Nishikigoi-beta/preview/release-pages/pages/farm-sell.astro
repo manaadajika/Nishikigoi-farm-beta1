@@ -93,7 +93,7 @@ const saveIcon = iconSvg('device-floppy')
             </div>
             <div class="col-md-6 d-none" data-sell-sold-fields>
               <label class="form-label">Tanggal Terjual</label>
-              <input class="form-control" type="date" name="sold_at" />
+              <input class="form-control" type="text" data-date-parts name="sold_at" />
             </div>
             <div class="col-12 border-top pt-3">
               <label class="form-label">Ikan dari Data Ikan</label>
@@ -850,7 +850,7 @@ const saveIcon = iconSvg('device-floppy')
     const exportRows = (items) => items.map((item) => [
       item.id, item.title || '', typeLabels[item.item_type] || '', item.price === null || item.price === '' ? '' : Math.round(Number(item.price)),
       statusLabels[item.status]?.label || '', (item.koi || []).map((koi) => koi.code).filter(Boolean).join(', '),
-      item.buyer || '', item.sold_at ? String(item.sold_at).slice(0, 10) : '', item.description || '',
+      item.buyer || '', window.KoiAuth.dateShort(item.sold_at), item.description || '',
     ])
     const exportSell = async (ids, zipMode = false) => {
       if (!window.XLSX) { window.KoiDock.showResult('Ekspor Excel', 'Pustaka Excel belum termuat. Muat ulang halaman.'); return }
@@ -896,17 +896,7 @@ const saveIcon = iconSvg('device-floppy')
       const rawRows = XLSX.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]], { defval: '', raw: false })
       return rawRows.map((row) => Object.fromEntries(Object.entries(row).map(([key, value]) => [String(key).trim().toLowerCase(), String(value ?? '').trim().replace(/^[-–—]+$/, '')])))
     }
-    const dateFromText = (value) => {
-      const typed = String(value || '').trim()
-      const iso = typed.match(/^(\d{4})-(\d{1,2})-(\d{1,2})/)
-      const dmy = typed.match(/^(\d{1,2})[\/.-](\d{1,2})[\/.-](\d{4})$/)
-      const parts = iso ? iso.slice(1, 4) : dmy ? dmy.slice(1, 4).reverse() : null
-      if (!parts) return ''
-      const [year, month, day] = parts.map(Number)
-      const date = new Date(year, month - 1, day)
-      return date.getFullYear() === year && date.getMonth() === month - 1 && date.getDate() === day
-        ? `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}` : ''
-    }
+    const dateFromText = (value) => window.KoiAuth.dateFromText(value)
     const runImport = async (records, pkg, dryRun, progress) => {
       const problems = []
       let inserted = 0

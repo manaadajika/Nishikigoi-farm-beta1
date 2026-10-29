@@ -87,6 +87,7 @@ route('POST', '/farm-reports', function () {
     $reportType = trim($body['report_type'] ?? '');
     $reportDate = trim($body['report_date'] ?? '');
     if ($reportType === '' || $reportDate === '') send_error(400, 'report_type dan report_date wajib diisi');
+    $reportDate = koi_clean_partial_date($reportDate, 'Tanggal laporan');
 
     $batchCode = get_report_batch_code($reportDate);
 
@@ -154,6 +155,7 @@ $farmReportUpdateHandler = function (array $m) {
     // stayed in the same year-month, regenerate only if report_date moved
     // to a different month.
     if (array_key_exists('report_date', $body)) {
+        $body['report_date'] = koi_clean_partial_date($body['report_date'], 'Tanggal laporan') ?? '';
         $existing = query_one('SELECT report_date, batch_code FROM farm_reports WHERE id = ?', [$m[1]]);
         $existingMonth = substr((string)($existing['report_date'] ?? ''), 0, 7);
         $nextMonth = substr((string)$body['report_date'], 0, 7);

@@ -503,7 +503,7 @@
     <!-- END GLOBAL THEME SCRIPT -->
 
     <!-- BEGIN APP AUTH SCRIPT -->
-    <script src="./assets/auth.js?v=20261029b"></script>
+    <script src="./assets/auth.js?v=20261029e"></script>
     <script src="./assets/drafts.js?v=20261029b"></script>
     <script src="./assets/theme-sync.js?v=20261014b"></script>
     <script src="./assets/print-kit.js?v=20261024a"></script>
@@ -1569,15 +1569,15 @@
                       </div>
             <div class="col-md-4">
               <label class="form-label">Awal Pijah</label>
-              <input class="form-control" type="date" name="spawning_started_at" required />
+              <input class="form-control" type="text" data-date-parts name="spawning_started_at" required />
             </div>
             <div class="col-md-4">
               <label class="form-label">Akhir Pijah</label>
-              <input class="form-control" type="date" name="fish_separated_at" />
+              <input class="form-control" type="text" data-date-parts name="fish_separated_at" />
             </div>
             <div class="col-md-4">
               <label class="form-label">Tanggal Release Larva</label>
-              <input class="form-control" type="date" name="larva_released_at" />
+              <input class="form-control" type="text" data-date-parts name="larva_released_at" />
             </div>
             <input type="hidden" name="breeding_date" />
                       
@@ -1637,7 +1637,7 @@
             </div>
             <div class="col-md-4">
               <label class="form-label">Update Terakhir</label>
-              <input class="form-control" type="date" name="last_update_date" />
+              <input class="form-control" type="text" data-date-parts name="last_update_date" />
               <div class="form-hint">Terisi otomatis saat disimpan.</div>
             </div>
             <div class="col-12">
@@ -2563,7 +2563,7 @@
     }
             // ---- Excel export / import ------------------------------------------------------------------
             const breedingExcelColumns = ['Kode Batch', 'Nama Sesi', 'Awal Pijah', 'Akhir Pijah', 'Tanggal Release Larva', 'Metode', 'Status', 'Indukan Betina', 'Ukuran Betina (cm)', 'Indukan Jantan', 'Lokasi', 'Burayak', 'Berat Telur (g)', 'Catatan', 'Petugas', 'Update Terakhir', 'Galeri', 'ID Galeri']
-            const dateOnly = (value) => (value ? String(value).slice(0, 10) : '')
+            const dateOnly = (value) => window.KoiAuth.dateShort(value)
             // 2026-01-26, 26/01/2026 and "26 - [1] Januari - 2026" all become 2026-01-26; anything else becomes ''.
             const dateFromText = (value) => window.KoiAuth.dateFromText(value)
 

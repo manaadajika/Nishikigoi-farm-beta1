@@ -66,8 +66,8 @@ import DefaultLayout from '@shared/layouts/DefaultLayout.astro'
           <div class="col-md-4"><label class="form-label">Status</label>
             <select class="form-select" name="status"><option value="active">Aktif</option><option value="non_active">Non-Aktif</option><option value="quarantine">Karantina</option><option value="sold">Terjual</option><option value="dead">Mati</option></select></div>
           <div class="col-md-4 d-flex align-items-end"><label class="form-check mb-2"><input class="form-check-input" type="checkbox" name="parent_type" value="indukan" /><span class="form-check-label">Indukan</span></label></div>
-          <div class="col-md-4"><label class="form-label">Tanggal Lahir</label><input class="form-control" type="date" name="birth_date" /></div>
-          <div class="col-md-4"><label class="form-label">Tanggal Beli</label><input class="form-control" type="date" name="purchase_date" /></div>
+          <div class="col-md-4"><label class="form-label">Tanggal Lahir</label><input class="form-control" type="text" data-date-parts name="birth_date" /></div>
+          <div class="col-md-4"><label class="form-label">Tanggal Beli</label><input class="form-control" type="text" data-date-parts name="purchase_date" /></div>
           <div class="col-md-4"><label class="form-label">Ukuran Saat Ini (cm)</label><input class="form-control" type="number" min="0" step="0.1" name="current_length_cm" /></div>
           <div class="col-md-6"><label class="form-label">Harga Beli</label><input class="form-control" type="number" min="0" step="any" name="purchase_price" /></div>
           <div class="col-md-6"><label class="form-label">Harga Jual</label><input class="form-control" type="number" min="0" step="any" name="sale_price" /></div>

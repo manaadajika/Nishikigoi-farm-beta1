@@ -10,6 +10,13 @@ function koi_pdo_init_command(): int {
     return class_exists('Pdo\\Mysql') ? constant('Pdo\\Mysql::ATTR_INIT_COMMAND') : PDO::MYSQL_ATTR_INIT_COMMAND;
 }
 
+// What every connection sets first: the time zone, and NO_ZERO_IN_DATE switched off. The program lets a date be known only in part
+// (just the year, or year and month): the day or month that is not known is stored as 00 (2025-00-00, 2025-03-00), which MySQL
+// refuses while that mode is on. Such dates still sort and compare correctly as text and with YEAR().
+function koi_session_init_sql(): string {
+    return "SET time_zone = '" . date('P') . "', sql_mode = REPLACE(REPLACE(@@sql_mode, 'NO_ZERO_IN_DATE', ''), 'NO_ZERO_DATE', '')";
+}
+
 function db(): PDO {
     static $pdo = null;
     if ($pdo !== null) return $pdo;
@@ -32,7 +39,7 @@ function db(): PDO {
         PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
         PDO::ATTR_EMULATE_PREPARES => false,
         PDO::ATTR_PERSISTENT => $persistent,
-        koi_pdo_init_command() => "SET time_zone = '" . date('P') . "'",
+        koi_pdo_init_command() => koi_session_init_sql(),
     ]);
     if ($persistent) {
         // a reused connection must start clean: nothing left open or switched off by a request that died half way
@@ -66,7 +73,7 @@ function db_read(): PDO {
             PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
             PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
             PDO::ATTR_EMULATE_PREPARES => false,
-            koi_pdo_init_command() => "SET time_zone = '" . date('P') . "'",
+            koi_pdo_init_command() => koi_session_init_sql(),
         ]);
     } catch (Throwable $e) {
         error_log('[nishikigoi-api] read replica unreachable, using the main database: ' . $e->getMessage());

@@ -1241,10 +1241,22 @@
   // ---- Date standard for the whole program ---------------------------------------------------------------------------------------
   // Every date the program shows is written  year - [month number] Month name - day - weekday  (2026 - [10] Oktober - 20 - Senin);
   // where there is little room the weekday is left out (2026 - [10] Oktober - 20). KoiAuth.formatDate(value, { weekday, time }).
-  // Date fields keep the browser's own calendar (it shows mm/dd/yyyy), but what the field shows afterwards is this standard text.
+  // A date may be known only in part: just the year, or the year and the month. It is stored as 2025-00-00 / 2025-03-00 (the part that
+  // is not known is 00, which still sorts and compares correctly) and written with only what is known: 2025, or 2025 - [03] Maret.
+  // Date fields are three boxes (Tahun, Bulan, Tanggal): only the year has to be filled, see installDateInputs.
   var DATE_MONTH_NAMES = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember']
   var DATE_DAY_NAMES = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu']
   function pad2(number) { return ('0' + number).slice(-2) }
+  // { y, m, d } of 2025 / 2025-03 / 2025-03-14 / 2025-03-00 / 2025-00-00 (m or d is 0 when not known), or null when it is not such a date
+  function dateParts(value) {
+    if (value === null || value === undefined || value instanceof Date) return null
+    var text = String(value).trim()
+    var match = text.match(/^(\d{4})-(\d{2})-(\d{2})(?:[ T].*)?$/)
+    if (match) return { y: Number(match[1]), m: Number(match[2]), d: Number(match[3]) }
+    if ((match = text.match(/^(\d{4})-(\d{2})$/))) return { y: Number(match[1]), m: Number(match[2]), d: 0 }
+    if ((match = text.match(/^(\d{4})$/))) return { y: Number(match[1]), m: 0, d: 0 }
+    return null
+  }
   function parseDateValue(value) {
     if (value === null || value === undefined || value === '') return null
     if (value instanceof Date) return isNaN(value.getTime()) ? null : value
@@ -1256,6 +1268,11 @@
   }
   function formatDate(value, options) {
     options = options || {}
+    var parts = dateParts(value)
+    if (parts && parts.y > 0 && (parts.m === 0 || parts.d === 0)) {
+      if (parts.m === 0) return String(parts.y)
+      if (parts.m <= 12) return parts.y + ' - [' + pad2(parts.m) + '] ' + DATE_MONTH_NAMES[parts.m - 1]
+    }
     var date = parseDateValue(value)
     if (!date) return value === null || value === undefined ? '' : String(value)
     var text = date.getFullYear() + ' - [' + pad2(date.getMonth() + 1) + '] ' + DATE_MONTH_NAMES[date.getMonth()] + ' - ' + pad2(date.getDate())
@@ -1266,8 +1283,19 @@
   function formatDateTime(value, options) {
     return formatDate(value, Object.assign({ time: true }, options || {}))
   }
-  // What a person typed (or a search box holds) -> 'YYYY-MM-DD', or '' when it is not a date. Understands the program's own text
-  // (2026 - [10] Oktober - 20 - Senin), 2026-10-20, 20/10/2026 and the older "20 - [10] Oktober - 2026".
+  // The date as it is written in an Excel file or a short list: 2025, 2025-03 or 2025-03-14 (only what is known)
+  function dateShort(value) {
+    var parts = dateParts(value)
+    if (!parts) return value === null || value === undefined ? '' : String(value).slice(0, 10)
+    if (parts.m === 0) return String(parts.y)
+    if (parts.d === 0) return parts.y + '-' + pad2(parts.m)
+    return parts.y + '-' + pad2(parts.m) + '-' + pad2(parts.d)
+  }
+  var DATE_MONTH_WORDS = { januari: 1, jan: 1, january: 1, februari: 2, feb: 2, february: 2, pebruari: 2, maret: 3, mar: 3, march: 3, april: 4, apr: 4, mei: 5, may: 5, juni: 6, jun: 6, june: 6,
+    juli: 7, jul: 7, july: 7, agustus: 8, agu: 8, ags: 8, aug: 8, august: 8, september: 9, sep: 9, sept: 9, oktober: 10, okt: 10, oct: 10, october: 10, november: 11, nov: 11, desember: 12, des: 12, dec: 12, december: 12 }
+  // What a person typed (or a search box / Excel cell holds) -> 'YYYY-MM-DD' (00 for a month or day that is not known), or '' when it is not a
+  // date. Understands the program's own text (2026 - [10] Oktober - 20 - Senin), 2026-10-20, 20/10/2026, the older "20 - [10] Oktober - 2026",
+  // and the partial forms: 2026, 2026-10, 10/2026, Oktober 2026, 2026 - [10] Oktober.
   function dateFromText(value) {
     var typed = String(value || '').trim()
     var match
@@ -1276,80 +1304,182 @@
     else if ((match = typed.match(/^(\d{4})-(\d{1,2})-(\d{1,2})/))) parts = [match[1], match[2], match[3]]
     else if ((match = typed.match(/^(\d{1,2})[\/.-](\d{1,2})[\/.-](\d{4})$/))) parts = [match[3], match[2], match[1]]
     else if ((match = typed.match(/^(\d{1,2})\s*-\s*\[?(\d{1,2})\]?[^\d]*-\s*(\d{4})$/))) parts = [match[3], match[2], match[1]]
+    else if ((match = typed.match(/^(\d{1,2})\s+([A-Za-z]+)\s+(\d{4})$/)) && DATE_MONTH_WORDS[match[2].toLowerCase()]) parts = [match[3], String(DATE_MONTH_WORDS[match[2].toLowerCase()]), match[1]]
+    else if ((match = typed.match(/^(\d{4})\s*-\s*\[?(\d{1,2})\]?(?:\s+[A-Za-z]+)?$/))) parts = [match[1], match[2], '0']
+    else if ((match = typed.match(/^(\d{4})\s*-\s*([A-Za-z]+)$/)) && DATE_MONTH_WORDS[match[2].toLowerCase()]) parts = [match[1], String(DATE_MONTH_WORDS[match[2].toLowerCase()]), '0']
+    else if ((match = typed.match(/^(\d{1,2})[\/.-](\d{4})$/))) parts = [match[2], match[1], '0']
+    else if ((match = typed.match(/^([A-Za-z]+)\s+(\d{4})$/)) && DATE_MONTH_WORDS[match[1].toLowerCase()]) parts = [match[2], String(DATE_MONTH_WORDS[match[1].toLowerCase()]), '0']
+    else if ((match = typed.match(/^(\d{4})$/))) parts = [match[1], '0', '0']
     if (!parts) return ''
     var year = Number(parts[0]), month = Number(parts[1]), day = Number(parts[2])
+    if (year < 1000) return ''
+    if (month === 0) return day === 0 ? year + '-00-00' : ''
+    if (month > 12) return ''
+    if (day === 0) return year + '-' + pad2(month) + '-00'
     var date = new Date(year, month - 1, day)
     if (date.getFullYear() !== year || date.getMonth() !== month - 1 || date.getDate() !== day) return ''
     return year + '-' + pad2(month) + '-' + pad2(day)
   }
 
+  // Every date field (input marked data-date-parts) becomes three boxes: Tahun, Bulan, Tanggal. Only the year has to be filled; a month
+  // or a day that is not known is left as "-". The original input stays in the page (hidden) and keeps the value as YYYY-MM-DD with 00 for
+  // what is not known, so forms, saving and the code that reads or sets input.value work as before.
   function installDateInputs() {
     var style = document.createElement('style')
     style.id = 'koi-date-inputs'
-    // The browser's own date text must never show: the program's text sits over it. Chrome on Android draws that text without the
-    // desktop pseudo-elements, so the field's own text color is made transparent as well (the calendar icon is not text).
-    style.textContent = 'input[data-koi-date]{color:transparent!important;-webkit-text-fill-color:transparent!important;text-shadow:none!important;caret-color:transparent}' +
-      'input[data-koi-date]::-webkit-datetime-edit,input[data-koi-date]::-webkit-datetime-edit-text,input[data-koi-date]::-webkit-datetime-edit-month-field,input[data-koi-date]::-webkit-datetime-edit-day-field,input[data-koi-date]::-webkit-datetime-edit-year-field{color:transparent!important;-webkit-text-fill-color:transparent!important}' +
-      'input[data-koi-date]::-webkit-datetime-edit-fields-wrapper{opacity:0}' +
-      '.koi-date-text{position:absolute;display:flex;align-items:center;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;pointer-events:none;z-index:1;color:var(--tblr-body-color,inherit)}' +
-      '.koi-date-text.is-empty{color:var(--tblr-secondary-color,rgb(150,160,175))}'
+    style.textContent = '.koi-date-parts{display:flex;flex-wrap:wrap;gap:.35rem;width:100%;align-items:stretch}' +
+      '.koi-date-parts>*{min-width:0}' +
+      '.koi-date-parts .koi-dp-year{flex:1 1 4.6rem;max-width:7rem}' +
+      '.koi-date-parts .koi-dp-month{flex:2 1 7.2rem}' +
+      '.koi-date-parts .koi-dp-day{flex:1 1 4.6rem;max-width:7rem}' +
+      '.koi-date-parts .form-select{padding-right:1.9rem;background-position:right .5rem center}' +
+      '.koi-date-parts .koi-dp-clear{flex:0 0 auto;padding-left:.6rem;padding-right:.6rem}'
     document.head.appendChild(style)
     var nativeValue = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value')
 
     function enhance(input) {
-      if (!input || input.tagName !== 'INPUT' || input.type !== 'date' || input.dataset.koiDate) return
-      if (!input.classList.contains('form-control') || input.hasAttribute('data-no-date-text') || input.closest('.navbar, #offcanvas-settings')) return
+      if (!input || input.tagName !== 'INPUT' || input.dataset.koiDate || !input.hasAttribute('data-date-parts')) return
+      if (input.hasAttribute('data-no-date-text') || input.closest('.navbar, #offcanvas-settings')) return
       var parent = input.parentElement
       if (!parent) return
       input.dataset.koiDate = '1'
-      if (getComputedStyle(parent).position === 'static') parent.style.position = 'relative'
-      var label = document.createElement('span')
-      label.className = 'koi-date-text'
-      label.setAttribute('aria-hidden', 'true')
-      input.insertAdjacentElement('afterend', label)
+      var required = input.required
+      var label = ''
+      if (input.id) {
+        var labelNode = document.querySelector('label[for="' + input.id + '"]')
+        label = labelNode ? labelNode.textContent.replace('*', '').trim() : ''
+      }
+      input.required = false
+      input.setAttribute('data-no-clear', '')
+      input.style.display = 'none'
+      input.tabIndex = -1
 
-      function place() {
-        var computed = getComputedStyle(input)
-        label.style.left = (input.offsetLeft + parseFloat(computed.borderLeftWidth || 0)) + 'px'
-        label.style.top = (input.offsetTop + parseFloat(computed.borderTopWidth || 0)) + 'px'
-        label.style.width = Math.max(0, input.offsetWidth - parseFloat(computed.borderLeftWidth || 0) - parseFloat(computed.borderRightWidth || 0) - 34) + 'px'
-        label.style.height = Math.max(0, input.offsetHeight - parseFloat(computed.borderTopWidth || 0) - parseFloat(computed.borderBottomWidth || 0)) + 'px'
-        label.style.paddingLeft = computed.paddingLeft
-        label.style.font = computed.font
-        // a little smaller than the field's own text so the long month names (Desember, September) still fit
-        label.style.fontSize = 'calc(' + computed.fontSize + ' - 1px)'
-        label.style.lineHeight = computed.lineHeight
+      var box = document.createElement('div')
+      box.className = 'koi-date-parts'
+      box.setAttribute('role', 'group')
+      box.setAttribute('aria-label', label || input.getAttribute('aria-label') || 'Tanggal')
+      var year = document.createElement('input')
+      year.type = 'text'
+      year.inputMode = 'numeric'
+      year.maxLength = 4
+      year.className = 'form-control koi-dp-year'
+      year.placeholder = 'Tahun'
+      year.autocomplete = 'off'
+      year.setAttribute('data-no-clear', '')
+      year.setAttribute('aria-label', 'Tahun')
+      year.required = required
+      if (input.id) year.id = input.id + '-tahun'
+      var month = document.createElement('select')
+      month.className = 'form-select koi-dp-month'
+      month.setAttribute('data-native-select', '')   // keep the browser's own list: it is rebuilt when the month or year changes
+      month.setAttribute('aria-label', 'Bulan')
+      var day = document.createElement('select')
+      day.className = 'form-select koi-dp-day'
+      day.setAttribute('data-native-select', '')
+      day.setAttribute('aria-label', 'Tanggal')
+      var clear = document.createElement('button')
+      clear.type = 'button'
+      clear.className = 'btn koi-dp-clear d-none'
+      clear.tabIndex = -1
+      clear.title = 'Kosongkan tanggal'
+      clear.setAttribute('aria-label', 'Kosongkan tanggal')
+      clear.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 6l-12 12"/><path d="M6 6l12 12"/></svg>'
+      var monthHtml = '<option value="">Bulan -</option>'
+      DATE_MONTH_NAMES.forEach(function (name, index) { monthHtml += '<option value="' + pad2(index + 1) + '">' + name + '</option>' })
+      month.innerHTML = monthHtml
+      box.appendChild(year)
+      box.appendChild(month)
+      box.appendChild(day)
+      box.appendChild(clear)
+      input.insertAdjacentElement('afterend', box)
+      if (input.id) {
+        var forLabel = document.querySelector('label[for="' + input.id + '"]')
+        if (forLabel) forLabel.setAttribute('for', year.id)
       }
-      function sync() {
-        var value = nativeValue.get.call(input)
-        label.classList.toggle('is-empty', !value)
-        label.textContent = value ? formatDate(value, { weekday: input.offsetWidth >= 330 }) : (input.offsetWidth < 230 ? 'thn - [bln] - tgl' : 'tahun - [bulan] - tanggal')
-        // a narrow field may cut the text: the whole date (with the weekday) is in the tooltip
-        input.title = value ? formatDate(value, { weekday: true }) : ''
-        place()
+
+      function fillDays() {
+        var chosen = month.value ? day.value : ''   // no month: no day
+        var total = 31
+        if (month.value) {
+          var y = /^\d{4}$/.test(year.value) ? Number(year.value) : 2000   // 2000 is a leap year: February has 29 days until the year is known
+          total = new Date(y, Number(month.value), 0).getDate()
+        }
+        var html = '<option value="">Tanggal -</option>'
+        for (var n = 1; n <= total; n++) html += '<option value="' + pad2(n) + '">' + n + '</option>'
+        day.innerHTML = html
+        day.value = chosen && Number(chosen) <= total ? chosen : ''
+        day.disabled = !month.value || input.disabled
       }
-      // code that fills the field (input.value = ...) does not fire an event: watch the setter on this field
+      // the three boxes -> the hidden input
+      function compose(fire) {
+        var yearText = year.value.replace(/\D/g, '')
+        if (yearText !== year.value) year.value = yearText
+        year.setCustomValidity(yearText && yearText.length < 4 ? 'Tahun harus 4 angka, contoh 2025' : '')
+        fillDays()
+        var text = yearText.length === 4 ? yearText + '-' + (month.value || '00') + '-' + (month.value ? (day.value || '00') : '00') : ''
+        if (nativeValue.get.call(input) !== text) {
+          nativeValue.set.call(input, text)
+          if (fire) {
+            input.dispatchEvent(new Event('input', { bubbles: true }))
+            input.dispatchEvent(new Event('change', { bubbles: true }))
+          }
+        }
+        clear.classList.toggle('d-none', !(year.value || month.value))
+        input.title = text ? formatDate(text, { weekday: true }) : ''
+      }
+      // the hidden input -> the three boxes (code that fills the field with input.value = ..., or a form reset)
+      function render() {
+        var parts = dateParts(nativeValue.get.call(input))
+        year.value = parts && parts.y ? String(parts.y) : ''
+        month.value = parts && parts.m ? pad2(parts.m) : ''
+        fillDays()
+        day.value = parts && parts.d ? pad2(parts.d) : ''
+        year.setCustomValidity('')
+        clear.classList.toggle('d-none', !(year.value || month.value))
+        input.title = year.value ? formatDate(nativeValue.get.call(input), { weekday: true }) : ''
+      }
+      function syncDisabled() {
+        year.disabled = month.disabled = input.disabled
+        year.readOnly = input.readOnly
+        clear.disabled = input.disabled || input.readOnly
+        day.disabled = input.disabled || input.readOnly || !month.value
+        if (input.readOnly) month.disabled = true
+        clear.classList.toggle('d-none', input.disabled || input.readOnly || !(year.value || month.value))
+      }
       Object.defineProperty(input, 'value', {
         configurable: true,
         get: function () { return nativeValue.get.call(this) },
-        set: function (next) { nativeValue.set.call(this, next); sync() },
+        set: function (next) {
+          var text = String(next === null || next === undefined ? '' : next)
+          var parts = dateParts(text)
+          nativeValue.set.call(this, parts ? parts.y + '-' + pad2(parts.m) + '-' + pad2(parts.d) : text)
+          render()
+          syncDisabled()
+        },
       })
-      input.addEventListener('input', sync)
-      input.addEventListener('change', sync)
-      input.addEventListener('focus', place)
-      // a click anywhere on the field opens the calendar
-      input.addEventListener('click', function () { try { if (input.showPicker) input.showPicker() } catch (error) { /* needs a user gesture; the icon still works */ } })
-      if (input.form) input.form.addEventListener('reset', function () { setTimeout(sync, 0) })
-      if (window.ResizeObserver) new ResizeObserver(place).observe(input)
-      sync()
+      year.addEventListener('input', function () { compose(true) })
+      month.addEventListener('change', function () { compose(true) })
+      day.addEventListener('change', function () { compose(true) })
+      clear.addEventListener('click', function () {
+        year.value = ''
+        month.value = ''
+        day.value = ''
+        compose(true)
+        year.focus()
+      })
+      if (input.form) input.form.addEventListener('reset', function () { setTimeout(function () { render(); syncDisabled() }, 0) })
+      // a form that is switched to read-only (preview) disables or locks its fields: the boxes follow
+      new MutationObserver(syncDisabled).observe(input, { attributes: true, attributeFilter: ['disabled', 'readonly'] })
+      render()
+      syncDisabled()
     }
 
     var timer = null
     function scan() {
       timer = null
-      Array.prototype.forEach.call(document.querySelectorAll('input[type="date"]'), enhance)
+      Array.prototype.forEach.call(document.querySelectorAll('input[data-date-parts]'), enhance)
     }
-    function schedule() { if (!timer) timer = setTimeout(scan, 60) }
+    function schedule() { if (!timer) timer = setTimeout(scan, 0) }
     function start() {
       scan()
       new MutationObserver(schedule).observe(document.body, { childList: true, subtree: true })
@@ -2261,6 +2391,8 @@
     formatDate: formatDate,
     formatDateTime: formatDateTime,
     dateFromText: dateFromText,
+    dateParts: dateParts,
+    dateShort: dateShort,
     parseDateValue: parseDateValue,
     zoomPhoto: zoomPhoto,
     zoomSeries: zoomSeries,

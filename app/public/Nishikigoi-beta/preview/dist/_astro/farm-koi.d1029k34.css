@@ -1,0 +1,274 @@
+.koi-card-preview{aspect-ratio:2/3;background:var(--koi-preview-color,#d8e2ef);min-height:220px}.koi-card-preview img{object-fit:cover;width:100%;height:100%}.koi-upload-box{border:1px dashed var(--tblr-border-color);background:var(--tblr-bg-surface-secondary);cursor:pointer;border-radius:6px;min-height:104px;overflow:hidden}.koi-upload-box img{object-fit:contain;width:100%;height:100%;max-height:160px}.koi-card-preview-placeholder{width:100%;height:100%;color:var(--tblr-secondary-color);text-align:center;flex-direction:column;justify-content:center;align-items:center;gap:.45rem;padding:1rem;display:flex}.koi-card-preview-placeholder .koi-card-preview-code{color:var(--tblr-body-color);font-weight:700;position:static}.koi-card-preview-placeholder small{text-transform:uppercase;letter-spacing:.04em;font-size:.75rem}.koi-card-preview-code{color:#182433;background:#ffffffd1;border-radius:4px;padding:.25rem .5rem;font-weight:600}.koi-card-preview[data-koi-preview-select]{cursor:pointer;border-radius:6px;transition:opacity .15s;overflow:hidden}.koi-card-compact{border:1px solid var(--tblr-border-color);transition:border-color .15s,box-shadow .15s}.koi-card-compact.is-selected{border-color:var(--tblr-primary);box-shadow:0 0 0 .2rem rgba(var(--tblr-primary-rgb), .18)}.koi-card-compact.is-selected .koi-card-preview[data-koi-preview-select]{box-shadow:inset 0 0 0 2px var(--tblr-primary);border-bottom-right-radius:0;border-bottom-left-radius:0}.koi-selected-badge{display:none}.koi-card-compact.is-selected .koi-selected-badge{display:inline-flex}.koi-selection-hidden{display:none!important}.koi-merge-thumb{aspect-ratio:2/3;border:1px solid var(--tblr-border-color);object-fit:cover;background:var(--tblr-bg-surface-secondary);border-radius:6px;flex:0 0 42px;width:42px}.koi-merge-photo-preview{aspect-ratio:2/3;border:1px solid var(--tblr-border-color);background:var(--tblr-bg-surface-secondary);border-radius:6px 6px 0 0;width:100%;display:block;overflow:hidden}.koi-merge-photo-preview img{object-fit:cover;width:100%;height:100%}.koi-card-compact .card-body{padding:.75rem}.koi-sequence-number{color:var(--tblr-secondary);font-family:var(--tblr-font-monospace,ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace);letter-spacing:0;opacity:.8;align-items:center;font-size:.68rem;line-height:1;display:inline-flex}.koi-card-compact .card-title{font-size:.95rem;line-height:1.25}.koi-text-ellipsis{text-overflow:ellipsis;white-space:nowrap;min-width:0;max-width:100%;display:block;overflow:hidden}.koi-card-detail-cell{min-width:0}.koi-card-main-text{min-width:0;max-width:100%}.koi-icon-filter-row{flex-wrap:nowrap;flex:none;align-items:center;gap:.5rem;width:fit-content;min-height:4.125rem;margin:0;padding:1.625rem .25rem 0;display:inline-flex}.koi-icon-filter-row .form-selectgroup,.koi-icon-filter{flex-wrap:nowrap;align-items:center;gap:.5rem;height:2.5rem;margin:0;display:inline-flex}.koi-icon-filter-row .form-selectgroup-item{margin:0!important}.koi-icon-filter-row .form-selectgroup-label,.koi-icon-filter-row .btn-icon{justify-content:center;align-items:center;width:2.5rem;min-width:2.5rem;height:2.5rem;min-height:2.5rem;padding:0;display:inline-flex}.koi-icon-filter-row .form-selectgroup-label svg,.koi-icon-filter-row .btn-icon svg{flex:0 0 1rem;width:1rem;height:1rem}.koi-icon-filter-row .btn-icon{border-radius:var(--tblr-border-radius);flex:0 0 2.5rem;margin:0}.koi-icon-filter-row .koi-icon-filter{column-gap:.5rem}.koi-icon-filter-row .koi-icon-filter .form-selectgroup-item,.koi-icon-filter-row .koi-icon-filter .form-selectgroup-item+.form-selectgroup-item{margin-left:0!important;margin-right:0!important}.koi-icon-filter-row .koi-icon-filter .form-selectgroup-label{border-radius:var(--tblr-border-radius)!important}.koi-code-copy{max-width:100%;color:inherit;font:inherit;cursor:pointer;user-select:none;background:0 0;border:0;padding:0;font-weight:600;display:inline-flex}.koi-code-copy:hover{color:var(--tblr-primary)}.koi-code-copy.is-copied{color:var(--tblr-success)}.koi-code-copy.is-copy-failed{color:var(--tblr-danger)}.koi-entry-table{border-collapse:separate;border-spacing:0 .75rem;min-width:0;margin-bottom:0}.koi-entry-table td{vertical-align:middle;box-shadow:none;border-bottom-width:0}.koi-entry-table tbody td{background:0 0;border:0}.koi-entry-table tbody+tbody td{background-image:linear-gradient(to bottom, var(--tblr-border-color) 0, var(--tblr-border-color) 1px, transparent 1px, transparent 4px, var(--tblr-border-color) 4px, var(--tblr-border-color) 5px, transparent 5px);background-position:0 0;background-repeat:no-repeat;background-size:100% 5px;padding-top:1.1rem}.koi-entry-table-wrap{border:0;border-radius:6px}.koi-photo-history-grid{grid-template-columns:repeat(auto-fill,minmax(92px,1fr));gap:.75rem;display:grid}.koi-photo-history-item img{aspect-ratio:2/3;object-fit:cover;border:1px solid var(--tblr-border-color);border-radius:6px;width:100%}.koi-photo-history-preview{cursor:zoom-in;background:0 0;border:0;width:100%;padding:0;display:block}.koi-photo-history-item{will-change:transform;position:relative}.koi-photo-history-drag-handle{touch-action:none;cursor:grab;user-select:none}.koi-photo-history-item.is-dragging .koi-photo-history-drag-handle{cursor:grabbing}.koi-photo-history-grid.is-reordering .koi-photo-history-item:not(.is-dragging){transition:transform .2s}.koi-photo-history-item.is-dragging{cursor:grabbing;z-index:5;transition:none}.koi-photo-history-actions{z-index:1;justify-content:center;gap:.25rem;position:absolute;top:.35rem;left:.35rem;right:.35rem}.koi-photo-history-actions .btn{width:1.75rem;height:1.75rem}.koi-edit-preview{aspect-ratio:2/3;background:var(--tblr-bg-surface-secondary);border-radius:6px;min-height:220px;overflow:hidden}.koi-edit-preview img{object-fit:cover;width:100%;height:100%}.koi-photo-zoom-img{object-fit:contain;background:var(--tblr-bg-surface-secondary);border-radius:6px;width:min(64vw,560px);height:min(74vh,760px)}.koi-parent-preview-grid{grid-template-columns:repeat(2,minmax(0,1fr));align-items:stretch;gap:.5rem;display:grid}.koi-parent-preview-card{border:1px solid var(--tblr-border-color);background:var(--tblr-bg-surface-secondary);width:100%;min-height:100px;color:var(--tblr-body-color);text-align:left;border-radius:6px;overflow:hidden}.koi-parent-preview-field{width:100%;min-height:40px;margin-top:.5rem!important}.koi-parent-preview-grid>div{flex-direction:column;display:flex}.koi-parent-preview-grid [data-edit-parent-female-preview],.koi-parent-preview-grid [data-edit-parent-male-preview],.koi-parent-preview-grid [data-entry-parent-female-preview],.koi-parent-preview-grid [data-entry-parent-male-preview]{display:block}button.koi-parent-preview-card{cursor:zoom-in}button.koi-parent-preview-card:hover,button.koi-parent-preview-card:focus{border-color:var(--tblr-primary);outline:none}.koi-parent-preview-card img{object-fit:cover;width:54px;height:82px}.koi-parent-search,.koi-pond-search,.koi-variety-search{position:relative}.koi-parent-search .form-control,.koi-pond-search .form-control,.koi-variety-search .form-control{padding-right:4rem}.koi-parent-clear,.koi-pond-clear{z-index:3;border:1px solid var(--tblr-border-color);border-radius:var(--tblr-border-radius);width:1.15rem;min-width:1.15rem;height:1.15rem;color:var(--tblr-danger);background:var(--tblr-bg-surface-secondary);box-shadow:none;justify-content:center;align-items:center;padding:0;font-size:.85rem;font-weight:700;line-height:1;display:inline-flex;position:absolute;top:50%;right:.7rem;transform:translateY(-50%)}html[data-bs-theme=dark] .koi-parent-clear,body[data-bs-theme=dark] .koi-parent-clear,[data-bs-theme=dark] .koi-parent-clear,html[data-bs-theme=dark] .koi-pond-clear,body[data-bs-theme=dark] .koi-pond-clear,[data-bs-theme=dark] .koi-pond-clear{color:var(--tblr-danger);background:var(--tblr-bg-surface);border-color:var(--tblr-border-color)}.koi-parent-clear:hover,.koi-parent-clear:focus,.koi-pond-clear:hover,.koi-pond-clear:focus{color:var(--tblr-danger-fg,#fff);border-color:var(--tblr-danger);background:var(--tblr-danger);outline:none}.koi-parent-clear.d-none,.koi-pond-clear.d-none{display:none!important}.koi-parent-search-menu,.koi-pond-search-menu,.koi-variety-search-menu{z-index:20;border:1px solid var(--tblr-border-color);border-radius:var(--tblr-border-radius);background:var(--tblr-bg-surface);max-height:260px;box-shadow:var(--tblr-shadow-dropdown);position:absolute;top:calc(100% + .25rem);left:0;right:0;overflow:auto}.koi-text-suggest-menu{position:fixed;z-index:2000;max-height:220px;overflow:auto;border:1px solid var(--tblr-border-color);border-radius:var(--tblr-border-radius);background:var(--tblr-bg-surface);box-shadow:var(--tblr-shadow-dropdown)}.koi-text-suggest-item{display:block;width:100%;border:0;border-bottom:1px solid var(--tblr-border-color);padding:.55rem .75rem;color:var(--tblr-body-color);background:transparent;text-align:left;font:inherit}.koi-text-suggest-item:last-child{border-bottom:0}.koi-text-suggest-item:hover,.koi-text-suggest-item:focus{background:rgba(var(--tblr-primary-rgb),.12);outline:0}.koi-parent-search-item,.koi-pond-search-item,.koi-variety-search-item{border:0;border-bottom:1px solid var(--tblr-border-color);width:100%;color:var(--tblr-body-color);text-align:left;background:0 0;padding:.65rem .75rem}.koi-parent-search-main,.koi-pond-search-main,.koi-variety-search-main{align-items:center;gap:.65rem;min-width:0;display:flex}.koi-parent-search-thumb{border:1px solid var(--tblr-border-color);border-radius:var(--tblr-border-radius);object-fit:contain;background:var(--tblr-bg-surface-secondary);flex:0 0 40px;width:40px;height:60px}.koi-parent-search-placeholder{color:var(--tblr-secondary);justify-content:center;align-items:center;font-size:.75rem;font-weight:700;display:inline-flex}.koi-parent-search-copy,.koi-pond-search-copy,.koi-variety-search-copy{min-width:0}.koi-parent-search-item:last-child,.koi-pond-search-item:last-child,.koi-variety-search-item:last-child{border-bottom:0}.koi-parent-search-item:hover,.koi-parent-search-item:focus,.koi-pond-search-item:hover,.koi-pond-search-item:focus,.koi-variety-search-item:hover,.koi-variety-search-item:focus{color:var(--tblr-primary);background:var(--tblr-bg-surface-secondary);outline:none}.koi-parent-search-empty,.koi-pond-search-empty,.koi-variety-search-empty{color:var(--tblr-secondary);padding:.65rem .75rem}.koi-entry-table .koi-entry-type-cell{min-width:112px}.koi-entry-table .koi-entry-photo-cell{text-align:center;vertical-align:top;min-width:128px}.koi-entry-gender-field,.koi-edit-gender-field{grid-column:auto;justify-content:flex-start;place-self:start;align-items:center;width:max-content;max-width:100%;display:inline-flex}.koi-entry-gender-field .form-selectgroup-label,.koi-edit-gender-field .form-selectgroup-label{justify-content:center;align-items:center;width:40px;min-width:40px;height:40px;padding:0;display:inline-flex}.koi-entry-gender-field .icon,.koi-edit-gender-field .icon{width:18px;height:18px;margin:0}.koi-entry-fields-cell{width:100%}.koi-entry-fields-grid{grid-template-columns:repeat(3,minmax(150px,1fr));align-items:start;gap:.75rem;display:grid}.koi-entry-field-wide{grid-column:span 2}.koi-entry-selectgroup{white-space:nowrap;flex-wrap:nowrap;align-items:center;gap:.5rem;min-height:40px;display:flex}.koi-entry-selectgroup .form-selectgroup-label{align-items:center;gap:.4rem;min-height:40px;padding:.45rem .75rem;display:inline-flex}.koi-entry-gender-field,.koi-edit-gender-field{gap:.5rem}.koi-entry-gender-field .form-selectgroup-item,.koi-edit-gender-field .form-selectgroup-item{margin:0}.koi-entry-gender-field .form-selectgroup-label,.koi-edit-gender-field .form-selectgroup-label{justify-content:center;width:40px;min-width:40px;height:40px;min-height:40px;padding:0}.koi-entry-gender-field .form-selectgroup-check,.koi-edit-gender-field .form-selectgroup-check{display:none}.koi-entry-gender-field .icon,.koi-edit-gender-field .icon{width:18px;height:18px}.koi-parent-preview-grid>div{flex-direction:column;gap:.5rem;min-width:0;display:flex}.koi-parent-preview-grid [data-edit-parent-female-preview],.koi-parent-preview-grid [data-edit-parent-male-preview],.koi-parent-preview-grid [data-entry-parent-female-preview],.koi-parent-preview-grid [data-entry-parent-male-preview]{min-height:100px}.koi-parent-preview-grid .koi-parent-preview-card{width:100%;min-height:100px;margin:0}.koi-parent-preview-grid .koi-parent-preview-field{height:40px;min-height:40px;margin-top:0!important}.koi-entry-field-label{color:var(--tblr-secondary);margin-bottom:.25rem;font-size:.72rem;font-weight:600;line-height:1;display:block}.koi-help-field{position:relative}.koi-help-field .form-control,.koi-help-field .form-select{padding-right:2.75rem}.koi-help-field .input-icon .form-control{padding-left:2.5rem;padding-right:2.75rem}.koi-help-field .form-help{z-index:2;border:1px solid var(--tblr-border-color);width:1.15rem;min-width:1.15rem;height:1.15rem;color:var(--tblr-secondary);background:var(--tblr-bg-surface-secondary);cursor:pointer;box-shadow:none;justify-content:center;align-items:center;padding:0;font-size:.72rem;font-weight:700;line-height:1;display:inline-flex;position:absolute;top:50%;right:.7rem;transform:translateY(-50%);border-radius:var(--tblr-border-radius)!important}html[data-bs-theme=dark] .koi-help-field .form-help,body[data-bs-theme=dark] .koi-help-field .form-help,[data-bs-theme=dark] .koi-help-field .form-help{color:var(--tblr-secondary);background:var(--tblr-bg-surface);border-color:var(--tblr-border-color)}.koi-help-field .form-help[data-parent-help]{right:2.15rem}.koi-help-field.has-clear .form-control,.koi-help-field.has-clear .form-select,.koi-help-field.has-clear .input-icon .form-control{padding-right:4rem}.koi-help-field.has-clear .form-help{right:2.15rem}.koi-field-clear{z-index:3;border:1px solid var(--tblr-border-color);border-radius:var(--tblr-border-radius);width:1.15rem;min-width:1.15rem;height:1.15rem;color:var(--tblr-danger);background:var(--tblr-bg-surface-secondary);box-shadow:none;justify-content:center;align-items:center;padding:0;font-size:.85rem;font-weight:700;line-height:1;display:inline-flex;position:absolute;top:50%;right:.7rem;transform:translateY(-50%)}html[data-bs-theme=dark] .koi-field-clear,body[data-bs-theme=dark] .koi-field-clear,[data-bs-theme=dark] .koi-field-clear{color:var(--tblr-danger);background:var(--tblr-bg-surface);border-color:var(--tblr-border-color)}.koi-field-clear:hover,.koi-field-clear:focus{color:var(--tblr-danger-fg,#fff);border-color:var(--tblr-danger);background:var(--tblr-danger);outline:none}.koi-field-clear.d-none{display:none!important}#koi-photo-zoom-modal{z-index:1090}.koi-help-popover{z-index:1080;border:1px solid var(--tblr-border-color);border-radius:var(--tblr-border-radius);max-width:280px;color:var(--tblr-body-color);background:var(--tblr-bg-surface);box-shadow:var(--tblr-shadow-dropdown);padding:.75rem;font-size:.875rem;line-height:1.35;position:fixed}.koi-entry-table .koi-upload-box{aspect-ratio:2/3;width:88px;min-height:0;margin:0 auto}.koi-entry-table .koi-upload-box img{object-fit:cover;height:100%;max-height:none}.koi-entry-table .koi-upload-box{cursor:default}.koi-entry-table .koi-upload-box img:not(.d-none){cursor:zoom-in}.koi-upload-box.is-loading{cursor:wait;opacity:.75}.koi-upload-box.is-dragover{border-color:var(--tblr-primary);background:rgba(var(--tblr-primary-rgb), .08);box-shadow:0 0 0 .18rem rgba(var(--tblr-primary-rgb), .12)}.koi-entry-table .koi-entry-note-cell{min-width:0}.koi-bulk-value{flex:320px;min-width:200px}.koi-bulk-toolbar{grid-template-columns:minmax(9rem,12rem) minmax(14rem,1fr) auto minmax(14rem,1fr) auto;align-items:end;gap:.5rem;display:grid}@media (width<=991.98px){.koi-bulk-toolbar{grid-template-columns:1fr}}.koi-list-header{min-height:5rem}.koi-list-header.is-floating{z-index:1030;border:1px solid var(--tblr-border-color);backdrop-filter:blur(10px);background:var(--tblr-bg-surface);border-radius:8px;justify-content:center;align-items:center;width:max-content;min-width:0;max-width:calc(100vw - 2rem);min-height:0;padding:.35rem;display:inline-flex;position:fixed;top:auto;bottom:1rem;left:50%;transform:translate(-50%);box-shadow:0 18px 45px #00000057}.koi-list-header.is-floating .koi-list-actions{flex-wrap:wrap;flex:none;justify-content:center;width:auto;max-width:100%;margin:0;padding:0;overflow:visible}.koi-list-header.is-dock-hidden,.koi-action-dock-hide,.koi-action-dock-reveal{display:none}.koi-list-header.is-floating .koi-action-dock-hide,.koi-action-dock-reveal.is-visible{display:inline-flex}.koi-action-dock-reveal{z-index:1031;position:fixed;bottom:1rem;right:1rem;box-shadow:0 12px 32px #00000052}.koi-entry-bulk-check{justify-content:center;margin-top:.75rem;display:flex}.koi-entry-source-badge{justify-content:center;min-width:6.5rem;margin:.5rem auto 0;display:inline-flex}.koi-entry-row-index{background:var(--tblr-bg-surface-secondary);border:1px solid var(--tblr-border-color);border-radius:4px;justify-content:center;align-items:center;width:2.25rem;height:2rem;margin:0 auto .5rem;font-weight:600;display:flex}@media (width<=992px){.koi-entry-fields-grid{grid-template-columns:1fr}.koi-entry-field-wide,.koi-entry-gender-field{grid-column:auto}}.koi-selected-count{border:1px solid var(--tblr-bg-surface);color:#fff;opacity:1;border-radius:999px;min-width:1.15rem;height:1.15rem;padding:0 .25rem;font-size:.68rem;line-height:1.15rem;position:absolute;top:-.35rem;right:-.35rem;background:var(--tblr-secondary)!important}[data-selected-koi-count]:disabled{opacity:1}[data-selected-koi-count]:disabled .icon{opacity:.45}.koi-selected-count.is-active{background:var(--tblr-primary)!important}.koi-preview-controls{border-top:1px solid var(--tblr-border-color);flex-wrap:wrap;justify-content:space-between;align-items:center;gap:.75rem;margin-top:1rem;padding-top:1rem;display:flex}.koi-preview-controls .pagination{flex-wrap:wrap;justify-content:flex-end;gap:.25rem;display:flex}.koi-preview-controls .page-item{margin:0}.koi-preview-controls .page-link{border-radius:var(--tblr-border-radius);text-align:center;min-width:2.25rem}.koi-list-header{z-index:0;background:var(--tblr-bg-surface);justify-content:center;position:relative;top:0}.koi-list-actions{flex-wrap:wrap;flex:100%;justify-content:center;align-items:center;gap:.25rem;display:flex;margin:0!important;padding:0!important}.koi-list-actions>.btn{flex:0 0 2.5rem}.koi-page-size{align-items:center;gap:.5rem;display:inline-flex}.koi-page-size .btn{min-width:2.5rem}.koi-sort-toggle{width:2.5rem;min-width:2.5rem;height:2.5rem;padding:0;font-size:.68rem;font-weight:600;line-height:1}.koi-draft-item{grid-template-columns:1fr auto auto;align-items:center;gap:.25rem;min-width:220px;padding:.125rem .25rem .125rem .75rem;display:grid}.koi-draft-item .dropdown-item{padding-left:0;padding-right:.5rem}#add-koi-modal .modal-dialog{height:calc(100vh - 3.5rem)}#add-koi-modal .modal-content{max-height:100%}#add-koi-modal .modal-body{overflow-y:auto}#add-koi-modal .modal-footer{z-index:2;background:var(--tblr-bg-surface);position:sticky;bottom:0}@media (width>=992px){.koi-filter-row{flex-wrap:nowrap;align-items:end;display:flex}.koi-filter-field{flex:1 1 0;min-width:0}}@media (width<=575.98px){.koi-list-header{flex-wrap:wrap;justify-content:space-between;align-items:center}.koi-list-header .card-title{padding-top:.5rem}.koi-list-actions{flex:100%;justify-content:center}.koi-icon-filter-row{flex-wrap:nowrap;justify-content:center;width:100%;min-height:2.75rem;padding:.25rem 0 0;display:flex}.koi-list-header.is-floating{top:auto;right:auto;bottom:calc(.75rem + env(safe-area-inset-bottom));width:max-content;max-width:calc(100vw - 1.5rem);padding:.35rem;left:50%;transform:translate(-50%)}.koi-list-header.is-floating .koi-list-actions{flex-wrap:wrap;justify-content:center;width:auto;max-width:100%}.koi-action-dock-reveal{top:auto;right:.75rem;bottom:calc(.75rem + env(safe-area-inset-bottom))}.koi-preview-controls{justify-content:flex-start;align-items:flex-start;gap:.625rem}.koi-preview-controls [data-koi-page-summary],.koi-page-size,.koi-preview-controls .pagination{width:100%}.koi-page-size{flex-wrap:wrap}.koi-preview-controls .pagination{justify-content:flex-start;row-gap:.375rem}.koi-preview-controls .page-link{min-width:2.125rem;padding:.375rem .5rem}.koi-preview-controls .page-link[data-mobile-label]{font-size:0}.koi-preview-controls .page-link[data-mobile-label]:after{content:attr(data-mobile-label);font-size:.8125rem}}.koi-filter-row select.form-select[multiple]:not(.koi-native-select-source){height:2.5rem;overflow:hidden;padding-inline-end:3rem;scrollbar-width:none;background-image:var(--tblr-form-select-bg-img),var(--tblr-form-select-bg-icon,none)}.koi-filter-row select.form-select[multiple]:not(.koi-native-select-source)::-webkit-scrollbar{display:none}
+/* Formulir entri banyak: rapi dan tidak kaku (2026-10-14) -------------------------------------------------------- */ .koi-help-field .form-help { display: none !important; } .koi-entry-table .koi-help-field .form-control, .koi-entry-table .koi-help-field .form-select, .koi-entry-table .koi-parent-search .form-control, .koi-entry-table .koi-pond-search .form-control, .koi-entry-table .koi-variety-search .form-control { height: 2.75rem; padding: .55rem .75rem; } .koi-entry-table textarea.form-control { min-height: 2.75rem; padding: .55rem .75rem; } .koi-entry-table .koi-help-field.has-clear .form-control, .koi-entry-table .koi-parent-search .form-control, .koi-entry-table .koi-pond-search .form-control { padding-right: 2.1rem; } /* a small field name floats above the text once the field has a value, a choice, or focus */ .koi-float-label { position: absolute; top: .3rem; left: .75rem; right: 2.1rem; z-index: 2; overflow: hidden; font-size: .66rem; line-height: 1; letter-spacing: .01em; color: var(--tblr-secondary); white-space: nowrap; text-overflow: ellipsis; pointer-events: none; opacity: 0; transform: translateY(2px); transition: opacity .12s ease, transform .12s ease; } .koi-entry-table input.form-control:not(:placeholder-shown) ~ .koi-float-label, .koi-entry-table textarea.form-control:not(:placeholder-shown) ~ .koi-float-label, .koi-entry-table select.form-select ~ .koi-float-label, .koi-entry-table input[data-date-parts] ~ .koi-float-label, .koi-entry-table .form-control:focus ~ .koi-float-label { opacity: 1; transform: none; } .koi-entry-table input.form-control:not(:placeholder-shown), .koi-entry-table textarea.form-control:not(:placeholder-shown), .koi-entry-table select.form-select, .koi-entry-table input[data-date-parts], .koi-entry-table .form-control:focus { padding-top: 1.1rem; padding-bottom: .2rem; } .koi-entry-table .form-control:focus::placeholder { opacity: 0; } /* clear buttons: one quiet round "x" for every field, shown while pointing at or typing in the field */ .koi-field-clear, .koi-parent-clear, .koi-pond-clear { width: 1.5rem !important; height: 1.5rem !important; min-width: 1.5rem !important; right: .4rem !important; border: 0 !important; border-radius: 50% !important; color: var(--tblr-secondary) !important; background: transparent !important; font-size: 1.1rem !important; font-weight: 400 !important; opacity: 0; transition: opacity .12s ease, background .12s ease, color .12s ease; } .koi-help-field:hover > .koi-field-clear, .koi-help-field:focus-within > .koi-field-clear, .koi-parent-search:hover > .koi-parent-clear, .koi-parent-search:focus-within > .koi-parent-clear, .koi-pond-search:hover > .koi-pond-clear, .koi-pond-search:focus-within > .koi-pond-clear { opacity: 1; } .koi-field-clear:hover, .koi-field-clear:focus, .koi-parent-clear:hover, .koi-parent-clear:focus, .koi-pond-clear:hover, .koi-pond-clear:focus { opacity: 1; color: var(--tblr-body-color) !important; background: var(--tblr-bg-surface-secondary) !important; border: 0 !important; outline: none; } /* Aksi masal and Tarik data ikan: two clear cards, labels above every column, buttons level with the fields */ .koi-bulk-toolbar { display: grid; grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr); gap: .75rem; align-items: stretch; } .koi-bulk-card { display: flex; flex-direction: column; gap: .5rem; padding: .75rem .9rem; border: 1px solid var(--tblr-border-color); border-radius: 8px; background: var(--tblr-bg-surface-secondary); } .koi-bulk-card-title { font-size: .72rem; font-weight: 700; letter-spacing: .05em; text-transform: uppercase; color: var(--tblr-secondary); } .koi-bulk-row { display: flex; flex-wrap: wrap; gap: .5rem; align-items: flex-end; } .koi-bulk-row > * { min-width: 0; } .koi-bulk-row-apply > :nth-child(1) { flex: 1 1 9rem; } .koi-bulk-row-apply > :nth-child(2) { flex: 2 1 13rem; } .koi-bulk-row-apply > :nth-child(3) { flex: 0 0 auto; } .koi-bulk-row-pull > :nth-child(1) { flex: 1 1 12rem; } .koi-bulk-row-pull > :nth-child(2) { flex: 0 0 auto; } .koi-bulk-card .form-label { margin-bottom: .25rem; font-size: .78rem; font-weight: 500; color: var(--tblr-secondary); } .koi-bulk-card .form-hint { margin: 0; } .koi-bulk-card .koi-bulk-value { min-width: 0; flex: none; } @media (max-width: 991.98px) { .koi-bulk-toolbar { grid-template-columns: minmax(0, 1fr); } } /* footers of the Tambah / Edit forms: buttons centred, wrapping on narrow screens */ #add-koi-modal .modal-footer, #edit-koi-modal .modal-footer { justify-content: center; flex-wrap: wrap; gap: .5rem; }
+/* clear button inside the Aksi masal / Tarik data ikan cards */ .koi-bulk-card .koi-help-field { width: 100%; } .koi-bulk-card .koi-help-field.has-clear .form-control { padding-right: 2.1rem; }  .koi-bulk-card .input-group.koi-help-field > .koi-field-clear { right: 5.9rem !important; }
+ /* Otomatis next to its field: a separate rounded button, same look as Terapkan / Tarik */
+ .koi-bulk-card .input-group { flex-wrap: nowrap; gap: .5rem; }
+ .koi-bulk-card .input-group > .form-control,
+ .koi-bulk-card .input-group > .btn { margin-left: 0 !important; border-radius: var(--tblr-border-radius) !important; }
+ .koi-bulk-card .input-group > .btn { flex: 0 0 auto; }
+/* Etc > Archive = the Data Ikan page showing archived fish (?arsip=1): nothing can be added there */ .koi-archive-mode [data-open-add-koi], .koi-archive-mode [data-add-koi-entry], .koi-archive-mode [data-import-koi-zip], .koi-archive-mode [data-import-koi-excel], .koi-archive-mode [data-export-koi-zip-template], .koi-archive-mode [data-export-koi-excel-template], .koi-archive-mode [data-save-koi-draft], .koi-archive-mode .dropdown:has([data-koi-draft-toggle]) { display: none !important; }
+
+    /* Formulir entri banyak: field lebih lega, jarak seragam, gender sejajar dengan field (2026-10-14 sore) */
+    .koi-entry-table .koi-entry-fields-grid { gap: .5rem .5rem; }
+    .koi-entry-table .koi-help-field .form-control,
+    .koi-entry-table .koi-help-field .form-select,
+    .koi-entry-table .koi-parent-search .form-control,
+    .koi-entry-table .koi-pond-search .form-control,
+    .koi-entry-table .koi-variety-search .form-control { height: 2.75rem; padding: .5rem .85rem; }
+    .koi-entry-table textarea.form-control { min-height: 2.75rem; padding: .5rem .85rem; line-height: 1.4; overflow-y: hidden; resize: none; }
+    .koi-entry-table input.form-control:not(:placeholder-shown),
+    .koi-entry-table textarea.form-control:not(:placeholder-shown),
+    .koi-entry-table select.form-select,
+    .koi-entry-table input[data-date-parts],
+    .koi-entry-table .form-control:focus { padding-top: 1.1rem; padding-bottom: .15rem; }
+    .koi-float-label { top: .28rem; left: .85rem; font-size: .68rem; }
+    .koi-entry-table .koi-native-select-button { min-height: 2.75rem; }
+    .koi-entry-table .koi-entry-gender-field .form-selectgroup-label {
+      width: 2.75rem; min-width: 2.75rem; height: 2.75rem; min-height: 2.75rem;
+    }
+    .koi-entry-table [data-entry-parent-panel] { grid-column: 1 / -1; }
+    .koi-entry-table .koi-parent-preview-grid .koi-parent-preview-field { height: 2.75rem; min-height: 2.75rem; }
+
+    /* ID Parent Female (tanpa placeholder): teks di tengah seperti dropdown Male */
+    .koi-entry-table .koi-parent-preview-grid input.koi-parent-preview-field.form-control {
+      padding-top: .5rem !important; padding-bottom: .5rem !important; line-height: 1.4;
+    }
+
+    /* Telepon: Parent Female dan Male tersusun ke bawah (dua baris) bila lebar tidak cukup */
+    @media (max-width: 639.98px) {
+      .koi-parent-preview-grid { grid-template-columns: minmax(0, 1fr) !important; }
+      .koi-entry-table [data-entry-parent-panel] .koi-parent-preview-grid { row-gap: .9rem; }
+    }
+
+    /* Telepon: foto dan kontrol baris di atas, field di bawahnya selebar layar (tidak berdampingan) */
+    @media (max-width: 639.98px) {
+      .koi-entry-table,
+      .koi-entry-table tbody,
+      .koi-entry-table tr,
+      .koi-entry-table td { display: block; width: 100%; }
+      .koi-entry-table .koi-entry-photo-cell {
+        display: flex; flex-wrap: wrap; align-items: center; gap: .6rem .75rem; min-width: 0; text-align: left; padding-bottom: .25rem;
+      }
+      .koi-entry-table .koi-entry-photo-cell .koi-upload-box { width: 104px; flex: 0 0 104px; }
+    }
+
+    /* Formulir Tambah Ikan: kanvas kosong, pengguna diarahkan memilih cara mengisi */
+    .koi-empty-state {
+      text-align: center;
+      padding: 2.25rem 1rem 2.5rem;
+      border: 1px dashed var(--tblr-border-color);
+      border-radius: 12px;
+      background: var(--tblr-bg-surface-secondary);
+    }
+    .koi-empty-title { font-size: 1.15rem; font-weight: 700; }
+    .koi-empty-text { max-width: 34rem; margin: .35rem auto 1.25rem; color: var(--tblr-secondary); }
+    .koi-empty-actions { display: flex; flex-wrap: wrap; gap: .6rem; justify-content: center; }
+    .koi-empty-links { margin-top: 1.1rem; font-size: .85rem; color: var(--tblr-secondary); }
+    .koi-bulk-toolbar:has(.koi-bulk-card.d-none) { grid-template-columns: minmax(0, 1fr); }
+
+    /* Kotak "Aksi masal": jarak antara kotak centang dan tulisannya */
+    .koi-entry-table .koi-entry-bulk-check { display: flex; align-items: center; justify-content: center; gap: .55rem; padding-left: 0; }
+    .koi-entry-table .koi-entry-bulk-check .form-check-input { float: none; margin: 0; flex: 0 0 auto; }
+
+    /* Data Ikan: "Tampilkan" jadi dropdown di atas daftar, nomor halaman di tengah bawah */
+    .koi-top-controls {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: .5rem .75rem;
+      margin-bottom: 1rem;
+    }
+    .koi-page-size-select { display: inline-flex; align-items: center; gap: .5rem; margin: 0; white-space: nowrap; }
+    .koi-page-size-select .form-select { width: auto; min-width: 5.5rem; }
+    .koi-preview-controls { justify-content: center; }
+    .koi-preview-controls .pagination { justify-content: center; }
+
+    /* Barisan ikon filter (Status, gender, indukan, bersihkan): jarak antar tombol lebih lega dan tidak menempel ke filter di atasnya */
+    .koi-icon-filter-row { gap: .75rem; }
+    .koi-icon-filter-row .form-selectgroup,
+    .koi-icon-filter,
+    .koi-icon-filter-row .koi-icon-filter { gap: .75rem; column-gap: .75rem; }
+    @media (max-width: 991.98px) {
+      .koi-icon-filter-row { padding-top: .75rem; margin-top: .25rem; }
+    }
+
+    /* Formulir Tambah/Edit Ikan: setiap entri adalah kartu tersendiri dengan judul "ENTRI n" (halus, tetap tegas) */
+    .koi-entry-table { counter-reset: koi-entry; display: block; border: 0; }
+    .koi-entry-table tbody {
+      display: block;
+      counter-increment: koi-entry;
+      margin: 0 0 1.25rem;
+      border: 1px solid var(--tblr-border-color);
+      border-radius: 14px;
+      background: var(--tblr-bg-surface-secondary);
+      overflow: hidden;
+      box-shadow: inset 0 0 0 2px var(--tblr-primary), 0 8px 22px rgba(0, 0, 0, .16);
+    }
+    .koi-entry-table tbody:last-child { margin-bottom: .5rem; }
+    /* judul "ENTRI n" dihilangkan: garis penanda di sisi kiri sudah cukup membedakan tiap entri */
+    .koi-entry-table tbody + tbody td { border-top: 0; }
+    .koi-entry-table tr { display: block; padding: .85rem; }
+    .koi-entry-table td { border: 0; }
+    .koi-entry-table tbody td, .koi-entry-table tbody + tbody td, .koi-entry-table tbody tr { border: 0 !important; box-shadow: none; background-image: none !important; }
+    /* Telepon: isi tiap entri rata tengah, kartu selebar kolom */
+    @media (max-width: 639.98px) {
+      .koi-entry-table { width: 100%; }
+      .koi-entry-table tbody { width: 100%; box-sizing: border-box; }
+      .koi-entry-table .koi-entry-photo-cell { justify-content: center; text-align: center; }
+      .koi-entry-table .koi-entry-photo-cell .koi-entry-bulk-check { flex: 0 0 100%; justify-content: center; margin: 0; }
+      .koi-entry-table .koi-entry-gender-field { justify-self: center; margin-inline: auto; }
+      .koi-entry-table .koi-entry-fields-grid > label.form-check,
+      .koi-entry-table .koi-entry-fields-grid > .form-check { justify-self: center; }
+      .koi-entry-table .koi-entry-fields-grid { justify-items: stretch; }
+      .koi-entry-table .koi-entry-fields-cell { text-align: center; }
+      .koi-entry-table .koi-entry-fields-cell .form-control,
+      .koi-entry-table .koi-entry-fields-cell textarea { text-align: left; }
+    }
+    /* Telepon: kolom foto disusun dengan grid supaya kotak foto tepat di tengah kartu */
+    @media (max-width: 639.98px) {
+      .koi-entry-table .koi-entry-photo-cell {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+        align-items: center;
+        justify-items: center;
+        column-gap: .75rem;
+        row-gap: .6rem;
+        width: 100%;
+      }
+      .koi-entry-table .koi-entry-photo-cell .koi-entry-row-index { grid-column: 1; justify-self: end; }
+      .koi-entry-table .koi-entry-photo-cell .koi-upload-box { grid-column: 2; width: 104px; }
+      .koi-entry-table .koi-entry-photo-cell .koi-entry-photo-actions { grid-column: 3; justify-self: start; margin-top: 0 !important; }
+      .koi-entry-table .koi-entry-photo-cell [data-koi-upload-status] { grid-column: 1 / -1; }
+      .koi-entry-table .koi-entry-photo-cell [data-koi-upload-status]:empty { display: none; }
+      .koi-entry-table .koi-entry-photo-cell .koi-entry-bulk-check { grid-column: 1 / -1; justify-self: center; }
+      .koi-entry-table .koi-entry-photo-cell .koi-entry-source-badge { grid-column: 2; justify-self: center; }
+      .koi-entry-table .koi-entry-photo-cell [data-remove-koi-entry] { grid-column: 3; justify-self: start; margin-top: 0 !important; }
+    }
+        @media (min-width: 640px) {
+      .koi-entry-table tr { display: flex; align-items: flex-start; gap: 1rem; padding: 1rem 1.25rem; }
+      .koi-entry-table td { display: block; padding: 0; }
+      .koi-entry-table .koi-entry-photo-cell { flex: 0 0 150px; }
+      .koi-entry-table .koi-entry-fields-cell { flex: 1 1 0; min-width: 0; }
+    }
+
+    /* Kartu terpilih: bingkai 2 px mengikuti lengkung kartu (garis ke dalam), tanpa cincin luar yang meleset */
+    .koi-card-compact.is-selected {
+      border-color: var(--tblr-primary);
+      outline: 2px solid var(--tblr-primary);
+      outline-offset: -2px;
+      box-shadow: 0 8px 22px rgba(0, 0, 0, .16);
+    }
+    .koi-card-compact.is-selected .koi-card-preview[data-koi-preview-select],
+    .koi-card-compact.is-selected .koi-card-preview[data-archive-select] { box-shadow: none; }
+
+    /* Sudut mengikuti Corner Radius tema (faktor skala), bukan angka tetap 6px */
+    .koi-card-compact .koi-card-preview,
+    .koi-card-preview[data-koi-preview-select] {
+      border-radius: calc(var(--tblr-card-border-radius, 8px) - 1px) calc(var(--tblr-card-border-radius, 8px) - 1px) 0 0;
+    }
+    .koi-upload-box,
+    .koi-merge-thumb,
+    .koi-photo-history-item img,
+    .koi-edit-preview,
+    .koi-photo-zoom-img,
+    .koi-parent-preview-card,
+    .koi-entry-table-wrap { border-radius: var(--tblr-border-radius); }
+    .koi-merge-photo-preview { border-radius: var(--tblr-border-radius) var(--tblr-border-radius) 0 0; }
+    .koi-bulk-card { border-radius: var(--tblr-card-border-radius, 8px); }
+
+    /* Dock Data Ikan: semua tombol selalu tampil; bila tidak muat dalam satu baris (mis. di HP) turun ke baris berikutnya */
+    .koi-list-header.is-floating { max-width: calc(100vw - 1.5rem); }
+    .koi-list-header.is-floating .koi-list-actions {
+      flex-wrap: wrap;
+      justify-content: center;
+      overflow: visible;
+    }
+
+    /* History Progress Foto: kartu berbingkai; tombol geser dan hapus berada DI ATAS foto (bukan menimpa gambar);
+       keterangan dan tanggal rata tengah */
+    .koi-photo-history-grid { grid-template-columns: repeat(auto-fill, minmax(116px, 1fr)); }
+    .koi-photo-history-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: .5rem;
+      border: 1px solid var(--tblr-border-color);
+      border-radius: var(--tblr-card-border-radius, 8px);
+      background: var(--tblr-bg-surface-secondary);
+      text-align: center;
+    }
+    .koi-photo-history-item .koi-photo-history-actions {
+      position: static;
+      width: 100%;
+      margin: 0 0 .5rem;
+      justify-content: center;
+    }
+    .koi-photo-history-item .koi-photo-history-preview { width: 100%; }
+    .koi-photo-history-item .btn-link { width: 100%; text-align: center; }
+
+
+  /* ---- Formulir Edit Ikan: one grid, photo in column 1, fields two per row in columns 2-3 (screens from 768px) ---- */
+  @media (min-width: 768px) {
+    #edit-koi-modal .modal-body > .row {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 0 1rem;
+    margin: 0;
+    --bs-gutter-x: 0;
+    --bs-gutter-y: 0;
+    }
+    #edit-koi-modal .modal-body > .row > *,
+    #edit-koi-modal .modal-body > .row > .col-md-8 > .row > * {
+    width: auto;
+    max-width: none;
+    margin: 0 0 1rem;
+    padding: 0;
+    }
+    #edit-koi-modal .modal-body > .row > .col-md-8,
+    #edit-koi-modal .modal-body > .row > .col-md-8 > .row {
+    display: contents;
+    }
+    #edit-koi-modal .modal-body > .row > .col-md-4:first-child {
+    grid-column: 1;
+    grid-row: 1 / span 30;
+    align-self: start;
+    }
+    #edit-koi-modal [data-edit-breeder-parent-panel] { grid-column: 2 / -1; }
+    #edit-koi-modal .koi-edit-last { order: 1; }
+    #edit-koi-modal .koi-edit-notes { order: 2; grid-column: 1 / -1; }
+    #edit-koi-modal .koi-edit-history { order: 3; grid-column: 1 / -1; }
+    /* the Indukan tick has the same height as the fields beside it, so the row lines up */
+    #edit-koi-modal .modal-body .form-check { min-height: 2.5rem; display: flex; align-items: center; margin: 0; }
+    #edit-koi-modal .modal-body .form-check .form-check-input { margin-top: 0; }
+  }
+
+
+  /* ---- Formulir Tambah Ikan (entry grid): the field name is a small caption above the field, outside the box ---- */
+  .koi-entry-cell {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    gap: .2rem;
+  }
+  .koi-entry-label {
+    display: block;
+    overflow: hidden;
+    padding-left: .15rem;
+    font-size: .68rem;
+    font-weight: 600;
+    line-height: 1.1;
+    letter-spacing: .01em;
+    color: var(--tblr-secondary);
+    white-space: nowrap;
+    text-overflow: ellipsis;
+  }
+  .koi-entry-table input.form-control,
+  .koi-entry-table textarea.form-control,
+  .koi-entry-table select.form-select,
+  .koi-entry-table input[data-date-parts],
+  .koi-entry-table .form-control:focus {
+    padding-top: .5625rem !important;
+    padding-bottom: .5625rem !important;
+  }
+

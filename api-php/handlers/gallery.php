@@ -171,7 +171,7 @@ function save_gallery_collection(array $body, $id = null) {
     $title = trim((string)($body['title'] ?? $body['display_name'] ?? ''));
     if ($title === '') $title = 'Galeri ' . date('d/m/Y');
     $segmentName = trim((string)($body['segment_name'] ?? ''));
-    $galleryDate = trim((string)($body['gallery_date'] ?? '')) ?: date('Y-m-d');
+    $galleryDate = koi_clean_partial_date($body['gallery_date'] ?? null, 'Tanggal galeri') ?? date('Y-m-d');
     $notes = trim((string)($body['notes'] ?? ''));
     $sourceType = trim((string)($body['source_type'] ?? ''));
     $sourceId = !empty($body['source_id']) ? (int)$body['source_id'] : null;
@@ -280,7 +280,7 @@ $galleryUpdateHandler = function (array $m) {
     foreach (['title', 'segment_name', 'gallery_date', 'notes'] as $col) {
         if (array_key_exists($col, $body)) {
             $fields[] = "$col = ?";
-            $params[] = $body[$col];
+            $params[] = $col === 'gallery_date' ? koi_clean_partial_date($body[$col], 'Tanggal galeri') : $body[$col];
         }
     }
     if ($fields) {

@@ -61,7 +61,7 @@ import DefaultLayout from '@shared/layouts/DefaultLayout.astro'
             </div>
           </div>
           <div class="report-form-section"><div class="row g-3">
-            <div class="col-md-3"><label class="form-label required">Tanggal</label><input class="form-control" type="date" name="report_date" required data-report-date /></div>
+            <div class="col-md-3"><label class="form-label required">Tanggal</label><input class="form-control" type="text" data-date-parts name="report_date" required data-report-date /></div>
             <div class="col-md-3"><label class="form-label">Kode Batch</label><input class="form-control" name="batch_code" readonly data-batch-code placeholder="Otomatis" /></div>
             <div class="col-md-3"><label class="form-label">Judul Laporan</label><input class="form-control" name="report_title" placeholder="Contoh: Data ulang kolam A" /></div><div class="col-md-3"><label class="form-label">Varietas Dominan</label><div class="report-search-wrap"><input class="form-control" name="dominant_variety" placeholder="Contoh: Kohaku, Showa, Sanke" autocomplete="off" data-dominant-variety-search /><div class="report-search-menu d-none" data-dominant-variety-search-menu></div></div></div>
             <div class="col-md-6"><label class="form-label">Lokasi Asal</label><input class="form-control" list="pond-options" name="origin_location" placeholder="Contoh: Karantina" autocomplete="off" /></div>
@@ -402,19 +402,7 @@ import DefaultLayout from '@shared/layouts/DefaultLayout.astro'
     }
     const printReport=(report)=>{const pondEntries=parseJson(report.pond_entries);const breedingEntries=parseJson(report.breeding_entries).filter((entry)=>entry.show_on_print!==false);const koiEntries=parseJson(report.koi_entries).filter((entry)=>entry.show_on_print!==false);const reporterEntries=parseJson(report.reporter_entries);const media=parseJson(report.media_entries);const printWindow=window.open('','_blank');if(!printWindow)return;const row=(label,value)=>`<tr><th>${label}</th><td>${value}</td></tr>`;printWindow.document.write(`<html><head><title>${escapeHtml(report.report_title||'Laporan')}</title><style>body{font-family:Arial,sans-serif;padding:24px;color:#111;background:#fff}h1{margin:0 0 8px}table{border-collapse:collapse;width:100%;margin:16px 0}td,th{border:1px solid #ddd;padding:8px;text-align:left;vertical-align:top}.media{display:flex;gap:12px;flex-wrap:wrap}.media img{max-width:180px;max-height:140px;object-fit:cover}</style></head><body><h1>${escapeHtml(report.report_title||'Laporan')}</h1><p>${formatDate(report.report_date)} - ${escapeHtml(labels[report.report_type]||report.report_type||'-')}</p><table><tbody>${row('Varietas Dominan',escapeHtml(report.dominant_variety||'-'))}${row('Lokasi',escapeHtml(pondEntries.map((entry)=>[entry.pond_name,entry.location].filter(Boolean).join(' -> ')).join(', ')||'-'))}${row('Breeding',escapeHtml(breedingEntries.map((entry)=>linkedPrintText(entry,'breeding')).join(', ')||'-'))}${row('Ikan',escapeHtml(koiEntries.map((entry)=>linkedPrintText(entry,'koi')).join(', ')||'-'))}${row('Petugas',escapeHtml(reporterEntries.map((entry)=>entry.label||entry.name||entry.username).join(', ')||'-'))}${row('Catatan Laporan',escapeHtml(report.notes||'-'))}</tbody></table><div class="media">${media.map((item)=>`<div>${item.type==='video'?`<p>Video: ${escapeHtml(item.url)}</p>`:`<img src="${escapeHtml(item.url)}" />`}<p>${escapeHtml(item.notes||'')}</p></div>`).join('')}</div><script>window.print()<\/script></body></html>`);printWindow.document.close()}
     const reportExcelColumns = ['Tanggal', 'Kode Batch', 'Jenis', 'Judul', 'Varietas Dominan', 'Lokasi Asal', 'Lokasi Tujuan', 'Rata-rata Ukuran (cm)', 'Lokasi', 'Breeding', 'Petugas', 'Catatan', 'Galeri', 'ID Galeri']
-    const reportDateFromText = (value) => {
-      const typed = String(value || '').trim()
-      const iso = typed.match(/^(\d{4})-(\d{1,2})-(\d{1,2})/)
-      const dmy = typed.match(/^(\d{1,2})[\/.-](\d{1,2})[\/.-](\d{4})$/)
-      const long = typed.match(/^(\d{1,2})\s*-\s*\[?(\d{1,2})\]?[^\d]*-\s*(\d{4})$/)
-      const parts = iso ? iso.slice(1, 4) : dmy ? dmy.slice(1, 4).reverse() : long ? long.slice(1, 4).reverse() : null
-      if (!parts) return ''
-      const [year, month, day] = parts.map(Number)
-      const date = new Date(year, month - 1, day)
-      return date.getFullYear() === year && date.getMonth() === month - 1 && date.getDate() === day
-        ? `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`
-        : ''
-    }
+    const reportDateFromText = (value) => window.KoiAuth.dateFromText(value)
 
     // "Galeri" column: Ya / Tidak. Empty = Ya when the report arrives with documentation (ZIP), so the
     // photos get a history in the Galeri menu; otherwise Tidak.
@@ -432,7 +420,7 @@ import DefaultLayout from '@shared/layouts/DefaultLayout.astro'
     const reportArrivalPhotoPath = (item, index, line) => `image/${window.KoiZip.safeName(item.batch_code || String(item.id), 'laporan')}/ikan/ikan-${String(index + 1).padStart(2, '0')}.${(String(line.image_url).split('?')[0].split('.').pop() || 'jpg').toLowerCase()}`
     const reportArrivalRows = (chosen, zipMode = false) => chosen.filter((item) => item.report_type === 'ikan_datang').flatMap((item) =>
       window.KoiArrival.linesOf(item).map((line, index) => [
-        String(item.report_date || '').slice(0, 10), item.report_title || '', item.origin_location || '', line.variety,
+        window.KoiAuth.dateShort(item.report_date), item.report_title || '', item.origin_location || '', line.variety,
         window.KoiArrival.genderLabels[line.gender], line.size_cm, line.farm, line.bloodline, line.owner, line.pond_name,
         line.image_url ? (zipMode ? reportArrivalPhotoPath(item, index, line) : line.image_url) : '', item.notes || '', item.batch_code || '',
       ]))
@@ -475,7 +463,7 @@ import DefaultLayout from '@shared/layouts/DefaultLayout.astro'
       }
 
       const rows = chosen.map((item) => [
-        String(item.report_date || '').slice(0, 10),
+        window.KoiAuth.dateShort(item.report_date),
         item.batch_code || '',
         labels[item.report_type] || (item.report_type === 'kegiatan' ? 'Kegiatan' : item.report_type === 'ikan_datang' ? 'Ikan Datang' : item.report_type || ''),
         item.report_title || '',
@@ -777,7 +765,7 @@ import DefaultLayout from '@shared/layouts/DefaultLayout.astro'
     document.head.insertAdjacentHTML('beforeend','<style>.report-parent-chip img{cursor:zoom-in}</style>')
     document.addEventListener('click',(event)=>{const chipPhoto=event.target.closest('.report-parent-chip img');if(chipPhoto)window.KoiAuth.zoomPhoto(chipPhoto.src,chipPhoto.alt)})
   </script>
-  <script is:inline src="/assets/activity-report.js?v=20261029b"></script>
-  <script is:inline src="/assets/arrival-report.js?v=20261029b"></script>
+  <script is:inline src="/assets/activity-report.js?v=20261029c"></script>
+  <script is:inline src="/assets/arrival-report.js?v=20261029c"></script>
 </DefaultLayout>
 

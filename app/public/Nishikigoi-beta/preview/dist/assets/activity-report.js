@@ -274,7 +274,7 @@
       activities.map(function (a) { return '<option value="' + a[0] + '">' + a[1] + '</option>' }).join('') + '</select>' +
       '<input class="form-control mt-2 d-none" name="jenis_lain" placeholder="Tulis jenis kegiatan" data-activity-other></div>' +
       '<div class="col-md-6"><label class="form-label">Judul <span class="text-secondary small">(opsional)</span></label><input class="form-control" name="judul" placeholder="Otomatis dari jenis dan kolam"></div>' +
-      '<div class="col-md-4"><label class="form-label required">Tanggal</label><input class="form-control" type="date" name="tanggal"></div>' +
+      '<div class="col-md-4"><label class="form-label required">Tanggal</label><input class="form-control" type="text" data-date-parts name="tanggal"></div>' +
       '<div class="col-6 col-md-4"><label class="form-label">Jam mulai</label><input class="form-control" type="time" name="jam_mulai"></div>' +
       '<div class="col-6 col-md-4"><label class="form-label">Jam selesai</label><input class="form-control" type="time" name="jam_selesai"></div>' +
       '<div class="col-md-6"><label class="form-label">Kolam</label><select class="form-select" name="kolam" multiple data-activity-ponds></select></div>' +

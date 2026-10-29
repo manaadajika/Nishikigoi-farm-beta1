@@ -1188,16 +1188,20 @@ const clipboardIcon = iconSvg('clipboard')
     // '' = nothing filled in, null = filled in but not a real date, otherwise YYYY-MM-DD.
     const notesDateValue = () => {
       const dayText = notesDay.value.trim()
+      const monthText = notesMonth.value.trim()
       const yearText = notesYear.value.trim()
-      if (!dayText && !notesMonth.value.trim() && !yearText) return ''
+      if (!dayText && !monthText && !yearText) return ''
       const day = Number(dayText)
       const month = parseMonth(notesMonth.value)
       const year = Number(yearText)
-      const valid = Number.isInteger(day) && day >= 1 && month >= 1 && Number.isInteger(year) && year >= 1900 && year <= 2100 && day <= new Date(year, month, 0).getDate()
-      notesDay.classList.toggle('is-invalid', !valid && !(day >= 1 && day <= 31))
-      notesMonth.classList.toggle('is-invalid', !month)
-      notesYear.classList.toggle('is-invalid', !(year >= 1900 && year <= 2100))
-      return valid ? `${year}-${pad2(month)}-${pad2(day)}` : null
+      // only the year has to be filled in; a month or day that is not known is left empty and stored as 00
+      const yearOk = Number.isInteger(year) && year >= 1900 && year <= 2100
+      const monthOk = !monthText || month >= 1
+      const dayOk = !dayText || (month >= 1 && Number.isInteger(day) && day >= 1 && day <= new Date(year, month, 0).getDate())
+      notesDay.classList.toggle('is-invalid', !dayOk)
+      notesMonth.classList.toggle('is-invalid', !monthOk)
+      notesYear.classList.toggle('is-invalid', !yearOk)
+      return yearOk && monthOk && dayOk ? `${year}-${month >= 1 ? pad2(month) : '00'}-${dayText ? pad2(day) : '00'}` : null
     }
     // blankWhenMissing: a pond without a date shows empty fields (the date is filled in when its note is edited).
     const setNotesDate = (value, blankWhenMissing = false) => {
@@ -1209,8 +1213,8 @@ const clipboardIcon = iconSvg('clipboard')
         notesDay.value = ''
       } else {
         notesYear.value = String(match ? Number(match[1]) : today.getFullYear())
-        notesMonth.value = monthLabel(match ? Number(match[2]) : today.getMonth() + 1)
-        notesDay.value = String(match ? Number(match[3]) : today.getDate())
+        notesMonth.value = match ? (Number(match[2]) ? monthLabel(Number(match[2])) : '') : monthLabel(today.getMonth() + 1)
+        notesDay.value = match ? (Number(match[3]) ? String(Number(match[3])) : '') : String(today.getDate())
       }
       ;[notesDay, notesMonth, notesYear].forEach((field) => field.classList.remove('is-invalid'))
     }

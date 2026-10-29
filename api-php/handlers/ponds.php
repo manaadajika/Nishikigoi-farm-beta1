@@ -108,7 +108,7 @@ route_pattern('PATCH', '#^/ponds/(\d+)$#', function (array $m) {
                 $params[] = (int)$body[$col];
             } elseif ($col === 'notes_date') {
                 $date = trim((string)$body[$col]);
-                if ($date !== '' && !(preg_match('/^(\d{4})-(\d{2})-(\d{2})$/', $date, $d) && checkdate((int)$d[2], (int)$d[3], (int)$d[1]))) {
+                if ($date !== '' && !koi_valid_partial_date($date)) {
                     send_error(422, 'Tanggal catatan tidak valid');
                 }
                 $params[] = $date !== '' ? $date : null;
