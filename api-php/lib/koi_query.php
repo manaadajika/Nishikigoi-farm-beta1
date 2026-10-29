@@ -10,7 +10,7 @@ require_once __DIR__ . '/cache.php';
 // (matchesKoiSearch, matchesFieldCriterion, numberTest, ...). Both give the same fish.
 
 const KOI_STATUS_LABELS = [
-    'unknown' => 'Tidak diketahui', 'male' => 'Jantan', 'female' => 'Betina', 'active' => 'Aktif', 'non_active' => 'Non-Aktif',
+    'unknown' => 'Unknown', 'male' => 'Jantan', 'female' => 'Betina', 'active' => 'Aktif', 'non_active' => 'Non-Aktif',
     'quarantine' => 'Karantina', 'sold' => 'Terjual', 'dead' => 'Mati', 'indukan' => 'Indukan', 'non_indukan' => 'Bukan Indukan',
 ];
 
@@ -53,7 +53,7 @@ function koi_normalize_search_labels(string $keyword): string {
     return $keyword;
 }
 const KOI_STATUS_WORDS = ['aktif' => 'active', 'nonaktif' => 'non_active', 'non-aktif' => 'non_active', 'karantina' => 'quarantine', 'terjual' => 'sold', 'mati' => 'dead'];
-const KOI_GENDER_WORDS = ['jantan' => 'male', 'male' => 'male', 'm' => 'male', 'betina' => 'female', 'female' => 'female', 'f' => 'female', 'u' => 'unknown', 'unknown' => 'unknown', 'belum' => 'unknown'];
+const KOI_GENDER_WORDS = ['jantan' => 'male', 'male' => 'male', 'm' => 'male', 'betina' => 'female', 'female' => 'female', 'f' => 'female', 'u' => 'unknown', 'unknown' => 'unknown', 'tidak diketahui' => 'unknown', 'belum' => 'unknown'];
 
 // JS: String(value || '').trim().toLowerCase()   (falsy values count as empty)
 function koi_norm($value): string {

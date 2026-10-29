@@ -90,7 +90,7 @@
     </style>
     <link rel="stylesheet" href="/_astro/DefaultLayout.d0930n1.css" />
       <link rel="manifest" href="/api/manifest" />
-  <style>    /* Kelamin ditulis (Tidak diketahui / Jantan / Betina) di formulir, huruf U / M / F pada tombol filter */
+  <style>    /* Kelamin ditulis (Unknown / Jantan / Betina) di formulir, huruf U / M / F pada tombol filter */
     .koi-entry-gender-field .form-selectgroup-label,
     .koi-edit-gender-field .form-selectgroup-label,
     .koi-entry-table .koi-entry-gender-field .form-selectgroup-label {
@@ -1728,7 +1728,7 @@
                     >
                       <option value="">Semua</option>
                     </select></div>
-                    <div class="koi-status-icon"><select data-select-text="Kelamin" data-select-title="Kelamin" multiple class="form-select" id="koi-filter-gender" name="koi_filter_gender" data-gender-select><option value="">Semua</option><option value="unknown">Tidak diketahui</option><option value="male">Jantan</option><option value="female">Betina</option></select></div>
+                    <div class="koi-status-icon"><select data-select-text="Kelamin" data-select-title="Kelamin" multiple class="form-select" id="koi-filter-gender" name="koi_filter_gender" data-gender-select><option value="">Semua</option><option value="unknown">Unknown</option><option value="male">Jantan</option><option value="female">Betina</option></select></div>
                     <div class="koi-status-icon"><select data-select-text="Typ" data-select-title="Typ" class="form-select" id="koi-filter-type" name="koi_filter_type" data-parent-type-select><option value="">Semua</option><option value="indukan">Indukan</option><option value="non_indukan">Bukan Indukan</option></select></div>
                     <button
                       class="btn btn-outline-secondary btn-icon"
@@ -1930,7 +1930,7 @@
                 <option value="purchase_date">Tanggal Beli</option>
                 <option value="purchase_price">Harga Beli</option>
                 <option value="sale_price">Harga Jual</option>
-                <option value="current_length_cm">Ukuran Saat Ini (cm)</option>
+                <option value="current_length_cm">Size Saat Ini (cm)</option>
                 <option value="notes">Catatan</option>
                   </select>
                 </div>
@@ -2482,7 +2482,7 @@
                           </div>
                           <div class="col-sm-6">
                             <label class="form-label">Kelamin</label>
-                            <input type="hidden" name="gender" value="unknown" data-edit-gender-value /><select class="form-select" data-edit-gender aria-label="Kelamin"><option value="unknown">Tidak diketahui</option><option value="male">Jantan</option><option value="female">Betina</option></select>
+                            <input type="hidden" name="gender" value="unknown" data-edit-gender-value /><select class="form-select" data-edit-gender aria-label="Kelamin"><option value="unknown">Unknown</option><option value="male">Jantan</option><option value="female">Betina</option></select>
                           </div>
                         </div>
                       </div>
@@ -2565,7 +2565,7 @@
                         />
                       </div>
                       <div class="col-md-6">
-                        <label class="form-label">Ukuran Saat Ini (cm)</label>
+                        <label class="form-label">Size Saat Ini (cm)</label>
                         <input
                           class="form-control"
                           type="number"
@@ -3087,7 +3087,7 @@ const pageSizeSelect = document.querySelector('[data-koi-page-size-select]');
                 const navbarSearchBox = document.querySelector("#navbar-global-search");
                 if (navbarSearchBox) {
                   navbarSearchBox.setAttribute("placeholder", "Kode, nama, size 49-70cm, bloodline:isa");
-                  navbarSearchBox.setAttribute("title", "Cari bebas: kode, nama, bloodline, ternakan, nomor urut, ukuran (49-70cm, <30, >40cm). Cari per kolom dengan kolom:isi, boleh digabung: bloodline:isa ternakan:dwd catatan:vat 03. Nama kolom boleh disingkat (bloo:isa, tern:dwd, br:miya). Kolom: nama kolom di formulir boleh ditulis persis dengan spasi, mis. Kode Koi:26G, Harga Jual:15jt (angka kecil di harga dibaca juta), Tanggal Lahir:2025, Terakhir Diedit:2026 - [10] Oktober - 20, Ukuran Saat Ini:49-70, Indukan/Breeding:BR2609, Owner:arin, Typ:indukan; juga kode, nama, variety, bloodline, ternakan, breeding (sesi atau induk sesi), breeder, induk, kolam, area, status, gender, tipe, catatan, ukuran, hargabeli, hargajual, lahir, tanggalbeli, nomor.");
+                  navbarSearchBox.setAttribute("title", "Cari bebas: kode, nama, bloodline, ternakan, nomor urut, ukuran (49-70cm, <30, >40cm). Cari per kolom dengan kolom:isi, boleh digabung: bloodline:isa ternakan:dwd catatan:vat 03. Nama kolom boleh disingkat (bloo:isa, tern:dwd, br:miya). Kolom: nama kolom di formulir boleh ditulis persis dengan spasi, mis. Kode Koi:26G, Harga Jual:15jt (angka kecil di harga dibaca juta), Tanggal Lahir:2025, Terakhir Diedit:2026 - [10] Oktober - 20, Size Saat Ini:49-70, Indukan/Breeding:BR2609, Owner:arin, Typ:indukan; juga kode, nama, variety, bloodline, ternakan, breeding (sesi atau induk sesi), breeder, induk, kolam, area, status, gender, tipe, catatan, ukuran, hargabeli, hargajual, lahir, tanggalbeli, nomor.");
                 }
                 const parentTypeSelect = document.querySelector('[data-parent-type-select]')
                 const genderSelect = document.querySelector('[data-gender-select]')
@@ -3400,7 +3400,7 @@ const pageSizeSelect = document.querySelector('[data-koi-page-size-select]');
                 };
 
                 const labels = {
-                  unknown: "Tidak diketahui",
+                  unknown: "Unknown",
                   male: "Jantan",
                   female: "Betina",
                   active: "Aktif",
@@ -3457,7 +3457,7 @@ const pageSizeSelect = document.querySelector('[data-koi-page-size-select]');
       `,
                   gender: () => `
         <select class="form-select" data-bulk-value>
-          <option value="unknown">Tidak diketahui</option>
+          <option value="unknown">Unknown</option>
           <option value="male">Jantan</option>
           <option value="female">Betina</option>
         </select>
@@ -5059,7 +5059,7 @@ const pageSizeSelect = document.querySelector('[data-koi-page-size-select]');
               </div>
               <button class="form-help" data-parent-help type="button" data-bs-toggle="popover" data-bs-trigger="focus" data-bs-placement="top" data-bs-content="Pilih Indukan/Breeding dari data sesi breeding" aria-label="Bantuan Indukan/Breeding">!</button>
             </div>
-            <input type="hidden" name="gender" value="unknown" /><select class="form-select" data-entry-gender aria-label="Kelamin"><option value="unknown">Tidak diketahui</option><option value="male">Jantan</option><option value="female">Betina</option></select>
+            <input type="hidden" name="gender" value="unknown" /><select class="form-select" data-entry-gender aria-label="Kelamin"><option value="unknown">Unknown</option><option value="male">Jantan</option><option value="female">Betina</option></select>
             <div class="koi-entry-field-wide d-none" data-entry-parent-panel>
               <div class="koi-parent-preview-grid">
                 <div>
@@ -5106,7 +5106,7 @@ const pageSizeSelect = document.querySelector('[data-koi-page-size-select]');
               <button class="form-help" type="button" data-bs-toggle="popover" data-bs-trigger="focus" data-bs-placement="top" data-bs-content="Isi harga jual ikan jika ada atau sudah terjual" aria-label="Bantuan harga jual">!</button>
             </div>
             <div class="koi-help-field">
-              <input class="form-control" type="number" min="0" step="0.1" name="current_length_cm" placeholder="Ukuran saat ini" aria-label="Ukuran Saat Ini" />
+              <input class="form-control" type="number" min="0" step="0.1" name="current_length_cm" placeholder="Size saat ini" aria-label="Size Saat Ini" />
               <button class="form-help" type="button" data-bs-toggle="popover" data-bs-trigger="focus" data-bs-placement="top" data-bs-content="Isi size atau panjang ikan saat ini dalam cm" aria-label="Bantuan size saat ini">!</button>
             </div>
             <div class="koi-help-field koi-entry-field-wide">
@@ -7175,7 +7175,7 @@ items.forEach((item) => {
       tgllahir: 'birth_date', terakhirdiedit: 'updated_at', diedit: 'updated_at',
                 }
                 // "bloo:isa" works too: a field name may be shortened to its first letters (2 or more). Exact names win, then the
-                // first name in the list above that starts with what was typed. Tidak diketahui names stay plain text.
+                // first name in the list above that starts with what was typed. Unknown names stay plain text.
                     // "Harga Jual:15", "Tanggal Lahir:2025" ... : the labels of the Edit / Tambah Ikan form (with spaces) become one word
     const searchLabelWords = {
       'parent/breeding': 'parentbreeding', 'parent breeding': 'parentbreeding', 'indukan/breeding': 'parentbreeding', 'indukan breeding': 'parentbreeding', 'ukuran saat ini': 'sizesaatini', 'terakhir diedit': 'terakhirdiedit', 'tanggal lahir': 'tanggallahir',
@@ -7202,7 +7202,7 @@ items.forEach((item) => {
                   return found
                 }
                 const statusWords = { aktif: 'active', nonaktif: 'non_active', 'non-aktif': 'non_active', karantina: 'quarantine', terjual: 'sold', mati: 'dead', active: 'active', 'non-active': 'non_active', nonactive: 'non_active', quarantine: 'quarantine', sold: 'sold', dead: 'dead' }
-                const genderWords = { jantan: 'male', male: 'male', m: 'male', betina: 'female', female: 'female', f: 'female', u: 'unknown', unknown: 'unknown', belum: 'unknown' }
+                const genderWords = { jantan: 'male', male: 'male', m: 'male', betina: 'female', female: 'female', f: 'female', u: 'unknown', unknown: 'unknown', belum: 'unknown', 'tidak diketahui': 'unknown' }
 
                 let breedingMatchCache = { items: null, map: new Map() }
                 const parseSearchNumber = (value, money) => {
@@ -8158,7 +8158,7 @@ if (pageSizeSelect) pageSizeSelect.value = String(pageSize);
                   ["Tanggal Beli", "purchase_date"],
                   ["Harga Beli", "purchase_price"],
                   ["Harga Jual", "sale_price"],
-                  ["Ukuran Saat Ini (cm)", "current_length_cm"],
+                  ["Size Saat Ini (cm)", "current_length_cm"],
                   ["Catatan", "notes"],
                   ["Foto", "image_url"],
                 ];
@@ -8375,7 +8375,7 @@ if (pageSizeSelect) pageSizeSelect.value = String(pageSize);
         throw new Error(`${rowLabel}: Tanggal Beli "${rawItem.purchase_date}" salah. Tulis seperti 2026-09-27, 27/09/2026, atau hanya 2026 / 2026-09.`)
       }
       if (!isValidImportNumberText(rawItem.current_length_cm)) {
-        throw new Error(`${rowLabel}: Ukuran Saat Ini harus angka, contoh 45 atau 45.5.`)
+        throw new Error(`${rowLabel}: Size Saat Ini harus angka, contoh 45 atau 45.5.`)
       }
     };
                 const parseDelimitedRows = (textValue) => {
@@ -9068,7 +9068,7 @@ items.forEach((item) => {
                     ["Harga Beli", (item) => item.purchase_price],
                     ["Harga Jual", (item) => item.sale_price],
                     [
-                      "Ukuran Saat Ini (cm)",
+                      "Size Saat Ini (cm)",
                       (item) => formatDecimal(item.current_length_cm),
                     ],
                     ["Catatan", (item) => item.notes],
@@ -9865,7 +9865,7 @@ Ketik HAPUS untuk melanjutkan.`)) !== 'HAPUS' : !(await window.KoiDialog.confirm
                 <div class="col-6 koi-card-detail-cell"><span class="text-secondary">Ternakan</span><div class="koi-text-ellipsis" title="${escapeHtml(text(item.farm_name))}">${escapeHtml(text(item.farm_name))}</div></div>
                 <div class="col-6 koi-card-detail-cell"><span class="text-secondary">${koiPlace(item).label}</span><div class="koi-text-ellipsis" title="${escapeHtml(text(koiPlace(item).value))}">${escapeHtml(text(koiPlace(item).value))}</div></div>
                 <div class="col-6 koi-card-detail-cell"><span class="text-secondary">Kelamin</span><div class="koi-text-ellipsis" title="${escapeHtml(labels[item.gender] || text(item.gender))}">${escapeHtml(labels[item.gender] || text(item.gender))}</div></div>
-                <div class="col-6 koi-card-detail-cell"><span class="text-secondary">Ukuran</span><div class="koi-text-ellipsis" title="${item.current_length_cm ? `${escapeHtml(formatDecimal(item.current_length_cm))} cm` : "-"}">${item.current_length_cm ? `${escapeHtml(formatDecimal(item.current_length_cm))} cm` : "-"}</div></div>
+                <div class="col-6 koi-card-detail-cell"><span class="text-secondary">Size</span><div class="koi-text-ellipsis" title="${item.current_length_cm ? `${escapeHtml(formatDecimal(item.current_length_cm))} cm` : "-"}">${item.current_length_cm ? `${escapeHtml(formatDecimal(item.current_length_cm))} cm` : "-"}</div></div>
               </div>
               <div class="mt-2 d-flex align-items-center justify-content-between gap-2">
                 <span class="koi-sequence-number koi-text-ellipsis" data-seq-koi-id="${escapeHtml(item.id)}" style="cursor:pointer;text-decoration:underline dotted;text-underline-offset:3px" title="${koiSequenceNumber(item)}${archiveMode && item.archived_at ? ` - diarsipkan ${window.KoiAuth.formatDate(item.archived_at)}` : ''} - klik untuk memindahkan nomor urut">${koiSequenceNumber(item)}${archiveMode && item.archived_at ? ` · Arsip ${window.KoiAuth.formatDate(item.archived_at)}` : ''}</span>
@@ -11186,7 +11186,7 @@ pageSizeButtons.forEach((button) =>
         return
       }
       const field = (name) => String(editForm.querySelector(`[name="${name}"]`)?.value || '').trim()
-      const genderLabels = { male: 'Jantan', female: 'Betina', unknown: 'Tidak diketahui' }
+      const genderLabels = { male: 'Jantan', female: 'Betina', unknown: 'Unknown' }
       const code = field('code') || 'Ikan'
       const pond = [
         editForm.querySelector('[data-edit-pond-select]')?.value,
@@ -11213,7 +11213,7 @@ pageSizeButtons.forEach((button) =>
           ['Varietas', field('variety')],
           ...(field('gender') && field('gender') !== 'unknown' ? [['Kelamin', genderLabels[field('gender')] || field('gender')]] : []), // hideUnknownGender
           ['Kolam / Lokasi', pond],
-          ['Ukuran Saat Ini', length ? `${length} cm` : ''],
+          ['Size Saat Ini', length ? `${length} cm` : ''],
           ['Jumlah Foto', photos.length],
         ],
         body: `<section class="kp-section"><h2>History Progress Foto</h2><div style="display:grid;grid-template-columns:repeat(6,1fr);gap:8px">${cards}</div></section>`,

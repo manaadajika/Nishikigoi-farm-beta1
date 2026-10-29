@@ -351,7 +351,7 @@ route('GET', '/summary-more', function () {
         $rows = [];
         foreach (query("SELECT koi.id, koi.code, koi.name, koi.variety, koi.bloodline, koi.gender, koi.current_length_cm, koi.image_url, ponds.name AS pond_name FROM koi LEFT JOIN ponds ON ponds.id = koi.pond_id WHERE koi.archived_at IS NULL AND koi.parent_type = 'indukan' AND koi.status = 'active' ORDER BY koi.code") as $k) {
             if (isset($used[(int)$k['id']])) continue;
-            $gender = $k['gender'] === 'male' ? 'Jantan' : ($k['gender'] === 'female' ? 'Betina' : 'Tidak diketahui');
+            $gender = $k['gender'] === 'male' ? 'Jantan' : ($k['gender'] === 'female' ? 'Betina' : 'Unknown');
             $rows[] = [
                 'title' => (string)$k['code'] . ' ' . (string)($k['name'] ?: $k['variety'] ?: ''),
                 'sub' => $gender . ($k['pond_name'] ? ' · ' . $k['pond_name'] : ''),
@@ -379,7 +379,7 @@ route('GET', '/summary-more', function () {
             'note' => $total > $limit ? "Menampilkan $limit ikan yang paling baru diubah." : '',
             'rows' => array_map(fn($r) => [
                 'title' => (string)$r['code'] . ' ' . (string)($r['name'] ?: $r['variety'] ?: ''),
-                'sub' => implode(' · ', array_filter([$genders[$r['gender']] ?? 'Tidak diketahui', $r['parent_type'] === 'indukan' ? 'Indukan' : '', $r['archived_at'] ? 'Arsip' : '', (string)($r['pond_name'] ?? '')])),
+                'sub' => implode(' · ', array_filter([$genders[$r['gender']] ?? 'Unknown', $r['parent_type'] === 'indukan' ? 'Indukan' : '', $r['archived_at'] ? 'Arsip' : '', (string)($r['pond_name'] ?? '')])),
                 'at' => $r['updated_at'] ? date('Y-m-d H:i:s', strtotime((string)$r['updated_at'])) : '',
                 'search' => (string)$r['code'],
                 'page' => $r['archived_at'] ? 'farm-koi.html?arsip=1' : 'farm-koi.html',

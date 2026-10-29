@@ -847,7 +847,7 @@ const clipboardIcon = iconSvg('clipboard')
     const formatSizeCm = (value) => { const number = Number(value); return Number.isFinite(number) && String(value).trim() !== '' ? number.toLocaleString('id-ID', { maximumFractionDigits: 1 }) : String(value ?? '') }
     // DEAD CODE (diperiksa 2026-10-14): koiLabels tidak dipanggil di mana pun. Aman dihapus; sengaja belum dihapus.
     const koiLabels = {
-      unknown: 'Tidak diketahui',
+      unknown: 'Unknown',
       male: 'Jantan',
       female: 'Betina',
       active: 'Aktif',

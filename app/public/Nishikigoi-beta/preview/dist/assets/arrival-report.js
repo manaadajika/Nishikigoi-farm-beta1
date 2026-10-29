@@ -21,7 +21,7 @@
     return String(value == null ? '' : value).trim() === '' || !Number.isFinite(n) ? null : n
   }
   // Same values as the Kelamin field of Data Ikan: unknown | male | female (shown as words).
-  var genderLabels = { unknown: 'Tidak diketahui', male: 'Jantan', female: 'Betina' }
+  var genderLabels = { unknown: 'Unknown', male: 'Jantan', female: 'Betina' }
   function genderFrom(value) {
     var typed = String(value == null ? '' : value).trim().toLowerCase()
     if (['male', 'm', 'jantan', 'j'].indexOf(typed) >= 0) return 'male'

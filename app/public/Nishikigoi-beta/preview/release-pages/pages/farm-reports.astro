@@ -151,7 +151,7 @@ import DefaultLayout from '@shared/layouts/DefaultLayout.astro'
     const resolveMediaUrl=(value)=>{const raw=String(value||'').trim();if(!raw)return'';const resolved=window.KoiAuth?.apiUrl?window.KoiAuth.apiUrl(raw):raw;try{return new URL(resolved,window.location.origin).href}catch{return resolved}}
     const linkedPreviewUrl=(item={})=>item.image_url||item.photo_url||item.thumbnail_url||item.avatar||item.female_image_url||item.male_image_url||item.female_photo_url||item.male_photo_url||''
     const linkedMeta=(item={},type)=>type==='breeding'?[item.spawning_method,item.method,item.status,item.pond_name,item.pond_label].filter(Boolean).join(' - '):[item.variety,item.gender,item.current_length_cm?`${item.current_length_cm} cm`:item.size_cm?`${item.size_cm} cm`:item.size].filter(Boolean).join(' - ')
-    const normalizeGender=(value)=>{const raw=String(value||'').toLowerCase();if(raw.includes('female')||raw.includes('betina'))return'Betina';if(raw.includes('male')||raw.includes('jantan'))return'Jantan';return value||'Tidak diketahui'}
+    const normalizeGender=(value)=>{const raw=String(value||'').toLowerCase();if(raw.includes('female')||raw.includes('betina'))return'Betina';if(raw.includes('male')||raw.includes('jantan'))return'Jantan';return value||'Unknown'}
     const koiDetails=(item={})=>[{label:'ID',value:item.code||item.kode||item.id||'-'},{label:'Varietas',value:item.variety||item.varietas||'-'},{label:'Kelamin',value:normalizeGender(item.gender||item.sex)},{label:'Nama',value:item.name||item.nama||'-'}]
     const parseParentEntries=(value,fallbackId,fallbackLabel)=>{try{const parsed=typeof value==='string'?JSON.parse(value):value;const entries=Array.isArray(parsed)?parsed:[];return entries.length?entries:(fallbackId?[{koi_id:fallbackId,label:fallbackLabel||'',notes:''}]:[])}catch{return fallbackId?[{koi_id:fallbackId,label:fallbackLabel||'',notes:''}]:[]}}
     const parentFromEntry=(entry,gender)=>{const koi=entry?.koi_id?window.KoiPicker.cache[String(entry.koi_id)]:null;const labelParts=String(entry?.label||'').split(' - ').map((part)=>part.trim()).filter(Boolean);const code=koi?.code||entry?.code||labelParts[0]||entry?.koi_id||'-';const name=koi?.name||entry?.name||labelParts[1]||'-';return{id:entry?.koi_id||code,code,name,variety:koi?.variety||entry?.variety||'-',gender:koi?.gender?normalizeGender(koi.gender):gender,bloodline:koi?.bloodline||entry?.bloodline||'',image_url:koi?.image_url||entry?.image_url||'',notes:entry?.notes||'',length_cm:entry?.length_cm||koi?.current_length_cm||''}}
@@ -220,7 +220,7 @@ import DefaultLayout from '@shared/layouts/DefaultLayout.astro'
       galeri: 'gallery_id',
     }
     // "bloo:isa" works too: a field name may be shortened to its first letters (2 or more). Exact names win, then the
-    // first name in the alias list that starts with what was typed. Tidak diketahui names stay plain text.
+    // first name in the alias list that starts with what was typed. Unknown names stay plain text.
     function rdReportResolveMarkers(keyword, aliases) {
       var names = Object.keys(aliases)
       var found = []
@@ -766,6 +766,6 @@ import DefaultLayout from '@shared/layouts/DefaultLayout.astro'
     document.addEventListener('click',(event)=>{const chipPhoto=event.target.closest('.report-parent-chip img');if(chipPhoto)window.KoiAuth.zoomPhoto(chipPhoto.src,chipPhoto.alt)})
   </script>
   <script is:inline src="/assets/activity-report.js?v=20261029c"></script>
-  <script is:inline src="/assets/arrival-report.js?v=20261029c"></script>
+  <script is:inline src="/assets/arrival-report.js?v=20261029h"></script>
 </DefaultLayout>
 
