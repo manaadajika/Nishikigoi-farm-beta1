@@ -55,11 +55,9 @@ if ($job === 'apply') {
         $last = $now;
         update_write(update_apply_file(), ['state' => 'running', 'started_at' => $started, 'stage' => $stage, 'stage_label' => $label, 'percent' => $percent, 'detail' => $detail, 'steps' => $steps, 'message' => 'Tahap ' . $stage . '/3: ' . $label]);
     };
-    $mb = function (string $size, string $unit): string {
-        $value = (float)$size * ['KiB' => 1 / 1024, 'MiB' => 1, 'GiB' => 1024][$unit];
-        return number_format($value, 1, ',', '.') . ' MB';
-    };
-    $mbOf = fn(int $bytes): string => number_format($bytes / 1048576, 1, ',', '.') . ' MB';
+    // sizes read like backup and restore: MB, or KB while it is still small
+    $mbOf = fn(int $bytes): string => $bytes < 1048576 ? number_format($bytes / 1024, 1, ',', '.') . ' KB' : number_format($bytes / 1048576, 1, ',', '.') . ' MB';
+    $mb = fn(string $size, string $unit): string => $mbOf((int)round((float)$size * ['KiB' => 1024, 'MiB' => 1048576, 'GiB' => 1073741824][$unit]));
     $num = fn(int $n): string => number_format($n, 0, ',', '.');
 
     $report(1, 'memeriksa GitHub', null, 'menghubungi GitHub', true);
@@ -84,6 +82,14 @@ if ($job === 'apply') {
     }
     [$behind] = update_pending();
     $steps[1] = $behind > 0 ? $num($behind) . ' pembaruan tersedia' : 'sudah terbaru';
+    if ($downloaded === '') {
+        // a small package passes without git printing progress: the size of what arrived is read from the new objects
+        [, $objects] = update_git(['rev-list', '--objects', 'HEAD..@{u}'], 30);
+        [, $bytes] = update_git(['rev-list', '--objects', '--disk-usage', 'HEAD..@{u}'], 30);
+        $count = count(array_filter(explode("
+", $objects)));
+        if ($count > 0) $downloaded = ((int)$bytes > 0 ? $mbOf((int)$bytes) . ', ' : '') . $num($count) . ' objek';
+    }
     $steps[2] = $downloaded !== '' ? $downloaded : 'paket kecil';
     // a small update flies by: keep the finished download on screen for a moment so the stage can be seen
     $report(2, 'mengunduh paket', 100, $steps[2] . ' (100%)', true);
