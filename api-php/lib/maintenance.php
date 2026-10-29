@@ -627,3 +627,99 @@ function maintenance_warm_thumbnails(?callable $emit = null, array $widths = [24
     }
     return $result;
 }
+
+// ---- Program files nobody needs any more --------------------------------------------------------------------------------------------
+// Every release gives a changed script or stylesheet a new name (so the browser never shows an old copy). The old names stay behind: in
+// the program folder of a clone until the update that removes them, and always on a phone (an update package adds files, it never
+// removes one). This finds them (a file in the site's _astro folder that no page, stylesheet or script mentions), plus leftovers of
+// the update (temporary git files), old slow-request logs, and the garbage git keeps after many updates. $dryRun only measures.
+// A file that git itself tracks is left alone: deleting it would make the next update stop at "local changes"; the update that
+// removes it from the program does it on its own.
+function maintenance_dir_size(string $dir): int {
+    $total = 0;
+    if (!is_dir($dir)) return 0;
+    $it = new RecursiveIteratorIterator(new RecursiveDirectoryIterator($dir, FilesystemIterator::SKIP_DOTS));
+    foreach ($it as $file) {
+        if ($file->isFile()) $total += (int)$file->getSize();
+    }
+    return $total;
+}
+
+function maintenance_web_root(): ?string {
+    $root = dirname(__DIR__, 2);
+    $candidates = [];
+    $doc = (string)($_SERVER['DOCUMENT_ROOT'] ?? '');
+    if ($doc !== '') $candidates[] = $doc;
+    $candidates[] = $root . '/app/public/Nishikigoi-beta/preview/dist';
+    $candidates[] = $root . '/htdocs';
+    foreach ($candidates as $dir) {
+        if (is_dir($dir . '/_astro') && is_file($dir . '/sw.js')) return rtrim(str_replace('\\', '/', (string)realpath($dir)), '/');
+    }
+    return null;
+}
+
+function maintenance_cleanup_program(bool $dryRun): array {
+    $root = str_replace('\\', '/', dirname(__DIR__, 2));
+    $web = maintenance_web_root();
+    if ($web === null) throw new MaintenanceError('Folder situs tidak ditemukan.', 404);
+
+    // everything that may name a script or stylesheet: pages, the files in _astro itself, shared scripts and the service worker
+    $text = '';
+    foreach (array_merge(glob($web . '/*.html') ?: [], glob($web . '/_astro/*') ?: [], glob($web . '/assets/*.js') ?: [], [$web . '/sw.js']) as $file) {
+        if (is_file($file)) $text .= "\n" . (string)@file_get_contents($file);
+    }
+    $unused = [];
+    foreach (glob($web . '/_astro/*') ?: [] as $file) {
+        if (is_file($file) && strpos($text, basename($file)) === false) $unused[] = $file;
+    }
+    // files that git tracks stay (see above); the others go
+    $tracked = [];
+    $isRepo = is_dir($root . '/.git');
+    if ($isRepo) {
+        require_once __DIR__ . '/update.php';
+        [$code, $out] = update_git(['ls-files', '--', ltrim(substr($web, strlen($root)), '/') . '/_astro'], 20);
+        if ($code === 0) foreach (array_filter(explode("\n", $out)) as $line) $tracked[basename(trim($line))] = true;
+    }
+    $remove = array_values(array_filter($unused, fn($file) => !isset($tracked[basename($file)])));
+    $keptByGit = count($unused) - count($remove);
+
+    // leftovers of the update and old logs
+    $junk = [];
+    foreach (glob($root . '/storage/run/git-*') ?: [] as $file) {
+        if (is_file($file) && filemtime($file) < time() - 3600) $junk[] = $file;
+    }
+    foreach (glob($root . '/storage/run/*.tmp') ?: [] as $file) {
+        if (is_file($file) && filemtime($file) < time() - 3600) $junk[] = $file;
+    }
+    foreach (glob($root . '/storage/logs/*.log') ?: [] as $file) {
+        if (is_file($file) && filemtime($file) < time() - 30 * 86400) $junk[] = $file;
+    }
+
+    $sum = function (array $files): int { $n = 0; foreach ($files as $file) $n += (int)@filesize($file); return $n; };
+    $result = [
+        'dry_run' => $dryRun,
+        'unused_files' => count($remove),
+        'unused_bytes' => $sum($remove),
+        'kept_by_git_files' => $keptByGit,
+        'kept_by_git_bytes' => $sum(array_filter($unused, fn($file) => isset($tracked[basename($file)]))),
+        'junk_files' => count($junk),
+        'junk_bytes' => $sum($junk),
+        'samples' => array_map('basename', array_slice($remove, 0, 6)),
+        'git' => $isRepo,
+        'git_bytes_before' => $isRepo ? maintenance_dir_size($root . '/.git') : 0,
+        'git_bytes_after' => null,
+        'removed' => 0,
+    ];
+    if ($dryRun) return $result;
+
+    foreach (array_merge($remove, $junk) as $file) {
+        if (@unlink($file)) $result['removed']++;
+    }
+    if ($isRepo) {
+        // the garbage git keeps after many updates (objects nothing points to any more)
+        require_once __DIR__ . '/update.php';
+        update_git(['gc', '--prune=now', '--quiet'], 180);
+        $result['git_bytes_after'] = maintenance_dir_size($root . '/.git');
+    }
+    return $result;
+}

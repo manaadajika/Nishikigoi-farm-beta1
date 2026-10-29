@@ -169,6 +169,16 @@ route('POST', '/maintenance/cleanup-uploads', function () {
     }
 });
 
+route('POST', '/maintenance/cleanup-program', function () {
+    require_account();
+    $body = read_json_body();
+    try {
+        send_json(200, maintenance_cleanup_program(!empty($body['dry_run'])));
+    } catch (MaintenanceError $e) {
+        send_error($e->getCode() ?: 500, $e->getMessage());
+    }
+});
+
 route('POST', '/maintenance/sync-media-assets', function () {
     require_account();
     send_json(200, maintenance_sync_media_assets());

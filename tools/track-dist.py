@@ -77,3 +77,11 @@ for start in range(0, len(files), 200):
     chunk = [prefix + f for f in files[start:start + 200]]
     subprocess.run(['git', 'add', '-f', '--'] + chunk, cwd=REPO, check=True)
 print(len(files), 'files added to Git')
+
+# files of _astro that Git still tracks but no page, stylesheet or script uses any more (old names of changed files): taken out of the
+# program, so every clone loses them with its next update
+listing = subprocess.run(['git', 'ls-files', '--', prefix + '_astro'], cwd=REPO, capture_output=True, text=True).stdout.split('\n')
+stale = [line for line in listing if line.strip() and line[len(prefix):] not in needed]
+for start in range(0, len(stale), 100):
+    subprocess.run(['git', 'rm', '-q', '-f', '--'] + stale[start:start + 100], cwd=REPO, check=True)
+print(len(stale), 'old _astro files removed from Git')

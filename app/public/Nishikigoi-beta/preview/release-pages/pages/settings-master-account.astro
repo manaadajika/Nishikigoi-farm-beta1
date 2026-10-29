@@ -79,6 +79,7 @@ import FormGroup from '@ui/FormGroup.astro'
           <input type="file" class="d-none" accept=".zip,application/zip" data-system-restore-input />
           <button type="button" class="btn" data-action="pick-system-restore">Restore</button>
           <button type="button" class="btn" data-action="cleanup-unused-files">Bersihkan File Tidak Terpakai</button>
+          <button type="button" class="btn" data-action="cleanup-program" title="Menghapus berkas program lama yang tidak dipakai lagi dan sisa pembaruan (data ikan, foto, dan backup tidak disentuh)">Bersihkan Berkas Program</button>
           <button type="button" class="btn btn-outline-danger" data-action="clear-system-data">Hapus Semua Data</button>
         </div>
       </div>
@@ -684,6 +685,49 @@ import FormGroup from '@ui/FormGroup.astro'
         }
       }
 
+      const cleanupProgramFiles = async (button) => {
+        const call = async (dryRun) => {
+          const response = await fetch(window.KoiAuth.apiUrl('/api/maintenance/cleanup-program'), {
+            method: 'POST',
+            headers: systemJobHeaders({ 'content-type': 'application/json' }),
+            body: JSON.stringify({ dry_run: dryRun }),
+          })
+          const data = await response.json().catch(() => ({}))
+          if (!response.ok) throw new Error(data.detail || data.error || 'Pembersihan berkas program gagal.')
+          return data
+        }
+        button.disabled = true
+        setBackupBusy(true)
+        showBackupMessage('Memeriksa berkas program yang tidak dipakai...', 'info')
+        try {
+          const check = await call(true)
+          if (!check.unused_files && !check.junk_files && !check.git && !check.kept_by_git_files) {
+            showBackupMessage('Tidak ada berkas program yang perlu dibersihkan.', 'success')
+            return
+          }
+          const lines = [
+            check.unused_files ? `- ${check.unused_files} berkas program lama yang tidak dipakai halaman mana pun (${megabytesLabel(check.unused_bytes)} MB)` : '',
+            check.junk_files ? `- ${check.junk_files} sisa update dan catatan lama (${megabytesLabel(check.junk_bytes)} MB)` : '',
+            check.git ? `- Tempat simpanan update (git) ${megabytesLabel(check.git_bytes_before)} MB: sampahnya dibuang` : '',
+          ].filter(Boolean).join('\n')
+          const note = check.kept_by_git_files ? `\n\n${check.kept_by_git_files} berkas lama lain (${megabytesLabel(check.kept_by_git_bytes)} MB) hilang sendiri pada pembaruan berikutnya.` : ''
+          const ok = await window.KoiDialog.confirm(`Bersihkan berkas program?\n\n${lines || 'Tidak ada berkas yang bisa dihapus sekarang.'}${note}\n\nData ikan, foto, dan backup tidak disentuh. Lanjutkan?`)
+          if (!ok) {
+            showBackupMessage('Dibatalkan. Tidak ada berkas yang dihapus.', 'warning')
+            return
+          }
+          showBackupMessage('Membersihkan berkas program...', 'info')
+          const done = await call(false)
+          const freed = Number(check.unused_bytes) + Number(check.junk_bytes) + (done.git_bytes_after !== null ? Math.max(0, Number(done.git_bytes_before) - Number(done.git_bytes_after)) : 0)
+          showBackupMessage(`Selesai. ${done.removed} berkas dihapus${done.git_bytes_after !== null ? `, simpanan update ${megabytesLabel(done.git_bytes_before)} MB menjadi ${megabytesLabel(done.git_bytes_after)} MB` : ''}. Ruang kembali sekitar ${megabytesLabel(freed)} MB.`, 'success')
+        } catch (error) {
+          showBackupMessage(error.message || 'Pembersihan berkas program gagal.', 'danger')
+        } finally {
+          button.disabled = false
+          setBackupBusy(false)
+        }
+      }
+
       const clearSystemData = async (button) => {
         const typed = (await window.KoiDialog.prompt('Ini akan menghapus SEMUA data ikan, kolam, breeding, laporan, galeri, notifikasi, dan draft. Akun, setingan program, tema, dan histori Antrean tetap ada, file foto/video di server tidak ikut terhapus. Sebaiknya Buat Backup dulu sebelum lanjut.\n\nKetik HAPUS untuk konfirmasi.'))
         if (typed === null) return
@@ -1050,6 +1094,10 @@ import FormGroup from '@ui/FormGroup.astro'
 
       if (action === 'cleanup-unused-files') {
         await cleanupUnusedFiles(button)
+      }
+
+      if (action === 'cleanup-program') {
+        await cleanupProgramFiles(button)
       }
 
       if (action === 'clear-system-data') {
