@@ -1777,14 +1777,16 @@
       // A number 0-100 fills the bar (percent of the current stage); null = no countable steps right now (moving stripes).
       const backupBar = backupProgress?.querySelector('.progress-bar')
       const setBackupProgress = (percent) => {
-        if (!backupBar) return
-        if (percent === null || percent === undefined) {
-          backupBar.classList.add('progress-bar-indeterminate')
-          backupBar.style.width = ''
-          return
-        }
-        backupBar.classList.remove('progress-bar-indeterminate')
-        backupBar.style.width = `${Math.max(0, Math.min(100, Math.floor(percent)))}%`
+        ;[backupBar, taskBar].forEach((bar) => {
+          if (!bar) return
+          if (percent === null || percent === undefined) {
+            bar.classList.add('progress-bar-indeterminate')
+            bar.style.width = ''
+            return
+          }
+          bar.classList.remove('progress-bar-indeterminate')
+          bar.style.width = `${Math.max(0, Math.min(100, Math.floor(percent)))}%`
+        })
       }
       const megabytesLabel = (bytes) => (Number(bytes || 0) / 1048576).toFixed(1).replace('.', ',')
       const numberLabel = (value) => Number(value || 0).toLocaleString('id-ID')
@@ -1805,6 +1807,75 @@
       }
 
                       window.setTimeout(loadBackupStamps, 0)
+
+      // Backup and restore progress as a card in the middle of the screen, like "Memperbarui program": the three stages as a list
+      // (the finished ones ticked with what they came to), the running one with its counts, a bar for that stage and a stopwatch.
+      let taskBar = null
+      const taskCard = (title, names) => {
+        const check = '<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12l5 5l10 -10"/></svg>'
+        const box = document.createElement('div')
+        box.setAttribute('data-task-card', '')
+        box.style.cssText = 'position:fixed;inset:0;z-index:7000;display:flex;align-items:center;justify-content:center;padding:12px;background:rgba(8,12,20,.55)'
+        const rows = names.map((name, index) => '<div data-task-step="' + (index + 1) + '" style="display:flex;align-items:flex-start;gap:10px;padding:7px 0">' +
+          '<span data-task-icon style="flex:0 0 20px;height:20px;display:inline-flex;align-items:center;justify-content:center"></span>' +
+          '<span style="flex:1 1 auto;min-width:0"><span style="display:block;font-weight:500">' + name + '</span>' +
+          '<span data-task-info class="small text-secondary" style="display:block;overflow-wrap:anywhere"></span></span></div>').join('')
+        box.innerHTML = '<div style="width:min(92vw,26rem);padding:18px 20px;border-radius:var(--tblr-border-radius-lg,10px);background:var(--tblr-bg-surface,#1b2330);color:var(--tblr-body-color,#e6e8eb);border:1px solid var(--tblr-border-color,rgba(128,150,172,.3));box-shadow:0 8px 28px rgba(0,0,0,.35)">' +
+          '<div style="font-weight:600;font-size:1.05rem;margin-bottom:8px;text-align:center">' + title + '</div><div>' + rows + '</div>' +
+          '<div class="progress progress-sm mt-3"><div class="progress-bar progress-bar-indeterminate" data-task-bar></div></div>' +
+          '<div class="d-flex justify-content-between small text-secondary mt-2"><span data-task-text></span><span data-task-clock></span></div>' +
+          '<div class="small text-secondary mt-1">Jangan tutup halaman ini.</div></div>'
+        document.body.appendChild(box)
+        backupMessage?.classList.add('d-none')
+        taskBar = box.querySelector('[data-task-bar]')
+        const text = box.querySelector('[data-task-text]')
+        const clock = box.querySelector('[data-task-clock]')
+        const summary = {}
+        let current = 1
+        let finished = false
+        const draw = () => {
+          names.forEach((name, index) => {
+            const number = index + 1
+            const row = box.querySelector('[data-task-step="' + number + '"]')
+            const icon = row.querySelector('[data-task-icon]')
+            const state = finished || number < current ? 'done' : number === current ? 'running' : 'waiting'
+            if (row.dataset.state !== state) {
+              row.dataset.state = state
+              icon.innerHTML = state === 'done' ? '<span class="text-success">' + check + '</span>'
+                : state === 'running' ? '<span class="spinner-border spinner-border-sm text-primary" role="status" aria-hidden="true"></span>'
+                : '<span style="width:8px;height:8px;border-radius:50%;background:currentColor;opacity:.35"></span>'
+              row.style.opacity = state === 'waiting' ? '.55' : ''
+            }
+            row.querySelector('[data-task-info]').textContent = state === 'waiting' ? '' : (summary[number] || '')
+          })
+        }
+        draw()
+        return {
+          // takes the status line the page already builds: "Tahap 2/3: memulihkan data tabel..."
+          paint(label, elapsed) {
+            const match = String(label).match(/^Tahap (\d)\/3:\s*(.*)$/)
+            const stage = match ? Number(match[1]) : current
+            summary[stage] = (match ? match[2] : String(label)).replace(/\.\.\.$/, '')
+            const own = String(names[stage - 1] || '').toLowerCase()
+            if (own && summary[stage].toLowerCase().startsWith(own)) summary[stage] = summary[stage].slice(own.length).trim() || 'berjalan'
+            current = Math.max(current, stage)
+            draw()
+            text.textContent = 'Tahap ' + current + '/3'
+            clock.textContent = elapsed
+          },
+          finish() {
+            finished = true
+            draw()
+            text.textContent = 'Selesai'
+            if (taskBar) { taskBar.classList.remove('progress-bar-indeterminate'); taskBar.style.width = '100%' }
+          },
+          close() {
+            taskBar = null
+            if (finished) window.setTimeout(() => box.remove(), 700)
+            else box.remove()
+          },
+        }
+      }
 
       const downloadBlob = (blob, filename) => {
                         const url = URL.createObjectURL(blob);
@@ -1867,13 +1938,13 @@
         const idleLabel = button.textContent
         button.disabled = true
         button.textContent = 'Membuat...'
-        setBackupBusy(true)
+        const card = taskCard(accounts ? 'Membuat backup akun' : 'Membuat backup sistem', ['Mengumpulkan data', 'Menyusun file ZIP', 'Mengunduh'])
 
         const elapsedLabel = stopwatch()
         // the status line says the stage, the packages counted so far and the percent of that stage
         let stageLabel = 'Tahap 1/3: menyiapkan data...'
         const renderBackupStatus = () => {
-          showBackupMessage(`${accounts ? 'Backup akun sedang dibuat.' : 'Backup sistem sedang dibuat.'} ${stageLabel} (${elapsedLabel()})`, 'info')
+          card.paint(stageLabel, elapsedLabel())
         }
         renderBackupStatus()
         const elapsedTimer = window.setInterval(renderBackupStatus, 1000)
@@ -1930,11 +2001,13 @@
           }
           setBackupProgress(100)
           downloadBlob(blob, job.result?.file || (accounts ? 'nishikigoi-backup-akun.zip' : 'nishikigoi-backup.zip'))
+          card.finish()
           showBackupMessage(`${accounts ? `Backup akun berhasil dibuat dan diunduh: ${numberLabel(job.result?.accounts)} akun, ${numberLabel(job.result?.settings)} setingan dan tema (${megabytesLabel(blob.size)} MB).` : `Backup lengkap berhasil dibuat dan diunduh (${megabytesLabel(blob.size)} MB).`} (${elapsedLabel()})`, 'success')
         } catch (error) {
           showBackupMessage(error.message || 'Backup gagal dibuat.', 'danger')
         } finally {
           window.clearInterval(elapsedTimer)
+          card.close()
           button.disabled = false
           button.textContent = idleLabel
           setBackupBusy(false)
@@ -1968,12 +2041,12 @@
           restoreInput.value = ''
           return
         }
-        setBackupBusy(true)
+        const card = taskCard(accounts ? 'Restore akun' : 'Restore backup', ['Mengunggah file backup', 'Memulihkan data tabel', accounts ? 'Memulihkan foto dan logo akun' : 'Memulihkan file media'])
 
         const elapsedLabel = stopwatch()
         let stageLabel = 'Tahap 1/3: mengunggah file backup...'
         const renderRestoreStatus = () => {
-          showBackupMessage(`${accounts ? 'Restore akun sedang berjalan.' : 'Restore backup sedang berjalan.'} ${stageLabel} (${elapsedLabel()})`, 'info')
+          card.paint(stageLabel, elapsedLabel())
         }
         renderRestoreStatus()
         const elapsedTimer = window.setInterval(renderRestoreStatus, 1000)
@@ -2019,12 +2092,14 @@
             renderRestoreStatus()
           })
           setBackupProgress(100)
+          card.finish()
           const restoredFiles = Number(job.result?.restored_files || 0)
           showBackupMessage((accounts ? `Restore akun selesai: ${numberLabel(job.result?.restored_accounts)} akun, ${numberLabel(job.result?.restored_settings)} setingan dan tema dipulihkan. Muat ulang halaman; bila diminta, masuk ulang. (${elapsedLabel()})` : `Restore selesai. ${restoredFiles} file gambar/media dipulihkan. Refresh halaman/menu untuk memuat data terbaru. (${elapsedLabel()})`), 'success')
         } catch (error) {
           showBackupMessage(error.message || 'Restore gagal dijalankan.', 'danger')
         } finally {
           window.clearInterval(elapsedTimer)
+          card.close()
           restoreInput.value = ''
           setBackupBusy(false)
         }
