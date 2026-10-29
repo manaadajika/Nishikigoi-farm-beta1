@@ -9774,7 +9774,13 @@ Ketik HAPUS untuk melanjutkan.`)) !== 'HAPUS' : !(await window.KoiDialog.confirm
                   }
                 }
 
-                const koiSequenceNumber = (item) =>
+                // The place cell of a card names what is known about the fish: its Lokasi (pond), or only its Area when no pond is chosen. Archive shows the "lokasi arsip".
+    const koiPlace = (item) => {
+      if (archiveMode) return { label: 'Lokasi arsip', value: item.archive_location || item.pond_name }
+      if (!String(item.pond_name || '').trim() && String(item.area || '').trim()) return { label: 'Area', value: item.area }
+      return { label: 'Lokasi', value: item.pond_name }
+    }
+    const koiSequenceNumber = (item) =>
                   String(Math.max(koiSequenceIndex(item), 1)).padStart(10, "0");
                 const koiStatusBadgeClass = (status) =>
                   ({
@@ -9832,7 +9838,7 @@ Ketik HAPUS untuk melanjutkan.`)) !== 'HAPUS' : !(await window.KoiDialog.confirm
                 <div class="col-6 koi-card-detail-cell"><span class="text-secondary">Nama</span><div class="koi-text-ellipsis" title="${escapeHtml(text(item.name))}">${escapeHtml(text(item.name))}</div></div>
                 <div class="col-6 koi-card-detail-cell"><span class="text-secondary">Bloodline</span><div class="koi-text-ellipsis" title="${escapeHtml(text(item.bloodline))}">${escapeHtml(text(item.bloodline))}</div></div>
                 <div class="col-6 koi-card-detail-cell"><span class="text-secondary">Ternakan</span><div class="koi-text-ellipsis" title="${escapeHtml(text(item.farm_name))}">${escapeHtml(text(item.farm_name))}</div></div>
-                <div class="col-6 koi-card-detail-cell"><span class="text-secondary">${archiveMode ? 'Lokasi arsip' : 'Lokasi'}</span><div class="koi-text-ellipsis" title="${escapeHtml(text(archiveMode ? item.archive_location || item.pond_name : item.pond_name))}">${escapeHtml(text(archiveMode ? item.archive_location || item.pond_name : item.pond_name))}</div></div>
+                <div class="col-6 koi-card-detail-cell"><span class="text-secondary">${koiPlace(item).label}</span><div class="koi-text-ellipsis" title="${escapeHtml(text(koiPlace(item).value))}">${escapeHtml(text(koiPlace(item).value))}</div></div>
                 <div class="col-6 koi-card-detail-cell"><span class="text-secondary">Kelamin</span><div class="koi-text-ellipsis" title="${escapeHtml(labels[item.gender] || text(item.gender))}">${escapeHtml(labels[item.gender] || text(item.gender))}</div></div>
                 <div class="col-6 koi-card-detail-cell"><span class="text-secondary">Size</span><div class="koi-text-ellipsis" title="${item.current_length_cm ? `${escapeHtml(formatDecimal(item.current_length_cm))} cm` : "-"}">${item.current_length_cm ? `${escapeHtml(formatDecimal(item.current_length_cm))} cm` : "-"}</div></div>
               </div>
