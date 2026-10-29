@@ -281,7 +281,7 @@ function dashboard_activity_feed(int $limit): array {
     }
     foreach (query("SELECT title, created_at, updated_at, archived_at, (SELECT gi.image_url FROM gallery_images gi WHERE gi.gallery_id = gallery_collections.id AND gi.media_type <> 'video' ORDER BY gi.sort_order, gi.id LIMIT 1) AS image_url FROM gallery_collections ORDER BY GREATEST(created_at, COALESCE(updated_at, created_at)) DESC, id DESC LIMIT $limit") as $r) {
         [$isNew, $at] = $when($r);
-        $add($isNew ? 'Galeri baru' : 'Galeri diubah', (string)$r['title'], $r['archived_at'] ? 'Archive' : '', $at, 'farm-gallery.html', (string)$r['title'], (string)($r['image_url'] ?? ''));
+        $add($isNew ? 'Galeri baru' : 'Galeri diubah', (string)$r['title'], $r['archived_at'] ? 'Arsip' : '', $at, 'farm-gallery.html', (string)$r['title'], (string)($r['image_url'] ?? ''));
     }
     // inventory, sales, invoices
     foreach (query("SELECT name, created_at, updated_at, image_url FROM inventory_items ORDER BY GREATEST(created_at, COALESCE(updated_at, created_at)) DESC, id DESC LIMIT $limit") as $r) {
@@ -351,7 +351,7 @@ route('GET', '/summary-more', function () {
         $rows = [];
         foreach (query("SELECT koi.id, koi.code, koi.name, koi.variety, koi.bloodline, koi.gender, koi.current_length_cm, koi.image_url, ponds.name AS pond_name FROM koi LEFT JOIN ponds ON ponds.id = koi.pond_id WHERE koi.archived_at IS NULL AND koi.parent_type = 'indukan' AND koi.status = 'active' ORDER BY koi.code") as $k) {
             if (isset($used[(int)$k['id']])) continue;
-            $gender = $k['gender'] === 'male' ? 'Male' : ($k['gender'] === 'female' ? 'Female' : 'Unknown');
+            $gender = $k['gender'] === 'male' ? 'Jantan' : ($k['gender'] === 'female' ? 'Betina' : 'Tidak diketahui');
             $rows[] = [
                 'title' => (string)$k['code'] . ' ' . (string)($k['name'] ?: $k['variety'] ?: ''),
                 'sub' => $gender . ($k['pond_name'] ? ' · ' . $k['pond_name'] : ''),
@@ -373,13 +373,13 @@ route('GET', '/summary-more', function () {
         [$label, $where] = $statusCards[$kind];
         $total = (int)(query_one("SELECT COUNT(*) AS c FROM koi WHERE $where")['c'] ?? 0);
         $rows = query("SELECT koi.code, koi.name, koi.variety, koi.bloodline, koi.gender, koi.current_length_cm, koi.image_url, koi.parent_type, koi.archived_at, koi.updated_at, ponds.name AS pond_name FROM koi LEFT JOIN ponds ON ponds.id = koi.pond_id WHERE $where ORDER BY koi.updated_at DESC, koi.id DESC LIMIT $limit");
-        $genders = ['male' => 'Male', 'female' => 'Female'];
+        $genders = ['male' => 'Jantan', 'female' => 'Betina'];
         send_json(200, [
             'title' => $label . ' (' . $total . ')',
             'note' => $total > $limit ? "Menampilkan $limit ikan yang paling baru diubah." : '',
             'rows' => array_map(fn($r) => [
                 'title' => (string)$r['code'] . ' ' . (string)($r['name'] ?: $r['variety'] ?: ''),
-                'sub' => implode(' · ', array_filter([$genders[$r['gender']] ?? 'Unknown', $r['parent_type'] === 'indukan' ? 'Indukan' : '', $r['archived_at'] ? 'Archive' : '', (string)($r['pond_name'] ?? '')])),
+                'sub' => implode(' · ', array_filter([$genders[$r['gender']] ?? 'Tidak diketahui', $r['parent_type'] === 'indukan' ? 'Indukan' : '', $r['archived_at'] ? 'Arsip' : '', (string)($r['pond_name'] ?? '')])),
                 'at' => $r['updated_at'] ? date('Y-m-d H:i:s', strtotime((string)$r['updated_at'])) : '',
                 'search' => (string)$r['code'],
                 'page' => $r['archived_at'] ? 'farm-koi.html?arsip=1' : 'farm-koi.html',
@@ -396,7 +396,7 @@ route('GET', '/summary-more', function () {
             'note' => $total > $limit ? "Menampilkan $limit ikan dengan harga tertinggi." : '',
             'rows' => array_map(fn($r) => [
                 'title' => (string)$r['code'] . ' ' . (string)($r['name'] ?: $r['variety'] ?: ''),
-                'sub' => implode(' · ', array_filter([$r['archived_at'] ? 'Archive' : '', (string)($r['pond_name'] ?? '')])),
+                'sub' => implode(' · ', array_filter([$r['archived_at'] ? 'Arsip' : '', (string)($r['pond_name'] ?? '')])),
                 'buy' => (float)$r['purchase_price'],
                 'sale' => (float)$r['sale_price'],
                 'search' => (string)$r['code'],
@@ -421,7 +421,7 @@ route('GET', '/summary-more', function () {
         $column = $kind === 'variety' ? 'variety' : 'farm_name';
         $field = $kind === 'variety' ? 'variety' : 'ternakan';
         $rows = query("SELECT `$column` AS label, COUNT(*) AS c FROM koi WHERE archived_at IS NULL AND `$column` IS NOT NULL AND `$column` <> '' GROUP BY `$column` ORDER BY c DESC, label ASC LIMIT $limit");
-        send_json(200, ['title' => $kind === 'variety' ? 'Chart Variety' : 'Total Yield', 'rows' => array_map(fn($r) => ['title' => (string)$r['label'], 'sub' => '', 'count' => (int)$r['c'], 'search' => $field . ':' . $r['label'], 'page' => 'farm-koi.html'], $rows)]);
+        send_json(200, ['title' => $kind === 'variety' ? 'Varietas terbanyak' : 'Ternakan terbanyak', 'rows' => array_map(fn($r) => ['title' => (string)$r['label'], 'sub' => '', 'count' => (int)$r['c'], 'search' => $field . ':' . $r['label'], 'page' => 'farm-koi.html'], $rows)]);
     }
 
     send_error(400, 'Jenis daftar tidak dikenal');

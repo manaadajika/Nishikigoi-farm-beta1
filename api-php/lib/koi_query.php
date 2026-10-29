@@ -10,8 +10,8 @@ require_once __DIR__ . '/cache.php';
 // (matchesKoiSearch, matchesFieldCriterion, numberTest, ...). Both give the same fish.
 
 const KOI_STATUS_LABELS = [
-    'unknown' => 'Unknown', 'male' => 'Male', 'female' => 'Female', 'active' => 'Active', 'non_active' => 'Non-Active',
-    'quarantine' => 'Quarantine', 'sold' => 'Sold', 'dead' => 'Dead', 'indukan' => 'Indukan', 'non_indukan' => 'Bukan Indukan',
+    'unknown' => 'Tidak diketahui', 'male' => 'Jantan', 'female' => 'Betina', 'active' => 'Aktif', 'non_active' => 'Non-Aktif',
+    'quarantine' => 'Karantina', 'sold' => 'Terjual', 'dead' => 'Mati', 'indukan' => 'Indukan', 'non_indukan' => 'Bukan Indukan',
 ];
 
 // order matters: a shortened name ("bloo:") resolves to the first alias that starts with it
@@ -37,13 +37,13 @@ const KOI_SEARCH_ALIASES = [
     'tanggalbeli' => 'purchase_date', 'tglbeli' => 'purchase_date',
     'nomor' => 'sequence', 'no' => 'sequence', 'urut' => 'sequence',
     // the names of the Edit / Tambah Ikan form (a label with spaces is written together here: "Harga Jual:" -> hargajual)
-    'kodekoi' => 'code', 'owner' => 'breeder', 'parentbreeding' => 'parent_info', 'typ' => 'parent_type', 'sizesaatini' => 'current_length_cm',
+    'kodekoi' => 'code', 'owner' => 'breeder', 'parentbreeding' => 'parent_info', 'typ' => 'parent_type', 'sizesaatini' => 'current_length_cm', 'ukuransaatini' => 'current_length_cm',
     'tgllahir' => 'birth_date', 'terakhirdiedit' => 'updated_at', 'diedit' => 'updated_at',
 ];
 
 // "Harga Jual:15", "Tanggal Lahir:2025" ... : the form's own labels (with spaces) become one word before the field names are looked up
 const KOI_SEARCH_LABELS = [
-    'parent/breeding' => 'parentbreeding', 'parent breeding' => 'parentbreeding', 'terakhir diedit' => 'terakhirdiedit', 'tanggal lahir' => 'tanggallahir',
+    'parent/breeding' => 'parentbreeding', 'parent breeding' => 'parentbreeding', 'indukan/breeding' => 'parentbreeding', 'indukan breeding' => 'parentbreeding', 'ukuran saat ini' => 'sizesaatini', 'terakhir diedit' => 'terakhirdiedit', 'tanggal lahir' => 'tanggallahir',
     'tanggal beli' => 'tanggalbeli', 'size saat ini' => 'sizesaatini', 'harga beli' => 'hargabeli', 'harga jual' => 'hargajual', 'kode koi' => 'kodekoi',
 ];
 function koi_normalize_search_labels(string $keyword): string {

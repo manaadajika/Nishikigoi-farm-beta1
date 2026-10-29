@@ -153,9 +153,9 @@
     { title: 'Menu utama', items: [
       ['Dashboard', 'farm.html', 'dashboard'], ['Data Ikan', 'farm-koi.html', 'fish'], ['Data Kolam', 'farm-ponds.html', 'bowl'],
       ['Breeding', 'farm-breeding.html', 'dna-2'], ['Laporan', 'farm-reports.html', 'report'], ['Katalog', 'farm-sell.html', 'tag'], ['Invoice', 'farm-invoice.html', 'file-invoice'] ] },
-    { title: 'Etc', role: 'database-write', items: [
-      ['Archive', 'farm-archive.html', 'archive'], ['Queue', 'farm-queue.html', 'stack-2'],
-      ['Gallery', 'farm-gallery.html', 'photo'], ['Log', 'farm-log.html', 'clipboard-list'],
+    { title: 'Lainnya', role: 'database-write', items: [
+      ['Arsip', 'farm-archive.html', 'archive'], ['Antrean', 'farm-queue.html', 'stack-2'],
+      ['Galeri', 'farm-gallery.html', 'photo'], ['Log', 'farm-log.html', 'clipboard-list'],
       ['Inventaris', 'farm-inventory.html', 'package'] ] },
   ]
 
@@ -461,7 +461,7 @@
     return { updateAction: updateAction, toggle: toggle, apply: apply, prune: prune, refresh: refresh, ids: ids, isSelected: function (id) { return selected.has(String(id)) }, clear: function () { selected.clear(); showSelectedOnly = false; hideSelected = false; refresh() } }
   }
 
-  // Pages without their own dock (Dashboard, Archive, Queue, Gallery, Log, Settings, License) get a small
+  // Pages without their own dock (Dashboard, Arsip, Antrean, Galeri, Log, Settings, License) get a small
   // dock that only holds the "Pindah menu" button, so the dock is the same starting point everywhere.
   var OWN_DOCK = ['farm-koi', 'farm-breeding', 'farm-ponds', 'farm-reports', 'farm-sell', 'farm-invoice', 'farm-inventory']
   var NO_DOCK = ['', 'index', 'sign-in', 'sign-up', 'forgot-password']

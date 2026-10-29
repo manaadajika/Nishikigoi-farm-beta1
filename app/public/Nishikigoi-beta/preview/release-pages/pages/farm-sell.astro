@@ -409,7 +409,7 @@ const saveIcon = iconSvg('device-floppy')
               <div class="sell-fish-list">${fishRows}${more}</div>
               ${item.description ? `<div class="small text-secondary mt-2 sell-ellipsis" title="${escapeHtml(item.description)}">${escapeHtml(item.description)}</div>` : ''}
               <div class="sell-card-actions">
-                <button class="btn btn-sm" type="button" data-print-sell="${escapeHtml(item.id)}">${printIcon} Print</button>
+                <button class="btn btn-sm" type="button" data-print-sell="${escapeHtml(item.id)}">${printIcon} Cetak</button>
                 <button class="btn btn-sm" type="button" data-edit-sell="${escapeHtml(item.id)}" data-role-required="farm-operate">${editIcon} Edit</button>
                 <button class="btn btn-sm btn-outline-danger" type="button" data-delete-sell="${escapeHtml(item.id)}" data-role-required="farm-operate">${trashIcon} Hapus</button>
               </div>
@@ -454,7 +454,7 @@ const saveIcon = iconSvg('device-floppy')
           <div class="sell-chip-text">
             <div class="fw-semibold sell-ellipsis">${escapeHtml(koiLabel(koi))}</div>
             <div class="small text-secondary sell-ellipsis">${escapeHtml([koi.variety, koi.bloodline, koi.farm_name, sizeText(koi.current_length_cm)].filter(Boolean).join(' · '))}</div>
-            ${koi.status === 'sold' ? '<div class="small text-warning">Di Data Ikan statusnya sudah Sold</div>' : ''}
+            ${koi.status === 'sold' ? '<div class="small text-warning">Di Data Ikan statusnya sudah Terjual</div>' : ''}
           </div>
           ${readonlyMode ? '' : `<button class="btn btn-sm btn-outline-danger" type="button" data-sell-remove-koi="${escapeHtml(id)}" aria-label="Hapus ikan dari item" title="Hapus">${trashIcon}</button>`}
         </div>`
@@ -479,7 +479,7 @@ const saveIcon = iconSvg('device-floppy')
           ${koi.image_url ? `<img class="sell-thumb" src="${escapeHtml(koi.image_url)}" alt="" loading="lazy" />` : '<div class="sell-thumb"></div>'}
           <span class="min-width-0">
             <span class="d-block fw-semibold">${escapeHtml(koiLabel(koi))}</span>
-            <span class="d-block small text-secondary">${escapeHtml([koi.variety, koi.bloodline, sizeText(koi.current_length_cm), koi.status === 'sold' ? 'Sold' : ''].filter(Boolean).join(' · '))}</span>
+            <span class="d-block small text-secondary">${escapeHtml([koi.variety, koi.bloodline, sizeText(koi.current_length_cm), koi.status === 'sold' ? 'Terjual' : ''].filter(Boolean).join(' · '))}</span>
           </span>
         </button>`).join('') || (pickerResult && !pickerBusy ? '<div class="p-3 text-secondary">Ikan tidak ditemukan.</div>' : '<div class="p-3 text-secondary"><span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>Mencari ikan...</div>')
       pickerMenu.classList.remove('d-none')
@@ -840,7 +840,7 @@ const saveIcon = iconSvg('device-floppy')
         subheading: item.title,
         info: [['Judul', item.title], ['Harga', formatPrice(item.price)], ['Status', statusLabels[item.status]?.label || ''], ['Jenis', typeLabels[item.item_type] || ''], item.buyer ? ['Pembeli', item.buyer] : null, item.sold_at ? ['Tanggal terjual', dateText(item.sold_at)] : null].filter(Boolean),
         notes: item.description || '',
-        body: (fishRows ? `<section class="kp-section"><h2>Ikan (${item.koi.length})</h2><table class="kp-table"><thead><tr><th style="width:44px">Foto</th><th>Kode</th><th>Nama</th><th>Variety</th><th>Bloodline</th><th>Ternakan</th><th class="kp-num">Ukuran</th></tr></thead><tbody>${fishRows}</tbody></table></section>` : '') +
+        body: (fishRows ? `<section class="kp-section"><h2>Ikan (${item.koi.length})</h2><table class="kp-table"><thead><tr><th style="width:44px">Foto</th><th>Kode</th><th>Nama</th><th>Varietas</th><th>Bloodline</th><th>Ternakan</th><th class="kp-num">Ukuran</th></tr></thead><tbody>${fishRows}</tbody></table></section>` : '') +
           (media ? `<section class="kp-section"><h2>Foto gabungan</h2><div style="display:grid;grid-template-columns:repeat(2,1fr);gap:6px">${media}</div></section>` : ''),
       })
     }
@@ -853,9 +853,9 @@ const saveIcon = iconSvg('device-floppy')
       item.buyer || '', item.sold_at ? String(item.sold_at).slice(0, 10) : '', item.description || '',
     ])
     const exportSell = async (ids, zipMode = false) => {
-      if (!window.XLSX) { window.KoiDock.showResult('Export Excel', 'Pustaka Excel belum termuat. Muat ulang halaman.'); return }
+      if (!window.XLSX) { window.KoiDock.showResult('Ekspor Excel', 'Pustaka Excel belum termuat. Muat ulang halaman.'); return }
       const chosen = chosenItems(ids)
-      if (!chosen.length) { window.KoiDock.showResult('Export Excel', 'Belum ada data katalog untuk diexport.'); return }
+      if (!chosen.length) { window.KoiDock.showResult('Ekspor Excel', 'Belum ada data katalog untuk diexport.'); return }
       const rows = exportRows(chosen)
       if (zipMode) {
         const progress = window.KoiZip.progress('Unduh ZIP Katalog')
@@ -1005,7 +1005,7 @@ const saveIcon = iconSvg('device-floppy')
       return { inserted, updated, docsAdded, docsSkipped, docsPlanned, problems }
     }
     const importSell = async (file) => {
-      if (!window.XLSX) { window.KoiDock.showResult('Import Excel', 'Pustaka Excel belum termuat. Muat ulang halaman.'); return }
+      if (!window.XLSX) { window.KoiDock.showResult('Impor Excel', 'Pustaka Excel belum termuat. Muat ulang halaman.'); return }
       let progress = null
       try {
         await loadKoi()
@@ -1020,24 +1020,24 @@ const saveIcon = iconSvg('device-floppy')
           pkg = await window.KoiZip.plainPackage()
         }
         const records = await readRecords(file)
-        if (!records.length) { window.KoiDock.showResult('Import Excel', 'File tidak berisi data. Kolom yang dikenali: ' + excelColumns.join(', ') + '.'); return }
+        if (!records.length) { window.KoiDock.showResult('Impor Excel', 'File tidak berisi data. Kolom yang dikenali: ' + excelColumns.join(', ') + '.'); return }
         const plan = await runImport(records, pkg, true, progress)
         progress.close()
         progress = null
         const planProblems = [...packageProblems, ...plan.problems]
-        if (!plan.inserted && !plan.updated) { window.KoiDock.showResult('Import Excel Katalog', 'Tidak ada data yang bisa diimport.', planProblems); return }
+        if (!plan.inserted && !plan.updated) { window.KoiDock.showResult('Impor Excel Katalog', 'Tidak ada data yang bisa diimport.', planProblems); return }
         const summary = `Item baru: ${plan.inserted}\nItem diperbarui: ${plan.updated}` +
           (pkg.isZip || plan.docsPlanned ? `\nDokumentasi: ${plan.docsPlanned} file (yang sudah ada dilewati otomatis)` : '') +
           (planProblems.length ? '\nBaris atau file bermasalah dilewati.' : '')
         const go = await window.KoiDock.showResult('Pratinjau import Katalog', summary, planProblems, { confirm: true, okLabel: planProblems.length ? 'Lanjutkan (lewati yang bermasalah)' : 'Lanjutkan' })
         if (!go) return
-        progress = window.KoiZip.progress('Import Katalog')
+        progress = window.KoiZip.progress('Impor Katalog')
         const result = await runImport(records, pkg, false, progress)
         const allProblems = [...packageProblems, ...result.problems]
-        window.KoiDock.showResult('Import Excel Katalog', `Baru ${result.inserted}, diperbarui ${result.updated}, bermasalah ${allProblems.length}.${pkg.isZip || result.docsPlanned ? ` Dokumentasi ditambahkan ${result.docsAdded}, sudah ada ${result.docsSkipped}.` : ''}`, allProblems)
+        window.KoiDock.showResult('Impor Excel Katalog', `Baru ${result.inserted}, diperbarui ${result.updated}, bermasalah ${allProblems.length}.${pkg.isZip || result.docsPlanned ? ` Dokumentasi ditambahkan ${result.docsAdded}, sudah ada ${result.docsSkipped}.` : ''}`, allProblems)
         await keepScroll(loadSell)
       } catch (error) {
-        window.KoiDock.showResult('Import Excel Katalog', error.message || 'File tidak dapat dibaca.')
+        window.KoiDock.showResult('Impor Excel Katalog', error.message || 'File tidak dapat dibaca.')
       } finally {
         progress?.close()
       }
@@ -1075,9 +1075,9 @@ const saveIcon = iconSvg('device-floppy')
         },
         { key: 'print', icon: 'printer', variant: 'secondary', always: true, title: (count) => (count ? `Cetak katalog (${count} terpilih)` : 'Cetak katalog (semua yang tampil)'), onClick: (ids) => printCatalog(chosenItems(ids)) },
         { key: 'delete', icon: 'trash', variant: 'danger', title: (count) => `Hapus ${count} item terpilih`, role: 'farm-operate', onClick: (ids) => deleteItems(ids) },
-        { key: 'export', icon: 'file-spreadsheet', variant: 'success', title: (count) => (count ? `Export Excel (${count} terpilih)` : 'Export Excel'), always: true, onClick: (ids) => exportSell(ids) },
+        { key: 'export', icon: 'file-spreadsheet', variant: 'success', title: (count) => (count ? `Ekspor Excel (${count} terpilih)` : 'Ekspor Excel'), always: true, onClick: (ids) => exportSell(ids) },
         { key: 'zip', icon: 'file-zip', variant: 'success', title: (count) => (count ? `Unduh ZIP (${count} terpilih)` : 'Unduh ZIP (Excel + dokumentasi)'), always: true, onClick: (ids) => exportSell(ids, true) },
-        { key: 'import', icon: 'upload', variant: 'success', title: 'Import Excel atau ZIP', role: 'farm-operate', always: true, show: (count) => count === 0, onClick: () => importInput.click() },
+        { key: 'import', icon: 'upload', variant: 'success', title: 'Impor Excel atau ZIP', role: 'farm-operate', always: true, show: (count) => count === 0, onClick: () => importInput.click() },
       ],
       add: { title: 'Tambah item katalog', role: 'farm-operate', onClick: () => openForm(null, false) },
     })

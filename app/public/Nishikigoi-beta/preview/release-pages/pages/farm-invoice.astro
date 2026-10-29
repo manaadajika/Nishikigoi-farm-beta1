@@ -385,7 +385,7 @@ const trashIcon = iconSvg('trash')
               <div class="text-secondary small">${lineCount} item${(invoice.payment_proofs || []).length ? ` · <span class="text-azure">bukti transfer (${invoice.payment_proofs.length})</span>` : ''}${(invoice.media_entries || []).length ? ` · <span class="text-azure">dokumentasi (${invoice.media_entries.length})${invoice.gallery_id ? ' · di Galeri' : ''}</span>` : ''}</div>
               <div class="invoice-total mt-2">${escapeHtml(money(invoice.total))}</div>
               <div class="d-flex gap-2 mt-3 pt-2" style="margin-top:auto">
-                <button class="btn btn-sm flex-fill" type="button" data-print-invoice="${escapeHtml(invoice.id)}">${printIcon} Print</button>
+                <button class="btn btn-sm flex-fill" type="button" data-print-invoice="${escapeHtml(invoice.id)}">${printIcon} Cetak</button>
                 <button class="btn btn-sm flex-fill" type="button" data-edit-invoice="${escapeHtml(invoice.id)}" data-role-required="farm-operate">${editIcon} Edit</button>
                 <button class="btn btn-sm btn-outline-danger flex-fill" type="button" data-delete-invoice="${escapeHtml(invoice.id)}" data-role-required="farm-operate">${trashIcon} Hapus</button>
               </div>
@@ -484,7 +484,7 @@ const trashIcon = iconSvg('trash')
         </button>`
       pickerMenu.innerHTML = addAll +
         (sellMatches.length ? '<div class="px-3 pt-2 small text-secondary">Penjualan</div>' + sellMatches.map((item) => option('sell', item.id, ((item.media_entries || [])[0]?.thumbnail_url) || ((item.koi || [])[0]?.image_url) || '', item.title, `${money(item.price)} · ${(item.koi || []).map((koi) => koi.code).join(', ') || 'foto'}`)).join('') : '') +
-        (koiMatches.length ? '<div class="px-3 pt-2 small text-secondary">Data Ikan</div>' + koiMatches.map((koi) => option('koi', koi.id, koi.image_url, koiDescription(koi), `${koi.sale_price ? money(koi.sale_price) : 'Harga belum diisi'}${koi.status === 'sold' ? ' · Sold' : ''}`)).join('') : '') ||
+        (koiMatches.length ? '<div class="px-3 pt-2 small text-secondary">Data Ikan</div>' + koiMatches.map((koi) => option('koi', koi.id, koi.image_url, koiDescription(koi), `${koi.sale_price ? money(koi.sale_price) : 'Harga belum diisi'}${koi.status === 'sold' ? ' · Terjual' : ''}`)).join('') : '') ||
         (sourcesLoaded && pickerResult && !pickerBusy ? '<div class="p-3 text-secondary">Tidak ditemukan.</div>' : '<div class="p-3 text-secondary"><span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>Mencari...</div>')
       pickerMenu.classList.remove('d-none')
     }

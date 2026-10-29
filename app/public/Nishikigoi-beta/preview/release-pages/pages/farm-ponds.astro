@@ -16,7 +16,7 @@ const uploadIcon = iconSvg('upload')
 const clipboardIcon = iconSvg('clipboard')
 ---
 
-<DefaultLayout title="Kolam" pageHeader="Data Kolam" pretitle="Management" pageMenu="farm-ponds">
+<DefaultLayout title="Kolam" pageHeader="Data Kolam" pretitle="Manajemen" pageMenu="farm-ponds">
   <style is:global>
     .pond-fish-preview {
       width: 48px;
@@ -537,7 +537,7 @@ const clipboardIcon = iconSvg('clipboard')
                       <label class="form-label">Dokumentasi</label>
                       <input class="d-none" id="pond-documentation-input" type="file" accept="image/*,video/mp4,video/webm" multiple data-pond-documentation-input />
                       <div class="d-flex align-items-center gap-2">
-                        <label class="btn btn-icon mb-0" for="pond-documentation-input" data-upload-pond-documentation data-role-required="farm-operate" aria-label="Upload media" title="Upload media"><Fragment set:html={uploadIcon} /></label>
+                        <label class="btn btn-icon mb-0" for="pond-documentation-input" data-upload-pond-documentation data-role-required="farm-operate" aria-label="Unggah media" title="Unggah media"><Fragment set:html={uploadIcon} /></label>
                         <button class="btn btn-icon mb-0" type="button" data-paste-pond-documentation data-role-required="database-write" aria-label="Paste gambar dokumentasi" title="Paste gambar dokumentasi"><Fragment set:html={clipboardIcon} /></button>
                         <div class="form-hint mb-0" data-pond-documentation-status></div>
                       </div>
@@ -606,7 +606,7 @@ const clipboardIcon = iconSvg('clipboard')
                   <th>Foto</th>
                   <th>Kode</th>
                   <th>Nama</th>
-                  <th>Variety</th>
+                  <th>Varietas</th>
                   <th>Bloodline</th>
                   <th>Ternakan</th>
                   <th>Ukuran</th>
@@ -847,13 +847,13 @@ const clipboardIcon = iconSvg('clipboard')
     const formatSizeCm = (value) => { const number = Number(value); return Number.isFinite(number) && String(value).trim() !== '' ? number.toLocaleString('id-ID', { maximumFractionDigits: 1 }) : String(value ?? '') }
     // DEAD CODE (diperiksa 2026-10-14): koiLabels tidak dipanggil di mana pun. Aman dihapus; sengaja belum dihapus.
     const koiLabels = {
-      unknown: 'Unknown',
-      male: 'Male',
-      female: 'Female',
-      active: 'Active',
-      quarantine: 'Quarantine',
-      sold: 'Sold',
-      dead: 'Dead',
+      unknown: 'Tidak diketahui',
+      male: 'Jantan',
+      female: 'Betina',
+      active: 'Aktif',
+      quarantine: 'Karantina',
+      sold: 'Terjual',
+      dead: 'Mati',
       indukan: 'Indukan',
       non_indukan: 'Bukan Indukan',
     }
@@ -1707,7 +1707,7 @@ const clipboardIcon = iconSvg('clipboard')
         notes: pond.notes || '',
         body: `<table class="kp-table"><thead><tr>
           <th class="kp-center" style="width:28px">No</th><th class="kp-center" style="width:48px">Foto</th><th style="width:13%">Kode</th><th>Nama</th>
-          <th style="width:15%">Variety</th><th style="width:13%">Bloodline</th><th style="width:17%">Ternakan</th><th class="kp-num" style="width:10%">Ukuran</th>
+          <th style="width:15%">Varietas</th><th style="width:13%">Bloodline</th><th style="width:17%">Ternakan</th><th class="kp-num" style="width:10%">Ukuran</th>
         </tr></thead><tbody>${rows}</tbody></table>`,
       })
     }
@@ -2186,7 +2186,7 @@ const clipboardIcon = iconSvg('clipboard')
         link.click()
         link.remove()
         setTimeout(() => URL.revokeObjectURL(objectUrl), 1000)
-        importExportMessage.textContent = 'Export Excel data kolam selesai.'
+        importExportMessage.textContent = 'Ekspor Excel data kolam selesai.'
       } catch (error) {
         importExportMessage.textContent = error.message
       } finally {
@@ -2366,7 +2366,7 @@ const clipboardIcon = iconSvg('clipboard')
         const planProblems = [...packageProblems, ...plan.problems]
         if (!plan.inserted && !plan.updated && !plan.docsPlanned) {
           importExportMessage.textContent = 'Tidak ada data kolam yang bisa diimport.'
-          window.KoiDock.showResult('Import Data Kolam', 'Tidak ada data yang bisa diimport.', planProblems)
+          window.KoiDock.showResult('Impor Data Kolam', 'Tidak ada data yang bisa diimport.', planProblems)
           return
         }
         const preview = `Kolam baru: ${plan.inserted}\nKolam diperbarui: ${plan.updated}` +
@@ -2374,19 +2374,19 @@ const clipboardIcon = iconSvg('clipboard')
           (planProblems.length ? '\nBaris atau file bermasalah dilewati.' : '')
         const go = await window.KoiDock.showResult('Pratinjau import Data Kolam', preview, planProblems, { confirm: true, okLabel: planProblems.length ? 'Lanjutkan (lewati yang bermasalah)' : 'Lanjutkan' })
         if (!go) {
-          importExportMessage.textContent = 'Import dibatalkan.'
+          importExportMessage.textContent = 'Impor dibatalkan.'
           return
         }
 
         // pass 2: write
-        progress = window.KoiZip.progress('Import Data Kolam')
+        progress = window.KoiZip.progress('Impor Data Kolam')
         const result = await runPondsImport(items, pkg, false)
-        const summary = `Import selesai. Baru ${result.inserted}, diperbarui ${result.updated}, dilewati ${result.skipped}.${pkg.isZip || result.docsPlanned ? ` Dokumentasi ditambahkan ${result.docsAdded}, sudah ada ${result.docsSkipped}.` : ''}`
+        const summary = `Impor selesai. Baru ${result.inserted}, diperbarui ${result.updated}, dilewati ${result.skipped}.${pkg.isZip || result.docsPlanned ? ` Dokumentasi ditambahkan ${result.docsAdded}, sudah ada ${result.docsSkipped}.` : ''}`
         importExportMessage.textContent = summary
-        window.KoiDock.showResult('Import Data Kolam', summary, [...packageProblems, ...result.problems])
+        window.KoiDock.showResult('Impor Data Kolam', summary, [...packageProblems, ...result.problems])
         await keepScroll(loadPonds)
       } catch (error) {
-        importExportMessage.textContent = error.message || 'Import gagal.'
+        importExportMessage.textContent = error.message || 'Impor gagal.'
       } finally {
         progress?.close()
         importInput.value = ''
@@ -2579,8 +2579,8 @@ const clipboardIcon = iconSvg('clipboard')
         },
         { key: 'delete', icon: 'trash', variant: 'danger', title: (count) => `Hapus ${count} kolam terpilih`, role: 'farm-operate', onClick: (ids) => deletePondsBatch(ids) },
         { key: 'print-list', icon: 'printer', variant: 'secondary', title: 'Cetak daftar kolam', always: true, show: (count) => count === 0, onClick: () => printButton.click() },
-        { key: 'import', icon: 'upload', variant: 'success', title: 'Import kolam (Excel atau ZIP)', role: 'farm-operate', always: true, show: (count) => count === 0, onClick: () => importButton.click() },
-        { key: 'export', icon: 'file-spreadsheet', variant: 'success', title: 'Export kolam (Excel)', always: true, show: (count) => count === 0, onClick: () => exportButton.click() },
+        { key: 'import', icon: 'upload', variant: 'success', title: 'Impor kolam (Excel atau ZIP)', role: 'farm-operate', always: true, show: (count) => count === 0, onClick: () => importButton.click() },
+        { key: 'export', icon: 'file-spreadsheet', variant: 'success', title: 'Ekspor kolam (Excel)', always: true, show: (count) => count === 0, onClick: () => exportButton.click() },
         { key: 'zip', icon: 'file-zip', variant: 'success', title: (count) => (count ? `Unduh ZIP (${count} terpilih)` : 'Unduh ZIP (Excel + dokumentasi)'), always: true, onClick: (ids) => window.koiPondsZip(ids) },
         { key: 'settings', icon: 'settings', title: 'Pengaturan area', role: 'farm-operate', always: true, show: (count) => count === 0, onClick: () => areaSettingsButton.click() },
         {
@@ -2770,7 +2770,7 @@ const clipboardIcon = iconSvg('clipboard')
           if (!response.ok) {
             const result = await response.json().catch(() => ({}))
             if (isVideo && response.status === 422) {
-              throw new Error('Upload video perlu restart aplikasi agar API terbaru aktif.')
+              throw new Error('Unggah video perlu restart aplikasi agar API terbaru aktif.')
             }
             throw new Error(result.detail || result.error || 'Dokumentasi gagal diupload.')
           }

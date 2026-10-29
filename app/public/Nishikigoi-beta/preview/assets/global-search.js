@@ -1,5 +1,5 @@
 // Pencarian global (kotak cari di navbar) - HANYA di Dashboard.
-// Di Dashboard, mengetik menampilkan dropdown hasil dari Data Ikan, Archive, Data Kolam, Breeding, Laporan, Katalog,
+// Di Dashboard, mengetik menampilkan dropdown hasil dari Data Ikan, Arsip, Data Kolam, Breeding, Laporan, Katalog,
 // Invoice, Inventaris, dan Galeri, ditambah menu dan pengaturan program. Klik hasil membuka item itu di menunya.
 // Tanpa mengetik, dropdown menampilkan pencarian terakhir dan pintasan menu.
 // Di menu lain kotak cari tetap pencarian biasa milik halaman itu (menyaring daftar, kolom:isi dsb);
@@ -45,13 +45,13 @@
     { t: 'Laporan', u: 'farm-reports.html', k: 'report kegiatan panen perikanan ikan datang sortir', i: 'report', s: 'Menu' },
     { t: 'Katalog', u: 'farm-sell.html', k: 'jual penjualan harga dijual dagang', i: 'tag', s: 'Penjualan' },
     { t: 'Invoice', u: 'farm-invoice.html', k: 'tagihan nota faktur pembayaran bukti transfer', i: 'file-invoice', s: 'Penjualan' },
-    { t: 'Inventaris', u: 'farm-inventory.html', k: 'stok barang gudang belanja pakan obat aset rusak pembelian', i: 'package', s: 'Etc', perm: 'database-write' },
-    { t: 'Archive', u: 'farm-archive.html', k: 'arsip ikan diarsipkan', i: 'archive', s: 'Etc', perm: 'database-write' },
-    { t: 'Queue', u: 'farm-queue.html', k: 'draft antrian job pekerjaan lanjutkan', i: 'page', s: 'Etc', perm: 'database-write' },
-    { t: 'Gallery', u: 'farm-gallery.html', k: 'galeri foto video koleksi dokumentasi', i: 'photo', s: 'Etc', perm: 'database-write' },
-    { t: 'Log Sistem', u: 'farm-log.html', k: 'log riwayat aktivitas sistem catatan', i: 'page', s: 'Etc', perm: 'database-write' },
-    { t: 'Change Log', u: 'farm-log.html', click: '[data-log-tab="changelog"]', k: 'versi perubahan update rilis changelog', i: 'page', s: 'Etc', perm: 'database-write' },
-    { t: 'Panduan Penggunaan', u: 'farm-log.html', click: '[data-log-tab="panduan"]', k: 'panduan cara pakai bantuan tutorial help', i: 'page', s: 'Etc', perm: 'database-write' },
+    { t: 'Inventaris', u: 'farm-inventory.html', k: 'stok barang gudang belanja pakan obat aset rusak pembelian', i: 'package', s: 'Lainnya', perm: 'database-write' },
+    { t: 'Arsip', u: 'farm-archive.html', k: 'arsip archive ikan diarsipkan', i: 'archive', s: 'Lainnya', perm: 'database-write' },
+    { t: 'Antrean', u: 'farm-queue.html', k: 'antrean antrian queue draft job pekerjaan lanjutkan', i: 'page', s: 'Lainnya', perm: 'database-write' },
+    { t: 'Galeri', u: 'farm-gallery.html', k: 'galeri gallery foto video koleksi dokumentasi', i: 'photo', s: 'Lainnya', perm: 'database-write' },
+    { t: 'Log Sistem', u: 'farm-log.html', k: 'log riwayat aktivitas sistem catatan', i: 'page', s: 'Lainnya', perm: 'database-write' },
+    { t: 'Change Log', u: 'farm-log.html', click: '[data-log-tab="changelog"]', k: 'versi perubahan update rilis changelog', i: 'page', s: 'Lainnya', perm: 'database-write' },
+    { t: 'Panduan Penggunaan', u: 'farm-log.html', click: '[data-log-tab="panduan"]', k: 'panduan cara pakai bantuan tutorial help', i: 'page', s: 'Lainnya', perm: 'database-write' },
     { t: 'Theme Settings', u: 'settings.html', click: '[data-bs-target="#offcanvas-settings"]', k: 'tema warna gelap terang dark light mode tampilan font', i: 'settings', s: 'Pengaturan' },
     { t: 'Give Feedback', u: 'settings.html', click: '[data-feedback-open]', k: 'feedback masukan saran laporan masalah kirim pesan ke master', i: 'settings', s: 'Pengaturan' },
     { t: 'Pengaturan Akun', u: 'settings.html', k: 'akun profil password kata sandi email foto', i: 'settings', s: 'Pengaturan' },
@@ -247,7 +247,7 @@
     open()
   }
 
-  // how many results one group (koi = Data Ikan, archive = Archive) holds
+  // how many results one group (koi = Data Ikan, archive = Arsip) holds
   function groupCount(key) {
     var count = 0
     dataGroups.forEach(function (g) { if (g.key === key) count += g.items.length })
@@ -299,7 +299,7 @@
       var inData = groupCount('koi')
       var inArchive = groupCount('archive')
       if (inData) html += row(register({ t: 'Tampilkan semua di Data Ikan', sub: inData + ' kode ini disaring langsung di halaman Data Ikan', u: 'farm-koi.html?cari=' + encodeURIComponent(query), i: 'fish' }), [], '')
-      if (inArchive) html += row(register({ t: 'Tampilkan semua di Archive', sub: inArchive + ' kode ini ada di Archive (ikan yang diarsipkan)', u: 'farm-koi.html?arsip=1&cari=' + encodeURIComponent(query), i: 'archive' }), [], '')
+      if (inArchive) html += row(register({ t: 'Tampilkan semua di Arsip', sub: inArchive + ' kode ini ada di Arsip (ikan yang diarsipkan)', u: 'farm-koi.html?arsip=1&cari=' + encodeURIComponent(query), i: 'archive' }), [], '')
     }
     dataGroups.forEach(function (group) {
       html += '<div class="gs-head"><span>' + escapeHtml(group.label) + '</span></div>'

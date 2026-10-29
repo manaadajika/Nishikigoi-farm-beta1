@@ -57,7 +57,7 @@ route('GET', '/search', function () {
     };
 
     // Data Ikan (active) and Archive
-    foreach ([['koi', 'Data Ikan', 'fish', 'IS NULL'], ['archive', 'Archive', 'archive', 'IS NOT NULL']] as [$key, $label, $icon, $cond]) {
+    foreach ([['koi', 'Data Ikan', 'fish', 'IS NULL'], ['archive', 'Arsip', 'archive', 'IS NOT NULL']] as [$key, $label, $icon, $cond]) {
         if ($isCodeList) {
             $where = 'UPPER(k.code) IN (' . implode(',', array_fill(0, count($rawTokens), '?')) . ')';
             $params = $rawTokens;

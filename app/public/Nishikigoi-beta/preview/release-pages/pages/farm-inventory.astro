@@ -19,7 +19,7 @@ const trashIcon = iconSvg('trash')
 const packageIcon = iconSvg('package')
 ---
 
-<DefaultLayout title="Inventaris" pageHeader="Inventaris" pretitle="Etc" pageMenu="management.inventory">
+<DefaultLayout title="Inventaris" pageHeader="Inventaris" pretitle="Lainnya" pageMenu="management.inventory">
   <style is:global>
     .inv-card { overflow: hidden; }
     .inv-card-top { display: flex; align-items: center; justify-content: space-between; gap: .5rem; padding: .6rem 1rem; border-bottom: 1px solid var(--tblr-border-color); cursor: pointer; }
@@ -987,7 +987,7 @@ const packageIcon = iconSvg('package')
         { key: 'detail', icon: 'history', variant: 'secondary', title: 'Lihat riwayat', show: single, onClick: (ids) => openDetail(ids[0]) },
         { key: 'shopping', icon: 'basket', variant: 'secondary', always: true, title: (count) => (count ? `Cetak daftar belanja (${count} terpilih)` : 'Cetak daftar belanja (yang perlu beli)'), onClick: (ids) => printShopping(ids) },
         { key: 'print', icon: 'printer', variant: 'secondary', always: true, title: (count) => (count ? `Cetak daftar stok (${count} terpilih)` : 'Cetak daftar stok (semua yang tampil)'), onClick: (ids) => printStock(chosenItems(ids)) },
-        { key: 'export', icon: 'file-spreadsheet', variant: 'success', always: true, title: (count) => (count ? `Export Excel (${count} terpilih)` : 'Export Excel'), onClick: (ids) => exportExcel(chosenItems(ids)) },
+        { key: 'export', icon: 'file-spreadsheet', variant: 'success', always: true, title: (count) => (count ? `Ekspor Excel (${count} terpilih)` : 'Ekspor Excel'), onClick: (ids) => exportExcel(chosenItems(ids)) },
         { key: 'delete', icon: 'trash', variant: 'danger', title: (count) => `Hapus ${count} barang terpilih`, role: 'farm-operate', onClick: (ids) => deleteItems(ids) },
       ],
       add: { title: 'Tambah barang', role: 'farm-operate', onClick: () => openForm(null) },

@@ -295,7 +295,7 @@
       '<div class="form-hint">Media laporan ini ikut tampil di menu Galeri sebagai satu koleksi (file tidak digandakan).</div></div>' +
       '</div></div>' +
       '<div class="modal-footer"><div class="me-auto" data-activity-draft-host></div>' +
-      '<button type="button" class="btn d-none" data-activity-print>Print</button>' +
+      '<button type="button" class="btn d-none" data-activity-print>Cetak</button>' +
       '<button type="button" class="btn" data-activity-close>Batal</button>' +
       '<button type="submit" class="btn btn-primary" data-activity-submit>Simpan Laporan</button></div>' +
       '</form></div>'

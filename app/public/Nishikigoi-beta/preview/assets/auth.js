@@ -2819,7 +2819,7 @@
     document.head.appendChild(script)
   }
   function start() {
-    load('/assets/global-search.js?v=20261018a')
+    load('/assets/global-search.js?v=20261029b')
     load('/assets/field-suggest.js?v=20261025a')
     load('/assets/list-pager.js?v=20261021c')
     load('/assets/user-menu.js?v=20261025a')
@@ -2828,7 +2828,7 @@
     load('/assets/messenger.js?v=20261024b')
     load('/assets/back-close.js?v=20261017b')
     load('/assets/img-skeleton.js?v=20261017a')
-    if (name === 'settings') load('/assets/account-extras.js?v=20261024a')
+    if (name === 'settings') load('/assets/account-extras.js?v=20261029b')
   }
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', start)
   else start()

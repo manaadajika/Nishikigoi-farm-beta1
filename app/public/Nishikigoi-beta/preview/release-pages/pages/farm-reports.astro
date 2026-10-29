@@ -2,7 +2,7 @@
 import DefaultLayout from '@shared/layouts/DefaultLayout.astro'
 ---
 
-<DefaultLayout title="Laporan" pageHeader="Laporan" pretitle="Management" pageMenu="farm-reports">
+<DefaultLayout title="Laporan" pageHeader="Laporan" pretitle="Manajemen" pageMenu="farm-reports">
   <style is:global>
     .report-spectrum-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(132px,1fr));gap:.5rem}
     .report-spectrum-grid.is-empty{display:none}
@@ -147,16 +147,16 @@ import DefaultLayout from '@shared/layouts/DefaultLayout.astro'
     const koiLabel=(item)=>[item.code,item.name,item.variety].filter(Boolean).join(' - ')
     const breedingLabel=(item)=>[item.batch_code,item.session_name].filter(Boolean).join(' - ')
     const accountLabel=(item)=>`${item.name||item.username} @${item.username}`
-    const breedingRoleLabels={both:'Female & Male',female:'Female',male:'Male',none:'Tidak ditentukan'}
+    const breedingRoleLabels={both:'Betina & Jantan',female:'Betina',male:'Jantan',none:'Tidak ditentukan'}
     const resolveMediaUrl=(value)=>{const raw=String(value||'').trim();if(!raw)return'';const resolved=window.KoiAuth?.apiUrl?window.KoiAuth.apiUrl(raw):raw;try{return new URL(resolved,window.location.origin).href}catch{return resolved}}
     const linkedPreviewUrl=(item={})=>item.image_url||item.photo_url||item.thumbnail_url||item.avatar||item.female_image_url||item.male_image_url||item.female_photo_url||item.male_photo_url||''
     const linkedMeta=(item={},type)=>type==='breeding'?[item.spawning_method,item.method,item.status,item.pond_name,item.pond_label].filter(Boolean).join(' - '):[item.variety,item.gender,item.current_length_cm?`${item.current_length_cm} cm`:item.size_cm?`${item.size_cm} cm`:item.size].filter(Boolean).join(' - ')
-    const normalizeGender=(value)=>{const raw=String(value||'').toLowerCase();if(raw.includes('female')||raw.includes('betina'))return'Female';if(raw.includes('male')||raw.includes('jantan'))return'Male';return value||'Unknown'}
-    const koiDetails=(item={})=>[{label:'ID',value:item.code||item.kode||item.id||'-'},{label:'Variety',value:item.variety||item.varietas||'-'},{label:'Gender',value:normalizeGender(item.gender||item.sex)},{label:'Nama',value:item.name||item.nama||'-'}]
+    const normalizeGender=(value)=>{const raw=String(value||'').toLowerCase();if(raw.includes('female')||raw.includes('betina'))return'Betina';if(raw.includes('male')||raw.includes('jantan'))return'Jantan';return value||'Tidak diketahui'}
+    const koiDetails=(item={})=>[{label:'ID',value:item.code||item.kode||item.id||'-'},{label:'Varietas',value:item.variety||item.varietas||'-'},{label:'Kelamin',value:normalizeGender(item.gender||item.sex)},{label:'Nama',value:item.name||item.nama||'-'}]
     const parseParentEntries=(value,fallbackId,fallbackLabel)=>{try{const parsed=typeof value==='string'?JSON.parse(value):value;const entries=Array.isArray(parsed)?parsed:[];return entries.length?entries:(fallbackId?[{koi_id:fallbackId,label:fallbackLabel||'',notes:''}]:[])}catch{return fallbackId?[{koi_id:fallbackId,label:fallbackLabel||'',notes:''}]:[]}}
     const parentFromEntry=(entry,gender)=>{const koi=entry?.koi_id?window.KoiPicker.cache[String(entry.koi_id)]:null;const labelParts=String(entry?.label||'').split(' - ').map((part)=>part.trim()).filter(Boolean);const code=koi?.code||entry?.code||labelParts[0]||entry?.koi_id||'-';const name=koi?.name||entry?.name||labelParts[1]||'-';return{id:entry?.koi_id||code,code,name,variety:koi?.variety||entry?.variety||'-',gender:koi?.gender?normalizeGender(koi.gender):gender,bloodline:koi?.bloodline||entry?.bloodline||'',image_url:koi?.image_url||entry?.image_url||'',notes:entry?.notes||'',length_cm:entry?.length_cm||koi?.current_length_cm||''}}
-    const breedingParents=(item={})=>{const femaleName=[item.female_koi_code,item.female_koi_name].filter(Boolean).join(' - ');const maleName=[item.male_koi_code,item.male_koi_name].filter(Boolean).join(' - ');return[...parseParentEntries(item.female_parent_entries,item.female_koi_id,femaleName).map((entry)=>parentFromEntry(entry,'Female')),...parseParentEntries(item.male_parent_entries,item.male_koi_id,maleName).map((entry)=>parentFromEntry(entry,'Male'))]}
-    const linkedDetails=(item={},type)=>type==='breeding'?[{label:'ID',value:item.batch_code||item.id||'-'},{label:'Variety',value:breedingParents(item).map((parent)=>parent.variety).filter((value)=>value&&value!=='-').join(', ')||'-'},{label:'Gender',value:breedingParents(item).map((parent)=>parent.gender).join(' & ')||'-'},{label:'Nama',value:item.session_name||item.name||'-'}]:koiDetails(item)
+    const breedingParents=(item={})=>{const femaleName=[item.female_koi_code,item.female_koi_name].filter(Boolean).join(' - ');const maleName=[item.male_koi_code,item.male_koi_name].filter(Boolean).join(' - ');return[...parseParentEntries(item.female_parent_entries,item.female_koi_id,femaleName).map((entry)=>parentFromEntry(entry,'Betina')),...parseParentEntries(item.male_parent_entries,item.male_koi_id,maleName).map((entry)=>parentFromEntry(entry,'Jantan'))]}
+    const linkedDetails=(item={},type)=>type==='breeding'?[{label:'ID',value:item.batch_code||item.id||'-'},{label:'Varietas',value:breedingParents(item).map((parent)=>parent.variety).filter((value)=>value&&value!=='-').join(', ')||'-'},{label:'Kelamin',value:breedingParents(item).map((parent)=>parent.gender).join(' & ')||'-'},{label:'Nama',value:item.session_name||item.name||'-'}]:koiDetails(item)
     const detailsHtml=(details=[])=>`<div class="report-linked-details">${details.map((detail)=>`<span><strong>${escapeHtml(detail.value||'-')}</strong>${escapeHtml(detail.label)}</span>`).join('')}</div>`
     const parentListHtml=(parents=[])=>parents.length?`<div class="report-parent-list">${parents.map((parent,index)=>{const image=resolveMediaUrl(parent.image_url);return `<div class="report-parent-chip" data-report-parent-index="${index}">${image?`<img src="${escapeHtml(image)}" alt="${escapeHtml(parent.code)}" />`:`<span>No foto</span>`}<div><div class="report-linked-title">${escapeHtml(parent.code||'-')}</div><div class="report-linked-meta">${escapeHtml([parent.variety,parent.gender,parent.name].filter(Boolean).join(' - ')||'-')}</div><div class="report-parent-control"><label class="form-check mb-0"><input class="form-check-input" name="report_parent_show_print" type="checkbox" data-parent-show-print ${parent.show_on_print===false?'':'checked'} /><span class="form-check-label">Pilih</span></label><input class="form-control form-control-sm" name="report_parent_notes" data-parent-notes placeholder="Catatan indukan ini" autocomplete="off" value="${escapeHtml(parent.notes||'')}" /></div></div></div>`}).join('')}</div>`:''
     const searchKeywords=(item,type)=>[type==='breeding'?breedingLabel(item):koiLabel(item),linkedMeta(item,type),...linkedDetails(item,type).map((detail)=>detail.value),...breedingParents(item).flatMap((parent)=>[parent.code,parent.variety,parent.gender,parent.name])].join(' ').toLowerCase()
@@ -220,7 +220,7 @@ import DefaultLayout from '@shared/layouts/DefaultLayout.astro'
       galeri: 'gallery_id',
     }
     // "bloo:isa" works too: a field name may be shortened to its first letters (2 or more). Exact names win, then the
-    // first name in the alias list that starts with what was typed. Unknown names stay plain text.
+    // first name in the alias list that starts with what was typed. Tidak diketahui names stay plain text.
     function rdReportResolveMarkers(keyword, aliases) {
       var names = Object.keys(aliases)
       var found = []
@@ -315,7 +315,7 @@ import DefaultLayout from '@shared/layouts/DefaultLayout.astro'
       return alternatives.some(function (words) { return words.every(function (word) { return blob.includes(word) }) })
     }
     
-    const renderReports=(reports)=>{reportItems=reports;dock.prune(reports);const shown=dock.apply(reports.filter(rdReportMatches));reportTable.innerHTML=shown.map((item)=>{const pondEntries=parseJson(item.pond_entries);const breedingEntries=parseJson(item.breeding_entries);const locText=pondEntries.map((entry)=>[entry.pond_name,entry.location].filter(Boolean).join(' -> ')).filter(Boolean).join(', ')||item.pond_name||'-';const breedText=breedingEntries.map((entry)=>entry.label).join(', ')||'-';return `<div class="col-sm-6 col-lg-4 col-xl-3"><div class="card h-100 report-card" data-dock-id="${escapeHtml(item.id)}"><div class="report-card-top" data-dock-select title="Klik untuk memilih"><span class="badge ${item.report_type==='panen'?'bg-green-lt':'bg-blue-lt'}">${escapeHtml(labels[item.report_type]||item.report_type||'-')}</span><div class="report-card-date">${escapeHtml(formatLongDate(item.report_date))}</div></div><div class="card-body" role="button" tabindex="0" data-report-id="${escapeHtml(item.id)}"><div class="d-flex align-items-start justify-content-between gap-2 mb-1"><div class="report-card-code"><button class="dock-code-copy" type="button" data-copy-report-code="${escapeHtml(item.batch_code||'-')}" title="${escapeHtml(item.batch_code||'-')}">${escapeHtml(item.batch_code||'-')}</button></div><span class="badge bg-blue text-blue-fg dock-selected-badge">Terpilih</span></div><div class="fw-semibold report-card-title">${escapeHtml(item.report_title||'-')}</div>${item.gallery_id?`<a class="badge bg-purple-lt text-decoration-none mt-1" href="./farm-gallery.html?id=${escapeHtml(item.gallery_id)}" onclick="event.stopPropagation()" title="Buka koleksi ini di Galeri">Galeri #${escapeHtml(item.gallery_id)}</a>`:''}<div class="row g-2 small mt-1"><div class="col-12 report-card-cell"><span class="text-secondary">Lokasi</span><div class="report-card-ellipsis" title="${escapeHtml(locText)}">${escapeHtml(locText)}</div></div><div class="col-12 report-card-cell"><span class="text-secondary">Breeding</span><div class="report-card-ellipsis" title="${escapeHtml(breedText)}">${escapeHtml(breedText)}</div></div></div><div class="report-card-actions"><button class="btn btn-sm" type="button" data-print-report="${escapeHtml(item.id)}">${window.KoiDock.icon('printer')} Print</button><button class="btn btn-sm" type="button" data-edit-report="${escapeHtml(item.id)}" data-role-required="farm-operate">${window.KoiDock.icon('edit')} Edit</button><button class="btn btn-sm btn-outline-danger" type="button" data-delete-report="${escapeHtml(item.id)}" data-role-required="farm-operate">${window.KoiDock.icon('trash')} Hapus</button></div></div></div></div>`}).join('')||`<div class="col-12 text-secondary">${rdReportSearch?'Laporan tidak ditemukan.':'Belum ada laporan tersimpan.'}</div>`;dock.refresh()}
+    const renderReports=(reports)=>{reportItems=reports;dock.prune(reports);const shown=dock.apply(reports.filter(rdReportMatches));reportTable.innerHTML=shown.map((item)=>{const pondEntries=parseJson(item.pond_entries);const breedingEntries=parseJson(item.breeding_entries);const locText=pondEntries.map((entry)=>[entry.pond_name,entry.location].filter(Boolean).join(' -> ')).filter(Boolean).join(', ')||item.pond_name||'-';const breedText=breedingEntries.map((entry)=>entry.label).join(', ')||'-';return `<div class="col-sm-6 col-lg-4 col-xl-3"><div class="card h-100 report-card" data-dock-id="${escapeHtml(item.id)}"><div class="report-card-top" data-dock-select title="Klik untuk memilih"><span class="badge ${item.report_type==='panen'?'bg-green-lt':'bg-blue-lt'}">${escapeHtml(labels[item.report_type]||item.report_type||'-')}</span><div class="report-card-date">${escapeHtml(formatLongDate(item.report_date))}</div></div><div class="card-body" role="button" tabindex="0" data-report-id="${escapeHtml(item.id)}"><div class="d-flex align-items-start justify-content-between gap-2 mb-1"><div class="report-card-code"><button class="dock-code-copy" type="button" data-copy-report-code="${escapeHtml(item.batch_code||'-')}" title="${escapeHtml(item.batch_code||'-')}">${escapeHtml(item.batch_code||'-')}</button></div><span class="badge bg-blue text-blue-fg dock-selected-badge">Terpilih</span></div><div class="fw-semibold report-card-title">${escapeHtml(item.report_title||'-')}</div>${item.gallery_id?`<a class="badge bg-purple-lt text-decoration-none mt-1" href="./farm-gallery.html?id=${escapeHtml(item.gallery_id)}" onclick="event.stopPropagation()" title="Buka koleksi ini di Galeri">Galeri #${escapeHtml(item.gallery_id)}</a>`:''}<div class="row g-2 small mt-1"><div class="col-12 report-card-cell"><span class="text-secondary">Lokasi</span><div class="report-card-ellipsis" title="${escapeHtml(locText)}">${escapeHtml(locText)}</div></div><div class="col-12 report-card-cell"><span class="text-secondary">Breeding</span><div class="report-card-ellipsis" title="${escapeHtml(breedText)}">${escapeHtml(breedText)}</div></div></div><div class="report-card-actions"><button class="btn btn-sm" type="button" data-print-report="${escapeHtml(item.id)}">${window.KoiDock.icon('printer')} Cetak</button><button class="btn btn-sm" type="button" data-edit-report="${escapeHtml(item.id)}" data-role-required="farm-operate">${window.KoiDock.icon('edit')} Edit</button><button class="btn btn-sm btn-outline-danger" type="button" data-delete-report="${escapeHtml(item.id)}" data-role-required="farm-operate">${window.KoiDock.icon('trash')} Hapus</button></div></div></div></div>`}).join('')||`<div class="col-12 text-secondary">${rdReportSearch?'Laporan tidak ditemukan.':'Belum ada laporan tersimpan.'}</div>`;dock.refresh()}
     const loadReports=(silent=false)=>fetch(`${apiUrl}/farm-reports`).then((response)=>response.json()).then((reports)=>{const signature=JSON.stringify(reports);if(silent&&signature===reportRealtimeSignature)return;reportRealtimeSignature=signature;localStorage.setItem(reportCacheKey,signature);renderReports(reports)}).catch(()=>{if(!silent)reportTable.innerHTML='<div class="col-12 text-danger">Laporan gagal dimuat.</div>'})
     const restoreReportCache=()=>{try{const cached=JSON.parse(localStorage.getItem(reportCacheKey)||'[]');if(!Array.isArray(cached)||!cached.length)return;reportRealtimeSignature=JSON.stringify(cached);renderReports(cached)}catch{localStorage.removeItem(reportCacheKey)}}
     const loadOptions=async()=>{const [pondsResponse,breedingResponse,accountResponse,facetsResponse]=await Promise.all([fetch(`${apiUrl}/ponds`),fetch(`${apiUrl}/breeding`),fetch(`${apiUrl}/accounts`),fetch(`${apiUrl}/koi/facets?archived=all&fields=variety`)]);ponds=await pondsResponse.json();breedingItems=await breedingResponse.json();accountItems=await accountResponse.json();koiFacets=facetsResponse.ok?await facetsResponse.json():{};const parentIds=[...new Set(breedingItems.flatMap((item)=>[...parseParentEntries(item.female_parent_entries,item.female_koi_id,''),...parseParentEntries(item.male_parent_entries,item.male_koi_id,'')].map((entry)=>entry?.koi_id)).filter(Boolean).map(String))];if(parentIds.length){try{await window.KoiPicker.byIds(parentIds,{scope:'all'})}catch{}}document.querySelector('#pond-options').innerHTML=ponds.map((item)=>`<option value="${escapeHtml(pondLabel(item))}"></option>`).join('')}
@@ -338,7 +338,7 @@ import DefaultLayout from '@shared/layouts/DefaultLayout.astro'
     document.querySelector('[data-media-paste]').addEventListener('click',pasteReportImages)
     spectrumInput.addEventListener('input',renderSpectrum)
     reportDate.addEventListener('change',loadNextReportBatchCode)
-    // Drafts (Queue menu): media is uploaded when picked, so a draft only keeps the addresses.
+    // Drafts (Antrean menu): media is uploaded when picked, so a draft only keeps the addresses.
     const reportDraftHost=document.createElement('div');reportDraftHost.className='me-auto';form.querySelector('.modal-footer')?.prepend(reportDraftHost)
     const collectReportDraft=()=>{const data={report_type:new FormData(form).get('report_type'),report_date:form.elements.report_date.value,batch_code:form.elements.batch_code.value,report_title:form.elements.report_title.value,dominant_variety:form.elements.dominant_variety.value,origin_location:form.elements.origin_location.value,destination_location:form.elements.destination_location.value,average_length_cm:form.elements.average_length_cm.value,notes:form.elements.notes.value,pond_entries:JSON.stringify(getPondEntries()),condition_entries:JSON.stringify(getConditionEntries()),sorting_entries:JSON.stringify(getSortingEntries()),breeding_entries:JSON.stringify(getLinkedEntries(breedingEntryList,'breeding')),koi_entries:JSON.stringify(getLinkedEntries(koiEntryList,'koi')),reporter_entries:JSON.stringify(getAccountEntries()),media_entries:JSON.stringify(collectMediaEntries()),spectrum_sizes:JSON.stringify(getSpectrumSizes()),validation_checks:JSON.stringify([...document.querySelectorAll('[data-validation-check]:checked')].map((item)=>item.value)),show_in_gallery:Boolean(form.elements.show_in_gallery?.checked)};return{data,summary:[data.report_title,data.report_date].filter(Boolean).join(' - ')||'Laporan tanpa judul',item_count:1}}
     // batch code is taken fresh on load so it never clashes with a report saved meanwhile
@@ -427,7 +427,7 @@ import DefaultLayout from '@shared/layouts/DefaultLayout.astro'
 
     // "Ikan Datang" reports (Laporan Ikan Datang): the main sheet has their summary row; the fish lines
     // (one row per jenis) go to an extra sheet "Ikan Datang", which is also the format the import reads.
-    const reportArrivalColumns = ['Tanggal', 'Nama Laporan', 'Ikan Dari', 'Jenis', 'Gender', 'Ukuran (cm)', 'Farm', 'Bloodline', 'Owner', 'Lokasi Tujuan', 'Foto', 'Catatan', 'Kode Batch']
+    const reportArrivalColumns = ['Tanggal', 'Nama Laporan', 'Ikan Dari', 'Jenis', 'Kelamin', 'Ukuran (cm)', 'Ternakan', 'Bloodline', 'Owner', 'Lokasi Tujuan', 'Foto', 'Catatan', 'Kode Batch']
     // Photo of a line: in the ZIP it is a file under dokumentasi/<kode>/, in a plain Excel file its upload URL.
     const reportArrivalPhotoPath = (item, index, line) => `image/${window.KoiZip.safeName(item.batch_code || String(item.id), 'laporan')}/ikan/ikan-${String(index + 1).padStart(2, '0')}.${(String(line.image_url).split('?')[0].split('.').pop() || 'jpg').toLowerCase()}`
     const reportArrivalRows = (chosen, zipMode = false) => chosen.filter((item) => item.report_type === 'ikan_datang').flatMap((item) =>
@@ -464,13 +464,13 @@ import DefaultLayout from '@shared/layouts/DefaultLayout.astro'
 
     const exportReportsExcel = (ids, zipMode = false) => {
       if (!window.XLSX) {
-        window.KoiDock.showResult('Export Excel', 'Pustaka Excel belum termuat. Muat ulang halaman.')
+        window.KoiDock.showResult('Ekspor Excel', 'Pustaka Excel belum termuat. Muat ulang halaman.')
         return
       }
 
       const chosen = ids.length ? reportItems.filter((item) => ids.includes(String(item.id))) : dock.apply(reportItems)
       if (!chosen.length) {
-        window.KoiDock.showResult('Export Excel', 'Belum ada laporan untuk diexport.')
+        window.KoiDock.showResult('Ekspor Excel', 'Belum ada laporan untuk diexport.')
         return
       }
 
@@ -514,7 +514,7 @@ import DefaultLayout from '@shared/layouts/DefaultLayout.astro'
       setTimeout(() => URL.revokeObjectURL(objectUrl), 1000)
     }
 
-    // Import makes NEW reports from the summary columns (Tanggal, Jenis, Judul, Varietas Dominan, Lokasi Asal/Tujuan,
+    // Impor makes NEW reports from the summary columns (Tanggal, Jenis, Judul, Varietas Dominan, Lokasi Asal/Tujuan,
     // Rata-rata Ukuran, Catatan, Galeri). Kolam, Breeding and Petugas are export-only; fill in the details through the form.
     // Laporan Ikan Datang comes from the sheet "Ikan Datang" (one row per fish).
     // Mass input works in two passes: everything is checked first and shown as a preview (nothing is written),
@@ -692,7 +692,7 @@ import DefaultLayout from '@shared/layouts/DefaultLayout.astro'
 
     const importReportsExcel = async (file) => {
       if (!window.XLSX) {
-        window.KoiDock.showResult('Import Excel', 'Pustaka Excel belum termuat. Muat ulang halaman.')
+        window.KoiDock.showResult('Impor Excel', 'Pustaka Excel belum termuat. Muat ulang halaman.')
         return
       }
 
@@ -710,7 +710,7 @@ import DefaultLayout from '@shared/layouts/DefaultLayout.astro'
         }
         const sheet = await readReportsWorkbook(file)
         if (!sheet.records.length) {
-          window.KoiDock.showResult('Import Excel', 'File tidak berisi data. Kolom yang dikenali: ' + reportExcelColumns.join(', ') + '.')
+          window.KoiDock.showResult('Impor Excel', 'File tidak berisi data. Kolom yang dikenali: ' + reportExcelColumns.join(', ') + '.')
           return
         }
 
@@ -720,7 +720,7 @@ import DefaultLayout from '@shared/layouts/DefaultLayout.astro'
         progress = null
         const planProblems = [...packageProblems, ...plan.problems]
         if (!plan.inserted && !plan.arrivalCreated) {
-          window.KoiDock.showResult('Import Excel Laporan', 'Tidak ada laporan yang bisa diimport.', planProblems)
+          window.KoiDock.showResult('Impor Excel Laporan', 'Tidak ada laporan yang bisa diimport.', planProblems)
           return
         }
         const summary = `Laporan baru: ${plan.inserted}` + (plan.arrivalCreated ? `\nLaporan Ikan Datang baru: ${plan.arrivalCreated}` : '') +
@@ -730,13 +730,13 @@ import DefaultLayout from '@shared/layouts/DefaultLayout.astro'
         if (!go) return
 
         // pass 2: write
-        progress = window.KoiZip.progress('Import Laporan')
+        progress = window.KoiZip.progress('Impor Laporan')
         const result = await runReportsImport(sheet, pkg, false, progress)
         const allProblems = [...packageProblems, ...result.problems]
-        window.KoiDock.showResult('Import Excel Laporan', `Laporan baru ${result.inserted}${result.arrivalCreated ? `, Ikan Datang baru ${result.arrivalCreated}` : ''}, bermasalah ${allProblems.length}.${pkg.isZip || result.docsPlanned ? ` Dokumentasi ditambahkan ${result.docsAdded}, sudah ada ${result.docsSkipped}. Masuk Galeri ${result.galleryCount}.` : ''} Rincian kolam, kondisi, sortir, spektrum, dan data lain diisi lewat formulir.`, allProblems)
+        window.KoiDock.showResult('Impor Excel Laporan', `Laporan baru ${result.inserted}${result.arrivalCreated ? `, Ikan Datang baru ${result.arrivalCreated}` : ''}, bermasalah ${allProblems.length}.${pkg.isZip || result.docsPlanned ? ` Dokumentasi ditambahkan ${result.docsAdded}, sudah ada ${result.docsSkipped}. Masuk Galeri ${result.galleryCount}.` : ''} Rincian kolam, kondisi, sortir, spektrum, dan data lain diisi lewat formulir.`, allProblems)
         await loadReports()
       } catch (error) {
-        window.KoiDock.showResult('Import Excel Laporan', error.message || 'File tidak dapat dibaca.')
+        window.KoiDock.showResult('Impor Excel Laporan', error.message || 'File tidak dapat dibaca.')
       } finally {
         progress?.close()
       }
@@ -757,7 +757,7 @@ import DefaultLayout from '@shared/layouts/DefaultLayout.astro'
     // DEAD CODE (diperiksa 2026-10-14): chooseReportType tidak dipanggil di mana pun. Aman dihapus; sengaja belum dihapus.
     const chooseReportType=()=>{document.querySelector('[data-report-type-chooser]')?.remove();const overlay=document.createElement('div');overlay.setAttribute('data-report-type-chooser','');overlay.style.cssText='position:fixed;inset:0;z-index:4900;display:flex;align-items:center;justify-content:center;padding:16px;background:rgba(0,0,0,.6)';overlay.innerHTML='<div class="card" style="max-width:26rem;width:100%"><div class="card-header"><h3 class="card-title">Tambah Laporan</h3><div class="card-actions"><button type="button" class="btn-close" data-close-chooser aria-label="Tutup"></button></div></div><div class="list-group list-group-flush"><button type="button" class="list-group-item list-group-item-action" data-choose="perikanan"><div class="fw-medium">Laporan Perikanan</div><div class="small text-secondary">Data ulang / panen: jumlah, ukuran, spektrum, validasi.</div></button><button type="button" class="list-group-item list-group-item-action" data-choose="kegiatan"><div class="fw-medium">Laporan Kegiatan</div><div class="small text-secondary">Pakan, ganti air, pengobatan, bersih kolam, pindah ikan, perbaikan.</div></button></div></div>';overlay.addEventListener('click',(event)=>{const choice=event.target.closest('[data-choose]');if(choice){overlay.remove();const target=choice.dataset.choose==='kegiatan'?(document.querySelector('[data-report-open-activity]')||document.querySelector('[data-report-open]')):document.querySelector('[data-report-open]');target?.click();return}if(event.target===overlay||event.target.closest('[data-close-chooser]'))overlay.remove()});document.body.appendChild(overlay)}
     document.addEventListener('keydown',(event)=>{if(event.key==='Escape')document.querySelector('[data-report-type-chooser]')?.remove()})
-    const dock=window.KoiDock.create({root:reportTable,label:'laporan',idOf:(item)=>String(item.id),visibleItems:()=>dock.apply(reportItems.filter(rdReportMatches)),render:()=>renderReports(reportItems),actions:[{key:'edit',icon:'edit',title:'Edit laporan terpilih',role:'farm-operate',show:(count)=>count===1,onClick:(ids)=>{document.querySelector(`[data-dock-id="${ids[0]}"] [data-edit-report]`)?.click()}},{key:'copy',icon:'copy',title:'Salin kode batch terpilih',onClick:async(ids,button)=>{const codes=ids.map((id)=>reportItems.find((item)=>String(item.id)===String(id))?.batch_code).filter(Boolean);const copied=await window.KoiDock.copyText(codes.join('\n'));button.classList.remove('btn-outline-primary');button.classList.add(copied?'btn-success':'btn-danger');button.setAttribute('title',copied?'Kode batch tersalin':'Kode batch gagal disalin');setTimeout(()=>{button.classList.remove('btn-success','btn-danger');button.classList.add('btn-outline-primary');button.setAttribute('title','Salin kode batch terpilih')},1200)}},{key:'print',icon:'printer',variant:'secondary',title:(count)=>count>1?`Cetak ${count} laporan terpilih (satu halaman per laporan)`:'Cetak laporan terpilih',show:(count)=>count>=1,onClick:(ids)=>{const clickPrint=(id)=>document.querySelector(`[data-dock-id="${id}"] [data-print-report]`)?.click();if(ids.length>1)window.KoiPrint.printMany(ids,clickPrint,{title:`Laporan terpilih (${ids.length})`});else clickPrint(ids[0])}},{key:'delete',icon:'trash',variant:'danger',title:(count)=>`Hapus ${count} laporan terpilih`,role:'farm-operate',onClick:(ids)=>deleteReportsBatch(ids)},{key:'export',icon:'file-spreadsheet',variant:'success',title:(count)=>(count?`Export Excel (${count} terpilih)`:'Export Excel'),always:true,onClick:(ids)=>exportReportsExcel(ids)},{key:'zip',icon:'file-zip',variant:'success',title:(count)=>(count?`Unduh ZIP (${count} terpilih)`:'Unduh ZIP (Excel + dokumentasi)'),always:true,onClick:(ids)=>exportReportsExcel(ids,true)},{key:'import',icon:'upload',variant:'success',title:'Import Excel atau ZIP',role:'farm-operate',always:true,show:(count)=>count===0,onClick:()=>reportImportInput.click()}],add:{title:'Tambah laporan',role:'farm-operate',onClick:()=>document.querySelector('[data-report-open]').click()}})
+    const dock=window.KoiDock.create({root:reportTable,label:'laporan',idOf:(item)=>String(item.id),visibleItems:()=>dock.apply(reportItems.filter(rdReportMatches)),render:()=>renderReports(reportItems),actions:[{key:'edit',icon:'edit',title:'Edit laporan terpilih',role:'farm-operate',show:(count)=>count===1,onClick:(ids)=>{document.querySelector(`[data-dock-id="${ids[0]}"] [data-edit-report]`)?.click()}},{key:'copy',icon:'copy',title:'Salin kode batch terpilih',onClick:async(ids,button)=>{const codes=ids.map((id)=>reportItems.find((item)=>String(item.id)===String(id))?.batch_code).filter(Boolean);const copied=await window.KoiDock.copyText(codes.join('\n'));button.classList.remove('btn-outline-primary');button.classList.add(copied?'btn-success':'btn-danger');button.setAttribute('title',copied?'Kode batch tersalin':'Kode batch gagal disalin');setTimeout(()=>{button.classList.remove('btn-success','btn-danger');button.classList.add('btn-outline-primary');button.setAttribute('title','Salin kode batch terpilih')},1200)}},{key:'print',icon:'printer',variant:'secondary',title:(count)=>count>1?`Cetak ${count} laporan terpilih (satu halaman per laporan)`:'Cetak laporan terpilih',show:(count)=>count>=1,onClick:(ids)=>{const clickPrint=(id)=>document.querySelector(`[data-dock-id="${id}"] [data-print-report]`)?.click();if(ids.length>1)window.KoiPrint.printMany(ids,clickPrint,{title:`Laporan terpilih (${ids.length})`});else clickPrint(ids[0])}},{key:'delete',icon:'trash',variant:'danger',title:(count)=>`Hapus ${count} laporan terpilih`,role:'farm-operate',onClick:(ids)=>deleteReportsBatch(ids)},{key:'export',icon:'file-spreadsheet',variant:'success',title:(count)=>(count?`Ekspor Excel (${count} terpilih)`:'Ekspor Excel'),always:true,onClick:(ids)=>exportReportsExcel(ids)},{key:'zip',icon:'file-zip',variant:'success',title:(count)=>(count?`Unduh ZIP (${count} terpilih)`:'Unduh ZIP (Excel + dokumentasi)'),always:true,onClick:(ids)=>exportReportsExcel(ids,true)},{key:'import',icon:'upload',variant:'success',title:'Impor Excel atau ZIP',role:'farm-operate',always:true,show:(count)=>count===0,onClick:()=>reportImportInput.click()}],add:{title:'Tambah laporan',role:'farm-operate',onClick:()=>document.querySelector('[data-report-open]').click()}})
 
 // the navbar search feeds the hidden [data-report-search] input
 ;(function () {
@@ -777,7 +777,7 @@ import DefaultLayout from '@shared/layouts/DefaultLayout.astro'
     document.head.insertAdjacentHTML('beforeend','<style>.report-parent-chip img{cursor:zoom-in}</style>')
     document.addEventListener('click',(event)=>{const chipPhoto=event.target.closest('.report-parent-chip img');if(chipPhoto)window.KoiAuth.zoomPhoto(chipPhoto.src,chipPhoto.alt)})
   </script>
-  <script is:inline src="/assets/activity-report.js?v=20261024a"></script>
-  <script is:inline src="/assets/arrival-report.js?v=20261029a"></script>
+  <script is:inline src="/assets/activity-report.js?v=20261029b"></script>
+  <script is:inline src="/assets/arrival-report.js?v=20261029b"></script>
 </DefaultLayout>
 

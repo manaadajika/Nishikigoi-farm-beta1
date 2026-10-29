@@ -1,5 +1,5 @@
 // Account Settings (settings.html) extras, loaded by auth.js on that page only:
-//  - "Background Profile": upload / remove the picture behind the name on the profile card
+//  - "Latar Belakang Profil": upload / remove the picture behind the name on the profile card
 //  - a "Profile" button that opens your own profile card
 //  - pictures are shrunk in the browser before they are sent (a phone photo is several MB; the avatar needs 512 px, the
 //    background 1500 px), and the server keeps them as files, not as text in the account row.
@@ -68,13 +68,13 @@
     document.head.appendChild(style)
     section = document.createElement('div')
     section.className = 'mt-4'
-    section.innerHTML = '<h3 class="card-title">Background Profile</h3>' +
+    section.innerHTML = '<h3 class="card-title">Latar Belakang Profil</h3>' +
       '<p class="card-subtitle">Gambar di belakang nama pada profil Anda. Disarankan lebar (perbandingan 3:1), misalnya 1500 × 500.</p>' +
       '<div class="koi-cover-preview mb-3" data-cover-preview></div>' +
       '<div class="d-flex flex-wrap gap-2">' +
         '<input type="file" class="d-none" accept="image/*" data-cover-input />' +
-        '<button type="button" class="btn" data-cover-upload>Upload Background Profile</button>' +
-        '<button type="button" class="btn btn-ghost-danger" data-cover-remove>Delete Background Profile</button>' +
+        '<button type="button" class="btn" data-cover-upload>Unggah Latar Belakang Profil</button>' +
+        '<button type="button" class="btn btn-ghost-danger" data-cover-remove>Delete Latar Belakang Profil</button>' +
       '</div>'
     anchor.parentNode.insertBefore(section, anchor.nextSibling)
     preview = section.querySelector('[data-cover-preview]')
@@ -83,7 +83,7 @@
     section.querySelector('[data-cover-remove]').addEventListener('click', function () {
       state.cover = ''
       setPreview('')
-      message('Background Profile dihapus. Klik Submit untuk menyimpan.')
+      message('Latar Belakang Profil dihapus. Klik Submit untuk menyimpan.')
     })
     input.addEventListener('change', function () {
       var file = input.files && input.files[0]
@@ -92,7 +92,7 @@
       readFile(file).then(function (dataUrl) { return shrink(dataUrl, 1500, 0.85) }).then(function (small) {
         state.cover = small
         setPreview(small)
-        message('Background Profile siap disimpan. Klik Submit untuk memperbarui.')
+        message('Latar Belakang Profil siap disimpan. Klik Submit untuk memperbarui.')
       }).catch(function (error) { message(error.message, 'danger') })
     })
     // Cancel puts the saved picture back

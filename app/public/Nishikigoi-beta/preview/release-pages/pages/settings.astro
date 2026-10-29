@@ -21,9 +21,9 @@ import CardTitle from '@ui/CardTitle.astro'
       </div>
       <div class="col-auto">
         <input type="file" class="d-none" id="avatar-upload" accept="image/*" />
-        <button type="button" class="btn" data-action="change-avatar">Change Photo Profile</button>
+        <button type="button" class="btn" data-action="change-avatar">Change Foto Profil</button>
       </div>
-      <div class="col-auto"><button type="button" class="btn btn-ghost-danger" data-action="delete-avatar">Delete Photo Profile</button></div>
+      <div class="col-auto"><button type="button" class="btn btn-ghost-danger" data-action="delete-avatar">Delete Foto Profil</button></div>
     </div>
 
     <CardTitle class="mt-4">Account Profile</CardTitle>
@@ -177,14 +177,14 @@ import CardTitle from '@ui/CardTitle.astro'
       const reader = new FileReader()
       reader.addEventListener('load', () => {
         setAvatar(String(reader.result || ''))
-        showMessage('Photo Profile siap disimpan. Klik Submit untuk memperbarui Master Akun.')
+        showMessage('Foto Profil siap disimpan. Klik Submit untuk memperbarui Master Akun.')
       })
       reader.readAsDataURL(file)
     })
 
     document.querySelector('[data-action="delete-avatar"]')?.addEventListener('click', () => {
       setAvatar('__deleted__')
-      showMessage('Photo Profile dihapus. Klik Submit untuk menyimpan.')
+      showMessage('Foto Profil dihapus. Klik Submit untuk menyimpan.')
     })
 
     document.querySelector('[data-action="change-email"]')?.addEventListener('click', () => {

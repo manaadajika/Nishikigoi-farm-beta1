@@ -35,7 +35,7 @@ import FormGroup from '@ui/FormGroup.astro'
             <span class="avatar avatar-xl" data-brand-icon-preview>N</span>
             <div class="btn-list">
               <input type="file" class="d-none" id="brand-icon" data-brand-icon-input accept="image/*" />
-              <button type="button" class="btn" data-action="upload-brand-icon">Upload Icon</button>
+              <button type="button" class="btn" data-action="upload-brand-icon">Unggah Icon</button>
               <button type="button" class="btn btn-ghost-danger" data-action="remove-brand-icon">Hapus Icon</button>
             </div>
           </div>
@@ -96,7 +96,7 @@ import FormGroup from '@ui/FormGroup.astro'
       <table class="table card-table table-vcenter">
         <thead>
           <tr>
-            <th>Photo Profile</th>
+            <th>Foto Profil</th>
             <th>Nama</th>
             <th>Username</th>
             <th>Email</th>
@@ -177,13 +177,13 @@ import FormGroup from '@ui/FormGroup.astro'
           <div class="alert alert-success d-none mb-3" role="alert" data-master-account-message></div>
           <div class="row g-3" data-account-form>
             <div class="col-12">
-              <label class="form-label" for="account-avatar">Photo Profile</label>
+              <label class="form-label" for="account-avatar">Foto Profil</label>
               <div class="d-flex align-items-center gap-3">
                 <span class="avatar avatar-xl" data-account-avatar-preview>HA</span>
                 <div class="btn-list">
                   <input type="file" class="d-none" id="account-avatar" accept="image/*" />
-                  <button type="button" class="btn" data-action="upload-avatar">Upload Photo Profile</button>
-                  <button type="button" class="btn btn-ghost-danger" data-action="remove-avatar">Hapus Photo Profile</button>
+                  <button type="button" class="btn" data-action="upload-avatar">Unggah Foto Profil</button>
+                  <button type="button" class="btn btn-ghost-danger" data-action="remove-avatar">Hapus Foto Profil</button>
                 </div>
               </div>
             </div>
@@ -685,7 +685,7 @@ import FormGroup from '@ui/FormGroup.astro'
       }
 
       const clearSystemData = async (button) => {
-        const typed = (await window.KoiDialog.prompt('Ini akan menghapus SEMUA data ikan, kolam, breeding, laporan, galeri, notifikasi, dan draft. Akun, setingan program, tema, dan histori Queue tetap ada, file foto/video di server tidak ikut terhapus. Sebaiknya Buat Backup dulu sebelum lanjut.\n\nKetik HAPUS untuk konfirmasi.'))
+        const typed = (await window.KoiDialog.prompt('Ini akan menghapus SEMUA data ikan, kolam, breeding, laporan, galeri, notifikasi, dan draft. Akun, setingan program, tema, dan histori Antrean tetap ada, file foto/video di server tidak ikut terhapus. Sebaiknya Buat Backup dulu sebelum lanjut.\n\nKetik HAPUS untuk konfirmasi.'))
         if (typed === null) return
         if (typed.trim().toUpperCase() !== 'HAPUS') {
           window.alert('Belum dihapus: ketik HAPUS untuk konfirmasi.')
@@ -1114,7 +1114,7 @@ import FormGroup from '@ui/FormGroup.astro'
 
       if (action === 'remove-avatar') {
         setAvatarPreview('')
-        showMessage('Photo Profile akun dihapus. Klik Submit untuk menyimpan.')
+        showMessage('Foto Profil akun dihapus. Klik Submit untuk menyimpan.')
       }
 
       if (action === 'unlock-account') {

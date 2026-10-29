@@ -2,7 +2,7 @@
 import DefaultLayout from '@shared/layouts/DefaultLayout.astro'
 ---
 
-<DefaultLayout title="Gallery" pageHeader="Gallery" pretitle="Management" pageMenu="management.gallery">
+<DefaultLayout title="Galeri" pageHeader="Galeri" pretitle="Manajemen" pageMenu="management.gallery">
   <style is:global>
     .gallery-form-media-card {
       position: relative;
@@ -42,7 +42,7 @@ import DefaultLayout from '@shared/layouts/DefaultLayout.astro'
     <div class="modal-dialog modal-xl modal-dialog-centered" role="document">
       <form class="modal-content" data-gallery-form>
         <div class="modal-header">
-          <h5 class="modal-title" data-modal-title>Formulir Tambah Gallery</h5>
+          <h5 class="modal-title" data-modal-title>Formulir Tambah Galeri</h5>
           <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Tutup"></button>
         </div>
         <div class="modal-body">
@@ -51,7 +51,7 @@ import DefaultLayout from '@shared/layouts/DefaultLayout.astro'
           <input type="hidden" name="pond_id" data-gallery-pond-id />
           <div class="row g-3">
             <div class="col-md-6">
-              <label class="form-label">Judul Gallery</label>
+              <label class="form-label">Judul Galeri</label>
               <input class="form-control" name="title" placeholder="Kolase panen kolam A" />
             </div>
             <div class="col-md-6">
@@ -79,7 +79,7 @@ import DefaultLayout from '@shared/layouts/DefaultLayout.astro'
         </div>
         <div class="modal-footer">
           <button class="btn" type="button" data-bs-dismiss="modal">Batal</button>
-          <button class="btn btn-primary" type="submit" data-gallery-submit>Simpan Gallery</button>
+          <button class="btn btn-primary" type="submit" data-gallery-submit>Simpan Galeri</button>
         </div>
       </form>
     </div>
@@ -98,7 +98,7 @@ import DefaultLayout from '@shared/layouts/DefaultLayout.astro'
   </div>
 
   <div class="d-flex justify-content-end mb-3">
-    <button class="btn btn-primary" type="button" data-open-create data-role-required="database-write">Tambah Gallery</button>
+    <button class="btn btn-primary" type="button" data-open-create data-role-required="database-write">Tambah Galeri</button>
   </div>
 
   <input class="d-none" type="search" data-gallery-search aria-hidden="true" tabindex="-1" autocomplete="off" />
@@ -330,8 +330,8 @@ import DefaultLayout from '@shared/layouts/DefaultLayout.astro'
       galleryPondIdInput.value = ''
       mediaList.innerHTML = ''
       errorBox.classList.add('d-none')
-      modalTitle.textContent = 'Formulir Tambah Gallery'
-      submitButton.textContent = 'Simpan Gallery'
+      modalTitle.textContent = 'Formulir Tambah Galeri'
+      submitButton.textContent = 'Simpan Galeri'
       createMediaRow()
     }
 
@@ -580,7 +580,7 @@ import DefaultLayout from '@shared/layouts/DefaultLayout.astro'
     }
 
     const loadGallery = (silent = false) => fetch(`${apiUrl}/gallery`)
-      .then((response) => response.ok ? response.json() : Promise.reject(new Error('Gallery gagal dimuat')))
+      .then((response) => response.ok ? response.json() : Promise.reject(new Error('Galeri gagal dimuat')))
       .then((items) => {
         localStorage.setItem(galleryCacheKey, JSON.stringify(items))
         renderGallery(items)
@@ -647,7 +647,7 @@ import DefaultLayout from '@shared/layouts/DefaultLayout.astro'
         const item = galleries.find((gallery) => String(gallery.id) === String(editButton.dataset.editGallery))
         if (!item) return
         resetForm()
-        modalTitle.textContent = 'Formulir Edit Gallery'
+        modalTitle.textContent = 'Formulir Edit Galeri'
         submitButton.textContent = 'Simpan Perubahan'
         galleryIdInput.value = item.id
         galleryPondIdInput.value = item.pond_id || ''
@@ -676,7 +676,7 @@ import DefaultLayout from '@shared/layouts/DefaultLayout.astro'
         payload.images = collectMedia()
         if (payload.images.length === 0) throw new Error('Minimal satu foto/video wajib diisi')
         payload.pond_id = payload.pond_id || null
-        payload.segment_name = payload.title || 'Gallery'
+        payload.segment_name = payload.title || 'Galeri'
         payload.gallery_date = payload.gallery_date || new Date().toISOString().slice(0, 10)
 
         const response = await fetch(`${apiUrl}/gallery${galleryIdInput.value ? `/${galleryIdInput.value}` : ''}`, {
@@ -685,7 +685,7 @@ import DefaultLayout from '@shared/layouts/DefaultLayout.astro'
           body: JSON.stringify(payload),
         })
         const data = await response.json().catch(() => ({}))
-        if (!response.ok) throw new Error(data.detail || data.error || 'Gallery gagal disimpan')
+        if (!response.ok) throw new Error(data.detail || data.error || 'Galeri gagal disimpan')
 
         resetForm()
         closeGalleryModal()
@@ -695,7 +695,7 @@ import DefaultLayout from '@shared/layouts/DefaultLayout.astro'
         errorBox.classList.remove('d-none')
       } finally {
         submitButton.disabled = false
-        submitButton.textContent = galleryIdInput.value ? 'Simpan Perubahan' : 'Simpan Gallery'
+        submitButton.textContent = galleryIdInput.value ? 'Simpan Perubahan' : 'Simpan Galeri'
       }
     })
 
@@ -703,5 +703,5 @@ import DefaultLayout from '@shared/layouts/DefaultLayout.astro'
     restoreGalleryCache()
     loadGallery()
   </script>
-  <script is:inline src="/assets/gallery-extras.js?v=20261024a"></script>
+  <script is:inline src="/assets/gallery-extras.js?v=20261029b"></script>
 </DefaultLayout>

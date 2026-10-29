@@ -19,7 +19,7 @@ const trashIcon = iconSvg('trash')
 const saveIcon = iconSvg('device-floppy')
 ---
 
-<DefaultLayout title="Breeding" pageHeader="Breeding" pretitle="Management" pageMenu="farm-breeding" pageLibs={['litepicker']}>
+<DefaultLayout title="Breeding" pageHeader="Breeding" pretitle="Manajemen" pageMenu="farm-breeding" pageLibs={['litepicker']}>
   <style is:global>
     .breeding-parent-preview {
       min-height: 0;
@@ -681,7 +681,7 @@ const saveIcon = iconSvg('device-floppy')
       values: () => Object.values(window.KoiPicker.cache),
     }
 
-    // Parent photos come with the breeding list itself (item.parent_koi), so a failed or slow /koi
+    // Indukan photos come with the breeding list itself (item.parent_koi), so a failed or slow /koi
     // request no longer turns every parent without a direct female/male join into "No foto".
     const lookupKoi = (item, koiId) => {
       if (!koiId) return null
@@ -830,7 +830,7 @@ const saveIcon = iconSvg('device-floppy')
       catatan: 'notes', notes: 'notes',
     }
     // "bloo:isa" works too: a field name may be shortened to its first letters (2 or more). Exact names win, then the
-    // first name in the list above that starts with what was typed. Unknown names stay plain text.
+    // first name in the list above that starts with what was typed. Tidak diketahui names stay plain text.
     const resolveSearchMarkers = (keyword, aliases) => {
       const names = Object.keys(aliases)
       const found = []
@@ -1105,7 +1105,7 @@ const saveIcon = iconSvg('device-floppy')
                 <div class="col-12 breeding-card-cell"><span class="text-secondary">Indukan Jantan</span>${renderMaleThumbs(item)}</div>
               </div>
               <div class="breeding-card-actions">
-                <button class="btn btn-sm" type="button" data-print-breeding="${escapeHtml(item.id)}">${printIcon} Print</button>
+                <button class="btn btn-sm" type="button" data-print-breeding="${escapeHtml(item.id)}">${printIcon} Cetak</button>
                 <button class="btn btn-sm" type="button" data-edit-breeding="${escapeHtml(item.id)}" data-role-required="farm-operate">${editIcon} Edit</button>
                 <button class="btn btn-sm btn-outline-danger" type="button" data-delete-breeding="${escapeHtml(item.id)}" data-role-required="farm-operate">${trashIcon} Hapus</button>
               </div>
@@ -1147,13 +1147,13 @@ const saveIcon = iconSvg('device-floppy')
 
     const exportBreedingExcel = (ids, zipMode = false) => {
       if (!window.XLSX) {
-        window.KoiDock.showResult('Export Excel', 'Pustaka Excel belum termuat. Muat ulang halaman.')
+        window.KoiDock.showResult('Ekspor Excel', 'Pustaka Excel belum termuat. Muat ulang halaman.')
         return
       }
 
       const chosen = ids.length ? breedingItems.filter((item) => ids.includes(String(item.id))) : dock.apply(filteredBreedingItems())
       if (!chosen.length) {
-        window.KoiDock.showResult('Export Excel', 'Belum ada data breeding untuk diexport.')
+        window.KoiDock.showResult('Ekspor Excel', 'Belum ada data breeding untuk diexport.')
         return
       }
 
@@ -1368,7 +1368,7 @@ const saveIcon = iconSvg('device-floppy')
 
     const importBreedingExcel = async (file) => {
       if (!window.XLSX) {
-        window.KoiDock.showResult('Import Excel', 'Pustaka Excel belum termuat. Muat ulang halaman.')
+        window.KoiDock.showResult('Impor Excel', 'Pustaka Excel belum termuat. Muat ulang halaman.')
         return
       }
 
@@ -1386,7 +1386,7 @@ const saveIcon = iconSvg('device-floppy')
         }
         const records = await readBreedingRecords(file)
         if (!records.length) {
-          window.KoiDock.showResult('Import Excel', 'File tidak berisi data. Kolom yang dikenali: ' + breedingExcelColumns.join(', ') + '.')
+          window.KoiDock.showResult('Impor Excel', 'File tidak berisi data. Kolom yang dikenali: ' + breedingExcelColumns.join(', ') + '.')
           return
         }
 
@@ -1396,7 +1396,7 @@ const saveIcon = iconSvg('device-floppy')
         progress = null
         const planProblems = [...packageProblems, ...plan.problems]
         if (!plan.inserted && !plan.updated) {
-          window.KoiDock.showResult('Import Excel Breeding', 'Tidak ada data yang bisa diimport.', planProblems)
+          window.KoiDock.showResult('Impor Excel Breeding', 'Tidak ada data yang bisa diimport.', planProblems)
           return
         }
         const summary = `Sesi baru: ${plan.inserted}\nSesi diperbarui: ${plan.updated}` +
@@ -1406,13 +1406,13 @@ const saveIcon = iconSvg('device-floppy')
         if (!go) return
 
         // pass 2: write
-        progress = window.KoiZip.progress('Import Breeding')
+        progress = window.KoiZip.progress('Impor Breeding')
         const result = await runBreedingImport(records, pkg, false, progress)
         const allProblems = [...packageProblems, ...result.problems]
-        window.KoiDock.showResult('Import Excel Breeding', `Baru ${result.inserted}, diperbarui ${result.updated}, bermasalah ${allProblems.length}.${pkg.isZip || result.docsPlanned ? ` Dokumentasi ditambahkan ${result.docsAdded}, sudah ada ${result.docsSkipped}.` : ''}`, allProblems)
+        window.KoiDock.showResult('Impor Excel Breeding', `Baru ${result.inserted}, diperbarui ${result.updated}, bermasalah ${allProblems.length}.${pkg.isZip || result.docsPlanned ? ` Dokumentasi ditambahkan ${result.docsAdded}, sudah ada ${result.docsSkipped}.` : ''}`, allProblems)
         await keepScroll(loadBreeding)
       } catch (error) {
-        window.KoiDock.showResult('Import Excel Breeding', error.message || 'File tidak dapat dibaca.')
+        window.KoiDock.showResult('Impor Excel Breeding', error.message || 'File tidak dapat dibaca.')
       } finally {
         progress?.close()
       }
@@ -1483,9 +1483,9 @@ const saveIcon = iconSvg('device-floppy')
         },
         { key: 'print', icon: 'printer', variant: 'secondary', title: (count) => (count > 1 ? `Cetak ${count} breeding terpilih (satu halaman per sesi)` : 'Cetak breeding terpilih'), show: (count) => count >= 1, onClick: (ids) => (ids.length > 1 ? window.KoiPrint.printMany(ids, printBreeding, { title: `Breeding terpilih (${ids.length} sesi)` }) : printBreeding(ids[0])) },
         { key: 'delete', icon: 'trash', variant: 'danger', title: (count) => `Hapus ${count} breeding terpilih`, role: 'farm-operate', onClick: (ids) => deleteBreedingBatch(ids) },
-        { key: 'export', icon: 'file-spreadsheet', variant: 'success', title: (count) => (count ? `Export Excel (${count} terpilih)` : 'Export Excel'), always: true, onClick: (ids) => exportBreedingExcel(ids) },
+        { key: 'export', icon: 'file-spreadsheet', variant: 'success', title: (count) => (count ? `Ekspor Excel (${count} terpilih)` : 'Ekspor Excel'), always: true, onClick: (ids) => exportBreedingExcel(ids) },
         { key: 'zip', icon: 'file-zip', variant: 'success', title: (count) => (count ? `Unduh ZIP (${count} terpilih)` : 'Unduh ZIP (Excel + dokumentasi)'), always: true, onClick: (ids) => exportBreedingExcel(ids, true) },
-        { key: 'import', icon: 'upload', variant: 'success', title: 'Import Excel atau ZIP', role: 'farm-operate', always: true, show: (count) => count === 0, onClick: () => breedingImportInput.click() },
+        { key: 'import', icon: 'upload', variant: 'success', title: 'Impor Excel atau ZIP', role: 'farm-operate', always: true, show: (count) => count === 0, onClick: () => breedingImportInput.click() },
       ],
       add: { title: 'Tambah breeding', role: 'farm-operate', onClick: () => addButton.click() },
     })
@@ -1695,7 +1695,7 @@ const saveIcon = iconSvg('device-floppy')
             </div>
             <div class="row g-2 mt-0">
               <div class="col-5 col-sm-4 breeding-parent-size">
-                <label class="form-label mb-1">Size</label>
+                <label class="form-label mb-1">Ukuran</label>
                 <div class="input-group input-group-flat">
                   <input class="form-control" name="breeding_parent_length" type="number" min="0" step="0.1" data-parent-length data-no-clear placeholder="0" value="${escapeHtml(sizeInputValue(parentSizeValue(entry, selectedItem)))}" />
                   <span class="input-group-text">cm</span>
@@ -2077,7 +2077,7 @@ const saveIcon = iconSvg('device-floppy')
         ? entries.map((entry, index) => `<tr><td class="kp-center">${index + 1}</td><td><strong>${escapeHtml(text(entry.label))}</strong></td><td>${escapeHtml(entry.notes || '-')}</td></tr>`).join('')
         : '<tr><td colspan="3" class="kp-muted">Belum ada data.</td></tr>'
 
-    const parentTableHead = '<thead><tr><th class="kp-center" style="width:48px">Foto</th><th style="width:13%">Kode</th><th>Nama</th><th style="width:15%">Variety</th><th style="width:13%">Bloodline</th><th class="kp-num" style="width:10%">Ukuran</th><th style="width:16%">Catatan</th></tr></thead>'
+    const parentTableHead = '<thead><tr><th class="kp-center" style="width:48px">Foto</th><th style="width:13%">Kode</th><th>Nama</th><th style="width:15%">Varietas</th><th style="width:13%">Bloodline</th><th class="kp-num" style="width:10%">Ukuran</th><th style="width:16%">Catatan</th></tr></thead>'
 
     const printBreeding = (id) => {
       const item = breedingItems.find((entry) => String(entry.id) === String(id))
@@ -2232,7 +2232,7 @@ const saveIcon = iconSvg('device-floppy')
       pond_entries: readPondEntries(),
     })
 
-    // Drafts (Queue menu): save the form as a draft and continue it later, from any device.
+    // Drafts (Antrean menu): save the form as a draft and continue it later, from any device.
     const breedingDraftHost = document.createElement('div')
     breedingDraftHost.className = 'me-auto'
     form.querySelector('.modal-footer')?.prepend(breedingDraftHost)

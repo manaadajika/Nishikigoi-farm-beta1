@@ -1,4 +1,4 @@
-// Etc > Archive: "Ikan | Galeri" switch. The Galeri tab lists archived gallery collections with
+// Lainnya > Arsip: "Ikan | Galeri" switch. The Galeri tab lists archived gallery collections with
 // Kembalikan (restore to Galeri) and Hapus permanen. Collections made from a report are removed
 // from the Laporan menu, so Hapus shows a warning pointing there instead.
 ;(function () {

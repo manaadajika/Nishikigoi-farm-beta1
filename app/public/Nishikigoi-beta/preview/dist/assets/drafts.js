@@ -1,4 +1,4 @@
-// Server-side form drafts, listed in the Queue menu and usable from any device.
+// Server-side form drafts, listed in the Antrean menu and usable from any device.
 // Used by Tambah Ikan (its own draft menu), Tambah Breeding and Tambah Laporan (attach()).
 // Visible to Operator, Admin and Master Admin; Viewer never sees draft controls.
 ;(function () {
@@ -41,7 +41,7 @@
     save: function (payload) { return request('/drafts', { method: 'POST', body: JSON.stringify(payload) }) },
     rename: function (id, name) { return request('/drafts/' + encodeURIComponent(id), { method: 'PATCH', body: JSON.stringify({ name: name }) }) },
     remove: function (id) { return request('/drafts/' + encodeURIComponent(id), { method: 'DELETE' }) },
-    // ?draft=ID in the URL (from Queue "Lanjutkan")
+    // ?draft=ID in the URL (from Antrean "Lanjutkan")
     requestedId: function () { return new URLSearchParams(window.location.search).get('draft') },
     clearRequested: function () {
       var url = new URL(window.location.href)
@@ -49,7 +49,7 @@
       window.history.replaceState(window.history.state, '', url)
     },
     // Resolves once deferred scripts (Bootstrap modal) are ready, so forms opened from a
-    // Queue link can still be closed normally after saving.
+    // Antrean link can still be closed normally after saving.
     whenReady: function () {
       if (document.readyState === 'complete') return Promise.resolve()
       return new Promise(function (resolve) { window.addEventListener('load', function () { resolve() }, { once: true }) })
@@ -120,7 +120,7 @@
         })
         .then(function (saved) {
           state.currentId = saved.id
-          info('Draft tersimpan di Queue.')
+          info('Draft tersimpan di Antrean.')
           return refresh()
         })
         .catch(function (e) { error('Draft belum tersimpan: ' + e.message) })
@@ -166,7 +166,7 @@
     }
 
     refresh()
-    // ?draft=ID from Queue: only the form of the draft's own type opens it (a page may have two forms).
+    // ?draft=ID from Antrean: only the form of the draft's own type opens it (a page may have two forms).
     var requested = KoiDrafts.requestedId()
     if (requested && KoiDrafts.canUse(options.type)) {
       KoiDrafts.get(requested).then(function (draft) {

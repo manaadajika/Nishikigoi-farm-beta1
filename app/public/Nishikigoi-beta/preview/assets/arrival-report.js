@@ -20,8 +20,8 @@
     var n = Number(String(value == null ? '' : value).replace(',', '.'))
     return String(value == null ? '' : value).trim() === '' || !Number.isFinite(n) ? null : n
   }
-  // Same values as the Gender field of Data Ikan: unknown | male | female (shown as words).
-  var genderLabels = { unknown: 'Unknown', male: 'Male', female: 'Female' }
+  // Same values as the Kelamin field of Data Ikan: unknown | male | female (shown as words).
+  var genderLabels = { unknown: 'Tidak diketahui', male: 'Jantan', female: 'Betina' }
   function genderFrom(value) {
     var typed = String(value == null ? '' : value).trim().toLowerCase()
     if (['male', 'm', 'jantan', 'j'].indexOf(typed) >= 0) return 'male'
@@ -71,8 +71,8 @@
         '</td><td class="kp-num">' + (sizeText(line.size_cm) ? e(sizeText(line.size_cm)) + ' cm' : '-') +
         '</td><td>' + e(line.farm || '-') + '</td><td>' + e(line.bloodline || '-') + '</td><td>' + e(line.owner || '-') + '</td><td>' + e(line.pond_name || '-') + '</td></tr>'
     }).join('') || '<tr><td colspan="9" class="kp-muted">Belum ada ikan.</td></tr>'
-    var body = '<section class="kp-section"><h2>Ikan yang datang</h2><table class="kp-table"><thead><tr><th class="kp-center" style="width:28px">No</th><th class="kp-center" style="width:48px">Foto</th><th>Jenis</th><th class="kp-center" style="width:9%">Gender</th><th class="kp-num" style="width:9%">Ukuran</th>' +
-      '<th style="width:13%">Farm</th><th style="width:12%">Bloodline</th><th style="width:12%">Owner</th><th style="width:13%">Lokasi</th></tr></thead><tbody>' + rows +
+    var body = '<section class="kp-section"><h2>Ikan yang datang</h2><table class="kp-table"><thead><tr><th class="kp-center" style="width:28px">No</th><th class="kp-center" style="width:48px">Foto</th><th>Jenis</th><th class="kp-center" style="width:9%">Kelamin</th><th class="kp-num" style="width:9%">Ukuran</th>' +
+      '<th style="width:13%">Ternakan</th><th style="width:12%">Bloodline</th><th style="width:12%">Owner</th><th style="width:13%">Lokasi</th></tr></thead><tbody>' + rows +
       '<tr><td colspan="9"><strong>Total: ' + e(totalOf(lines)) + ' ekor</strong></td></tr></tbody></table></section>' +
       (mediaList.length ? '<section class="kp-section"><h2>Dokumentasi</h2><div style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px">' +
         mediaList.map(function (m) {
@@ -95,7 +95,7 @@
   }
 
   // ---- Excel sheet import ("Ikan Datang": one row per fish line) --------------------------------
-  // Columns: Tanggal | Nama Laporan | Ikan Dari | Jenis | Gender | Ukuran (cm) | Farm | Bloodline | Owner | Lokasi Tujuan | Foto | Catatan | Kode Batch
+  // Columns: Tanggal | Nama Laporan | Ikan Dari | Jenis | Kelamin | Ukuran (cm) | Ternakan | Bloodline | Owner | Lokasi Tujuan | Foto | Catatan | Kode Batch
   // One row = one fish. Rows with the same Tanggal + Nama Laporan + Ikan Dari become ONE report.
   // An old "Jumlah (ekor)" column is still read (empty = 1).
   // Returns { created, skipped, problems }.
@@ -139,8 +139,8 @@
       if (record.catatan && !group.notes) group.notes = String(record.catatan).trim()
       if (record.dokumentasi && !group.docsCell) group.docsCell = String(record.dokumentasi).trim()
       group.lines.push({
-        qty: qty === null ? 1 : Math.round(qty), variety: variety, gender: genderFrom(record.gender), size_cm: size === null ? '' : size,
-        farm: String(record.farm || '').trim(), bloodline: String(record.bloodline || '').trim(), owner: String(record.owner || '').trim(),
+        qty: qty === null ? 1 : Math.round(qty), variety: variety, gender: genderFrom(record.kelamin || record.gender), size_cm: size === null ? '' : size,
+        farm: String(record.ternakan || record.farm || '').trim(), bloodline: String(record.bloodline || '').trim(), owner: String(record.owner || '').trim(),
         pond_id: pond ? String(pond.id) : '', pond_name: pond ? pond.name : '',
         image_url: '', image_ref: String(record.foto || '').trim(),
       })
@@ -297,7 +297,7 @@
       '<label class="form-check mt-3 mb-1"><input class="form-check-input" type="checkbox" name="show_in_gallery" checked><span class="form-check-label">Tampilkan media di Galeri</span></label>' +
       '<div class="form-hint">Media laporan ini ikut tampil di menu Galeri sebagai satu koleksi (file tidak digandakan).</div></div>' +
       '</div></div>' +
-      '<div class="modal-footer"><div class="me-auto" data-arrival-draft-host></div><button type="button" class="btn d-none" data-arrival-print>Print</button>' +
+      '<div class="modal-footer"><div class="me-auto" data-arrival-draft-host></div><button type="button" class="btn d-none" data-arrival-print>Cetak</button>' +
       '<button type="button" class="btn" data-arrival-close>Batal</button>' +
       '<button type="submit" class="btn btn-primary" data-arrival-submit>Simpan Laporan</button></div>' +
       '</form></div>'
@@ -340,7 +340,7 @@
       })
     }
     function genderGroup(name, selected) {
-      return '<div class="form-selectgroup flex-nowrap" role="radiogroup" aria-label="Gender">' + ['unknown', 'male', 'female'].map(function (key) {
+      return '<div class="form-selectgroup flex-nowrap" role="radiogroup" aria-label="Kelamin">' + ['unknown', 'male', 'female'].map(function (key) {
         return '<label class="form-selectgroup-item" title="' + genderLabels[key] + '"><input class="form-selectgroup-input" type="radio" data-line-gender name="' + name + '" value="' + key + '"' + (key === selected ? ' checked' : '') + '>' +
           '<span class="form-selectgroup-label" aria-label="' + genderLabels[key] + '" style="padding:.35rem .5rem;font-size:.8rem;white-space:nowrap">' + genderLabels[key] + '</span></label>'
       }).join('') + '</div>'
@@ -351,7 +351,7 @@
       thumb.classList.toggle('d-none', !url)
       if (url) thumb.src = url
       row.querySelector('[data-line-photo-remove]').classList.toggle('d-none', !url || readonly)
-      row.querySelector('[data-line-photo-pick]').textContent = url ? 'Ganti foto' : 'Upload foto'
+      row.querySelector('[data-line-photo-pick]').textContent = url ? 'Ganti foto' : 'Unggah foto'
     }
     function addLine(line) {
       line = line || {}
@@ -363,15 +363,15 @@
       row.innerHTML = '<div class="row g-2">' +
         field('col-12 col-md-2', 'Jenis', '<input class="form-control" list="arrival-varieties" data-line-variety placeholder="Contoh Showa" value="' + escapeHtml(line.variety || '') + '">') +
         field('col-5 col-md-2', 'Ukuran (cm)', '<input class="form-control" type="number" min="0" step="0.1" data-line-size placeholder="cm" value="' + escapeHtml(line.size_cm == null ? '' : line.size_cm) + '">') +
-        field('col-12 col-md-4', 'Gender', genderGroup('arrival_gender_' + lineSeq, genderFrom(line.gender))) +
-        field('col-6 col-md-2', 'Farm', '<input class="form-control" list="arrival-farms" data-line-farm placeholder="Farm" value="' + escapeHtml(line.farm || '') + '">') +
+        field('col-12 col-md-4', 'Kelamin', genderGroup('arrival_gender_' + lineSeq, genderFrom(line.gender))) +
+        field('col-6 col-md-2', 'Ternakan', '<input class="form-control" list="arrival-farms" data-line-farm placeholder="Ternakan" value="' + escapeHtml(line.farm || '') + '">') +
         field('col-6 col-md-2', 'Bloodline', '<input class="form-control" list="arrival-bloodlines" data-line-bloodline placeholder="Bloodline" value="' + escapeHtml(line.bloodline || '') + '">') +
         field('col-12 col-md-2', 'Owner', '<input class="form-control" list="arrival-owners" data-line-owner placeholder="Owner" value="' + escapeHtml(line.owner || '') + '">') +
         '</div>' +
         '<div class="row g-2 mt-1 align-items-end"><div class="col-12 col-md-4"><label class="form-label small mb-0">Lokasi tujuan</label><select class="form-select" data-line-pond>' + pondOptionsHtml(line.pond_id) + '</select></div>' +
         '<div class="col-12 col-md-8 d-flex align-items-center flex-wrap gap-2">' +
         '<img class="rounded border d-none" alt="Foto ikan" data-line-photo-thumb style="width:44px;height:44px;object-fit:cover">' +
-        '<button type="button" class="btn btn-sm btn-outline-primary" data-line-photo-pick>Upload foto</button>' +
+        '<button type="button" class="btn btn-sm btn-outline-primary" data-line-photo-pick>Unggah foto</button>' +
         '<button type="button" class="btn btn-sm btn-outline-secondary d-none" data-line-photo-remove>Hapus foto</button>' +
         '<span class="text-secondary small" data-line-photo-status></span>' +
         '<input class="d-none" type="file" accept="image/*" data-line-photo-input>' +
@@ -664,7 +664,7 @@
         .then(function () { submit.disabled = false; submit.textContent = 'Simpan Laporan' })
     })
 
-    // "Simpan Draft": the unfinished report goes to Etc > Queue and can be continued later (from any device)
+    // "Simpan Draft": the unfinished report goes to Lainnya > Antrean and can be continued later (from any device)
     var drafts = window.KoiDrafts ? window.KoiDrafts.attach({
       type: 'arrival',
       host: modal.querySelector('[data-arrival-draft-host]'),

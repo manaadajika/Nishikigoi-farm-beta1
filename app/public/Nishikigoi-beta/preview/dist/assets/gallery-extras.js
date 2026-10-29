@@ -1,5 +1,5 @@
-// Gallery extras: "Arsipkan" button (archived collections leave the Galeri list and are managed in
-// Etc > Archive, tab Galeri), plus a "Dari Laporan" mark. Collections made from a report
+// Galeri extras: "Arsipkan" button (archived collections leave the Galeri list and are managed in
+// Lainnya > Arsip, tab Galeri), plus a "Dari Laporan" mark. Collections made from a report
 // ("Tampilkan media di Galeri") are changed or removed from Laporan, so Edit/Hapus on them shows a
 // warning pointing there instead. Works on top of the gallery page by reading its localStorage cache.
 ;(function () {
@@ -42,7 +42,7 @@
 
     var empty = document.createElement('div')
     empty.className = 'col-12 d-none'
-    empty.innerHTML = '<div class="card"><div class="card-body text-secondary">Semua koleksi sedang diarsipkan. Lihat di menu Etc &gt; Archive, tab Galeri.</div></div>'
+    empty.innerHTML = '<div class="card"><div class="card-body text-secondary">Semua koleksi sedang diarsipkan. Lihat di menu Lainnya &gt; Arsip, tab Galeri.</div></div>'
 
     function showNotice(kind, html) {
       notice.className = 'alert alert-' + kind
@@ -75,7 +75,7 @@
       } else if (item && item.archived_at) {
         targetDone = true
         showNotice('info', 'Koleksi <strong>' + escapeHtml(item.title) + '</strong> (ID ' + escapeHtml(targetId) + ') sedang diarsipkan. Lihat di menu ' +
-          '<a href="./farm-archive.html" data-go-archive-gallery>Etc &gt; Archive, tab Galeri</a>.')
+          '<a href="./farm-archive.html" data-go-archive-gallery>Lainnya &gt; Arsip, tab Galeri</a>.')
       } else if (final) {
         targetDone = true
         showNotice('warning', 'Koleksi Galeri dengan ID <strong>' + escapeHtml(targetId) + '</strong> tidak ditemukan.')
@@ -175,7 +175,7 @@
       }).filter(Boolean)
     }
 
-    // a "Print" button next to "Tambah Gallery" prints every collection that is shown, one per page
+    // a "Cetak" button next to "Tambah Galeri" prints every collection that is shown, one per page
     var addButton = document.querySelector('[data-open-create]')
     if (addButton && !document.querySelector('[data-gallery-print-all]')) {
       var printAll = document.createElement('button')
@@ -183,7 +183,7 @@
       printAll.className = 'btn btn-outline-secondary me-2'
       printAll.setAttribute('data-gallery-print-all', '')
       printAll.title = 'Cetak semua koleksi yang tampil (satu koleksi per halaman)'
-      printAll.innerHTML = printIcon + ' Print'
+      printAll.innerHTML = printIcon + ' Cetak'
       addButton.parentElement.insertBefore(printAll, addButton)
       printAll.addEventListener('click', function () {
         var items = visibleItems()
@@ -245,7 +245,7 @@
           button.type = 'button'
           button.className = 'btn btn-icon btn-outline-secondary'
           button.setAttribute('data-gallery-archive', id)
-          button.title = 'Arsipkan (pindah ke Etc > Archive)'
+          button.title = 'Arsipkan (pindah ke Lainnya > Arsip)'
           button.setAttribute('aria-label', button.title)
           button.innerHTML = archiveIcon
           actions.prepend(button)
@@ -294,7 +294,7 @@
             }))
             decorate()
             showNotice('info', 'Koleksi <strong>' + escapeHtml(item ? item.title : '') + '</strong> diarsipkan. Lihat atau kembalikan di menu ' +
-              '<a href="./farm-archive.html" data-go-archive-gallery>Etc &gt; Archive, tab Galeri</a>.')
+              '<a href="./farm-archive.html" data-go-archive-gallery>Lainnya &gt; Arsip, tab Galeri</a>.')
           })
           .catch(function (error) { window.alert(error.message); archiveButton.disabled = false })
         return
@@ -330,7 +330,7 @@
       }, 60)
     })
 
-    // The link in the notice opens the Archive page directly on the Galeri tab.
+    // The link in the notice opens the Arsip page directly on the Galeri tab.
     document.addEventListener('click', function (event) {
       if (event.target.closest('[data-go-archive-gallery]')) {
         try { sessionStorage.setItem('nishikigoi-archive-tab', 'galeri') } catch (e) {}

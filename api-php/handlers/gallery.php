@@ -169,7 +169,7 @@ function normalize_gallery_images($images): array {
 function save_gallery_collection(array $body, $id = null) {
     $pondId = !empty($body['pond_id']) ? (int)$body['pond_id'] : null;
     $title = trim((string)($body['title'] ?? $body['display_name'] ?? ''));
-    if ($title === '') $title = 'Gallery ' . date('d/m/Y');
+    if ($title === '') $title = 'Galeri ' . date('d/m/Y');
     $segmentName = trim((string)($body['segment_name'] ?? ''));
     $galleryDate = trim((string)($body['gallery_date'] ?? '')) ?: date('Y-m-d');
     $notes = trim((string)($body['notes'] ?? ''));

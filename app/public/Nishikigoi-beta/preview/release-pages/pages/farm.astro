@@ -2,7 +2,7 @@
 import DefaultLayout from '@shared/layouts/DefaultLayout.astro'
 ---
 
-<DefaultLayout title="Koi Farm" pageHeader="Dashboard Koi Farm" pretitle="Management" pageMenu="farm-dashboard">
+<DefaultLayout title="Koi Farm" pageHeader="Dashboard Koi Farm" pretitle="Manajemen" pageMenu="farm-dashboard">
   <div class="row row-deck row-cards">
     <div class="col-sm-6 col-lg-3">
       <div class="card">
@@ -32,7 +32,7 @@ import DefaultLayout from '@shared/layouts/DefaultLayout.astro'
     <div class="col-sm-6 col-lg-3">
       <div class="card">
         <div class="card-body">
-          <div class="subheader">Ikan di Archive</div>
+          <div class="subheader">Ikan di Arsip</div>
           <div class="h1 mb-0" data-summary="archived">0</div>
           <div class="small text-secondary mt-1" data-summary-note="archived"></div>
         </div>
@@ -89,11 +89,11 @@ import DefaultLayout from '@shared/layouts/DefaultLayout.astro'
       try {
         const summary = await (await fetch(`${apiUrl}/summary`)).json()
         
-        // Per card: how many are male / female (Unknown = no gender filled in); a part with no count is not written, and a card with none has no line
+        // Per card: how many are male / female (Tidak diketahui = no gender filled in); a part with no count is not written, and a card with none has no line
         ;['breeders_active', 'breeders_dead', 'sold', 'regular_dead'].forEach((prefix) => {
           const line = document.querySelector(`[data-summary-gender="${prefix}"]`)
           if (!line) return
-          const parts = [['Male', 'male'], ['Female', 'female'], ['Unknown', 'unknown']]
+          const parts = [['Jantan', 'male'], ['Betina', 'female'], ['Tidak diketahui', 'unknown']]
             .map(([label, key]) => [label, Number(summary[`${prefix}_${key}`] ?? 0)])
             .filter(([, count]) => count > 0)
             .map(([label, count]) => `${label} ${count.toLocaleString('id-ID')}`)
@@ -138,7 +138,7 @@ keys.forEach((key) => {
           <div class="progress progress-sm"><div class="progress-bar" style="width:${Math.max(3, Math.round(100 * row.count / max))}%"></div></div>
         </div>`).join('')
     }
-    const extraGender = (counts) => [['Male', counts.male], ['Female', counts.female], ['Unknown', counts.unknown]]
+    const extraGender = (counts) => [['Jantan', counts.male], ['Betina', counts.female], ['Tidak diketahui', counts.unknown]]
       .filter(([, count]) => Number(count) > 0).map(([label, count]) => `${label} ${numberText(count)}`).join(' · ')
 
     const zoomFeedRow = (row) => {
@@ -174,7 +174,7 @@ keys.forEach((key) => {
       // the cards that ask for attention (to complete, no progress, empty ponds, last backup) go to the very bottom
       const bottom = []
       const inc = extra.incomplete || {}
-      const incLines = [['Tanpa foto', inc.no_photo], ['Tanpa lokasi dan area', inc.no_place], ['Tanpa size', inc.no_size], ['Gender Unknown', inc.no_gender], ['Indukan tanpa peternakan', inc.no_farm_breeder]]
+      const incLines = [['Tanpa foto', inc.no_photo], ['Tanpa lokasi dan area', inc.no_place], ['Tanpa size', inc.no_size], ['Kelamin Tidak diketahui', inc.no_gender], ['Indukan tanpa peternakan', inc.no_farm_breeder]]
         .filter(([, count]) => Number(count) > 0)
         .map(([label, count]) => `<div class="d-flex justify-content-between small mt-1"><span>${label}</span><strong>${numberText(count)}</strong></div>`)
       if (incLines.length) bottom.push(extraCard('Perlu dilengkapi', `<div class="mt-2">${incLines.join('')}</div>`))
@@ -193,8 +193,8 @@ keys.forEach((key) => {
         `<div class="subheader mt-3">Backup akun terakhir</div><div class="fw-semibold ${accountBackup.at ? '' : 'text-secondary'}">${accountBackup.at ? escapeText(dateText(accountBackup.at, true)) : 'Belum pernah'}</div>` +
         (accountBackup.at ? smallLine(accountBackup.days === 0 ? 'hari ini' : `${numberText(accountBackup.days)} hari lalu`) : '')))
       if (extra.ponds_fullest?.length) cards.push(extraCard('Kolam terpadat', `<div class="mt-2">${barRows(extra.ponds_fullest)}</div>`, 'col-sm-6 col-lg-4', extra.ponds_with_fish > extra.ponds_fullest.length ? 'ponds_all' : ''))
-      if (extra.top_variety?.length) cards.push(extraCard('Chart Variety (5 teratas)', `<div class="mt-2">${barRows(extra.top_variety)}</div>`, 'col-sm-6 col-lg-4', extra.variety_distinct > extra.top_variety.length ? 'variety' : ''))
-      if (extra.top_farm?.length) cards.push(extraCard('Total Yield (5 teratas)', `<div class="mt-2">${barRows(extra.top_farm)}</div>`, 'col-sm-6 col-lg-4', extra.farm_distinct > extra.top_farm.length ? 'farm' : ''))
+      if (extra.top_variety?.length) cards.push(extraCard('Varietas terbanyak (5 teratas)', `<div class="mt-2">${barRows(extra.top_variety)}</div>`, 'col-sm-6 col-lg-4', extra.variety_distinct > extra.top_variety.length ? 'variety' : ''))
+      if (extra.top_farm?.length) cards.push(extraCard('Ternakan terbanyak (5 teratas)', `<div class="mt-2">${barRows(extra.top_farm)}</div>`, 'col-sm-6 col-lg-4', extra.farm_distinct > extra.top_farm.length ? 'farm' : ''))
       if (extra.recent?.length) {
         const thumbOf = (url) => { const m = /^\/api\/uploads\/(.+)$/.exec(String(url || '')); return m ? `/api/thumb/240/${m[1]}` : url }
         const rows = extra.recent.map((row, at) => {
@@ -205,7 +205,7 @@ keys.forEach((key) => {
         }).join('')
         cards.push(extraCard('Aktivitas terbaru', rows, 'col-sm-6 col-lg-4', 'recent'))
       }
-      // Size spectrum: the steps of the ladder (largest first) that have fish; a step with no fish is not written
+      // Ukuran spectrum: the steps of the ladder (largest first) that have fish; a step with no fish is not written
       if (extra.size_spread?.some((step) => step.count > 0)) {
         const max = Math.max(...extra.size_spread.map((step) => step.count), 1)
         const rows = extra.size_spread.filter((step) => step.count > 0).map((step) => `
@@ -214,7 +214,7 @@ keys.forEach((key) => {
             <div class="progress progress-sm flex-fill"><div class="progress-bar" style="width:${step.count > 0 ? Math.max(3, Math.round(100 * step.count / max)) : 0}%"></div></div>
             <strong style="width:2.4rem;text-align:right;flex:0 0 auto">${step.count > 0 ? numberText(step.count) : ''}</strong>
           </div>`).join('')
-        cards.push(extraCard('Size Spectrum', `<div class="mt-2">${rows}</div>`, 'col-sm-6 col-lg-4'))
+        cards.push(extraCard('Spektrum Ukuran', `<div class="mt-2">${rows}</div>`, 'col-sm-6 col-lg-4'))
       }
       const breeding = extra.breeding || {}
       if (breeding.proses > 0 || breeding.planning > 0) {
