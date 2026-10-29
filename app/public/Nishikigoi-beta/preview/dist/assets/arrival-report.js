@@ -72,7 +72,7 @@
         '</td><td>' + e(line.farm || '-') + '</td><td>' + e(line.bloodline || '-') + '</td><td>' + e(line.owner || '-') + '</td><td>' + e(line.pond_name || '-') + '</td></tr>'
     }).join('') || '<tr><td colspan="9" class="kp-muted">Belum ada ikan.</td></tr>'
     var body = '<section class="kp-section"><h2>Ikan yang datang</h2><table class="kp-table"><thead><tr><th class="kp-center" style="width:28px">No</th><th class="kp-center" style="width:48px">Foto</th><th>Jenis</th><th class="kp-center" style="width:9%">Gender</th><th class="kp-num" style="width:9%">Ukuran</th>' +
-      '<th style="width:13%">Farm</th><th style="width:12%">Bloodline</th><th style="width:12%">Owner</th><th style="width:13%">Kolam</th></tr></thead><tbody>' + rows +
+      '<th style="width:13%">Farm</th><th style="width:12%">Bloodline</th><th style="width:12%">Owner</th><th style="width:13%">Lokasi</th></tr></thead><tbody>' + rows +
       '<tr><td colspan="9"><strong>Total: ' + e(totalOf(lines)) + ' ekor</strong></td></tr></tbody></table></section>' +
       (mediaList.length ? '<section class="kp-section"><h2>Dokumentasi</h2><div style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px">' +
         mediaList.map(function (m) {
@@ -87,7 +87,7 @@
       subheading: (report.batch_code || '') + (report.report_title ? ' - ' + report.report_title : ''),
       info: [
         ['Kode', report.batch_code], ['Tanggal', formatDate(report.report_date)], ['Ikan dari', report.origin_location || '-'],
-        ['Total ikan', totalOf(lines) + ' ekor'], ['Kolam tujuan', pondText || '-'],
+        ['Total ikan', totalOf(lines) + ' ekor'], ['Lokasi tujuan', pondText || '-'],
       ],
       notes: report.notes || '',
       body: body,
@@ -95,7 +95,7 @@
   }
 
   // ---- Excel sheet import ("Ikan Datang": one row per fish line) --------------------------------
-  // Columns: Tanggal | Nama Laporan | Ikan Dari | Jenis | Gender | Ukuran (cm) | Farm | Bloodline | Owner | Kolam Tujuan | Foto | Catatan | Kode Batch
+  // Columns: Tanggal | Nama Laporan | Ikan Dari | Jenis | Gender | Ukuran (cm) | Farm | Bloodline | Owner | Lokasi Tujuan | Foto | Catatan | Kode Batch
   // One row = one fish. Rows with the same Tanggal + Nama Laporan + Ikan Dari become ONE report.
   // An old "Jumlah (ekor)" column is still read (empty = 1).
   // Returns { created, skipped, problems }.
@@ -123,11 +123,11 @@
       if (String(record['jumlah (ekor)'] || '').trim() !== '' && (qty === null || qty < 1)) bad.push('Jumlah (ekor) harus angka 1 atau lebih')
       var size = toNumber(record['ukuran (cm)'])
       if (String(record['ukuran (cm)'] || '').trim() !== '' && (size === null || size < 0)) bad.push('Ukuran (cm) tidak valid')
-      var pondName = String(record['kolam tujuan'] || '').trim()
+      var pondName = String(record['lokasi tujuan'] || record['kolam tujuan'] || '').trim()
       var pond = null
       if (pondName) {
         pond = options.pondByName ? options.pondByName.get(pondName.toLowerCase()) : null
-        if (!pond) bad.push('Kolam tujuan "' + pondName + '" tidak ditemukan')
+        if (!pond) bad.push('Lokasi tujuan "' + pondName + '" tidak ditemukan')
       }
       if (bad.length) { problems.push('Baris ' + line + ': ' + bad.join('; ')); return }
       if (code && knownCodes.has(code)) { problems.push('Baris ' + line + ' (' + code + '): laporan dengan kode ini sudah ada, dilewati'); return }
@@ -202,7 +202,7 @@
     genderLabels: genderLabels,
     payloadFor: payloadFor,
     summaryFields: summaryFields,
-    // name (lower case) -> pond, for the "Kolam Tujuan" column of an Excel import
+    // name (lower case) -> pond, for the "Lokasi Tujuan" column of an Excel import (the old name "Kolam Tujuan" is still read)
     pondMap: function () {
       return request('/ponds').then(function (list) {
         pondsCache = Array.isArray(list) ? list : []
@@ -368,7 +368,7 @@
         field('col-6 col-md-2', 'Bloodline', '<input class="form-control" list="arrival-bloodlines" data-line-bloodline placeholder="Bloodline" value="' + escapeHtml(line.bloodline || '') + '">') +
         field('col-12 col-md-2', 'Owner', '<input class="form-control" list="arrival-owners" data-line-owner placeholder="Owner" value="' + escapeHtml(line.owner || '') + '">') +
         '</div>' +
-        '<div class="row g-2 mt-1 align-items-end"><div class="col-12 col-md-4"><label class="form-label small mb-0">Kolam tujuan</label><select class="form-select" data-line-pond>' + pondOptionsHtml(line.pond_id) + '</select></div>' +
+        '<div class="row g-2 mt-1 align-items-end"><div class="col-12 col-md-4"><label class="form-label small mb-0">Lokasi tujuan</label><select class="form-select" data-line-pond>' + pondOptionsHtml(line.pond_id) + '</select></div>' +
         '<div class="col-12 col-md-8 d-flex align-items-center flex-wrap gap-2">' +
         '<img class="rounded border d-none" alt="Foto ikan" data-line-photo-thumb style="width:44px;height:44px;object-fit:cover">' +
         '<button type="button" class="btn btn-sm btn-outline-primary" data-line-photo-pick>Upload foto</button>' +

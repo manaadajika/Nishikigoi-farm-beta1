@@ -1667,14 +1667,14 @@
                         </button>
                       </div>
                       <div class="col-12 border-top pt-3">
-                        <label class="form-label">Kolam</label>
+                        <label class="form-label">Lokasi</label>
                         <div class="vstack gap-2" data-pond-list></div>
                         <button
                           class="btn btn-sm btn-outline-primary mt-2"
                           type="button"
                           data-add-pond
                         >
-                          Mention Kolam
+                          Mention Lokasi
                         </button>
                       </div>
                       <div class="col-md-6">
@@ -2542,7 +2542,7 @@
             </div>
             <div class="card-body" role="button" tabindex="0" data-breeding-id="${escapeHtml(item.id)}">
               <div class="row g-2 small">
-                <div class="col-6 breeding-card-cell"><span class="text-secondary">Kolam</span><div class="breeding-ellipsis" title="${escapeHtml(pondText)}">${escapeHtml(pondText)}</div></div>
+                <div class="col-6 breeding-card-cell"><span class="text-secondary">Lokasi</span><div class="breeding-ellipsis" title="${escapeHtml(pondText)}">${escapeHtml(pondText)}</div></div>
                 <div class="col-6 breeding-card-cell"><span class="text-secondary">Metode</span><div>${escapeHtml(methodLabels[item.spawning_method] || text(item.spawning_method))}</div></div>
                 <div class="col-12 breeding-card-cell"><span class="text-secondary">Indukan Betina</span><div>${escapeHtml(femaleText)}</div></div>
                 <div class="col-12 breeding-card-cell"><span class="text-secondary">Indukan Jantan</span>${renderMaleThumbs(item)}</div>
@@ -2562,7 +2562,7 @@
       setSummary(visibleItems)
     }
             // ---- Excel export / import ------------------------------------------------------------------
-            const breedingExcelColumns = ['Kode Batch', 'Nama Sesi', 'Awal Pijah', 'Akhir Pijah', 'Tanggal Release Larva', 'Metode', 'Status', 'Indukan Betina', 'Ukuran Betina (cm)', 'Indukan Jantan', 'Kolam', 'Burayak', 'Berat Telur (g)', 'Catatan', 'Petugas', 'Update Terakhir', 'Galeri', 'ID Galeri']
+            const breedingExcelColumns = ['Kode Batch', 'Nama Sesi', 'Awal Pijah', 'Akhir Pijah', 'Tanggal Release Larva', 'Metode', 'Status', 'Indukan Betina', 'Ukuran Betina (cm)', 'Indukan Jantan', 'Lokasi', 'Burayak', 'Berat Telur (g)', 'Catatan', 'Petugas', 'Update Terakhir', 'Galeri', 'ID Galeri']
             const dateOnly = (value) => (value ? String(value).slice(0, 10) : '')
             // 2026-01-26, 26/01/2026 and "26 - [1] Januari - 2026" all become 2026-01-26; anything else becomes ''.
             const dateFromText = (value) => window.KoiAuth.dateFromText(value)
@@ -2729,10 +2729,10 @@
             fields.male_parent_entries = males.map((male) => parentEntry(male.koi, ''))
           }
         }
-        if (record.kolam) {
-          const ponds = splitList(record.kolam).map((name) => ({ name, pond: pondByName.get(name.toLowerCase()) }))
+        if (record.lokasi || record.kolam) {
+          const ponds = splitList(record.lokasi || record.kolam).map((name) => ({ name, pond: pondByName.get(name.toLowerCase()) }))
           const missing = ponds.filter((item) => !item.pond).map((item) => item.name)
-          if (missing.length) bad.push(`Kolam ${missing.join(', ')} tidak ditemukan`)
+          if (missing.length) bad.push(`Lokasi ${missing.join(', ')} tidak ditemukan`)
           else {
             fields.pond_id = ponds[0].pond.id
             fields.pond_entries = ponds.map((item) => ({ pond_id: String(item.pond.id), label: item.pond.name, notes: '' }))
@@ -3357,7 +3357,7 @@
                 };
 
                 const pondLabel = (pond) =>
-                  pond?.name || `Kolam ${pond?.id || ""}`;
+                  pond?.name || `Lokasi ${pond?.id || ""}`;
                 const pondSearchText = (pond) =>
                   [pond.name, pond.location]
                     .filter(Boolean)
@@ -3410,20 +3410,20 @@
     `,
                     )
                     .join("") ||
-                  '<div class="p-2 text-secondary small">Data kolam tidak ditemukan.</div>';
+                  '<div class="p-2 text-secondary small">Data lokasi tidak ditemukan.</div>';
 
                 const pondRowTemplate = (entry = {}) => `
       <div class="row g-2 align-items-start" data-pond-entry>
         <div class="col-md-6 breeding-mention-wrap">
-          <input class="form-control" name="breeding_pond_search" data-pond-search placeholder="Mention nama kolam/area" autocomplete="off" value="${escapeHtml(entry.label || "")}" />
+          <input class="form-control" name="breeding_pond_search" data-pond-search placeholder="Mention nama lokasi/area" autocomplete="off" value="${escapeHtml(entry.label || "")}" />
           <input type="hidden" name="breeding_pond_id" data-pond-value value="${escapeHtml(entry.pond_id || "")}" />
           <div class="breeding-parent-suggestions d-none" data-pond-suggestions></div>
         </div>
         <div class="col-md-5">
-          <input class="form-control" name="breeding_pond_notes" data-pond-notes placeholder="Catatan kolam ini" autocomplete="off" value="${escapeHtml(entry.notes || "")}" />
+          <input class="form-control" name="breeding_pond_notes" data-pond-notes placeholder="Catatan lokasi ini" autocomplete="off" value="${escapeHtml(entry.notes || "")}" />
         </div>
         <div class="col-md-1">
-          <button class="btn btn-outline-danger btn-icon" type="button" data-remove-pond aria-label="Hapus kolam" title="Hapus kolam">${trashIcon}</button>
+          <button class="btn btn-outline-danger btn-icon" type="button" data-remove-pond aria-label="Hapus lokasi" title="Hapus lokasi">${trashIcon}</button>
         </div>
       </div>
     `;
@@ -3789,7 +3789,7 @@
                     body: `
           <section class="kp-section"><h2>Indukan Betina</h2><table class="kp-table">${parentTableHead}<tbody>${printParentRows(femaleEntries, "female", item)}</tbody></table></section>
           <section class="kp-section"><h2>Indukan Jantan</h2><table class="kp-table">${parentTableHead}<tbody>${printParentRows(maleEntries, "male", item)}</tbody></table></section>
-          <section class="kp-section"><h2>Kolam</h2><table class="kp-table"><thead><tr><th class="kp-center" style="width:28px">No</th><th style="width:28%">Nama Kolam</th><th>Catatan</th></tr></thead><tbody>${printPondRows(pondEntries)}</tbody></table></section>
+          <section class="kp-section"><h2>Lokasi</h2><table class="kp-table"><thead><tr><th class="kp-center" style="width:28px">No</th><th style="width:28%">Nama Lokasi</th><th>Catatan</th></tr></thead><tbody>${printPondRows(pondEntries)}</tbody></table></section>
         `,
                   });
                 };

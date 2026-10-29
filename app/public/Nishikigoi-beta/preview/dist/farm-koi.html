@@ -2907,6 +2907,16 @@ const pageSizeSelect = document.querySelector('[data-koi-page-size-select]');
                   "[data-copy-selected-koi-ids]",
                 );
     // A list of codes may be separated by spaces, new lines, commas, semicolons or periods (a period between two digits stays a decimal point).
+    // "<30", ">30cm", ">=45", "30>", "kurang dari 30", "lebih dari 30" are size comparisons: each becomes one word (lt30, gt30, le30, ge30). The sign alone says the direction, on either side of the number.
+    const compareSizeWords = (text) => {
+      const num = '(\\d+(?:\\.\\d+)?)'
+      const ops = { '<=': 'le', '≤': 'le', '>=': 'ge', '≥': 'ge', '<': 'lt', '>': 'gt' }
+      return String(text)
+        .replace(new RegExp('\\b(?:kurang\\s+dari|di\\s*bawah)\\s*' + num + '\\s*(?:cm)?', 'gi'), (all, n) => ' lt' + n + ' ')
+        .replace(new RegExp('\\b(?:lebih\\s+dari|di\\s*atas)\\s*' + num + '\\s*(?:cm)?', 'gi'), (all, n) => ' gt' + n + ' ')
+        .replace(new RegExp('(<=|>=|≤|≥|<|>)\\s*' + num + '\\s*(?:cm)?', 'gi'), (all, op, n) => ' ' + ops[op] + n + ' ')
+        .replace(new RegExp(num + '\\s*(?:cm)?\\s*(<=|>=|≤|≥|<|>)(?!\\s*\\d)', 'gi'), (all, n, op) => ' ' + ops[op] + n + ' ')
+    }
     const splitCodeList = (text) => String(text || '').replace(/(\d)\.(?=\d)/g, '$1\u0001').split(/[\s,;.]+/).map((part) => part.replace(/\u0001/g, '.').trim()).filter(Boolean)
                 const bulkPondButton = document.querySelector(
                   "[data-bulk-pond-change]",
@@ -3077,7 +3087,7 @@ const pageSizeSelect = document.querySelector('[data-koi-page-size-select]');
                 const navbarSearchBox = document.querySelector("#navbar-global-search");
                 if (navbarSearchBox) {
                   navbarSearchBox.setAttribute("placeholder", "Kode, nama, size 49-70cm, bloodline:isa");
-                  navbarSearchBox.setAttribute("title", "Cari bebas: kode, nama, bloodline, ternakan, nomor urut, ukuran (49-70cm). Cari per kolom dengan kolom:isi, boleh digabung: bloodline:isa ternakan:dwd catatan:vat 03. Nama kolom boleh disingkat (bloo:isa, tern:dwd, br:miya). Kolom: nama kolom di formulir boleh ditulis persis dengan spasi, mis. Kode Koi:26G, Harga Jual:15jt (angka kecil di harga dibaca juta), Tanggal Lahir:2025, Terakhir Diedit:2026 - [10] Oktober - 20, Size Saat Ini:49-70, Parent/Breeding:BR2609, Owner:arin, Typ:indukan; juga kode, nama, variety, bloodline, ternakan, breeding (sesi atau induk sesi), breeder, induk, kolam, area, status, gender, tipe, catatan, ukuran, hargabeli, hargajual, lahir, tanggalbeli, nomor.");
+                  navbarSearchBox.setAttribute("title", "Cari bebas: kode, nama, bloodline, ternakan, nomor urut, ukuran (49-70cm, <30, >40cm). Cari per kolom dengan kolom:isi, boleh digabung: bloodline:isa ternakan:dwd catatan:vat 03. Nama kolom boleh disingkat (bloo:isa, tern:dwd, br:miya). Kolom: nama kolom di formulir boleh ditulis persis dengan spasi, mis. Kode Koi:26G, Harga Jual:15jt (angka kecil di harga dibaca juta), Tanggal Lahir:2025, Terakhir Diedit:2026 - [10] Oktober - 20, Size Saat Ini:49-70, Parent/Breeding:BR2609, Owner:arin, Typ:indukan; juga kode, nama, variety, bloodline, ternakan, breeding (sesi atau induk sesi), breeder, induk, kolam, area, status, gender, tipe, catatan, ukuran, hargabeli, hargajual, lahir, tanggalbeli, nomor.");
                 }
                 const parentTypeSelect = document.querySelector('[data-parent-type-select]')
                 const genderSelect = document.querySelector('[data-gender-select]')
@@ -7329,7 +7339,7 @@ items.forEach((item) => {
 
                   // "49 - 70 cm" / "49cm-70cm" are written without spaces so the split below keeps a range in one piece
       // Spaces mean "all of these words"; a comma or a period starts an alternative (OR). A list of bare fish codes ("26CY8E 26EQ6M") lists those fish.
-      const cleaned = plain.replace(/\b(?:size|ukuran|panjang)\s*(?=\d)/gi, "").replace(/(\d)\s+cm(?![a-z])/gi, '$1cm').replace(/(\d)\s*(?:cm)?\s*-\s*(\d)/gi, '$1-$2')
+      const cleaned = compareSizeWords(plain).replace(/\b(?:size|ukuran|panjang)\s*(?=\d)/gi, "").replace(/(\d)\s+cm(?![a-z])/gi, '$1cm').replace(/(\d)\s*(?:cm)?\s*-\s*(\d)/gi, '$1-$2')
       const groups = []
       cleaned.replace(/(\d)\.(?=\d)/g, '$1\u0001').split(/[,.]+/).forEach((chunk) => {
         const words = parseSearchTerms(chunk.replace(/\u0001/g, '.'))
@@ -7342,16 +7352,21 @@ items.forEach((item) => {
       const groupMatches = (terms) => {
         const idTerms = []
         const sizeTests = []
+        const compareTests = []   // ">30 <60": every comparison has to hold
 
         terms.forEach((term) => {
           const range = term.match(/^(\d+(?:[.,]\d+)?)-(\d+(?:[.,]\d+)?)(?:cm)?$/)
           const single = term.match(/^(\d+(?:[.,]\d+)?)cm$/)
+          const compare = term.match(/^(gt|ge|lt|le)(\d+(?:\.\d+)?)$/)
 
           if (range) {
             const first = Number(range[1].replace(',', '.'))
             const second = Number(range[2].replace(',', '.'))
             const [min, max] = [Math.min(first, second), Math.max(first, second)]
             sizeTests.push((size) => size >= min && size <= max)
+          } else if (compare) {
+            const limit = Number(compare[2])
+            compareTests.push((size) => (compare[1] === 'gt' ? size > limit : compare[1] === 'ge' ? size >= limit : compare[1] === 'lt' ? size < limit : size <= limit))
           } else if (single) {
             const wanted = Number(single[1].replace(',', '.'))
             sizeTests.push((size) => (Number.isInteger(wanted) ? Math.floor(size) === wanted : size === wanted))
@@ -7376,10 +7391,15 @@ items.forEach((item) => {
           }
         }
 
-        if (sizeTests.length) {
+        if (sizeTests.length || compareTests.length) {
+          const known = item.current_length_cm !== null && item.current_length_cm !== undefined && item.current_length_cm !== ''
           const size = Number(item.current_length_cm)
 
-          if (!Number.isFinite(size) || !sizeTests.some((test) => test(size))) {
+          // a fish without a size is never "less than" anything
+          if (compareTests.length && !(known && Number.isFinite(size) && compareTests.every((test) => test(size)))) {
+            return false
+          }
+          if (sizeTests.length && (!Number.isFinite(size) || !sizeTests.some((test) => test(size)))) {
             return false
           }
         }

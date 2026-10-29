@@ -310,6 +310,18 @@ function koi_match_field(array $item, string $field, string $rawValue, array &$c
     return false;
 }
 
+// "<30", ">30cm", ">=45", "30>", "kurang dari 30", "lebih dari 30" are size comparisons: each becomes one word ("lt30", "gt30", "le30",
+// "ge30") that koi_plain_terms reads as a size test. The sign alone says the direction, on either side of the number. JS twin: compareSizeWords.
+function koi_compare_words(string $text): string {
+    $num = '(\d+(?:\.\d+)?)';
+    $ops = ['<=' => 'le', '≤' => 'le', '>=' => 'ge', '≥' => 'ge', '<' => 'lt', '>' => 'gt'];
+    $text = preg_replace_callback('/\b(?:kurang\s+dari|di\s*bawah)\s*' . $num . '\s*(?:cm)?/iu', fn($m) => ' lt' . $m[1] . ' ', $text);
+    $text = preg_replace_callback('/\b(?:lebih\s+dari|di\s*atas)\s*' . $num . '\s*(?:cm)?/iu', fn($m) => ' gt' . $m[1] . ' ', $text);
+    $text = preg_replace_callback('/(<=|>=|≤|≥|<|>)\s*' . $num . '\s*(?:cm)?/iu', fn($m) => ' ' . $ops[$m[1]] . $m[2] . ' ', $text);
+    $text = preg_replace_callback('/' . $num . '\s*(?:cm)?\s*(<=|>=|≤|≥|<|>)(?!\s*\d)/iu', fn($m) => ' ' . $ops[$m[2]] . $m[1] . ' ', $text);
+    return $text;
+}
+
 // The plain part of a search text ("kode nama 49-70cm 45cm"): words that look at id/code/name/bloodline/farm, and size tests.
 // Shared by the exact check and the SQL pre-filter so both read the text the same way.
 function koi_plain_terms(string $plain): array {
@@ -325,6 +337,8 @@ function koi_plain_terms(string $plain): array {
             $first = (float)str_replace(',', '.', $m[1]);
             $second = (float)str_replace(',', '.', $m[2]);
             $sizeTests[] = ['range', min($first, $second), max($first, $second)];
+        } elseif (preg_match('/^(gt|ge|lt|le)(\d+(?:\.\d+)?)$/', $term, $m)) {
+            $sizeTests[] = ['compare', $m[1], (float)$m[2]];
         } elseif (preg_match('/^(\d+(?:[.,]\d+)?)cm$/', $term, $m)) {
             $wanted = (float)str_replace(',', '.', $m[1]);
             $sizeTests[] = ['exact', $wanted, floor($wanted) == $wanted];
@@ -338,6 +352,7 @@ function koi_plain_terms(string $plain): array {
 // The plain part of a search text, as groups: a comma or a period separates alternatives (OR), spaces inside a group mean
 // "all of these" (AND). A period between two digits stays a decimal point ("45.5cm"). JS twin: splitSearchGroups.
 function koi_plain_groups(string $plain): array {
+    $plain = koi_compare_words($plain);
     $plain = preg_replace('/(\d)\.(?=\d)/', '$1' . chr(1), $plain);
     $groups = [];
     foreach (preg_split('/[,.]+/u', $plain) as $chunk) {
@@ -381,12 +396,20 @@ function koi_group_matches(array $item, array $parts, array &$ctx): bool
         $raw = $item['current_length_cm'] ?? null;
         $size = ($raw === null || $raw === '') ? 0.0 : (is_numeric($raw) ? (float)$raw : null);
         if ($size === null) return false;
+        $known = !($raw === null || $raw === '');   // a fish without a size is never "less than" anything
+        // comparisons (">30 <60") all have to hold; ranges and exact sizes ("49-70cm 45cm") are alternatives
+        $others = false;
         $ok = false;
         foreach ($parts['size'] as $test) {
+            if ($test[0] === 'compare') {
+                if (!($known && match ($test[1]) { 'gt' => $size > $test[2], 'ge' => $size >= $test[2], 'lt' => $size < $test[2], default => $size <= $test[2] })) return false;
+                continue;
+            }
+            $others = true;
             $hit = $test[0] === 'range' ? ($size >= $test[1] && $size <= $test[2]) : ($test[2] ? floor($size) == $test[1] : $size == $test[1]);
-            if ($hit) { $ok = true; break; }
+            if ($hit) $ok = true;
         }
-        if (!$ok) return false;
+        if ($others && !$ok) return false;
     }
     return true;
 }
@@ -550,6 +573,12 @@ function koi_search_prefilter(string $keyword, array &$ctx): array {
             $any = [];
             $size = 'IFNULL(koi.current_length_cm, 0)';
             foreach ($parts['size'] as $test) {
+                if ($test[0] !== 'compare') continue;
+                $params[] = $test[2];
+                $own[] = '(koi.current_length_cm IS NOT NULL AND koi.current_length_cm ' . ['gt' => '>', 'ge' => '>=', 'lt' => '<', 'le' => '<='][$test[1]] . ' ?)';
+            }
+            foreach ($parts['size'] as $test) {
+                if ($test[0] === 'compare') continue;
                 if ($test[0] === 'range') {
                     array_push($params, $test[1] - 0.0001, $test[2] + 0.0001);
                     $any[] = "($size BETWEEN ? AND ?)";
@@ -561,7 +590,7 @@ function koi_search_prefilter(string $keyword, array &$ctx): array {
                     $any[] = "($size BETWEEN ? AND ?)";
                 }
             }
-            $own[] = '(' . implode(' OR ', $any) . ')';
+            if ($any) $own[] = '(' . implode(' OR ', $any) . ')';
         }
         $groupSql[] = '(' . implode(' AND ', $own) . ')';
     }
