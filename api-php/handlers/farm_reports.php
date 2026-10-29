@@ -22,15 +22,14 @@ function get_report_batch_code(string $reportDate, ?int $excludeId = null, strin
     if (!preg_match('/^(\d{4})-(\d{2})-/', $dateValue, $m)) {
         return $existingCode;
     }
-    // a report known only by its year (2025-00-00) is numbered by the year alone: Report-25-01
-    $yearOnly = $m[2] === '00';
-    $prefix = 'Report-' . substr($m[1], -2) . '-' . ($yearOnly ? '' : $m[2] . '-');
+    // Report-YY-MM-01; a report known only by its year (2025-00-00) keeps the month position as 00: Report-25-00-01
+    $prefix = 'Report-' . substr($m[1], -2) . '-' . $m[2] . '-';
     if ($existingCode !== '' && str_starts_with($existingCode, $prefix)) {
         return $existingCode;
     }
 
-    $sql = $yearOnly ? 'SELECT batch_code FROM farm_reports WHERE batch_code REGEXP ?' : 'SELECT batch_code FROM farm_reports WHERE batch_code LIKE ?';
-    $params = [$yearOnly ? '^' . preg_quote($prefix, '/') . '[0-9]+$' : $prefix . '%'];
+    $sql = 'SELECT batch_code FROM farm_reports WHERE batch_code LIKE ?';
+    $params = [$prefix . '%'];
     if ($excludeId !== null) {
         $sql .= ' AND id != ?';
         $params[] = $excludeId;
