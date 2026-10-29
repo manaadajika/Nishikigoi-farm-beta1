@@ -72,7 +72,7 @@ import DefaultLayout from '@shared/layouts/DefaultLayout.astro'
           <div class="col-md-6"><label class="form-label">Harga Beli</label><input class="form-control" type="number" min="0" step="any" name="purchase_price" /></div>
           <div class="col-md-6"><label class="form-label">Harga Jual</label><input class="form-control" type="number" min="0" step="any" name="sale_price" /></div>
           <div class="col-12"><label class="form-label">Lokasi Arsip</label><input class="form-control" name="archive_location" autocomplete="off" placeholder="Bebas diisi, tidak terhubung ke daftar kolam" />
-            <div class="form-hint">Saat ikan dikembalikan ke Data Ikan, kolam dipilih lagi dari daftar kolam yang berlaku.</div></div>
+            <div class="form-hint">Saat ikan dikembalikan ke Data Ikan, lokasi dipilih lagi dari daftar kolam yang berlaku.</div></div>
           <div class="col-12"><label class="form-label">Catatan</label><textarea class="form-control" name="notes" rows="3"></textarea></div>
           <div class="col-md-6"><label class="form-label">Diarsipkan</label><input class="form-control" type="text" data-archive-edit-archived readonly tabindex="-1" placeholder="-" /></div>
           <div class="col-md-6"><label class="form-label">Terakhir Diedit</label><input class="form-control" type="text" data-archive-edit-last-edited readonly tabindex="-1" placeholder="-" /></div>
@@ -95,7 +95,7 @@ import DefaultLayout from '@shared/layouts/DefaultLayout.astro'
       </div>
       <div class="modal-body">
         <p class="mb-3" data-archive-restore-info></p>
-        <label class="form-label">Kolam (dari daftar kolam saat ini)</label>
+        <label class="form-label">Lokasi (dari daftar kolam saat ini)</label>
         <select class="form-select" name="restore_pond" data-archive-restore-pond></select>
         <div class="text-secondary small mt-2" data-archive-restore-hint></div>
         <div class="alert alert-danger d-none mt-3 mb-0" data-archive-restore-error></div>
@@ -482,11 +482,11 @@ import DefaultLayout from '@shared/layouts/DefaultLayout.astro'
     const locations = [...new Set(chosen.map((item) => String(item.archive_location || '').trim().toLowerCase()))]
     const sorted = [...ponds].sort((first, second) => String(first.name).localeCompare(String(second.name), 'id', { sensitivity: 'base' }))
     const previous = locations.length === 1 && locations[0] ? sorted.find((pond) => String(pond.name).trim().toLowerCase() === locations[0]) : null
-    restorePondSelect.innerHTML = '<option value="">Tanpa kolam</option>' + sorted.map((pond) => `<option value="${escapeHtml(pond.id)}">${escapeHtml(pond.name)} (${Number(pond.koi_count || 0)} ikan)</option>`).join('')
+    restorePondSelect.innerHTML = '<option value="">Tanpa lokasi</option>' + sorted.map((pond) => `<option value="${escapeHtml(pond.id)}">${escapeHtml(pond.name)} (${Number(pond.koi_count || 0)} ikan)</option>`).join('')
     restorePondSelect.value = previous ? String(previous.id) : ''
     document.querySelector('[data-archive-restore-hint]').textContent = locations.length === 1 && locations[0]
-      ? (previous ? `Kolam terakhir "${chosen[0].archive_location}" ditemukan di daftar kolam dan dipilih otomatis.` : `Lokasi arsip "${chosen[0].archive_location}" tidak ada di daftar kolam. Pilih kolam yang sesuai.`)
-      : 'Pilih kolam dari daftar kolam yang berlaku sekarang.'
+      ? (previous ? `Lokasi terakhir "${chosen[0].archive_location}" ditemukan di daftar kolam dan dipilih otomatis.` : `Lokasi arsip "${chosen[0].archive_location}" tidak ada di daftar kolam. Pilih kolam yang sesuai.`)
+      : 'Pilih lokasi dari daftar kolam yang berlaku sekarang.'
     openModal(restoreModalEl)
   }
 

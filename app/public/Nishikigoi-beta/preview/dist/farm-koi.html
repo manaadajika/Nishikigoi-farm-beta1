@@ -1807,7 +1807,7 @@
               >
                 <div class="modal-content">
                   <div class="modal-header">
-                    <h5 class="modal-title">Ganti Lokasi Kolam</h5>
+                    <h5 class="modal-title">Ganti Lokasi</h5>
                     <button
                       type="button"
                       class="btn-close"
@@ -1823,7 +1823,7 @@
                     <input
                       class="form-control mb-3"
                       name="bulk_pond_search"
-                      placeholder="Cari kolam"
+                      placeholder="Cari lokasi"
                       data-bulk-pond-search
                       autocomplete="off"
                     />
@@ -1917,7 +1917,7 @@
                   <label class="form-label">Kolom yang diubah</label>
                   <select class="form-select" name="bulk_field" data-bulk-field>
                 <option value="code">Kode Koi</option>
-                <option value="pond_id">Kolam</option><option value="area" disabled>Area</option>
+                <option value="pond_id">Lokasi</option><option value="area" disabled>Area</option>
                 <option value="variety">Variety</option>
                 <option value="bloodline">Bloodline</option>
                 <option value="farm_name">Ternakan</option>
@@ -2362,7 +2362,7 @@
                             />
                           </div>
                           <div class="col-sm-6">
-                            <label class="form-label">Kolam</label>
+                            <label class="form-label">Lokasi</label>
                             <input
                               type="hidden"
                               name="pond_id"
@@ -2371,7 +2371,7 @@
                             <div class="koi-pond-search">
                               <input
                                 class="form-control"
-                                placeholder="Tanpa kolam"
+                                placeholder="Tanpa lokasi"
                                 autocomplete="off"
                                 data-edit-pond-select
                                 data-pond-search-input
@@ -2380,8 +2380,8 @@
                                 class="koi-pond-clear d-none"
                                 type="button"
                                 data-pond-clear
-                                aria-label="Kosongkan kolam"
-                                title="Kosongkan kolam"
+                                aria-label="Kosongkan lokasi"
+                                title="Kosongkan lokasi"
                               >
                                 &times;
                               </button>
@@ -2396,7 +2396,7 @@
                             <div class="koi-pond-search">
                               <input
                                 class="form-control"
-                                placeholder="Tanpa lokasi"
+                                placeholder="Tanpa area"
                                 autocomplete="off"
                                 data-edit-pond-location
                                 data-pond-search-input
@@ -2405,8 +2405,8 @@
                                 class="koi-pond-clear d-none"
                                 type="button"
                                 data-pond-clear
-                                aria-label="Kosongkan lokasi"
-                                title="Kosongkan lokasi"
+                                aria-label="Kosongkan area"
+                                title="Kosongkan area"
                               >
                                 &times;
                               </button>
@@ -3419,8 +3419,8 @@ const pageSizeSelect = document.querySelector('[data-koi-page-size-select]');
       `,
                   pond_id: () => `
         <div class="koi-pond-search">
-          <input class="form-control" data-bulk-value placeholder="Tanpa kolam" autocomplete="off" data-pond-search-input />
-          <button class="koi-pond-clear d-none" type="button" data-pond-clear aria-label="Kosongkan kolam" title="Kosongkan kolam">&times;</button>
+          <input class="form-control" data-bulk-value placeholder="Tanpa lokasi" autocomplete="off" data-pond-search-input />
+          <button class="koi-pond-clear d-none" type="button" data-pond-clear aria-label="Kosongkan lokasi" title="Kosongkan lokasi">&times;</button>
           <div class="koi-pond-search-menu d-none" data-pond-search-menu></div>
         </div>
       `,
@@ -4615,8 +4615,8 @@ const pageSizeSelect = document.querySelector('[data-koi-page-size-select]');
         <button class="koi-pond-search-item" type="button" data-pond-search-pick="">
           <span class="koi-pond-search-main">
             <span class="koi-pond-search-copy">
-              <span class="d-block fw-medium text-truncate">${isLocationInput ? "Tanpa lokasi" : "Tanpa kolam"}</span>
-              <span class="d-block text-secondary small text-truncate">${isLocationInput ? "Kosongkan kolam dan lokasi ikan" : "Kosongkan lokasi ikan"}</span>
+              <span class="d-block fw-medium text-truncate">${isLocationInput ? "Tanpa area" : "Tanpa lokasi"}</span>
+              <span class="d-block text-secondary small text-truncate">${isLocationInput ? "Kosongkan lokasi dan area ikan" : "Kosongkan lokasi ikan"}</span>
             </span>
           </span>
         </button>
@@ -4636,7 +4636,7 @@ const pageSizeSelect = document.querySelector('[data-koi-page-size-select]');
           `,
                 )
                 .join("")
-            : '<div class="koi-pond-search-empty">Tidak ada kolam yang cocok</div>'
+            : '<div class="koi-pond-search-empty">Tidak ada lokasi yang cocok</div>'
         }
       `;
                   menu.classList.remove("d-none");
@@ -4820,7 +4820,7 @@ const pageSizeSelect = document.querySelector('[data-koi-page-size-select]');
 
       const code = String(entry.querySelector('[name="code"]')?.value || '').trim()
 
-      return `Entry ${index + 1}${code ? ` (${code})` : ''}: Area "${typed}" tidak sesuai dengan kolam ${pond.name} (area kolam: ${pond.location || 'kosong'}). Kosongkan Area agar terisi otomatis dari kolam, atau kosongkan Kolam kalau hanya tahu areanya.`
+      return `Entry ${index + 1}${code ? ` (${code})` : ''}: Area "${typed}" tidak sesuai dengan lokasi ${pond.name} (area lokasi: ${pond.location || 'kosong'}). Kosongkan Area agar terisi otomatis dari lokasi, atau kosongkan Lokasi kalau hanya tahu areanya.`
     }
 
                 const updateEntryParentPreview = (entry) => {
@@ -5012,15 +5012,15 @@ const pageSizeSelect = document.querySelector('[data-koi-page-size-select]');
             <input type="hidden" name="pond_id" data-pond-id />
             <div class="koi-help-field">
               <div class="koi-pond-search">
-                <input class="form-control" placeholder="Tanpa kolam" data-pond-select data-pond-search-input aria-label="Kolam" autocomplete="off" />
-                <button class="koi-pond-clear d-none" type="button" data-pond-clear aria-label="Kosongkan kolam" title="Kosongkan kolam">&times;</button>
+                <input class="form-control" placeholder="Tanpa lokasi" data-pond-select data-pond-search-input aria-label="Lokasi" autocomplete="off" />
+                <button class="koi-pond-clear d-none" type="button" data-pond-clear aria-label="Kosongkan lokasi" title="Kosongkan lokasi">&times;</button>
                 <div class="koi-pond-search-menu d-none" data-pond-search-menu></div>
               </div>
-              <button class="form-help" type="button" data-bs-toggle="popover" data-bs-trigger="focus" data-bs-placement="top" data-bs-content="Pilih kolam dari daftar, atau kosongkan untuk Tanpa kolam" aria-label="Bantuan kolam">!</button>
+              <button class="form-help" type="button" data-bs-toggle="popover" data-bs-trigger="focus" data-bs-placement="top" data-bs-content="Pilih lokasi dari daftar, atau kosongkan untuk Tanpa lokasi" aria-label="Bantuan lokasi">!</button>
             </div>
             <div class="koi-help-field">
               <input class="form-control" name="area" placeholder="Area" aria-label="Area" autocomplete="off" list="koi-area-options" data-entry-area />
-              <button class="form-help" type="button" data-bs-toggle="popover" data-bs-trigger="focus" data-bs-placement="top" data-bs-content="Terisi otomatis dari kolam. Boleh diisi sendiri kalau kolam belum diketahui (kolam dikosongkan). Area yang berbeda dari area kolam tidak diterima" aria-label="Bantuan area">!</button>
+              <button class="form-help" type="button" data-bs-toggle="popover" data-bs-trigger="focus" data-bs-placement="top" data-bs-content="Terisi otomatis dari lokasi. Boleh diisi sendiri kalau lokasi belum diketahui (lokasi dikosongkan). Area yang berbeda dari area lokasi tidak diterima" aria-label="Bantuan area">!</button>
             </div>
             <div class="koi-help-field">
               <div class="koi-variety-search">
@@ -5683,7 +5683,7 @@ const pageSizeSelect = document.querySelector('[data-koi-page-size-select]');
       if (fieldName === 'pond_id') {
         if (!String(value).trim()) return { pond_id: null }
         const pond = findPondByName(value)
-        if (!pond) throw new Error('Kolam tidak ditemukan. Pilih kolam dari daftar.')
+        if (!pond) throw new Error('Lokasi tidak ditemukan. Pilih lokasi dari daftar.')
         return { pond_id: pond.id, area: null }
       }
       if (fieldName === 'area') return { area: String(value).trim() }
@@ -8559,8 +8559,8 @@ if (pageSizeSelect) pageSizeSelect.value = String(pageSize);
       photo_name: 'WAJIB untuk ikan baru: nama file foto di ZIP, contoh IMG_20260927_101500 (.jpg boleh ditulis atau tidak, huruf besar/kecil bebas). Ikan lama (Kode Koi diisi): boleh kosong; kalau diisi, foto masuk History Progress Foto sebagai foto terbaru.',
       code: 'Kosongkan untuk ikan BARU. Isi Kode Koi yang sudah ada (contoh 26RLZI) untuk memperbarui ikan itu; kolom lain yang dikosongkan = data lama tetap dipakai.',
       name: 'Opsional. Nama ikan.',
-      pond_name: 'Nama kolam persis seperti di Data Kolam, contoh Konkret 01. Kosongkan = Tanpa kolam.',
-      area: 'Opsional. Terisi otomatis dari Lokasi (kolam) kalau Lokasi diisi; kalau diisi sendiri harus sama dengan area kolam itu. Boleh diisi tanpa Lokasi kalau hanya tahu areanya, contoh Outdoor.',
+      pond_name: 'Nama lokasi persis seperti di Data Kolam, contoh Konkret 01. Kosongkan = Tanpa lokasi.',
+      area: 'Opsional. Terisi otomatis dari Lokasi kalau Lokasi diisi; kalau diisi sendiri harus sama dengan area lokasi itu. Boleh diisi tanpa Lokasi kalau hanya tahu areanya, contoh Outdoor.',
       variety: 'Nama variety, contoh Kohaku, Showa, Tancho Kujaku.',
       bloodline: 'Opsional.',
       farm_name: 'Opsional. Nama ternakan, contoh Momotaro Koi Farm.',
@@ -9070,8 +9070,8 @@ items.forEach((item) => {
                   const rows = [
                     {
                       id: "",
-                      name: "Tanpa kolam",
-                      hint: "Kosongkan lokasi kolam",
+                      name: "Tanpa lokasi",
+                      hint: "Kosongkan lokasi",
                     },
                     ...filteredPonds.map((pond) => ({
                       id: pond.id,
@@ -9091,7 +9091,7 @@ items.forEach((item) => {
       `,
                       )
                       .join("") ||
-                    '<div class="list-group-item text-secondary">Kolam tidak ditemukan.</div>';
+                    '<div class="list-group-item text-secondary">Lokasi tidak ditemukan.</div>';
                 };
 
                 const openBulkPondModal = () => {
@@ -9400,7 +9400,7 @@ items.forEach((item) => {
         photo_name: 'IMG_0001',
         code: '',
         name: 'Contoh Ikan Baru',
-        pond_name: 'Tanpa kolam',
+        pond_name: 'Tanpa lokasi',
         variety: 'Kohaku',
         bloodline: '',
         farm_name: 'Contoh ternakan',
@@ -9640,9 +9640,9 @@ Ketik HAPUS untuk melanjutkan.`)) !== 'HAPUS' : !(await window.KoiDialog.confirm
           <div class="modal-header"><h5 class="modal-title">Keluarkan dari arsip</h5><button type="button" class="btn-close" data-restore-cancel aria-label="Tutup"></button></div>
           <div class="modal-body">
             <p class="mb-3">${count} ikan kembali ke daftar Data Ikan dan dihitung lagi di Dashboard.</p>
-            <label class="form-label">Kolam tujuan</label>
+            <label class="form-label">Lokasi tujuan</label>
             <select class="form-select" data-restore-pond>
-              <option value="">Tanpa kolam</option>
+              <option value="">Tanpa lokasi</option>
               ${(typeof pondsList !== 'undefined' ? pondsList : []).map((pond) => `<option value="${escapeHtml(pond.id)}"${String(pond.id) === String(defaultPondId) ? ' selected' : ''}>${escapeHtml(pond.name)}</option>`).join('')}
             </select>
             ${hint ? `<div class="form-hint mt-2">${escapeHtml(hint)}</div>` : ''}
@@ -9674,7 +9674,7 @@ Ketik HAPUS untuk melanjutkan.`)) !== 'HAPUS' : !(await window.KoiDialog.confirm
       const chosen = selectedKoiItems()
       const places = [...new Set(chosen.map((item) => String(item.archive_location || '').trim()).filter(Boolean))]
       const pondGuess = places.length === 1 ? (typeof pondsList !== 'undefined' ? pondsList : []).find((pond) => pond.name === places[0]) : null
-      const hint = places.length ? `Kolam saat diarsipkan: ${places.join(', ')}.` : 'Ikan tidak punya catatan kolam asal.'
+      const hint = places.length ? `Lokasi saat diarsipkan: ${places.join(', ')}.` : 'Ikan tidak punya catatan lokasi asal.'
       const answer = await askRestorePond(ids.length, pondGuess ? pondGuess.id : '', hint)
       if (!answer) return
       archiveSelectedButton.disabled = true
@@ -9938,7 +9938,7 @@ Ketik HAPUS untuk melanjutkan.`)) !== 'HAPUS' : !(await window.KoiDialog.confirm
           const areaDatalist = document.querySelector('[data-area-options]')
           if (areaDatalist) areaDatalist.innerHTML = [...new Set(ponds.map((pond) => String(pond.location || '').trim()).filter(Boolean))].map((area) => `<option value="${escapeHtml(area)}"></option>`).join('')
                       pondDatalist.innerHTML =
-                        '<option value="Tanpa kolam"></option>' +
+                        '<option value="Tanpa lokasi"></option>' +
                         ponds
                           .map(
                             (pond) => `

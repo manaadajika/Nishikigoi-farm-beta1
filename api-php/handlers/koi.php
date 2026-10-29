@@ -139,7 +139,7 @@ route('POST', '/koi/bulk-update', function () {
     if (!empty($body['relocation_note']) && array_key_exists('pond_id', $fields)) {
         $newPondId = blank_to_null($fields['pond_id']);
         $newName = $newPondId ? (string)(query_one('SELECT name FROM ponds WHERE id = ?', [$newPondId])['name'] ?? '') : '';
-        if ($newPondId && $newName === '') send_error(400, 'Kolam tidak ditemukan');
+        if ($newPondId && $newName === '') send_error(400, 'Lokasi tidak ditemukan');
         $newName = $newName !== '' ? $newName : 'Tanpa Lokasi';
         // the relocation line goes on top, then a dashed line and a blank line, then the old note (same style as Catatan masal)
         $relocation = "CONCAT('[', ?, '] Relokasi Masal: Dipindah dari ', COALESCE(oldpond.name, 'Tanpa Lokasi'), ' ke ', ?, '.')";
@@ -218,7 +218,7 @@ route('POST', '/koi/unarchive', function () {
     if ($pondId !== null) {
         $pondId = (int)$pondId;
         if (!query_one('SELECT id FROM ponds WHERE id = ?', [$pondId])) {
-            send_error(422, 'Kolam tidak ditemukan di daftar kolam');
+            send_error(422, 'Lokasi tidak ditemukan di daftar kolam');
         }
     }
     $placeholders = implode(',', array_fill(0, count($ids), '?'));
