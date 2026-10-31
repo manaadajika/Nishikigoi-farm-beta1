@@ -1149,6 +1149,16 @@
   }
   installNumberGuard()
 
+  // ---- Sizes in cm: one decimal digit at most ----------------------------------------------------------------------------------------
+  // Fish sizes are written 45 or 45.5 (never 45.55): the extra digits are cut as they are typed.
+  var ONE_DECIMAL = '[name$="length_cm"],[data-parent-length],[data-line-size],[data-average-length],input[data-bulk-value][type="number"][step="0.1"]'
+  document.addEventListener('input', function (event) {
+    var field = event.target
+    if (!field || field.tagName !== 'INPUT' || !field.matches(ONE_DECIMAL)) return
+    var cut = field.value.replace(/([.,]\d)\d+$/, '$1')
+    if (cut !== field.value) field.value = cut
+  }, true)
+
   // ---- Fields that sit outside an open modal ---------------------------------------------------------------------------------------
   // A Bootstrap modal (Edit Ikan, Formulir Kolam ...) pulls the focus back into itself whenever it moves to an element outside the modal.
   // The program's own dialogs and pop-up lists (the size prompt of History Progress Foto, search boxes of a select list ...) are
@@ -1656,7 +1666,7 @@
             var cleaned = field.value.replace(integerOnly ? /[^0-9]/g : /[^0-9.,]/g, '')
             if (!integerOnly) {
               var first = cleaned.search(/[.,]/)
-              if (first >= 0) cleaned = cleaned.slice(0, first + 1) + cleaned.slice(first + 1).replace(/[.,]/g, '')
+              if (first >= 0) cleaned = cleaned.slice(0, first + 1) + cleaned.slice(first + 1).replace(/[.,]/g, '').slice(0, 1)   // one decimal digit at most
             }
             if (cleaned !== field.value) field.value = cleaned
           })
