@@ -351,7 +351,7 @@ route('GET', '/summary-more', function () {
         $rows = [];
         foreach (query("SELECT koi.id, koi.code, koi.name, koi.variety, koi.bloodline, koi.gender, koi.current_length_cm, koi.image_url, ponds.name AS pond_name FROM koi LEFT JOIN ponds ON ponds.id = koi.pond_id WHERE koi.archived_at IS NULL AND koi.parent_type = 'indukan' AND koi.status = 'active' ORDER BY koi.code") as $k) {
             if (isset($used[(int)$k['id']])) continue;
-            $gender = $k['gender'] === 'male' ? 'Jantan' : ($k['gender'] === 'female' ? 'Betina' : 'Unknown');
+            $gender = $k['gender'] === 'male' ? 'Male' : ($k['gender'] === 'female' ? 'Female' : 'Unknown');
             $rows[] = [
                 'title' => (string)$k['code'] . ' ' . (string)($k['name'] ?: $k['variety'] ?: ''),
                 'sub' => $gender . ($k['pond_name'] ? ' · ' . $k['pond_name'] : ''),
@@ -373,7 +373,7 @@ route('GET', '/summary-more', function () {
         [$label, $where] = $statusCards[$kind];
         $total = (int)(query_one("SELECT COUNT(*) AS c FROM koi WHERE $where")['c'] ?? 0);
         $rows = query("SELECT koi.code, koi.name, koi.variety, koi.bloodline, koi.gender, koi.current_length_cm, koi.image_url, koi.parent_type, koi.archived_at, koi.updated_at, ponds.name AS pond_name FROM koi LEFT JOIN ponds ON ponds.id = koi.pond_id WHERE $where ORDER BY koi.updated_at DESC, koi.id DESC LIMIT $limit");
-        $genders = ['male' => 'Jantan', 'female' => 'Betina'];
+        $genders = ['male' => 'Male', 'female' => 'Female'];
         send_json(200, [
             'title' => $label . ' (' . $total . ')',
             'note' => $total > $limit ? "Menampilkan $limit ikan yang paling baru diubah." : '',

@@ -20,8 +20,8 @@
     var n = Number(String(value == null ? '' : value).replace(',', '.'))
     return String(value == null ? '' : value).trim() === '' || !Number.isFinite(n) ? null : n
   }
-  // Same values as the Kelamin field of Data Ikan: unknown | male | female (shown as words).
-  var genderLabels = { unknown: 'Unknown', male: 'Jantan', female: 'Betina' }
+  // Same values as the Sex field of Data Ikan: unknown | male | female (shown as words).
+  var genderLabels = { unknown: 'Unknown', male: 'Male', female: 'Female' }
   function genderFrom(value) {
     var typed = String(value == null ? '' : value).trim().toLowerCase()
     if (['male', 'm', 'jantan', 'j'].indexOf(typed) >= 0) return 'male'
@@ -71,7 +71,7 @@
         '</td><td class="kp-num">' + (sizeText(line.size_cm) ? e(sizeText(line.size_cm)) + ' cm' : '-') +
         '</td><td>' + e(line.farm || '-') + '</td><td>' + e(line.bloodline || '-') + '</td><td>' + e(line.owner || '-') + '</td><td>' + e(line.pond_name || '-') + '</td></tr>'
     }).join('') || '<tr><td colspan="9" class="kp-muted">Belum ada ikan.</td></tr>'
-    var body = '<section class="kp-section"><h2>Ikan yang datang</h2><table class="kp-table"><thead><tr><th class="kp-center" style="width:28px">No</th><th class="kp-center" style="width:48px">Foto</th><th>Jenis</th><th class="kp-center" style="width:9%">Kelamin</th><th class="kp-num" style="width:9%">Ukuran</th>' +
+    var body = '<section class="kp-section"><h2>Ikan yang datang</h2><table class="kp-table"><thead><tr><th class="kp-center" style="width:28px">No</th><th class="kp-center" style="width:48px">Foto</th><th>Jenis</th><th class="kp-center" style="width:9%">Sex</th><th class="kp-num" style="width:9%">Ukuran</th>' +
       '<th style="width:13%">Ternakan</th><th style="width:12%">Bloodline</th><th style="width:12%">Owner</th><th style="width:13%">Lokasi</th></tr></thead><tbody>' + rows +
       '<tr><td colspan="9"><strong>Total: ' + e(totalOf(lines)) + ' ekor</strong></td></tr></tbody></table></section>' +
       (mediaList.length ? '<section class="kp-section"><h2>Dokumentasi</h2><div style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px">' +
@@ -95,7 +95,7 @@
   }
 
   // ---- Excel sheet import ("Ikan Datang": one row per fish line) --------------------------------
-  // Columns: Tanggal | Nama Laporan | Ikan Dari | Jenis | Kelamin | Ukuran (cm) | Ternakan | Bloodline | Owner | Lokasi Tujuan | Foto | Catatan | Kode Batch
+  // Columns: Tanggal | Nama Laporan | Ikan Dari | Jenis | Sex | Ukuran (cm) | Ternakan | Bloodline | Owner | Lokasi Tujuan | Foto | Catatan | Kode Batch
   // One row = one fish. Rows with the same Tanggal + Nama Laporan + Ikan Dari become ONE report.
   // An old "Jumlah (ekor)" column is still read (empty = 1).
   // Returns { created, skipped, problems }.
@@ -139,7 +139,7 @@
       if (record.catatan && !group.notes) group.notes = String(record.catatan).trim()
       if (record.dokumentasi && !group.docsCell) group.docsCell = String(record.dokumentasi).trim()
       group.lines.push({
-        qty: qty === null ? 1 : Math.round(qty), variety: variety, gender: genderFrom(record.kelamin || record.gender), size_cm: size === null ? '' : size,
+        qty: qty === null ? 1 : Math.round(qty), variety: variety, gender: genderFrom(record.sex || record.kelamin || record.gender), size_cm: size === null ? '' : size,
         farm: String(record.ternakan || record.farm || '').trim(), bloodline: String(record.bloodline || '').trim(), owner: String(record.owner || '').trim(),
         pond_id: pond ? String(pond.id) : '', pond_name: pond ? pond.name : '',
         image_url: '', image_ref: String(record.foto || '').trim(),
@@ -340,7 +340,7 @@
       })
     }
     function genderGroup(name, selected) {
-      return '<div class="form-selectgroup flex-nowrap" role="radiogroup" aria-label="Kelamin">' + ['unknown', 'male', 'female'].map(function (key) {
+      return '<div class="form-selectgroup flex-nowrap" role="radiogroup" aria-label="Sex">' + ['unknown', 'male', 'female'].map(function (key) {
         return '<label class="form-selectgroup-item" title="' + genderLabels[key] + '"><input class="form-selectgroup-input" type="radio" data-line-gender name="' + name + '" value="' + key + '"' + (key === selected ? ' checked' : '') + '>' +
           '<span class="form-selectgroup-label" aria-label="' + genderLabels[key] + '" style="padding:.35rem .5rem;font-size:.8rem;white-space:nowrap">' + genderLabels[key] + '</span></label>'
       }).join('') + '</div>'
@@ -363,7 +363,7 @@
       row.innerHTML = '<div class="row g-2">' +
         field('col-12 col-md-2', 'Jenis', '<input class="form-control" list="arrival-varieties" data-line-variety placeholder="Contoh Showa" value="' + escapeHtml(line.variety || '') + '">') +
         field('col-5 col-md-2', 'Ukuran (cm)', '<input class="form-control" type="number" min="0" step="0.1" data-line-size placeholder="cm" value="' + escapeHtml(line.size_cm == null ? '' : line.size_cm) + '">') +
-        field('col-12 col-md-4', 'Kelamin', genderGroup('arrival_gender_' + lineSeq, genderFrom(line.gender))) +
+        field('col-12 col-md-4', 'Sex', genderGroup('arrival_gender_' + lineSeq, genderFrom(line.gender))) +
         field('col-6 col-md-2', 'Ternakan', '<input class="form-control" list="arrival-farms" data-line-farm placeholder="Ternakan" value="' + escapeHtml(line.farm || '') + '">') +
         field('col-6 col-md-2', 'Bloodline', '<input class="form-control" list="arrival-bloodlines" data-line-bloodline placeholder="Bloodline" value="' + escapeHtml(line.bloodline || '') + '">') +
         field('col-12 col-md-2', 'Owner', '<input class="form-control" list="arrival-owners" data-line-owner placeholder="Owner" value="' + escapeHtml(line.owner || '') + '">') +

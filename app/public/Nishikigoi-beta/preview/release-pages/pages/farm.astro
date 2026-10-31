@@ -93,7 +93,7 @@ import DefaultLayout from '@shared/layouts/DefaultLayout.astro'
         ;['breeders_active', 'breeders_dead', 'sold', 'regular_dead'].forEach((prefix) => {
           const line = document.querySelector(`[data-summary-gender="${prefix}"]`)
           if (!line) return
-          const parts = [['Jantan', 'male'], ['Betina', 'female'], ['Unknown', 'unknown']]
+          const parts = [['Male', 'male'], ['Female', 'female'], ['Unknown', 'unknown']]
             .map(([label, key]) => [label, Number(summary[`${prefix}_${key}`] ?? 0)])
             .filter(([, count]) => count > 0)
             .map(([label, count]) => `${label} ${count.toLocaleString('id-ID')}`)
@@ -138,7 +138,7 @@ keys.forEach((key) => {
           <div class="progress progress-sm"><div class="progress-bar" style="width:${Math.max(3, Math.round(100 * row.count / max))}%"></div></div>
         </div>`).join('')
     }
-    const extraGender = (counts) => [['Jantan', counts.male], ['Betina', counts.female], ['Unknown', counts.unknown]]
+    const extraGender = (counts) => [['Male', counts.male], ['Female', counts.female], ['Unknown', counts.unknown]]
       .filter(([, count]) => Number(count) > 0).map(([label, count]) => `${label} ${numberText(count)}`).join(' · ')
 
     const zoomFeedRow = (row) => {
@@ -174,7 +174,7 @@ keys.forEach((key) => {
       // the cards that ask for attention (to complete, no progress, empty ponds, last backup) go to the very bottom
       const bottom = []
       const inc = extra.incomplete || {}
-      const incLines = [['Tanpa foto', inc.no_photo], ['Tanpa lokasi dan area', inc.no_place], ['Tanpa size', inc.no_size], ['Kelamin Unknown', inc.no_gender], ['Indukan tanpa peternakan', inc.no_farm_breeder]]
+      const incLines = [['Tanpa foto', inc.no_photo], ['Tanpa lokasi dan area', inc.no_place], ['Tanpa size', inc.no_size], ['Sex Unknown', inc.no_gender], ['Indukan tanpa peternakan', inc.no_farm_breeder]]
         .filter(([, count]) => Number(count) > 0)
         .map(([label, count]) => `<div class="d-flex justify-content-between small mt-1"><span>${label}</span><strong>${numberText(count)}</strong></div>`)
       if (incLines.length) bottom.push(extraCard('Perlu dilengkapi', `<div class="mt-2">${incLines.join('')}</div>`))

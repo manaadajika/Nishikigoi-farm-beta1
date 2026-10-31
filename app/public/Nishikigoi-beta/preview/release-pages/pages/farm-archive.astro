@@ -61,8 +61,8 @@ import DefaultLayout from '@shared/layouts/DefaultLayout.astro'
           <div class="col-md-4"><label class="form-label">Bloodline</label><input class="form-control" name="bloodline" autocomplete="off" /></div>
           <div class="col-md-4"><label class="form-label">Ternakan</label><input class="form-control" name="farm_name" autocomplete="off" /></div>
           <div class="col-md-4"><label class="form-label">Owner</label><input class="form-control" name="breeder" autocomplete="off" /></div>
-          <div class="col-md-4"><label class="form-label">Kelamin</label>
-            <select class="form-select" name="gender"><option value="unknown">Unknown</option><option value="male">Jantan</option><option value="female">Betina</option></select></div>
+          <div class="col-md-4"><label class="form-label">Sex</label>
+            <select class="form-select" name="gender"><option value="unknown">Unknown</option><option value="male">Male</option><option value="female">Female</option></select></div>
           <div class="col-md-4"><label class="form-label">Status</label>
             <select class="form-select" name="status"><option value="active">Aktif</option><option value="non_active">Non-Aktif</option><option value="quarantine">Karantina</option><option value="sold">Terjual</option><option value="dead">Mati</option></select></div>
           <div class="col-md-4 d-flex align-items-end"><label class="form-check mb-2"><input class="form-check-input" type="checkbox" name="parent_type" value="indukan" /><span class="form-check-label">Indukan</span></label></div>
@@ -138,7 +138,7 @@ import DefaultLayout from '@shared/layouts/DefaultLayout.astro'
   const previewColors = ['#dbeafe', '#fee2e2', '#dcfce7', '#fef3c7', '#ede9fe', '#e0f2fe', '#fce7f3', '#e5e7eb']
   const statusLabels = { active: 'Aktif', non_active: 'Non-Aktif', quarantine: 'Karantina', sold: 'Terjual', dead: 'Mati' }
   const statusClasses = { active: 'bg-green-lt', non_active: 'bg-secondary-lt', quarantine: 'bg-yellow-lt', sold: 'bg-purple-lt', dead: 'bg-red-lt' }
-  const genderLabels = { unknown: 'Unknown', male: 'Jantan', female: 'Betina' }
+  const genderLabels = { unknown: 'Unknown', male: 'Male', female: 'Female' }
   const dayNames = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu']
   const editIcon = '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false" class="icon"><path d="M7 7h-1a2 2 0 0 0 -2 2v9a2 2 0 0 0 2 2h9a2 2 0 0 0 2 -2v-1" /><path d="M20.385 6.585a2.1 2.1 0 0 0 -2.97 -2.97l-8.415 8.385v3h3l8.385 -8.415" /><path d="M16 5l3 3" /></svg>'
 
@@ -334,7 +334,7 @@ import DefaultLayout from '@shared/layouts/DefaultLayout.astro'
               ${cell('Bloodline', text(item.bloodline))}
               ${cell('Ternakan', text(item.farm_name))}
               ${cell('Lokasi Arsip', text(item.archive_location))}
-              ${cell('Kelamin', genderLabels[item.gender] || text(item.gender))}
+              ${cell('Sex', genderLabels[item.gender] || text(item.gender))}
               ${cell('Size', formatSize(item.current_length_cm))}
             </div>
             <div class="mt-2 d-flex align-items-center justify-content-between gap-2">

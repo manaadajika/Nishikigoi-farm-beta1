@@ -10,7 +10,7 @@ require_once __DIR__ . '/cache.php';
 // (matchesKoiSearch, matchesFieldCriterion, numberTest, ...). Both give the same fish.
 
 const KOI_STATUS_LABELS = [
-    'unknown' => 'Unknown', 'male' => 'Jantan', 'female' => 'Betina', 'active' => 'Aktif', 'non_active' => 'Non-Aktif',
+    'unknown' => 'Unknown', 'male' => 'Male', 'female' => 'Female', 'active' => 'Aktif', 'non_active' => 'Non-Aktif',
     'quarantine' => 'Karantina', 'sold' => 'Terjual', 'dead' => 'Mati', 'indukan' => 'Indukan', 'non_indukan' => 'Bukan Indukan',
 ];
 
@@ -27,7 +27,7 @@ const KOI_SEARCH_ALIASES = [
     'kolam' => 'pond_name', 'lokasi' => 'pond_name', 'pond' => 'pond_name',
     'area' => 'pond_location',
     'status' => 'status',
-    'gender' => 'gender', 'kelamin' => 'gender', 'jk' => 'gender',
+    'gender' => 'gender', 'sex' => 'gender', 'kelamin' => 'gender', 'jk' => 'gender',
     'tipe' => 'parent_type', 'type' => 'parent_type',
     'catatan' => 'notes', 'notes' => 'notes', 'note' => 'notes',
     'ukuran' => 'current_length_cm', 'size' => 'current_length_cm', 'panjang' => 'current_length_cm',

@@ -514,16 +514,16 @@ const saveIcon = iconSvg('device-floppy')
             </div>
             <div class="col-12">
               <div class="d-flex align-items-center justify-content-between mb-2">
-                <label class="form-label mb-0">Indukan Betina</label>
+                <label class="form-label mb-0">Indukan Female</label>
               </div>
               <div class="vstack gap-2" data-parent-list="female"></div>
             </div>
             <div class="col-12">
               <div class="d-flex align-items-center justify-content-between mb-2">
-                <label class="form-label mb-0">Indukan Jantan</label>
+                <label class="form-label mb-0">Indukan Male</label>
               </div>
               <div class="vstack gap-2" data-parent-list="male"></div>
-              <button class="btn btn-sm btn-outline-primary mt-2" type="button" data-add-parent="male">Tambah Jantan</button>
+              <button class="btn btn-sm btn-outline-primary mt-2" type="button" data-add-parent="male">Tambah Male</button>
             </div>
             <div class="col-12 border-top pt-3">
               <label class="form-label">Lokasi</label>
@@ -1020,7 +1020,7 @@ const saveIcon = iconSvg('device-floppy')
       if (males.length <= 4) return `<div class="breeding-male-thumbs">${males.map((male) => maleThumbHtml(male)).join('')}</div>`
       const fourth = males[3]
       return `<div class="breeding-male-thumbs">${males.slice(0, 3).map((male) => maleThumbHtml(male)).join('')}
-        <button class="breeding-male-thumb breeding-male-more" type="button" data-show-males="${escapeHtml(item.id)}" aria-label="Lihat semua ${males.length} indukan jantan" title="Lihat semua indukan jantan">
+        <button class="breeding-male-thumb breeding-male-more" type="button" data-show-males="${escapeHtml(item.id)}" aria-label="Lihat semua ${males.length} indukan male" title="Lihat semua indukan jantan">
           ${fourth.image_url ? `<img src="${escapeHtml(fourth.image_url)}" alt="" loading="lazy" decoding="async" />` : ''}
           <span class="breeding-male-more-count">+${males.length - 3}</span>
         </button></div>`
@@ -1037,7 +1037,7 @@ const saveIcon = iconSvg('device-floppy')
       overlay.innerHTML = `
         <div class="card" style="max-width:36rem;width:100%;max-height:90vh">
           <div class="card-header">
-            <h3 class="card-title">Indukan Jantan ${escapeHtml(text(item.batch_code))} (${males.length})</h3>
+            <h3 class="card-title">Indukan Male ${escapeHtml(text(item.batch_code))} (${males.length})</h3>
             <div class="card-actions"><button type="button" class="btn-close" data-close-males aria-label="Tutup"></button></div>
           </div>
           <div class="card-body" style="overflow:auto">
@@ -1095,14 +1095,14 @@ const saveIcon = iconSvg('device-floppy')
             </div>
             <div class="breeding-card-photo" data-dock-select title="Klik untuk memilih">
               ${female.image_url ? `<img src="${escapeHtml(female.image_url)}" alt="${escapeHtml(text(female.code))}" loading="lazy" decoding="async" fetchpriority="low" />` : '<div class="breeding-parent-placeholder d-flex align-items-center justify-content-center">No foto</div>'}
-              ${female.image_url ? `<button class="btn btn-icon btn-sm breeding-zoom-btn" type="button" data-zoom-image="${escapeHtml(female.image_url)}" aria-label="Zoom foto indukan betina" title="Zoom foto">${window.KoiDock.icon('zoom-in')}</button>` : ''}
+              ${female.image_url ? `<button class="btn btn-icon btn-sm breeding-zoom-btn" type="button" data-zoom-image="${escapeHtml(female.image_url)}" aria-label="Zoom foto indukan female" title="Zoom foto">${window.KoiDock.icon('zoom-in')}</button>` : ''}
             </div>
             <div class="card-body" role="button" tabindex="0" data-breeding-id="${escapeHtml(item.id)}">
               <div class="row g-2 small">
                 <div class="col-6 breeding-card-cell"><span class="text-secondary">Lokasi</span><div class="breeding-ellipsis" title="${escapeHtml(pondText)}">${escapeHtml(pondText)}</div></div>
                 <div class="col-6 breeding-card-cell"><span class="text-secondary">Metode</span><div>${escapeHtml(methodLabels[item.spawning_method] || text(item.spawning_method))}</div></div>
-                <div class="col-12 breeding-card-cell"><span class="text-secondary">Indukan Betina</span><div>${escapeHtml(femaleText)}</div></div>
-                <div class="col-12 breeding-card-cell"><span class="text-secondary">Indukan Jantan</span>${renderMaleThumbs(item)}</div>
+                <div class="col-12 breeding-card-cell"><span class="text-secondary">Indukan Female</span><div>${escapeHtml(femaleText)}</div></div>
+                <div class="col-12 breeding-card-cell"><span class="text-secondary">Indukan Male</span>${renderMaleThumbs(item)}</div>
               </div>
               <div class="breeding-card-actions">
                 <button class="btn btn-sm" type="button" data-print-breeding="${escapeHtml(item.id)}">${printIcon} Cetak</button>
@@ -1119,7 +1119,7 @@ const saveIcon = iconSvg('device-floppy')
       setSummary(visibleItems)
     }
     // ---- Excel export / import ------------------------------------------------------------------
-    const breedingExcelColumns = ['Kode Batch', 'Nama Sesi', 'Awal Pijah', 'Akhir Pijah', 'Tanggal Release Larva', 'Metode', 'Status', 'Indukan Betina', 'Ukuran Betina (cm)', 'Indukan Jantan', 'Lokasi', 'Burayak', 'Berat Telur (g)', 'Catatan', 'Petugas', 'Update Terakhir', 'Galeri', 'ID Galeri']
+    const breedingExcelColumns = ['Kode Batch', 'Nama Sesi', 'Awal Pijah', 'Akhir Pijah', 'Tanggal Release Larva', 'Metode', 'Status', 'Indukan Female', 'Ukuran Female (cm)', 'Indukan Male', 'Lokasi', 'Burayak', 'Berat Telur (g)', 'Catatan', 'Petugas', 'Update Terakhir', 'Galeri', 'ID Galeri']
     const dateOnly = (value) => window.KoiAuth.dateShort(value)
     // 2026-01-26, 26/01/2026 and "26 - [1] Januari - 2026" all become 2026-01-26; anything else becomes ''.
     const dateFromText = (value) => window.KoiAuth.dateFromText(value)
@@ -1213,6 +1213,12 @@ const saveIcon = iconSvg('device-floppy')
     }
 
     const runBreedingImport = async (records, pkg, dryRun, progress) => {
+      // the sheet headers are now Indukan Female / Indukan Male / Ukuran Female (cm); the older Betina / Jantan names are read as well
+      records.forEach((record) => {
+        if (record['indukan female'] !== undefined && record['indukan betina'] === undefined) record['indukan betina'] = record['indukan female']
+        if (record['indukan male'] !== undefined && record['indukan jantan'] === undefined) record['indukan jantan'] = record['indukan male']
+        if (record['ukuran female (cm)'] !== undefined && record['ukuran betina (cm)'] === undefined) record['ukuran betina (cm)'] = record['ukuran female (cm)']
+      })
       const problems = []
       let inserted = 0
       let updated = 0
@@ -1271,7 +1277,7 @@ const saveIcon = iconSvg('device-floppy')
 
         if (record['indukan betina']) {
           const female = koiByCode.get(record['indukan betina'].toUpperCase())
-          if (!female) bad.push(`Indukan betina "${record['indukan betina']}" tidak ada di Data Ikan`)
+          if (!female) bad.push(`Indukan female "${record['indukan betina']}" tidak ada di Data Ikan`)
           else {
             fields.female_koi_id = female.id
             fields.female_parent_entries = [parentEntry(female, record['ukuran betina (cm)'])]
@@ -2112,8 +2118,8 @@ const saveIcon = iconSvg('device-floppy')
         ],
         notes: item.notes || '',
         body: `
-          <section class="kp-section"><h2>Indukan Betina</h2><table class="kp-table">${parentTableHead}<tbody>${printParentRows(femaleEntries, 'female', item)}</tbody></table></section>
-          <section class="kp-section"><h2>Indukan Jantan</h2><table class="kp-table">${parentTableHead}<tbody>${printParentRows(maleEntries, 'male', item)}</tbody></table></section>
+          <section class="kp-section"><h2>Indukan Female</h2><table class="kp-table">${parentTableHead}<tbody>${printParentRows(femaleEntries, 'female', item)}</tbody></table></section>
+          <section class="kp-section"><h2>Indukan Male</h2><table class="kp-table">${parentTableHead}<tbody>${printParentRows(maleEntries, 'male', item)}</tbody></table></section>
           <section class="kp-section"><h2>Lokasi</h2><table class="kp-table"><thead><tr><th class="kp-center" style="width:28px">No</th><th style="width:28%">Nama Lokasi</th><th>Catatan</th></tr></thead><tbody>${printPondRows(pondEntries)}</tbody></table></section>
         `,
       })

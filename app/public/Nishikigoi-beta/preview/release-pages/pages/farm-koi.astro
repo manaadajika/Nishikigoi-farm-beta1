@@ -1621,7 +1621,7 @@ const calendarIcon = iconSvg('calendar')
     .koi-entry-table .koi-entry-gender-field .form-selectgroup-label {
       width: 2.75rem; min-width: 2.75rem; height: 2.75rem; min-height: 2.75rem;
     }
-    /* Kelamin ditulis (Unknown / Jantan / Betina) di formulir, huruf U / M / F pada tombol filter */
+    /* Sex ditulis (Unknown / Male / Female) di formulir, huruf U / M / F pada tombol filter */
     .koi-entry-gender-field .form-selectgroup-label,
     .koi-edit-gender-field .form-selectgroup-label,
     .koi-entry-table .koi-entry-gender-field .form-selectgroup-label {
@@ -1650,12 +1650,12 @@ const calendarIcon = iconSvg('calendar')
     /* Kotak "Aksi masal": jarak antara kotak centang dan tulisannya */
     .koi-entry-table .koi-entry-bulk-check { display: flex; align-items: center; justify-content: center; gap: .55rem; padding-left: 0; }
     .koi-entry-table .koi-entry-bulk-check .form-check-input { float: none; margin: 0; flex: 0 0 auto; }
-    /* ID Indukan Betina (tanpa placeholder): teks di tengah seperti dropdown Jantan */
+    /* ID Indukan Female (tanpa placeholder): teks di tengah seperti dropdown Male */
     .koi-entry-table .koi-parent-preview-grid input.koi-parent-preview-field.form-control {
       padding-top: .5rem !important; padding-bottom: .5rem !important; line-height: 1.4;
     }
 
-    /* Telepon: Indukan Betina dan Jantan tersusun ke bawah (dua baris) bila lebar tidak cukup */
+    /* Telepon: Indukan Female dan Male tersusun ke bawah (dua baris) bila lebar tidak cukup */
     @media (max-width: 639.98px) {
       .koi-parent-preview-grid { grid-template-columns: minmax(0, 1fr) !important; }
       .koi-entry-table [data-entry-parent-panel] .koi-parent-preview-grid { row-gap: .9rem; }
@@ -1853,7 +1853,7 @@ const calendarIcon = iconSvg('calendar')
         
         <div class="col-12 col-lg-auto koi-icon-filter-row">
           <div class="koi-status-icon"><select data-select-text="Status" data-select-title="Status" class="form-select" id="koi-filter-status" name="koi_filter_status" data-filter="status" multiple><option value="">Semua</option></select></div>
-          <div class="koi-status-icon"><select data-select-text="Kelamin" data-select-title="Kelamin" multiple class="form-select" id="koi-filter-gender" name="koi_filter_gender" data-gender-select><option value="">Semua</option><option value="unknown">Unknown</option><option value="male">Jantan</option><option value="female">Betina</option></select></div>
+          <div class="koi-status-icon"><select data-select-text="Sex" data-select-title="Sex" multiple class="form-select" id="koi-filter-gender" name="koi_filter_gender" data-gender-select><option value="">Semua</option><option value="unknown">Unknown</option><option value="male">Male</option><option value="female">Female</option></select></div>
           <div class="koi-status-icon"><select data-select-text="Typ" data-select-title="Typ" class="form-select" id="koi-filter-type" name="koi_filter_type" data-parent-type-select><option value="">Semua</option><option value="indukan">Indukan</option><option value="non_indukan">Bukan Indukan</option></select></div>
           <button class="btn btn-outline-secondary btn-icon" type="button" data-clear-koi-filters disabled aria-label="Bersihkan filter" title="Bersihkan filter">
             <Icon name="x" />
@@ -1943,7 +1943,7 @@ const calendarIcon = iconSvg('calendar')
                 <option value="farm_name">Ternakan</option>
                 <option value="breeder">Owner</option>
                 <option value="parent_info">Indukan/Breeding</option>
-                <option value="gender">Kelamin</option>
+                <option value="gender">Sex</option>
                 <option value="parent_type">Typ</option>
                 <option value="status">Status</option>
                 <option value="birth_date">Tanggal Lahir</option>
@@ -2118,20 +2118,20 @@ const calendarIcon = iconSvg('calendar')
                   </div>
                 </div>
                 <div class="col-sm-6">
-                  <label class="form-label">Kelamin</label>
-                  <input type="hidden" name="gender" value="unknown" data-edit-gender-value /><select class="form-select" data-edit-gender aria-label="Kelamin"><option value="unknown">Unknown</option><option value="male">Jantan</option><option value="female">Betina</option></select>
+                  <label class="form-label">Sex</label>
+                  <input type="hidden" name="gender" value="unknown" data-edit-gender-value /><select class="form-select" data-edit-gender aria-label="Sex"><option value="unknown">Unknown</option><option value="male">Male</option><option value="female">Female</option></select>
                 </div>
               </div>
             </div>
             <div class="col-12 d-none" data-edit-breeder-parent-panel>
               <div class="row g-3">
                 <div class="col-md-6">
-                  <label class="form-label">Indukan Betina</label>
+                  <label class="form-label">Indukan Female</label>
                   <div data-edit-parent-female-preview></div>
                   <input class="form-control koi-parent-preview-field" data-edit-breeder-female readonly />
                 </div>
                 <div class="col-md-6">
-                  <label class="form-label">Indukan Jantan</label>
+                  <label class="form-label">Indukan Male</label>
                   <div data-edit-parent-male-preview></div>
                   <select class="form-select koi-parent-preview-field" name="edit_breeder_male" data-edit-breeder-male></select>
                 </div>
@@ -2646,8 +2646,8 @@ const calendarIcon = iconSvg('calendar')
 
     const labels = {
       unknown: 'Unknown',
-      male: 'Jantan',
-      female: 'Betina',
+      male: 'Male',
+      female: 'Female',
       active: 'Aktif',
       non_active: 'Non-Aktif',
       quarantine: 'Karantina',
@@ -2700,8 +2700,8 @@ const calendarIcon = iconSvg('calendar')
       gender: () => `
         <select class="form-select" data-bulk-value>
           <option value="unknown">Unknown</option>
-          <option value="male">Jantan</option>
-          <option value="female">Betina</option>
+          <option value="male">Male</option>
+          <option value="female">Female</option>
         </select>
       `,
       parent_type: () => `
@@ -2963,7 +2963,7 @@ const calendarIcon = iconSvg('calendar')
                 ${thumbMarkup}
                 <span class="koi-parent-search-copy">
                   <span class="d-block fw-medium text-truncate">${escapeHtml(breedingLabel(item))}</span>
-                  <span class="d-block text-secondary small text-truncate">Betina: ${escapeHtml(parentEntryText(item, 'female') || femaleFallback || '-')} | Jantan: ${escapeHtml(parentEntryText(item, 'male') || maleFallback || 'Mix')} | ${escapeHtml(method)}</span>
+                  <span class="d-block text-secondary small text-truncate">Female: ${escapeHtml(parentEntryText(item, 'female') || femaleFallback || '-')} | Male: ${escapeHtml(parentEntryText(item, 'male') || maleFallback || 'Mix')} | ${escapeHtml(method)}</span>
                 </span>
               </span>
             </button>
@@ -3301,14 +3301,14 @@ const calendarIcon = iconSvg('calendar')
       const maleEntry = !maleValue || /^mix$/i.test(maleValue) ? null : findParentEntryByToken(parentEntriesForBreeding(item, 'male'), maleValue)
       const maleText = !maleValue || /^mix$/i.test(maleValue) ? 'Mix' : (maleEntry ? entryKoiId(maleEntry) : String(maleValue).replace(/[()]/g, ' ').trim())
 
-      return `${breedingLabel(item)} | Betina: ${femaleText || '-'} | Jantan: ${maleText || '-'}`
+      return `${breedingLabel(item)} | Female: ${femaleText || '-'} | Male: ${maleText || '-'}`
     }
     const parseParentInfoParts = (value = '') => {
       const text = String(value || '').trim()
-      // "BR260903 - Sesi | Betina: X | Jantan: Y", or without a breeding session "Betina: X | Jantan: Y"
-      const [, parent = text] = text.match(/^(.*?)\s*(?:\|\s*)?Betina:/i) || []
-      const [, female = ''] = text.match(/(?:^|\|)\s*Betina:\s*(.*?)(?:\s*\|\s*Jantan:|$)/i) || []
-      const [, male = ''] = text.match(/\|\s*Jantan:\s*(.*?)$/i) || []
+      // "BR260903 - Sesi | Female: X | Male: Y", or without a breeding session "Female: X | Male: Y"
+      const [, parent = text] = text.match(/^(.*?)\s*(?:\|\s*)?Female:/i) || []
+      const [, female = ''] = text.match(/(?:^|\|)\s*Female:\s*(.*?)(?:\s*\|\s*Male:|$)/i) || []
+      const [, male = ''] = text.match(/\|\s*Male:\s*(.*?)$/i) || []
 
       return {
         parent: parent.trim(),
@@ -3321,7 +3321,7 @@ const calendarIcon = iconSvg('calendar')
       const femaleValue = String(female || '').trim()
       const maleValue = String(male || '').trim()
 
-      if (/(?:^|\|)\s*Betina:/i.test(parent)) {
+      if (/(?:^|\|)\s*Female:/i.test(parent)) {
         return parent
       }
 
@@ -3331,10 +3331,10 @@ const calendarIcon = iconSvg('calendar')
 
       // No breeding session: keep the parent fish codes on their own (they used to be dropped).
       if (!parent) {
-        return `Betina: ${femaleValue || '-'} | Jantan: ${maleValue || '-'}`
+        return `Female: ${femaleValue || '-'} | Male: ${maleValue || '-'}`
       }
 
-      return `${parent} | Betina: ${femaleValue || '-'} | Jantan: ${maleValue || '-'}`
+      return `${parent} | Female: ${femaleValue || '-'} | Male: ${maleValue || '-'}`
     }
     const parentBatchCodeFromInfo = (value = '') => {
       const parent = parseParentInfoParts(value).parent
@@ -3852,18 +3852,18 @@ const calendarIcon = iconSvg('calendar')
               </div>
               <button class="form-help" data-parent-help type="button" data-bs-toggle="popover" data-bs-trigger="focus" data-bs-placement="top" data-bs-content="Pilih Indukan/Breeding dari data sesi breeding" aria-label="Bantuan Indukan/Breeding">!</button>
             </div>
-            <input type="hidden" name="gender" value="unknown" /><select class="form-select" data-entry-gender aria-label="Kelamin"><option value="unknown">Unknown</option><option value="male">Jantan</option><option value="female">Betina</option></select>
+            <input type="hidden" name="gender" value="unknown" /><select class="form-select" data-entry-gender aria-label="Sex"><option value="unknown">Unknown</option><option value="male">Male</option><option value="female">Female</option></select>
             <div class="koi-entry-field-wide d-none" data-entry-parent-panel>
               <div class="koi-parent-preview-grid">
                 <div>
-                  <div class="small text-secondary mb-1">Indukan Betina</div>
+                  <div class="small text-secondary mb-1">Indukan Female</div>
                   <div data-entry-parent-female-preview></div>
-                  <input class="form-control koi-parent-preview-field" data-entry-breeder-female readonly aria-label="ID Indukan Betina" />
+                  <input class="form-control koi-parent-preview-field" data-entry-breeder-female readonly aria-label="ID Indukan Female" />
                 </div>
                 <div>
-                  <div class="small text-secondary mb-1">Indukan Jantan</div>
+                  <div class="small text-secondary mb-1">Indukan Male</div>
                   <div data-entry-parent-male-preview></div>
-                  <select class="form-select koi-parent-preview-field" name="entry_parent_male" data-entry-parent-male aria-label="Indukan Jantan"></select>
+                  <select class="form-select koi-parent-preview-field" name="entry_parent_male" data-entry-parent-male aria-label="Indukan Male"></select>
                 </div>
               </div>
             </div>
@@ -5566,7 +5566,7 @@ items.forEach((item) => {
       kolam: 'pond_name', lokasi: 'pond_name', pond: 'pond_name',
       area: 'pond_location',
       status: 'status',
-      gender: 'gender', kelamin: 'gender', jk: 'gender',
+      gender: 'gender', sex: 'gender', kelamin: 'gender', jk: 'gender',
       tipe: 'parent_type', type: 'parent_type',
       catatan: 'notes', notes: 'notes', note: 'notes',
       ukuran: 'current_length_cm', size: 'current_length_cm', panjang: 'current_length_cm',
@@ -6370,9 +6370,9 @@ items.forEach((item) => {
       ['Ternakan', 'farm_name'],
       ['Owner', 'breeder'],
       ['Sesi breeding', 'parent_info'],
-      ['Indukan Betina', 'parent_female'],
-      ['Indukan Jantan', 'parent_male'],
-      ['Kelamin', 'gender'],
+      ['Indukan Female', 'parent_female'],
+      ['Indukan Male', 'parent_male'],
+      ['Sex', 'gender'],
       ['Typ', 'parent_type'],
       ['Status', 'status'],
       ['Tanggal Lahir', 'birth_date'],
@@ -6426,6 +6426,7 @@ items.forEach((item) => {
       ['parent_male', 'parent_male'],
       ['gender', 'gender'],
       ['kelamin', 'gender'],
+      ['sex', 'gender'],
       ['typ', 'parent_type'],
       ['type', 'parent_type'],
       ['parent_type', 'parent_type'],
@@ -6535,7 +6536,7 @@ items.forEach((item) => {
         throw new Error(`${rowLabel}: Nama Foto wajib diisi untuk ikan baru (nama file foto di ZIP, contoh IMG_20260927_101500).`)
       }
       if (rawItem.gender && !importOptionValue(rawItem.gender, validImportOptions.gender)) {
-        throw new Error(`${rowLabel}: Kelamin "${rawItem.gender}" tidak dikenali. Isi unknown, male, atau female (boleh juga huruf U, M, F, atau jantan / betina).`)
+        throw new Error(`${rowLabel}: Sex "${rawItem.gender}" tidak dikenali. Isi unknown, male, atau female (boleh juga huruf U, M, F, atau jantan / betina).`)
       }
       if (rawItem.parent_type && !importOptionValue(rawItem.parent_type, validImportOptions.parent_type)) {
         throw new Error(`${rowLabel}: Typ harus Indukan atau Bukan Indukan.`)
@@ -6710,7 +6711,7 @@ items.forEach((item) => {
       bloodline: 'Opsional.',
       farm_name: 'Opsional. Nama ternakan, contoh Momotaro Koi Farm.',
       breeder: 'Opsional. Nama owner.',
-      parent_info: 'OTOMATIS: isi kode batch breeding yang terdaftar, contoh BR260903, lalu kosongkan Indukan Betina dan Jantan (betina diambil dari sesi, jantan = mix). Kosongkan kolom ini kalau indukan diisi manual.',
+      parent_info: 'OTOMATIS: isi kode batch breeding yang terdaftar, contoh BR260903, lalu kosongkan Indukan Female dan Male (betina diambil dari sesi, jantan = mix). Kosongkan kolom ini kalau indukan diisi manual.',
       parent_female: 'Kosongkan kalau Sesi breeding diisi (otomatis dari sesi). MANUAL (Sesi breeding kosong): isi Kode Koi indukan betina yang ada di Data Ikan, contoh 26RLZI.',
       parent_male: 'Kosongkan kalau Sesi breeding diisi (otomatis mix). MANUAL (Sesi breeding kosong): isi Kode Koi indukan jantan yang ada di Data Ikan, contoh 263TNQ, atau tulis mix.',
       gender: 'Isi salah satu: unknown, male, female (huruf U, M, F atau jantan / betina juga diterima, huruf besar/kecil bebas). Kosong = unknown.',
@@ -6739,10 +6740,10 @@ items.forEach((item) => {
       items.forEach((item, index) => {
         const row = `Baris ${rowNumberFor(index)}`
         const session = String(item.parent_info || '').trim()
-        if (session && !/\|\s*Betina:/i.test(session) && !findBreedingByValue(session)) {
+        if (session && !/\|\s*Female:/i.test(session) && !findBreedingByValue(session)) {
           problems.push(`${row}: Sesi breeding ${session} tidak terdaftar di Breeding.`)
         }
-        ;[['parent_female', 'Indukan Betina'], ['parent_male', 'Indukan Jantan']].forEach(([key, label]) => {
+        ;[['parent_female', 'Indukan Female'], ['parent_male', 'Indukan Male']].forEach(([key, label]) => {
           const text = String(item[key] || '').trim()
           if (!text || text === '-' || text.toLowerCase() === 'mix') return
           if (!codes.has(parentCodeFromText(text))) problems.push(`${row}: ${label} ${text} tidak ada di Data Ikan.`)
@@ -7087,9 +7088,9 @@ items.forEach((item) => {
         ['Ternakan', (item) => item.farm_name],
         ['Owner', (item) => item.breeder],
         ['Sesi breeding', (item) => parentBatchCodeFromInfo(item.parent_info)],
-        ['Indukan Betina', (item) => parseParentInfoParts(item.parent_info).female],
-        ['Indukan Jantan', (item) => parseParentInfoParts(item.parent_info).male],
-        ['Kelamin', (item) => labels[item.gender] || item.gender],
+        ['Indukan Female', (item) => parseParentInfoParts(item.parent_info).female],
+        ['Indukan Male', (item) => parseParentInfoParts(item.parent_info).male],
+        ['Sex', (item) => labels[item.gender] || item.gender],
         ['Typ', (item) => labels[item.parent_type] || item.parent_type],
         ['Status', (item) => labels[item.status] || item.status],
         ['Tanggal Lahir', (item) => window.KoiAuth.dateShort(item.birth_date)],
@@ -7431,10 +7432,10 @@ items.forEach((item) => {
         '- Kode Koi yang tidak ada di Data Ikan (salah ketik) = import ditolak dan barisnya disebutkan.',
         '',
         'Indukan:',
-        '- OTOMATIS: isi Sesi breeding (contoh BR260903), kosongkan Indukan Betina/Jantan -> betina dari sesi, jantan = mix.',
-        '- MANUAL: kosongkan Sesi breeding, isi Indukan Betina/Jantan dengan Kode Koi yang ada di Data Ikan (contoh 26RLZI).',
+        '- OTOMATIS: isi Sesi breeding (contoh BR260903), kosongkan Indukan Female/Male -> betina dari sesi, jantan = mix.',
+        '- MANUAL: kosongkan Sesi breeding, isi Indukan Female/Male dengan Kode Koi yang ada di Data Ikan (contoh 26RLZI).',
         '',
-        'Tanggal: tulis 2026-09-27, 27/09/2026, atau hanya 2026 / 2026-09. Kelamin: unknown, male, female (jantan/betina juga boleh).',
+        'Tanggal: tulis 2026-09-27, 27/09/2026, atau hanya 2026 / 2026-09. Sex: unknown, male, female (jantan/betina juga boleh).',
       ].join('\r\n')
       const samplePng = base64ToUint8Array('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAFgwJ/lD86bQAAAABJRU5ErkJggg==')
       const zipBlob = createZip([
@@ -7798,7 +7799,7 @@ Ketik HAPUS untuk melanjutkan.`)) !== 'HAPUS' : !(await window.KoiDialog.confirm
                 <div class="col-6 koi-card-detail-cell"><span class="text-secondary">Bloodline</span><div class="koi-text-ellipsis" title="${escapeHtml(text(item.bloodline))}">${escapeHtml(text(item.bloodline))}</div></div>
                 <div class="col-6 koi-card-detail-cell"><span class="text-secondary">Ternakan</span><div class="koi-text-ellipsis" title="${escapeHtml(text(item.farm_name))}">${escapeHtml(text(item.farm_name))}</div></div>
                 <div class="col-6 koi-card-detail-cell"><span class="text-secondary">${koiPlace(item).label}</span><div class="koi-text-ellipsis" title="${escapeHtml(text(koiPlace(item).value))}">${escapeHtml(text(koiPlace(item).value))}</div></div>
-                <div class="col-6 koi-card-detail-cell"><span class="text-secondary">Kelamin</span><div class="koi-text-ellipsis" title="${escapeHtml(labels[item.gender] || text(item.gender))}">${escapeHtml(labels[item.gender] || text(item.gender))}</div></div>
+                <div class="col-6 koi-card-detail-cell"><span class="text-secondary">Sex</span><div class="koi-text-ellipsis" title="${escapeHtml(labels[item.gender] || text(item.gender))}">${escapeHtml(labels[item.gender] || text(item.gender))}</div></div>
                 <div class="col-6 koi-card-detail-cell"><span class="text-secondary">Size</span><div class="koi-text-ellipsis" title="${item.current_length_cm ? `${escapeHtml(formatDecimal(item.current_length_cm))} cm` : '-'}">${item.current_length_cm ? `${escapeHtml(formatDecimal(item.current_length_cm))} cm` : '-'}</div></div>
               </div>
               <div class="mt-2 d-flex align-items-center justify-content-between gap-2">
@@ -8842,7 +8843,7 @@ Ketik HAPUS untuk melanjutkan.`)) !== 'HAPUS' : !(await window.KoiDialog.confirm
         return
       }
       const field = (name) => String(editForm.querySelector(`[name="${name}"]`)?.value || '').trim()
-      const genderLabels = { male: 'Jantan', female: 'Betina', unknown: 'Unknown' }
+      const genderLabels = { male: 'Male', female: 'Female', unknown: 'Unknown' }
       const code = field('code') || 'Ikan'
       const pond = [
         editForm.querySelector('[data-edit-pond-select]')?.value,
@@ -8867,7 +8868,7 @@ Ketik HAPUS untuk melanjutkan.`)) !== 'HAPUS' : !(await window.KoiDialog.confirm
           ['Kode Koi', code],
           ['Nama', field('name')],
           ['Varietas', field('variety')],
-          ...(field('gender') && field('gender') !== 'unknown' ? [['Kelamin', genderLabels[field('gender')] || field('gender')]] : []), // hideUnknownGender
+          ...(field('gender') && field('gender') !== 'unknown' ? [['Sex', genderLabels[field('gender')] || field('gender')]] : []), // hideUnknownGender
           ['Kolam / Lokasi', pond],
           ['Size Saat Ini', length ? `${length} cm` : ''],
           ['Jumlah Foto', photos.length],
