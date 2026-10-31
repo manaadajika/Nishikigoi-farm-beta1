@@ -5301,7 +5301,7 @@ items.forEach((item) => {
       const koiId = editForm.querySelector('[name="id"]').value
       const history = currentPhotoHistory.find((item) => String(item.id) === String(historyId))
       const currentValue = history?.length_cm ? formatDecimal(history.length_cm) : ''
-      const nextValue = (await window.KoiDialog.prompt('Isi ukuran progress foto dalam cm. Kosongkan untuk Tanpa ukuran.', currentValue, { numeric: 'decimal' }))
+      const nextValue = (await window.KoiDialog.prompt('Isi ukuran progress foto dalam cm. Kosongkan untuk Tanpa ukuran.', currentValue, { numeric: 'integer' }))
 
       if (nextValue === null || !koiId) {
         return

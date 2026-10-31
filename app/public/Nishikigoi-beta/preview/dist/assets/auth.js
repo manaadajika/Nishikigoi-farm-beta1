@@ -1149,14 +1149,33 @@
   }
   installNumberGuard()
 
-  // ---- Sizes in cm: one decimal digit at most ----------------------------------------------------------------------------------------
-  // Fish sizes are written 45 or 45.5 (never 45.55): the extra digits are cut as they are typed.
-  var ONE_DECIMAL = '[name$="length_cm"],[data-parent-length],[data-line-size],[data-average-length],input[data-bulk-value][type="number"][step="0.1"]'
+  // ---- Numbers: what may be typed ------------------------------------------------------------------------------------------------------
+  // Size in cm (Size, ukuran induk, ukuran ikan datang, ukuran rata-rata): whole numbers only, digits 0-9, no comma and no period.
+  // Weight in grams (Berat Telur): digits and ONE decimal sign (comma or period) with at most ONE digit after it, like 12.5.
+  // The extra characters are refused as they are typed (and cut from a pasted value); a value already saved is left as it is.
+  var CM_FIELDS = '[name$="length_cm"],[data-parent-length],[data-line-size],[data-average-length],input[data-bulk-value][type="number"][step="0.1"]'
+  var WEIGHT_FIELDS = '[name$="weight_g"]'
+  document.addEventListener('keydown', function (event) {
+    var field = event.target
+    if (!field || field.tagName !== 'INPUT' || !field.matches(CM_FIELDS)) return
+    if (event.ctrlKey || event.metaKey || event.altKey) return
+    if (['.', ',', 'e', 'E', '+', '-'].indexOf(event.key) >= 0) event.preventDefault()
+  }, true)
+  document.addEventListener('focusin', function (event) {
+    var field = event.target
+    if (field && field.tagName === 'INPUT' && field.matches && field.matches(CM_FIELDS)) field.inputMode = 'numeric'
+    else if (field && field.tagName === 'INPUT' && field.matches && field.matches(WEIGHT_FIELDS)) field.inputMode = 'decimal'
+  }, true)
   document.addEventListener('input', function (event) {
     var field = event.target
-    if (!field || field.tagName !== 'INPUT' || !field.matches(ONE_DECIMAL)) return
-    var cut = field.value.replace(/([.,]\d)\d+$/, '$1')
-    if (cut !== field.value) field.value = cut
+    if (!field || field.tagName !== 'INPUT' || !field.matches) return
+    if (field.matches(CM_FIELDS)) {
+      var whole = field.value.replace(/[.,].*$/, '')
+      if (whole !== field.value) field.value = whole
+    } else if (field.matches(WEIGHT_FIELDS)) {
+      var cut = field.value.replace(/([.,]\d)\d+$/, '$1')
+      if (cut !== field.value) field.value = cut
+    }
   }, true)
 
   // ---- Fields that sit outside an open modal ---------------------------------------------------------------------------------------
