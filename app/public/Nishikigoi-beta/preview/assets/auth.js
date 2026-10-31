@@ -1150,32 +1150,52 @@
   installNumberGuard()
 
   // ---- Numbers: what may be typed ------------------------------------------------------------------------------------------------------
-  // Size in cm (Size, ukuran induk, ukuran ikan datang, ukuran rata-rata): whole numbers only, digits 0-9, no comma and no period.
-  // Weight in grams (Berat Telur): digits and ONE decimal sign (comma or period) with at most ONE digit after it, like 12.5.
-  // The extra characters are refused as they are typed (and cut from a pasted value); a value already saved is left as it is.
-  var CM_FIELDS = '[name$="length_cm"],[data-parent-length],[data-line-size],[data-average-length],input[data-bulk-value][type="number"][step="0.1"]'
-  var WEIGHT_FIELDS = '[name$="weight_g"]'
+  // The rules for every number field of the program:
+  //   * size in cm, weight in grams, quantities in kg, temperature, pH, print sizes: digits and ONE decimal sign (comma or period) with at
+  //     most ONE digit after it. A whole number is the usual case (45); 45.5 is possible; 45.55 is not.
+  //   * counts (jumlah ekor, qty of fish, the day and year of a note): whole numbers only.
+  //   * money (harga, diskon): digits only (the thousand separators are put in by the field itself).
+  // Letters and the signs e + - are refused as they are typed, the extra digit is cut from a typed or pasted value. A value that is
+  // already saved is left as it is.
+  var DECIMAL_FIELDS = '[name$="length_cm"],[data-parent-length],[data-line-size],[data-average-length],input[data-bulk-value][type="number"][step="0.1"],[name$="weight_g"],[name="suhu"],[name="ph"],[data-item-qty],[data-kp-height],[data-kp-width],[data-kp-margin-t],[data-kp-margin-r],[data-kp-margin-b],[data-kp-margin-l],input[inputmode="decimal"]:not([type="number"])'
+  var WHOLE_FIELDS = 'input[type="number"][step="1"],[data-notes-day],[data-notes-year]'
+  var MONEY_FIELDS = 'input[inputmode="numeric"]:not([type="number"])'
+  function numberKind(field) {
+    if (!field || field.tagName !== 'INPUT' && field.tagName !== 'TEXTAREA' || !field.matches) return ''
+    if (field.matches('[data-spectrum-input]')) return 'spectrum'
+    if (field.matches(WHOLE_FIELDS)) return 'whole'
+    if (field.matches(DECIMAL_FIELDS)) return 'decimal'
+    if (field.matches(MONEY_FIELDS)) return 'money'
+    return ''
+  }
   document.addEventListener('keydown', function (event) {
-    var field = event.target
-    if (!field || field.tagName !== 'INPUT' || !field.matches(CM_FIELDS)) return
-    if (event.ctrlKey || event.metaKey || event.altKey) return
-    if (['.', ',', 'e', 'E', '+', '-'].indexOf(event.key) >= 0) event.preventDefault()
+    var kind = numberKind(event.target)
+    if (!kind || event.target.type !== 'number' || event.ctrlKey || event.metaKey || event.altKey) return
+    var blocked = ['e', 'E', '+', '-']
+    if (kind === 'whole') blocked = blocked.concat(['.', ','])
+    if (blocked.indexOf(event.key) >= 0) event.preventDefault()
   }, true)
   document.addEventListener('focusin', function (event) {
-    var field = event.target
-    if (field && field.tagName === 'INPUT' && field.matches && field.matches(CM_FIELDS)) field.inputMode = 'numeric'
-    else if (field && field.tagName === 'INPUT' && field.matches && field.matches(WEIGHT_FIELDS)) field.inputMode = 'decimal'
+    var kind = numberKind(event.target)
+    if (kind === 'decimal') event.target.inputMode = 'decimal'
+    else if (kind === 'whole' || kind === 'money') event.target.inputMode = 'numeric'
   }, true)
   document.addEventListener('input', function (event) {
     var field = event.target
-    if (!field || field.tagName !== 'INPUT' || !field.matches) return
-    if (field.matches(CM_FIELDS)) {
-      var whole = field.value.replace(/[.,].*$/, '')
-      if (whole !== field.value) field.value = whole
-    } else if (field.matches(WEIGHT_FIELDS)) {
-      var cut = field.value.replace(/([.,]\d)\d+$/, '$1')
-      if (cut !== field.value) field.value = cut
+    var kind = numberKind(field)
+    if (!kind) return
+    var value = field.value
+    var cleaned = value
+    if (kind === 'whole') cleaned = value.replace(/[.,].*$/, '').replace(/[^0-9]/g, '')
+    else if (kind === 'money') cleaned = value.replace(/[^0-9.,]/g, '')
+    else if (kind === 'spectrum') cleaned = value.replace(/[^0-9.,\s]/g, '').replace(/(\d[.,]\d)\d+/g, '$1')
+    else if (field.type === 'number') cleaned = value.replace(/([.,]\d)\d+$/, '$1')
+    else {
+      cleaned = value.replace(/[^0-9.,]/g, '')
+      var first = cleaned.search(/[.,]/)
+      if (first >= 0) cleaned = cleaned.slice(0, first + 1) + cleaned.slice(first + 1).replace(/[.,]/g, '').slice(0, 1)
     }
+    if (cleaned !== value) field.value = cleaned
   }, true)
 
   // ---- Fields that sit outside an open modal ---------------------------------------------------------------------------------------
