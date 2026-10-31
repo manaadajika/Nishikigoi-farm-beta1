@@ -4482,6 +4482,8 @@ const pageSizeSelect = document.querySelector('[data-koi-page-size-select]');
                   );
                   const breeding = findBreedingByValue(parentField.value);
 
+                  lockSessionFields(editForm, breeding);
+
                   if (!breeding) {
                     editBreederFemale.value = "";
                     renderParentPreview(
@@ -4515,22 +4517,6 @@ const pageSizeSelect = document.querySelector('[data-koi-page-size-select]');
                     editBreederMale,
                     breeding,
                   );
-                  fillOwnFarm(editForm);
-
-                  const bloodlineField =
-                    editForm.querySelector('[name="bloodline"]');
-                  const parentBloodline =
-                    breeding.female_koi_bloodline ||
-                    breeding.male_koi_bloodline ||
-                    "";
-
-                  if (
-                    bloodlineField &&
-                    !bloodlineField.value &&
-                    parentBloodline
-                  ) {
-                    bloodlineField.value = parentBloodline;
-                  }
                 };
                 const findPondByName = (name) =>
                   pondsList.find(
@@ -4836,20 +4822,36 @@ const pageSizeSelect = document.querySelector('[data-koi-page-size-select]');
 
                 // A fish that comes from a breeding session of this program was bred at this farm: when a session is chosen and Ternakan is still empty,
                 // Ternakan is filled with the farm's own name (the brand name set in Pengaturan, for example Cakra Wiratama Koi Farm).
+                // A fish of a breeding session does not choose its own Bloodline and Ternakan: Bloodline is the session's title and Ternakan is the
+                // program's name (Master Akun > Nama program). Both are filled in and locked while a session is chosen; clearing the session unlocks them.
                 const ownFarmName = () => {
                   try {
                     const saved = JSON.parse(localStorage.getItem('nishikigoi-app-settings') || 'null') || {}
-                    return String(saved.brand_owner || saved.brand_name || '').trim()
+                    return String(saved.brand_name || '').trim()
                   } catch (error) {
                     return ''
                   }
                 }
-                const fillOwnFarm = (form) => {
-                  const farmField = form?.querySelector('[name="farm_name"]')
-                  const farm = ownFarmName()
-                  if (!farmField || farmField.value.trim() || !farm) return
-                  farmField.value = farm
-                  farmField.dispatchEvent(new Event('input', { bubbles: true }))
+                const lockSessionFields = (form, breeding) => {
+                  const targets = [['bloodline', breeding ? String(breeding.session_name || '').trim() : ''], ['farm_name', breeding ? ownFarmName() : '']]
+
+                  targets.forEach(([name, value]) => {
+                    const field = form?.querySelector(`[name="${name}"]`)
+
+                    if (!field) return
+
+                    if (value) {
+                      field.value = value
+                      field.readOnly = true
+                      field.dataset.sessionLocked = '1'
+                      field.title = 'Mengikuti sesi breeding'
+                      field.dispatchEvent(new Event('input', { bubbles: true }))
+                    } else if (field.dataset.sessionLocked) {
+                      field.readOnly = false
+                      delete field.dataset.sessionLocked
+                      field.removeAttribute('title')
+                    }
+                  })
                 }
 
                 const updateEntryParentPreview = (entry) => {
@@ -4884,7 +4886,7 @@ const pageSizeSelect = document.querySelector('[data-koi-page-size-select]');
                     );
                   }
 
-                  if (breeding) fillOwnFarm(entry);
+                  lockSessionFields(entry, breeding);
 
                   renderParentPreview(
                     panel,

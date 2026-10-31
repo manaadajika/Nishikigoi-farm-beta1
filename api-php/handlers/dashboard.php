@@ -161,6 +161,11 @@ route('PATCH', '/app-settings', function () {
     }
     // an image that was replaced or removed leaves no orphan file behind (unless something else still uses it)
     if ($replacedFiles) delete_upload_files_if_unused($replacedFiles);
+    // Ternakan of the fish that belong to a breeding session is the program name
+    if (array_key_exists('brand_name', $body)) {
+        koi_sync_session_links(db());
+        koi_facets_cache_clear();
+    }
     $rows = query('SELECT `key`, value FROM app_settings');
     $settings = [];
     foreach ($rows as $row) $settings[$row['key']] = $row['value'];

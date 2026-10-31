@@ -291,6 +291,7 @@ route_pattern('PATCH', '#^/breeding/(\d+)$#', function (array $m) {
     $galleryChoice = breeding_gallery_choice($body);
     if (!$fields && $galleryChoice === null) send_error(400, 'Tidak ada field untuk diupdate');
     $params[] = $m[1];
+    $beforeBatch = query_one('SELECT batch_code, session_name FROM breeding_batches WHERE id = ?', [$m[1]]);
 
     try {
         if ($fields) execute('UPDATE breeding_batches SET ' . implode(', ', $fields) . ' WHERE id = ?', $params);
@@ -303,6 +304,12 @@ route_pattern('PATCH', '#^/breeding/(\d+)$#', function (array $m) {
     if (!$batch) send_error(404, 'Batch breeding tidak ditemukan');
     sync_breeding_gallery((int)$m[1], $galleryChoice);
     breeding_promote_parents($batch);
+    // the fish of this session follow its new title (Bloodline) and its new code, wherever they are listed
+    if ($beforeBatch && (($beforeBatch['session_name'] ?? '') !== ($batch['session_name'] ?? '') || ($beforeBatch['batch_code'] ?? '') !== ($batch['batch_code'] ?? ''))) {
+        $renames = ($beforeBatch['batch_code'] ?? '') !== ($batch['batch_code'] ?? '') ? [$beforeBatch['batch_code'] => $batch['batch_code']] : [];
+        koi_sync_session_links(db(), null, $renames);
+        koi_facets_cache_clear();
+    }
     send_json(200, $batch);
 });
 

@@ -3,7 +3,9 @@
 require_once __DIR__ . '/../config.php';
 require_once __DIR__ . '/cache.php';
 
-const KOI_SCHEMA_REV = 20261101;
+require_once __DIR__ . '/koi_link.php';
+
+const KOI_SCHEMA_REV = 20261102;
 
 // PHP 8.5 renamed the MySQL driver constants (Pdo\Mysql::ATTR_*); older versions only know PDO::MYSQL_ATTR_*.
 function koi_pdo_init_command(): int {
@@ -117,6 +119,7 @@ function ensure_all_schemas(PDO $pdo): void {
     ensure_accounts_phone_schema($pdo);
     ensure_accounts_cover_schema($pdo);
     ensure_breeding_officer_schema($pdo);
+    ensure_koi_session_link_backfill($pdo);
 }
 
 // Login history/lockout and the per-IP request counter (see lib/security.php).

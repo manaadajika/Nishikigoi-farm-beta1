@@ -3421,6 +3421,8 @@ const calendarIcon = iconSvg('calendar')
       const parentField = editForm.querySelector('[name="parent_info"]')
       const breeding = findBreedingByValue(parentField.value)
 
+      lockSessionFields(editForm, breeding)
+
       if (!breeding) {
         editBreederFemale.value = ''
         renderParentPreview(editBreederParentPanel, editParentFemalePreview, editParentMalePreview, editBreederMale, null)
@@ -3432,14 +3434,6 @@ const calendarIcon = iconSvg('calendar')
 
       editBreederFemale.value = femaleEntries.map(parentLabel).join(', ') || '-'
       renderParentPreview(editBreederParentPanel, editParentFemalePreview, editParentMalePreview, editBreederMale, breeding)
-      fillOwnFarm(editForm)
-
-      const bloodlineField = editForm.querySelector('[name="bloodline"]')
-      const parentBloodline = breeding.female_koi_bloodline || breeding.male_koi_bloodline || ''
-
-      if (bloodlineField && !bloodlineField.value && parentBloodline) {
-        bloodlineField.value = parentBloodline
-      }
     }
     const findPondByName = (name) => pondsList.find((pond) => pond.name.toLowerCase() === String(name || '').trim().toLowerCase())
 
@@ -3670,22 +3664,36 @@ const calendarIcon = iconSvg('calendar')
       return `Entry ${index + 1}${code ? ` (${code})` : ''}: Area "${typed}" tidak sesuai dengan lokasi ${pond.name} (area lokasi: ${pond.location || 'kosong'}). Kosongkan Area agar terisi otomatis dari lokasi, atau kosongkan Lokasi kalau hanya tahu areanya.`
     }
 
-    // A fish that comes from a breeding session of this program was bred at this farm: when a session is chosen and Ternakan is still empty,
-    // Ternakan is filled with the farm's own name (the brand name set in Pengaturan, for example Cakra Wiratama Koi Farm).
+    // A fish of a breeding session does not choose its own Bloodline and Ternakan: Bloodline is the session's title and Ternakan is the
+    // program's name (Master Akun > Nama program). Both are filled in and locked while a session is chosen; clearing the session unlocks them.
     const ownFarmName = () => {
       try {
         const saved = JSON.parse(localStorage.getItem('nishikigoi-app-settings') || 'null') || {}
-        return String(saved.brand_owner || saved.brand_name || '').trim()
+        return String(saved.brand_name || '').trim()
       } catch (error) {
         return ''
       }
     }
-    const fillOwnFarm = (form) => {
-      const farmField = form?.querySelector('[name="farm_name"]')
-      const farm = ownFarmName()
-      if (!farmField || farmField.value.trim() || !farm) return
-      farmField.value = farm
-      farmField.dispatchEvent(new Event('input', { bubbles: true }))
+    const lockSessionFields = (form, breeding) => {
+      const targets = [['bloodline', breeding ? String(breeding.session_name || '').trim() : ''], ['farm_name', breeding ? ownFarmName() : '']]
+
+      targets.forEach(([name, value]) => {
+        const field = form?.querySelector(`[name="${name}"]`)
+
+        if (!field) return
+
+        if (value) {
+          field.value = value
+          field.readOnly = true
+          field.dataset.sessionLocked = '1'
+          field.title = 'Mengikuti sesi breeding'
+          field.dispatchEvent(new Event('input', { bubbles: true }))
+        } else if (field.dataset.sessionLocked) {
+          field.readOnly = false
+          delete field.dataset.sessionLocked
+          field.removeAttribute('title')
+        }
+      })
     }
 
     const updateEntryParentPreview = (entry) => {
@@ -3701,7 +3709,7 @@ const calendarIcon = iconSvg('calendar')
         birthDateField.value = String(breeding.breeding_date).slice(0, 10)
       }
 
-      if (breeding) fillOwnFarm(entry)
+      lockSessionFields(entry, breeding)
 
       renderParentPreview(panel, femalePreview, malePreview, maleSelect, breeding)
     }

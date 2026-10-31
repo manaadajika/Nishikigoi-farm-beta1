@@ -176,6 +176,7 @@ route('POST', '/koi/bulk-update', function () {
 
     $placeholders = implode(',', array_fill(0, count($ids), '?'));
     $affected = execute('UPDATE koi LEFT JOIN ponds oldpond ON oldpond.id = koi.pond_id SET ' . implode(', ', $sets) . " WHERE koi.id IN ($placeholders)", array_merge($params, $ids))->rowCount();
+    koi_sync_session_links(db(), $ids);
     koi_facets_cache_clear();
     send_json(200, ['ok' => true, 'updated' => $affected, 'requested' => count($ids)]);
 });
@@ -307,6 +308,7 @@ route('POST', '/koi', function () {
             koi_append_seq($createdId);
             koi_facets_cache_clear();
             koi_ensure_initial_history($createdId);
+            koi_sync_session_links(db(), [$createdId]);
             $created[] = query_one('SELECT * FROM koi WHERE id = ?', [$createdId]);
         }
         db()->commit();
@@ -383,6 +385,7 @@ route_pattern('PATCH', '#^/koi/(\d+)$#', function (array $m) {
         if (is_duplicate_error($e)) send_error(409, 'Kode koi sudah dipakai');
         throw $e;
     }
+    koi_sync_session_links(db(), [(int)$m[1]]);
     if (array_intersect(array_keys($body), ['pond_id', 'variety', 'bloodline', 'farm_name', 'breeder', 'status', 'name', 'parent_info'])) koi_facets_cache_clear();
 
     if ($imageChanged) {
