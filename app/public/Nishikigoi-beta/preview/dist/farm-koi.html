@@ -8120,6 +8120,8 @@ if (pageSizeSelect) pageSizeSelect.value = String(pageSize);
         range.e.r = Math.max(range.e.r, firstDataRow + 499)
       })
       worksheet['!ref'] = XLSX.utils.encode_range(range)
+      // the hint row (when there is one) and the header row stay on top while scrolling
+      worksheet['!freeze'] = { rows: notesRow ? 2 : 1 }
       worksheet['!cols'] = headerRow.map((header) => ({ wch: notesRow ? 30 : Math.max(12, String(header).length + 2) }))
       const workbook = XLSX.utils.book_new()
       XLSX.utils.book_append_sheet(workbook, worksheet, 'Data Ikan')
