@@ -110,7 +110,8 @@ const trashIcon = iconSvg('trash')
                     <span class="text-secondary">Diskon (Rp atau %)</span>
                     <input class="form-control form-control-sm text-end" style="max-width: 13rem" name="discount" placeholder="50.000 atau 10%" title="Tulis nominal rupiah (50.000), persen dengan tanda % di belakang (10% atau 10,5%), atau gabungan dengan spasi (10% 50.000)" autocomplete="off" data-invoice-discount />
                   </div>
-                  <div class="d-flex justify-content-between mt-2 border-top pt-2"><strong>Total</strong><strong class="invoice-total" data-invoice-total>Rp 0</strong></div>
+                  <div class="d-flex justify-content-between mt-1" data-invoice-discount-line hidden><span class="text-secondary">Potongan diskon</span><span class="text-danger fw-medium" data-invoice-discount-amount>-Rp 0</span></div>
+                  <div class="d-flex justify-content-between mt-2 border-top pt-2"><strong>Grand Total</strong><strong class="invoice-total" data-invoice-total>Rp 0</strong></div>
                 </div>
               </div>
             </div>
@@ -219,6 +220,8 @@ const trashIcon = iconSvg('trash')
     const linesBox = document.querySelector('[data-invoice-lines]')
     const subtotalBox = document.querySelector('[data-invoice-subtotal]')
     const totalBox = document.querySelector('[data-invoice-total]')
+    const discountLine = document.querySelector('[data-invoice-discount-line]')
+    const discountAmountBox = document.querySelector('[data-invoice-discount-amount]')
     const discountInput = document.querySelector('[data-invoice-discount]')
     const pickerInput = document.querySelector('[data-invoice-picker-input]')
     const pickerMenu = document.querySelector('[data-invoice-picker-menu]')
@@ -446,6 +449,8 @@ const trashIcon = iconSvg('trash')
       const subtotal = lines.reduce((sum, line) => sum + lineSum(line), 0)
       const discount = discountAmount(subtotal)
       subtotalBox.textContent = money(subtotal)
+      discountLine.hidden = !discount
+      discountAmountBox.textContent = `-${money(discount)}`
       totalBox.textContent = money(Math.max(0, subtotal - discount))
       linesBox.querySelectorAll('[data-line-total]').forEach((element) => {
         const index = Number(element.dataset.lineTotal)
@@ -855,8 +860,8 @@ const trashIcon = iconSvg('trash')
             </table>
             <table style="width:46%;margin-left:auto;margin-top:6px;border-collapse:collapse">
               <tr><td style="padding:3px 6px">Subtotal</td><td class="kp-num" style="padding:3px 6px">${e(money(subtotal))}</td></tr>
-              ${discount ? `<tr><td style="padding:3px 6px">Diskon${discountPercent}</td><td class="kp-num" style="padding:3px 6px">- ${e(money(discount))}</td></tr>` : ''}
-              <tr><td style="padding:5px 6px;border-top:2px solid #111;font-weight:800">TOTAL</td><td class="kp-num" style="padding:5px 6px;border-top:2px solid #111;font-weight:800;font-size:13px">${e(money(invoice.total))}</td></tr>
+              ${discount ? `<tr><td style="padding:3px 6px">Diskon${discountPercent}</td><td class="kp-num" style="padding:3px 6px">-${e(money(discount))}</td></tr>` : ''}
+              <tr><td style="padding:5px 6px;border-top:2px solid #111;font-weight:800">GRAND TOTAL</td><td class="kp-num" style="padding:5px 6px;border-top:2px solid #111;font-weight:800;font-size:13px">${e(money(invoice.total))}</td></tr>
             </table>
           </section>
           ${notesBlocks.length ? `<section class="kp-section" style="display:grid;grid-template-columns:repeat(${notesBlocks.length},1fr);gap:10px">${notesBlocks.join('')}</section>` : ''}
