@@ -517,7 +517,7 @@
     <!-- END GLOBAL THEME SCRIPT -->
 
     <!-- BEGIN APP AUTH SCRIPT -->
-    <script src="./assets/auth.js?v=20261031g"></script>
+    <script src="./assets/auth.js?v=20261101a"></script>
     <script src="./assets/drafts.js?v=20261029b"></script>
     <script src="./assets/theme-sync.js?v=20261014b"></script>
     <script src="./assets/print-kit.js?v=20261024a"></script>
@@ -1572,11 +1572,8 @@
                 <div class="col-md-6 offset-md-6">
                   <div class="d-flex justify-content-between"><span class="text-secondary">Subtotal</span><span data-invoice-subtotal>Rp 0</span></div>
                   <div class="d-flex justify-content-between align-items-center gap-3 mt-1">
-                    <span class="text-secondary">Diskon</span>
-                    <div class="d-flex align-items-center gap-2">
-                      <select class="form-select form-select-sm" style="width: 4.8rem" data-invoice-discount-type data-native-select aria-label="Jenis diskon"><option value="rp">Rp</option><option value="percent">%</option></select>
-                      <input class="form-control form-control-sm text-end" style="max-width: 11rem" name="discount" inputmode="numeric" placeholder="0" autocomplete="off" data-invoice-discount />
-                    </div>
+                    <span class="text-secondary">Diskon (Rp atau %)</span>
+                    <input class="form-control form-control-sm text-end" style="max-width: 13rem" name="discount" placeholder="50.000 atau 10%" title="Tulis nominal rupiah (50.000), persen dengan tanda % di belakang (10% atau 10,5%), atau gabungan dengan spasi (10% 50.000)" autocomplete="off" data-invoice-discount />
                   </div>
                   <div class="d-flex justify-content-between mt-2 border-top pt-2"><strong>Total</strong><strong class="invoice-total" data-invoice-total>Rp 0</strong></div>
                 </div>
@@ -1696,7 +1693,6 @@ const packageIcon = "\u003csvg xmlns=\"http://www.w3.org/2000/svg\" width=\"24\"
     const subtotalBox = document.querySelector('[data-invoice-subtotal]')
     const totalBox = document.querySelector('[data-invoice-total]')
     const discountInput = document.querySelector('[data-invoice-discount]')
-    const discountTypeSelect = document.querySelector('[data-invoice-discount-type]')
     const pickerInput = document.querySelector('[data-invoice-picker-input]')
     const pickerMenu = document.querySelector('[data-invoice-picker-menu]')
     const filterChips = [...document.querySelectorAll('[data-invoice-filter]')]
@@ -1902,15 +1898,22 @@ const packageIcon = "\u003csvg xmlns=\"http://www.w3.org/2000/svg\" width=\"24\"
       input.value = digits ? Number(digits).toLocaleString('id-ID') : ''
     }
     const digitsOf = (value) => Number(String(value || '').replace(/[^\d]/g, '')) || 0
-    // The discount is an amount in rupiah (Rp) or a percent of the subtotal (%, 0-100, one decimal)
-    const discountIsPercent = () => discountTypeSelect.value === 'percent'
-    const percentOf = (value) => Math.min(100, Math.max(0, Math.round((Number(String(value || '').replace(',', '.')) || 0) * 10) / 10))
-    const discountAmount = (subtotal) => (discountIsPercent() ? Math.round(subtotal * percentOf(discountInput.value) / 100) : digitsOf(discountInput.value))
-    const applyDiscountType = () => {
-      const percent = discountIsPercent()
-      discountInput.inputMode = percent ? 'decimal' : 'numeric'
-      discountInput.placeholder = percent ? '0 - 100' : '0'
+    // The discount is typed in one field: an amount in rupiah (50.000), a percent of the subtotal with % at the end (10%, 10,5%), or several
+    // parts together separated by a space or + (10% 50.000). The amount never exceeds the subtotal.
+    const parseDiscount = (text, subtotal) => {
+      let total = 0
+      String(text || '').split(/[\s+]+/).filter(Boolean).forEach((token) => {
+        const percent = token.match(/^(\d+(?:[.,]\d)?)%$/)
+        if (percent) total += subtotal * Math.min(100, Number(percent[1].replace(',', '.'))) / 100
+        else total += Number(token.replace(/[^\d]/g, '')) || 0
+      })
+      return Math.min(subtotal, Math.round(total))
     }
+    const discountAmount = (subtotal) => parseDiscount(discountInput.value, subtotal)
+    // letters and signs are refused as they are typed; a percent keeps one decimal digit and the % stays at the end of its part
+    const cleanDiscountText = (text) => String(text || '').replace(/[^\d.,%+\s]/g, '').replace(/%+/g, '%').replace(/%(?=[^\s+])/g, '').replace(/([.,]\d)\d+(?=%)/g, '$1')
+    // the rupiah parts get their thousand separators when the field is left
+    const formatDiscountText = (text) => String(text || '').split(/([\s+]+)/).map((part) => (/^[\s+]*$/.test(part) || /%$/.test(part) ? part : (part.replace(/[^\d]/g, '') ? Number(part.replace(/[^\d]/g, '')).toLocaleString('id-ID') : ''))).join('').trim()
     const updateTotals = () => {
       const subtotal = lines.reduce((sum, line) => sum + lineSum(line), 0)
       const discount = discountAmount(subtotal)
@@ -2174,10 +2177,7 @@ const packageIcon = "\u003csvg xmlns=\"http://www.w3.org/2000/svg\" width=\"24\"
       form.elements.sales_contact.value = invoice ? (invoice.sales_contact || '') : (defaults.sales_contact || '')
       form.elements.bank_account.value = invoice ? (invoice.bank_account || '') : (defaults.bank_account || '')
       form.elements.notes.value = invoice?.notes || ''
-      const savedPercent = invoice && invoice.discount_percent !== null && invoice.discount_percent !== undefined && invoice.discount_percent !== '' ? Number(invoice.discount_percent) : null
-      discountTypeSelect.value = savedPercent !== null ? 'percent' : 'rp'
-      applyDiscountType()
-      discountInput.value = savedPercent !== null ? String(savedPercent).replace('.', ',') : (invoice && Number(invoice.discount) ? Math.round(Number(invoice.discount)).toLocaleString('id-ID') : '')
+      discountInput.value = invoice && invoice.discount_text ? invoice.discount_text : (invoice && Number(invoice.discount) ? Math.round(Number(invoice.discount)).toLocaleString('id-ID') : '')
       lines = (invoice?.items || []).map((line) => ({ ...line }))
       proofs = (invoice?.payment_proofs || []).map((proof) => ({ url: proof.url, name: proof.name, previewUrl: proof.url }))
       proofInput.value = ''
@@ -2221,8 +2221,8 @@ const packageIcon = "\u003csvg xmlns=\"http://www.w3.org/2000/svg\" width=\"24\"
           sales_contact: form.elements.sales_contact.value.trim(),
           bank_account: form.elements.bank_account.value.trim(),
           notes: form.elements.notes.value.trim(),
-          discount: discountIsPercent() ? 0 : digitsOf(discountInput.value),
-          discount_percent: discountIsPercent() && String(discountInput.value).trim() !== '' ? percentOf(discountInput.value) : null,
+          discount: discountAmount(lines.reduce((sum, line) => sum + lineSum(line), 0)),
+          discount_text: String(discountInput.value).trim() || null,
           items: lines.filter((line) => String(line.description || '').trim()).map((line) => ({
             description: String(line.description).trim(),
             qty: qtyNumber(line.qty) || 1,
@@ -2269,7 +2269,7 @@ const packageIcon = "\u003csvg xmlns=\"http://www.w3.org/2000/svg\" width=\"24\"
       const items = invoice.items || []
       const subtotal = invoiceSubtotal(invoice)
       const discount = Number(invoice.discount) || 0
-      const discountPercent = invoice.discount_percent !== null && invoice.discount_percent !== undefined && invoice.discount_percent !== '' && Number(invoice.discount_percent) > 0 ? ` (${String(Number(invoice.discount_percent)).replace('.', ',')}%)` : ''
+      const discountPercent = invoice.discount_text && /%/.test(invoice.discount_text) ? ` (${invoice.discount_text})` : ''
       const rows = items.map((line, index) => `<tr>
         <td class="kp-center">${index + 1}</td>
         <td>${e(line.description)}</td>
@@ -2419,18 +2419,13 @@ const packageIcon = "\u003csvg xmlns=\"http://www.w3.org/2000/svg\" width=\"24\"
       if (printFormButton.dataset.invoiceId) printInvoice(printFormButton.dataset.invoiceId)
     })
     discountInput.addEventListener('input', () => {
-      if (discountIsPercent()) {
-        if (Number(String(discountInput.value).replace(',', '.')) > 100) discountInput.value = '100'
-      } else {
-        formatMoneyInput(discountInput)
-      }
+      const cleaned = cleanDiscountText(discountInput.value)
+      if (cleaned !== discountInput.value) discountInput.value = cleaned
       updateTotals()
     })
-    discountTypeSelect.addEventListener('change', () => {
-      discountInput.value = ''
-      applyDiscountType()
+    discountInput.addEventListener('blur', () => {
+      discountInput.value = formatDiscountText(discountInput.value)
       updateTotals()
-      discountInput.focus()
     })
     linesBox.addEventListener('input', (event) => {
       const row = event.target.closest('[data-invoice-line]')

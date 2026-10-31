@@ -98,6 +98,30 @@ function invoice_subtotal(array $items): float {
     return $sum;
 }
 
+// "50.000", "10%", "10,5%" or several parts separated by a space or + ("10% 50.000"): [amount in rupiah, the text tidied], or null when a part is not a
+// number. A percent is of the subtotal (0-100, one decimal); the amount never exceeds the subtotal.
+function invoice_discount_from_text(string $text, float $subtotal): ?array {
+    $amount = 0.0;
+    $parts = [];
+    foreach (preg_split('/[\s+]+/', trim($text), -1, PREG_SPLIT_NO_EMPTY) as $token) {
+        if (preg_match('/^(\d+(?:[.,]\d)?)%$/', $token, $m)) {
+            $percent = (float)str_replace(',', '.', $m[1]);
+            if ($percent > 100) return null;
+            $amount += $subtotal * $percent / 100;
+            $parts[] = str_replace('.', ',', rtrim(rtrim(number_format($percent, 1, ',', ''), '0'), ',')) . '%';
+        } elseif (preg_match('/^[\d.,]+$/', $token)) {
+            $digits = preg_replace('/\D/', '', $token);
+            if ($digits === '') return null;
+            $amount += (float)$digits;
+            $parts[] = number_format((float)$digits, 0, ',', '.');
+        } else {
+            return null;
+        }
+    }
+    if (!$parts) return null;
+    return [round(min($subtotal, $amount), 2), implode(' ', $parts)];
+}
+
 function invoice_total(array $items, float $discount): float {
     return max(0.0, round(invoice_subtotal($items) - $discount, 2));
 }
@@ -179,25 +203,24 @@ function invoice_fields(array $body, bool $partial, ?array $existing): array {
     $itemsGiven = array_key_exists('items', $body);
     $discountGiven = array_key_exists('discount', $body);
     if ($itemsGiven) $fields['items'] = json_encode(invoice_clean_items($body['items']), JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
-    $percentGiven = array_key_exists('discount_percent', $body);
+    $textGiven = array_key_exists('discount_text', $body);
     if ($discountGiven) $fields['discount'] = invoice_number($body['discount'], 'Diskon') ?? 0;
-    // a discount in percent (0-100, one decimal): the amount is worked out here from the lines; an amount in rupiah alone clears the percent
-    if ($percentGiven) {
-        $percentText = trim((string)blank_to_null($body['discount_percent']));
-        if ($percentText === '') {
-            $fields['discount_percent'] = null;
-        } else {
-            $percent = (float)str_replace(',', '.', $percentText);
-            if (!is_numeric(str_replace(',', '.', $percentText)) || $percent < 0 || $percent > 100) send_error(422, 'Diskon persen tidak valid (0 sampai 100)');
-            $fields['discount_percent'] = round($percent, 1);
-        }
+    // The discount may be typed as an amount (50.000), a percent of the subtotal (10%) or both (10% 50.000): the amount is worked out
+    // here from the lines and again whenever they change. An amount in rupiah alone (older clients) clears the text.
+    if ($textGiven) {
+        $text = trim((string)blank_to_null($body['discount_text']));
+        $fields['discount_text'] = $text === '' ? null : $text;
     } elseif ($discountGiven) {
-        $fields['discount_percent'] = null;
+        $fields['discount_text'] = null;
     }
-    if ($itemsGiven || $discountGiven || $percentGiven) {
+    if ($itemsGiven || $discountGiven || $textGiven) {
         $items = $itemsGiven ? invoice_clean_items($body['items']) : invoice_clean_items($existing['items'] ?? '[]');
-        $percent = array_key_exists('discount_percent', $fields) ? $fields['discount_percent'] : ($existing['discount_percent'] ?? null);
-        if ($percent !== null && $percent !== '') $fields['discount'] = round(invoice_subtotal($items) * (float)$percent / 100, 2);
+        $discountText = array_key_exists('discount_text', $fields) ? $fields['discount_text'] : ($existing['discount_text'] ?? null);
+        if ($discountText !== null && $discountText !== '') {
+            $parsed = invoice_discount_from_text((string)$discountText, invoice_subtotal($items));
+            if ($parsed === null) send_error(422, 'Diskon tidak valid. Tulis nominal (50.000), persen (10%), atau keduanya (10% 50.000)');
+            [$fields['discount'], $fields['discount_text']] = $parsed;
+        }
         $discount = array_key_exists('discount', $fields) ? (float)$fields['discount'] : (float)($existing['discount'] ?? 0);
         $fields['total'] = invoice_total($items, $discount);
     }

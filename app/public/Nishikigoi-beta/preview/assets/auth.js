@@ -1162,6 +1162,7 @@
   var MONEY_FIELDS = 'input[inputmode="numeric"]:not([type="number"])'
   function numberKind(field) {
     if (!field || field.tagName !== 'INPUT' && field.tagName !== 'TEXTAREA' || !field.matches) return ''
+    if (field.matches('[data-invoice-discount]')) return ''   // typed as 50.000, 10% or both: it has its own rules (farm-invoice)
     if (field.matches('[data-spectrum-input]')) return 'spectrum'
     if (field.matches(WHOLE_FIELDS)) return 'whole'
     if (field.matches(DECIMAL_FIELDS)) return 'decimal'

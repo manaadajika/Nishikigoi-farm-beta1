@@ -3,7 +3,7 @@
 require_once __DIR__ . '/../config.php';
 require_once __DIR__ . '/cache.php';
 
-const KOI_SCHEMA_REV = 20261031;
+const KOI_SCHEMA_REV = 20261101;
 
 // PHP 8.5 renamed the MySQL driver constants (Pdo\Mysql::ATTR_*); older versions only know PDO::MYSQL_ATTR_*.
 function koi_pdo_init_command(): int {
@@ -571,6 +571,10 @@ function ensure_invoice_schema(PDO $pdo): void {
             if (!$pdo->query("SHOW COLUMNS FROM invoices LIKE 'discount_percent'")->fetch()) {
                 $pdo->exec('ALTER TABLE invoices ADD COLUMN discount_percent DECIMAL(5,1) NULL AFTER discount');
             }
+            // the discount as it was typed (50.000, 10%, 10% 50.000): the amount is worked out again whenever the lines change
+            if (!$pdo->query("SHOW COLUMNS FROM invoices LIKE 'discount_text'")->fetch()) {
+                $pdo->exec('ALTER TABLE invoices ADD COLUMN discount_text VARCHAR(120) NULL AFTER discount_percent');
+            }
             return;
         }
         $pdo->exec(
@@ -586,6 +590,7 @@ function ensure_invoice_schema(PDO $pdo): void {
                 items MEDIUMTEXT NULL,
                 discount DECIMAL(14,2) NOT NULL DEFAULT 0,
                 discount_percent DECIMAL(5,1) NULL,
+                discount_text VARCHAR(120) NULL,
                 total DECIMAL(14,2) NOT NULL DEFAULT 0,
                 sales_contact TEXT NULL,
                 bank_account TEXT NULL,
