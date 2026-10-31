@@ -9290,7 +9290,7 @@ items.forEach((item) => {
       const clip = (value) => escapeHtml(String(value ?? '').trim())
       const card = (item, small = false, naturalHeight = false) => {
         const main = [item.code, item.variety, item.current_length_cm ? `${formatDecimal(item.current_length_cm)} cm` : '', item.gender && item.gender !== 'unknown' ? (labels[item.gender] || item.gender) : ''].filter((part) => String(part ?? '').trim()).join(' - ')
-        const sub = [item.pond_name || item.location_name || item.pond || item.location, item.name, item.bloodline, item.breeder, item.farm_name].filter((part) => String(part ?? '').trim()).join(' - ')
+        const sub = [item.pond_name || item.location_name || item.pond || item.location, item.name, item.bloodline || item.farm_name, item.breeder].filter((part) => String(part ?? '').trim()).join(' - ')
 
         return `
           <div style="break-inside:avoid;page-break-inside:avoid;border:1px solid #999;padding:4px;min-width:0;min-height:0;overflow:hidden;display:flex;flex-direction:column;text-align:center">
