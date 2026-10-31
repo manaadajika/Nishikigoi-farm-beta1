@@ -4515,6 +4515,7 @@ const pageSizeSelect = document.querySelector('[data-koi-page-size-select]');
                     editBreederMale,
                     breeding,
                   );
+                  fillOwnFarm(editForm);
 
                   const bloodlineField =
                     editForm.querySelector('[name="bloodline"]');
@@ -4833,6 +4834,24 @@ const pageSizeSelect = document.querySelector('[data-koi-page-size-select]');
       return `Entry ${index + 1}${code ? ` (${code})` : ''}: Area "${typed}" tidak sesuai dengan lokasi ${pond.name} (area lokasi: ${pond.location || 'kosong'}). Kosongkan Area agar terisi otomatis dari lokasi, atau kosongkan Lokasi kalau hanya tahu areanya.`
     }
 
+                // A fish that comes from a breeding session of this program was bred at this farm: when a session is chosen and Ternakan is still empty,
+                // Ternakan is filled with the farm's own name (the brand name set in Pengaturan, for example Cakra Wiratama Koi Farm).
+                const ownFarmName = () => {
+                  try {
+                    const saved = JSON.parse(localStorage.getItem('nishikigoi-app-settings') || 'null') || {}
+                    return String(saved.brand_owner || saved.brand_name || '').trim()
+                  } catch (error) {
+                    return ''
+                  }
+                }
+                const fillOwnFarm = (form) => {
+                  const farmField = form?.querySelector('[name="farm_name"]')
+                  const farm = ownFarmName()
+                  if (!farmField || farmField.value.trim() || !farm) return
+                  farmField.value = farm
+                  farmField.dispatchEvent(new Event('input', { bubbles: true }))
+                }
+
                 const updateEntryParentPreview = (entry) => {
                   const parentField = entry.querySelector(
                     '[name="parent_info"]',
@@ -4864,6 +4883,8 @@ const pageSizeSelect = document.querySelector('[data-koi-page-size-select]');
                       10,
                     );
                   }
+
+                  if (breeding) fillOwnFarm(entry);
 
                   renderParentPreview(
                     panel,
