@@ -92,10 +92,14 @@ function invoice_media_urls($value): array {
     return $urls;
 }
 
-function invoice_total(array $items, float $discount): float {
+function invoice_subtotal(array $items): float {
     $sum = 0.0;
     foreach ($items as $line) $sum += (float)$line['qty'] * (float)$line['unit_price'];
-    return max(0.0, round($sum - $discount, 2));
+    return $sum;
+}
+
+function invoice_total(array $items, float $discount): float {
+    return max(0.0, round(invoice_subtotal($items) - $discount, 2));
 }
 
 function invoice_clean_date($value, bool $required, string $label): ?string {
@@ -175,9 +179,25 @@ function invoice_fields(array $body, bool $partial, ?array $existing): array {
     $itemsGiven = array_key_exists('items', $body);
     $discountGiven = array_key_exists('discount', $body);
     if ($itemsGiven) $fields['items'] = json_encode(invoice_clean_items($body['items']), JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+    $percentGiven = array_key_exists('discount_percent', $body);
     if ($discountGiven) $fields['discount'] = invoice_number($body['discount'], 'Diskon') ?? 0;
-    if ($itemsGiven || $discountGiven) {
+    // a discount in percent (0-100, one decimal): the amount is worked out here from the lines; an amount in rupiah alone clears the percent
+    if ($percentGiven) {
+        $percentText = trim((string)blank_to_null($body['discount_percent']));
+        if ($percentText === '') {
+            $fields['discount_percent'] = null;
+        } else {
+            $percent = (float)str_replace(',', '.', $percentText);
+            if (!is_numeric(str_replace(',', '.', $percentText)) || $percent < 0 || $percent > 100) send_error(422, 'Diskon persen tidak valid (0 sampai 100)');
+            $fields['discount_percent'] = round($percent, 1);
+        }
+    } elseif ($discountGiven) {
+        $fields['discount_percent'] = null;
+    }
+    if ($itemsGiven || $discountGiven || $percentGiven) {
         $items = $itemsGiven ? invoice_clean_items($body['items']) : invoice_clean_items($existing['items'] ?? '[]');
+        $percent = array_key_exists('discount_percent', $fields) ? $fields['discount_percent'] : ($existing['discount_percent'] ?? null);
+        if ($percent !== null && $percent !== '') $fields['discount'] = round(invoice_subtotal($items) * (float)$percent / 100, 2);
         $discount = array_key_exists('discount', $fields) ? (float)$fields['discount'] : (float)($existing['discount'] ?? 0);
         $fields['total'] = invoice_total($items, $discount);
     }

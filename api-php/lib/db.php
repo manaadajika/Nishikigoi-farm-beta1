@@ -3,7 +3,7 @@
 require_once __DIR__ . '/../config.php';
 require_once __DIR__ . '/cache.php';
 
-const KOI_SCHEMA_REV = 20261030;
+const KOI_SCHEMA_REV = 20261031;
 
 // PHP 8.5 renamed the MySQL driver constants (Pdo\Mysql::ATTR_*); older versions only know PDO::MYSQL_ATTR_*.
 function koi_pdo_init_command(): int {
@@ -567,6 +567,10 @@ function ensure_invoice_schema(PDO $pdo): void {
             if (!$pdo->query("SHOW COLUMNS FROM invoices LIKE 'media_entries'")->fetch()) {
                 $pdo->exec('ALTER TABLE invoices ADD COLUMN media_entries MEDIUMTEXT NULL AFTER payment_proofs');
             }
+            // a discount may be given as a percent of the subtotal (discount_percent); discount stays the amount in rupiah
+            if (!$pdo->query("SHOW COLUMNS FROM invoices LIKE 'discount_percent'")->fetch()) {
+                $pdo->exec('ALTER TABLE invoices ADD COLUMN discount_percent DECIMAL(5,1) NULL AFTER discount');
+            }
             return;
         }
         $pdo->exec(
@@ -581,6 +585,7 @@ function ensure_invoice_schema(PDO $pdo): void {
                 status VARCHAR(20) NOT NULL DEFAULT 'unpaid',
                 items MEDIUMTEXT NULL,
                 discount DECIMAL(14,2) NOT NULL DEFAULT 0,
+                discount_percent DECIMAL(5,1) NULL,
                 total DECIMAL(14,2) NOT NULL DEFAULT 0,
                 sales_contact TEXT NULL,
                 bank_account TEXT NULL,
