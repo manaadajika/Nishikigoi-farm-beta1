@@ -4495,6 +4495,7 @@ Perubahan ini berlaku untuk SEMUA ikan terpilih, bukan hanya yang tampil di laya
 
       const ids = [...serverBulkIds]
       let done = 0
+      let sessionLinked = 0
       if (applyButton) applyButton.disabled = true
       try {
         for (let index = 0; index < ids.length; index += 200) {
@@ -4506,10 +4507,11 @@ Perubahan ini berlaku untuk SEMUA ikan terpilih, bukan hanya yang tampil di laya
           })
           const data = await response.json().catch(() => ({}))
           if (!response.ok) throw new Error(data.error || 'Perubahan masal gagal disimpan')
+          sessionLinked += Number(data.session_linked || 0)
           done += chunk.length
           if (hint) hint.textContent = `Menyimpan... ${done} dari ${ids.length} ikan`
         }
-        if (hint) hint.textContent = `Selesai: ${label} diubah untuk ${done} ikan.`
+        if (hint) hint.textContent = `Selesai: ${label} diubah untuk ${done - sessionLinked} ikan.${sessionLinked ? ` ${sessionLinked} ikan yang punya sesi Indukan/Breeding tidak diubah karena Bloodline dan Ternakannya mengikuti sesi.` : ''}`
         keepScroll(loadKoi)
       } catch (error) {
         errorBox.textContent = `${error.message} (${done} dari ${ids.length} ikan sudah tersimpan)`

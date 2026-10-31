@@ -176,9 +176,11 @@ route('POST', '/koi/bulk-update', function () {
 
     $placeholders = implode(',', array_fill(0, count($ids), '?'));
     $affected = execute('UPDATE koi LEFT JOIN ponds oldpond ON oldpond.id = koi.pond_id SET ' . implode(', ', $sets) . " WHERE koi.id IN ($placeholders)", array_merge($params, $ids))->rowCount();
-    koi_sync_session_links(db(), $ids);
+    $linked = koi_sync_session_links(db(), $ids);
     koi_facets_cache_clear();
-    send_json(200, ['ok' => true, 'updated' => $affected, 'requested' => count($ids)]);
+    // fish of a breeding session keep the Bloodline/Ternakan of their session; tell the page how many of the chosen fish that applies to
+    $touchesLinked = (bool)array_intersect(['bloodline', 'farm_name'], array_keys($fields));
+    send_json(200, ['ok' => true, 'updated' => $affected, 'requested' => count($ids), 'session_linked' => $touchesLinked ? $linked['checked'] : 0]);
 });
 
 // New automatic Kode Koi for the chosen fish (Aksi masal > Kode Koi). Each new code is checked against every fish (archived too);

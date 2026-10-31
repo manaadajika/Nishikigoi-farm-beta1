@@ -22,6 +22,18 @@ route('GET', '/system/update', function () {
         $checking = true;
     }
 
+    // right after an update was installed, one reminder (a notification) to clear the old program files; once per update
+    $finished = (int)($apply['finished_at'] ?? 0);
+    if (($apply['state'] ?? '') === 'done' && $finished > 0 && $now - $finished < 86400 && (int)($state['cleanup_reminded'] ?? 0) !== $finished) {
+        $state['cleanup_reminded'] = $finished;
+        update_write(update_state_file(), $state);
+        execute(
+            "INSERT INTO system_notifications (type, title, message, status, actor, role, action, target_label)
+             VALUES ('system', 'Pembaruan program terpasang', ?, 'unread', 'Sistem', 'Master Admin', 'update', 'Bersihkan Berkas Program')",
+            ['Pembaruan baru saja terpasang. Disarankan membuka Master Akun lalu menekan "Bersihkan Berkas Program" agar berkas program lama dan sisa pembaruan dibuang. Data ikan, foto, dan backup tidak disentuh.']
+        );
+    }
+
     $behind = (int)($state['behind'] ?? 0);
     $dirty = $behind > 0 && update_is_dirty();
     send_json(200, [
