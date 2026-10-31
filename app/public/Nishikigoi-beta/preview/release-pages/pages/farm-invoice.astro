@@ -425,16 +425,17 @@ const trashIcon = iconSvg('trash')
       input.value = digits ? Number(digits).toLocaleString('id-ID') : ''
     }
     const digitsOf = (value) => Number(String(value || '').replace(/[^\d]/g, '')) || 0
-    // The discount is typed in one field: an amount in rupiah (50.000), a percent of the subtotal with % at the end (10%, 10,5%), or several
-    // parts together separated by a space or + (10% 50.000). The amount never exceeds the subtotal.
+    // The discount is typed in one field: an amount in rupiah (50.000), a percent with % at the end (10%, 10,5%), or several parts together
+    // separated by a space or + (10% + 20% + 200.000). The parts are taken one after the other (a tiered discount): a percent is of what is
+    // left after the parts before it, a sum in rupiah is taken off as it is. The discount never exceeds the subtotal.
     const parseDiscount = (text, subtotal) => {
-      let total = 0
+      let left = subtotal
       String(text || '').split(/[\s+]+/).filter(Boolean).forEach((token) => {
         const percent = token.match(/^(\d+(?:[.,]\d)?)%$/)
-        if (percent) total += subtotal * Math.min(100, Number(percent[1].replace(',', '.'))) / 100
-        else total += Number(token.replace(/[^\d]/g, '')) || 0
+        if (percent) left -= left * Math.min(100, Number(percent[1].replace(',', '.'))) / 100
+        else left -= Number(token.replace(/[^\d]/g, '')) || 0
       })
-      return Math.min(subtotal, Math.round(total))
+      return Math.round(subtotal - Math.max(0, left))
     }
     const discountAmount = (subtotal) => parseDiscount(discountInput.value, subtotal)
     // letters and signs are refused as they are typed; a percent keeps one decimal digit and the % stays at the end of its part

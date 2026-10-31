@@ -98,28 +98,30 @@ function invoice_subtotal(array $items): float {
     return $sum;
 }
 
-// "50.000", "10%", "10,5%" or several parts separated by a space or + ("10% 50.000"): [amount in rupiah, the text tidied], or null when a part is not a
-// number. A percent is of the subtotal (0-100, one decimal); the amount never exceeds the subtotal.
+// "50.000", "10%", "10,5%" or several parts separated by a space or + ("10% + 20% + 200.000"): [amount in rupiah, the text tidied], or null when a
+// part is not a number. The parts are taken one after the other (a tiered discount): a percent (0-100, one decimal) is of what is left
+// after the parts before it, a sum in rupiah is taken off as it is. The discount never exceeds the subtotal.
 function invoice_discount_from_text(string $text, float $subtotal): ?array {
-    $amount = 0.0;
+    $left = $subtotal;
     $parts = [];
     foreach (preg_split('/[\s+]+/', trim($text), -1, PREG_SPLIT_NO_EMPTY) as $token) {
         if (preg_match('/^(\d+(?:[.,]\d)?)%$/', $token, $m)) {
             $percent = (float)str_replace(',', '.', $m[1]);
             if ($percent > 100) return null;
-            $amount += $subtotal * $percent / 100;
+            $left -= $left * $percent / 100;
             $parts[] = str_replace('.', ',', rtrim(rtrim(number_format($percent, 1, ',', ''), '0'), ',')) . '%';
         } elseif (preg_match('/^[\d.,]+$/', $token)) {
             $digits = preg_replace('/\D/', '', $token);
             if ($digits === '') return null;
-            $amount += (float)$digits;
+            $left -= (float)$digits;
             $parts[] = number_format((float)$digits, 0, ',', '.');
         } else {
             return null;
         }
     }
     if (!$parts) return null;
-    return [round(min($subtotal, $amount), 2), implode(' ', $parts)];
+    $left = max(0.0, $left);
+    return [round($subtotal - $left, 0), implode(' + ', $parts)];
 }
 
 function invoice_total(array $items, float $discount): float {
