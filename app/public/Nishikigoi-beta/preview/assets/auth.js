@@ -1648,6 +1648,19 @@
       overlay.addEventListener('mousedown', function (event) { if (event.target === overlay && kind !== 'alert') reject() })
       if (field) {
         field.value = defaultValue === undefined || defaultValue === null ? '' : String(defaultValue)
+        // options.numeric: 'integer' or 'decimal' lets only digits (and one comma or period) be typed, and shows the number keypad on a phone
+        if (options.numeric) {
+          var integerOnly = options.numeric === 'integer'
+          field.inputMode = integerOnly ? 'numeric' : 'decimal'
+          field.addEventListener('input', function () {
+            var cleaned = field.value.replace(integerOnly ? /[^0-9]/g : /[^0-9.,]/g, '')
+            if (!integerOnly) {
+              var first = cleaned.search(/[.,]/)
+              if (first >= 0) cleaned = cleaned.slice(0, first + 1) + cleaned.slice(first + 1).replace(/[.,]/g, '')
+            }
+            if (cleaned !== field.value) field.value = cleaned
+          })
+        }
         var sync = function () { okButton.disabled = !typedOk() }
         field.addEventListener('input', sync)
         sync()

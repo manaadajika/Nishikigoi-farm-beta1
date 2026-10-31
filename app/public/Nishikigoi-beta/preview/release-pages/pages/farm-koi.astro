@@ -5301,7 +5301,7 @@ items.forEach((item) => {
       const koiId = editForm.querySelector('[name="id"]').value
       const history = currentPhotoHistory.find((item) => String(item.id) === String(historyId))
       const currentValue = history?.length_cm ? formatDecimal(history.length_cm) : ''
-      const nextValue = (await window.KoiDialog.prompt('Isi ukuran progress foto dalam cm. Kosongkan untuk Tanpa ukuran.', currentValue))
+      const nextValue = (await window.KoiDialog.prompt('Isi ukuran progress foto dalam cm. Kosongkan untuk Tanpa ukuran.', currentValue, { numeric: 'decimal' }))
 
       if (nextValue === null || !koiId) {
         return
@@ -8099,6 +8099,7 @@ Ketik HAPUS untuk melanjutkan.`)) !== 'HAPUS' : !(await window.KoiDialog.confirm
           message: `Nomor urut baru untuk ${seqKoi.code} (sekarang ${current}).
       Bila nomor itu sudah dipakai ikan lain, ikan itu dan semua sesudahnya bergeser satu nomor.`,
           confirmText: 'Pindahkan',
+          numeric: 'integer',
         }, String(current))
         if (answer === null || answer === undefined) return
         const wanted = parseInt(String(answer).trim(), 10)

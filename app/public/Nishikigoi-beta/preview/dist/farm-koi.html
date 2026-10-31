@@ -157,7 +157,7 @@
     <!-- END GLOBAL THEME SCRIPT -->
 
     <!-- BEGIN APP AUTH SCRIPT -->
-    <script src="./assets/auth.js?v=20261031b"></script>
+    <script src="./assets/auth.js?v=20261031c"></script>
     <script src="./assets/drafts.js?v=20261029b"></script>
     <script src="./assets/theme-sync.js?v=20261014b"></script>
     <script src="./assets/print-kit.js?v=20261024a"></script>
@@ -6789,6 +6789,7 @@ items.forEach((item) => {
                   const nextValue = (await window.KoiDialog.prompt(
                     "Isi ukuran progress foto dalam cm. Kosongkan untuk Tanpa ukuran.",
                     currentValue,
+                    { numeric: "decimal" },
                   ));
 
                   if (nextValue === null || !koiId) {
@@ -10256,6 +10257,7 @@ pageSizeButtons.forEach((button) =>
                       message: `Nomor urut baru untuk ${seqKoi.code} (sekarang ${current}).
                   Bila nomor itu sudah dipakai ikan lain, ikan itu dan semua sesudahnya bergeser satu nomor.`,
                       confirmText: 'Pindahkan',
+                      numeric: 'integer',
                     }, String(current))
                     if (answer === null || answer === undefined) return
                     const wanted = parseInt(String(answer).trim(), 10)
