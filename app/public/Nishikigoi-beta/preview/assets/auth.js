@@ -1149,6 +1149,21 @@
   }
   installNumberGuard()
 
+  // ---- Fields that sit outside an open modal ---------------------------------------------------------------------------------------
+  // A Bootstrap modal (Edit Ikan, Formulir Kolam ...) pulls the focus back into itself whenever it moves to an element outside the modal.
+  // The program's own dialogs and pop-up lists (the size prompt of History Progress Foto, search boxes of a select list ...) are
+  // placed outside the modal, so their text fields could not be typed in. A field outside the modal is now allowed to take the focus
+  // while a modal is open (the page behind the modal cannot be reached with the mouse anyway).
+  function installModalFocusGuard() {
+    document.addEventListener('focusin', function (event) {
+      var element = event.target
+      if (!element || !element.closest || element.closest('.modal')) return
+      if (!document.querySelector('.modal.show')) return
+      if (element.matches('input, textarea, select, [contenteditable="true"]')) event.stopPropagation()
+    }, true)
+  }
+  installModalFocusGuard()
+
   // ---- Clear (X) button on text fields ---------------------------------------------------------------------------------------------
   // Every ordinary text / number / email / phone / link field gets an X button joined to its right edge (the same Tabler input-group
   // look as the Show button of the password field). It empties the field, fires input + change so the page reacts, and focuses it.
@@ -1597,10 +1612,15 @@
       var field = overlay.querySelector('[data-dialog-input]')
       var previousFocus = document.activeElement
       var finished = false
+      // A Bootstrap modal that is open (the Edit Ikan form, for one) pulls the focus back into itself whenever it goes to an element
+      // outside the modal, and this dialog sits outside it: the field could not be typed in. The focus that moves inside the dialog is
+      // kept from reaching the modal.
+      function keepFocus(event) { if (overlay.contains(event.target)) event.stopPropagation() }
       function finish(value) {
         if (finished) return
         finished = true
         document.removeEventListener('keydown', onKey, true)
+        document.removeEventListener('focusin', keepFocus, true)
         overlay.remove()
         if (previousFocus && previousFocus.focus) { try { previousFocus.focus() } catch (error) { /* the element is gone */ } }
         resolve(value)
@@ -1633,6 +1653,7 @@
         sync()
       }
       document.addEventListener('keydown', onKey, true)
+      document.addEventListener('focusin', keepFocus, true)
       document.body.appendChild(overlay)
       // a risky action starts on Batal so a stray Enter or tap cannot confirm it
       var start = field || (options.danger && cancelButton ? cancelButton : okButton)
