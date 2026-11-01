@@ -531,8 +531,7 @@ const clipboardIcon = iconSvg('clipboard')
               <div class="row g-3">
                 <div class="col-md-4">
                   <label class="form-label" for="pond-detail-unphotographed">Qty Manual</label>
-                  <input class="form-control" id="pond-detail-unphotographed" name="unphotographed_fish_qty" type="number" min="0" step="1" readonly title="Otomatis: total Qty Kanban" />
-                  <div class="form-hint">Otomatis dari total Qty Kanban.</div>
+                  <input class="form-control" id="pond-detail-unphotographed" name="unphotographed_fish_qty" type="number" min="0" step="1" />
                   <div class="row g-3 mt-0">
                     <div class="col-sm-6">
                       <label class="form-label">Dokumentasi</label>
@@ -3217,6 +3216,6 @@ const clipboardIcon = iconSvg('clipboard')
     window.KoiAuth?.registerRealtimeRefresh(() => keepScroll(() => loadPonds(true)), { intervalMs: 25000 })
   </script>
   <script is:inline src="/assets/pond-areas.js?v=20261026a"></script>
-  <script is:inline src="/assets/pond-kanban.js?v=20261101e"></script>
+  <script is:inline src="/assets/pond-kanban.js?v=20261101f"></script>
 </DefaultLayout>
 

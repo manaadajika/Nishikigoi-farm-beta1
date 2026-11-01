@@ -17,7 +17,7 @@ function sync_pond_gallery(int $pondId): void {
 }
 
 route('GET', '/ponds', function () {
-    pond_kanban_adopt_all_once();
+    pond_kanban_undo_adoption_once();
     $ponds = query(
         'SELECT ponds.*, COUNT(koi.id) AS koi_count
          FROM ponds LEFT JOIN koi ON koi.pond_id = ponds.id AND koi.archived_at IS NULL
@@ -106,8 +106,6 @@ route_pattern('PATCH', '#^/ponds/(\d+)$#', function (array $m) {
         if (array_key_exists($col, $body)) {
             $fields[] = "$col = ?";
             if ($col === 'unphotographed_fish_qty') {
-                // a pond with kanban cards gets its Qty Manual from them (handlers/pond_kanban.php)
-                if (query_one('SELECT id FROM pond_kanban WHERE pond_id = ? LIMIT 1', [$m[1]])) { array_pop($fields); continue; }
                 $params[] = (int)$body[$col];
             } elseif ($col === 'notes_date') {
                 $date = trim((string)$body[$col]);
@@ -172,7 +170,7 @@ route_pattern('DELETE', '#^/ponds/(\d+)$#', function (array $m) {
 route_pattern('PATCH', '#^/ponds/(\d+)/unphotographed-fish$#', function (array $m) {
     require_account();
     $body = read_json_body();
-    if (!query_one('SELECT id FROM pond_kanban WHERE pond_id = ? LIMIT 1', [$m[1]])) execute('UPDATE ponds SET unphotographed_fish_qty = ? WHERE id = ?', [(int)($body['qty'] ?? 0), $m[1]]);
+    execute('UPDATE ponds SET unphotographed_fish_qty = ? WHERE id = ?', [(int)($body['qty'] ?? 0), $m[1]]);
     send_json(200, query_one('SELECT * FROM ponds WHERE id = ?', [$m[1]]));
 });
 

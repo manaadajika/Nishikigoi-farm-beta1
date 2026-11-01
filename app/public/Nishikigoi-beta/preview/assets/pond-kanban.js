@@ -106,8 +106,6 @@ function pondKanbanBoot() {
     var total = 0
     Object.keys(cards).forEach(function (id) { total += Number(cards[id].qty || 0) })
     if (totalBox) totalBox.textContent = Object.keys(cards).length ? 'Total Qty Kanban: ' + total : ''
-    var manual = document.getElementById('pond-detail-unphotographed')
-    if (manual) manual.value = total
   }
 
   function renderBoard(items) {
@@ -229,8 +227,6 @@ function pondKanbanBoot() {
       changed = true
       cards[id] = Object.assign(cards[id] || {}, data.kanban)
       input.value = Number(data.kanban.qty)
-      var manual = document.getElementById('pond-detail-unphotographed')
-      if (manual && data.pond_qty != null) manual.value = Number(data.pond_qty)
       updateTotal()
       say('')
       if (!cardEl.querySelector('[data-k-log]').hidden) loadLog(cardEl)
