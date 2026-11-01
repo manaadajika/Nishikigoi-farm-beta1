@@ -530,9 +530,9 @@ const clipboardIcon = iconSvg('clipboard')
             <div class="card-body">
               <div class="row g-3">
                 <div class="col-md-4">
-                  <label class="form-label" for="pond-detail-unphotographed">Qty Manual</label>
+                  <label class="form-label" for="pond-detail-unphotographed">Qty Kanban</label>
                   <input class="form-control" id="pond-detail-unphotographed" name="unphotographed_fish_qty" type="number" min="0" step="1" readonly title="Otomatis: total Qty Kanban" />
-                  <div class="form-hint">Otomatis dari total Qty Kanban.</div>
+                  <div class="form-hint">Total Qty semua kartu kanban.</div>
                   <div class="row g-3 mt-0">
                     <div class="col-sm-6">
                       <label class="form-label">Dokumentasi</label>
@@ -1682,7 +1682,7 @@ const clipboardIcon = iconSvg('clipboard')
         const items = groups.get(area) || []
         const areaFish = items.reduce((sum, pond) => sum + Number(totalPondQty(pond) || 0), 0)
         return `<section class="kp-section"><h2>${e(area)} <span class="kp-muted">(${items.length} kolam, ${areaFish} ikan)</span></h2>
-          <table class="kp-table"><thead><tr><th class="kp-center" style="width:28px">No</th><th style="width:28%">Nama Kolam</th><th class="kp-num" style="width:12%">Qty Total</th><th>Catatan</th></tr></thead>
+          <table class="kp-table"><thead><tr><th class="kp-center" style="width:28px">No</th><th style="width:28%">Nama Kolam</th><th class="kp-num" style="width:12%">Total Qty</th><th>Catatan</th></tr></thead>
           <tbody>${items.map((pond, index) => `<tr><td class="kp-center">${index + 1}</td><td><strong>${e(pond.name || '-')}</strong></td><td class="kp-num">${totalPondQty(pond)}</td><td>${e(pond.notes || '-')}</td></tr>`).join('')}</tbody></table></section>`
       }).join('')
       kp.print({
@@ -1694,7 +1694,7 @@ const clipboardIcon = iconSvg('clipboard')
       })
     }
 
-    const printPondDetail = () => {
+    const printPondDetail = async () => {
       const pond = pondsData.find((item) => String(item.id) === String(selectedPondId))
       if (!pond) {
         alert('Pilih kolam terlebih dahulu.')
@@ -1713,17 +1713,42 @@ const clipboardIcon = iconSvg('clipboard')
           <td>${e(item.farm_name || '-')}</td>
           <td class="kp-num">${item.current_length_cm ? `${kp.size(item.current_length_cm)} cm` : '-'}</td>
         </tr>`).join('') || '<tr><td colspan="8" class="kp-muted">Belum ada ikan tercatat di Data Ikan untuk kolam ini.</td></tr>'
+      let kanban = []
+      try {
+        const kanbanResponse = await fetch(`/api/ponds/${pond.id}/kanban`)
+        if (kanbanResponse.ok) kanban = (await kanbanResponse.json()).items || []
+      } catch (error) {
+        kanban = []
+      }
+      const kanbanImages = (card) => {
+        let list = card.images
+        if (typeof list === 'string') { try { list = JSON.parse(list) } catch (error) { list = [] } }
+        return Array.isArray(list) ? list.filter(Boolean) : []
+      }
+      const kanbanThumb = (url) => { const match = /^\/api\/uploads\/(.+)$/.exec(String(url || '')); return match ? '/api/thumb/240/' + match[1] : url }
+      const kanbanTotal = kanban.reduce((sum, card) => sum + Number(card.qty || 0), 0)
+      const kanbanRows = kanban.map((card, index) => `<tr>
+          <td class="kp-center">${index + 1}</td>
+          <td><strong>${e(card.title || '-')}</strong><div class="kp-muted">${e(card.note_date ? window.KoiAuth.formatDate(card.note_date) : '')}</div></td>
+          <td style="white-space:pre-wrap">${e(card.body || '-')}</td>
+          <td class="kp-num">${Number(card.qty || 0)}</td>
+          <td>${kanbanImages(card).map((url) => `<img src="${e(printAssetUrl(kanbanThumb(url)))}" alt="" style="width:24px;height:36px;object-fit:cover;margin:1px;border:1px solid #bbb" />`).join('')}</td>
+        </tr>`).join('')
+      const kanbanTable = kanban.length ? `<div style="margin:14px 0 6px;font-weight:700">Kanban Catatan</div>
+        <table class="kp-table"><thead><tr>
+          <th class="kp-center" style="width:28px">No</th><th style="width:22%">Kanban</th><th>Catatan</th><th class="kp-num" style="width:9%">Qty</th><th style="width:22%">Gambar</th>
+        </tr></thead><tbody>${kanbanRows}</tbody>
+        <tfoot><tr><td></td><td colspan="2"><strong>Total Qty Kanban</strong></td><td class="kp-num"><strong>${kanbanTotal}</strong></td><td></td></tr></tfoot></table>` : ''
       kp.print({
         key: 'ponds-detail',
         title: `Isi Kolam ${pond.name || ''}`,
         heading: 'Daftar Ikan dalam Kolam',
         subheading: pond.name || '',
-        info: [['Nama Kolam', pond.name], ['Area', pond.location], ['Ikan terdata', fish.length], ['Manual', Number(pond.unphotographed_fish_qty || 0)], ['Qty Total', totalPondQty(pond)]],
-        notes: pond.notes || '',
+        info: [['Nama Kolam', pond.name], ['Area', pond.location], ['Qty Data Ikan', fish.length], ['Qty Kanban', Number(pond.unphotographed_fish_qty || 0)], ['Total Qty', totalPondQty(pond)]],
         body: `<table class="kp-table"><thead><tr>
           <th class="kp-center" style="width:28px">No</th><th class="kp-center" style="width:48px">Foto</th><th style="width:13%">Kode</th><th>Nama</th>
           <th style="width:15%">Varietas</th><th style="width:13%">Bloodline</th><th style="width:17%">Ternakan</th><th class="kp-num" style="width:10%">Ukuran</th>
-        </tr></thead><tbody>${rows}</tbody></table>`,
+        </tr></thead><tbody>${rows}</tbody></table>${kanbanTable}`,
       })
     }
 
@@ -1782,7 +1807,7 @@ const clipboardIcon = iconSvg('clipboard')
             <div class="card h-100 pond-card${/^#[0-9a-f]{6}$/i.test(areaColors[area] || '') ? ' has-area-color' : ''}"${/^#[0-9a-f]{6}$/i.test(areaColors[area] || '') ? ` style="--area-color:${areaColors[area]}"` : ''} data-dock-id="${escapeHtml(item.id)}">
               <div class="pond-card-stat" data-dock-select title="Klik untuk memilih">
                 <div class="pond-card-qty">${totalPondQty(item)}</div>
-                <div class="text-secondary small">Qty Total</div>
+                <div class="text-secondary small">Total Qty</div>
               </div>
               <div class="card-body" role="button" tabindex="0" data-pond-row="${escapeHtml(item.id)}">
                 <div class="d-flex align-items-start justify-content-between gap-2 mb-2">
@@ -1793,8 +1818,8 @@ const clipboardIcon = iconSvg('clipboard')
                   </div>
                 </div>
                 <div class="row g-2 small">
-                  <div class="col-6"><span class="text-secondary">Terfoto</span><div>${Number(item.koi_count || 0)}</div></div>
-                  <div class="col-6"><span class="text-secondary">Manual</span><div>${Number(item.unphotographed_fish_qty || 0)}</div></div>
+                  <div class="col-6"><span class="text-secondary">Qty Data Ikan</span><div>${Number(item.koi_count || 0)}</div></div>
+                  <div class="col-6"><span class="text-secondary">Qty Kanban</span><div>${Number(item.unphotographed_fish_qty || 0)}</div></div>
                   <div class="col-12"><span class="text-secondary">Catatan</span>${item.notes_date ? `<div style="font-size:.75rem;color:var(--tblr-secondary)">${escapeHtml(formatNotesDate(item.notes_date))}</div>` : ''}<div class="pond-card-notes">${escapeHtml(text(item.notes))}</div></div>
                 </div>
                 <div class="pond-card-actions">
@@ -1960,8 +1985,8 @@ const clipboardIcon = iconSvg('clipboard')
         <div class="col-sm-6 col-lg-3"><span class="text-secondary">Nama Kolam</span><div>${text(pond.name)}</div></div>
         <div class="col-sm-6 col-lg-3"><span class="text-secondary">Area</span><div>${text(pond.location)}</div></div>
         <div class="col-sm-6 col-lg-3" data-print-hidden><span class="text-secondary">Status</span><div>${statusLabels[pond.status]?.label || text(pond.status)}</div></div>
-        <div class="col-sm-6 col-lg-3"><span class="text-secondary">Qty Total</span><div>${totalPondQty(pond)}</div></div>
-        <div class="col-sm-6 col-lg-3" data-print-hidden><span class="text-secondary">Terfoto / Manual</span><div>${Number(pond.koi_count || 0)} / ${Number(pond.unphotographed_fish_qty || 0)}</div></div>
+        <div class="col-sm-6 col-lg-3"><span class="text-secondary">Total Qty</span><div>${totalPondQty(pond)}</div></div>
+        <div class="col-sm-6 col-lg-3" data-print-hidden><span class="text-secondary">Qty Data Ikan / Qty Kanban</span><div>${Number(pond.koi_count || 0)} / ${Number(pond.unphotographed_fish_qty || 0)}</div></div>
       `
       detailFish.innerHTML = fish.map((item) => `
         <tr style="cursor: pointer">
@@ -2110,7 +2135,7 @@ const clipboardIcon = iconSvg('clipboard')
       document.body.classList.remove('printing-pond-list')
     })
 
-    const pondExcelColumns = ['Area', 'Nama Kolam', 'Status', 'Terfoto', 'Manual', 'Qty Total', 'Tanggal Catatan', 'Catatan']
+    const pondExcelColumns = ['Area', 'Nama Kolam', 'Status', 'Qty Data Ikan', 'Qty Kanban', 'Total Qty', 'Tanggal Catatan', 'Catatan']
     const pondStatusFromText = (value) => {
       const typed = String(value || '').trim().toLowerCase()
       if (typed === 'aktif' || typed === 'active') return 'active'
@@ -2245,7 +2270,7 @@ const clipboardIcon = iconSvg('clipboard')
           name: String(record['nama kolam'] ?? record.nama ?? record.name ?? '').trim(),
           location: String(record.area ?? record.lokasi ?? record.location ?? '').trim(),
           status: pondStatusFromText(record.status),
-          unphotographed: String(record['manual'] ?? record['belum difoto'] ?? record.unphotographed_fish_qty ?? '').trim(),
+          unphotographed: String(record['qty kanban'] ?? record['manual'] ?? record['belum difoto'] ?? record.unphotographed_fish_qty ?? '').trim(),
           notesDate: pondNoteDateFromText(record['tanggal catatan']),
           notes: String(record.catatan ?? record.notes ?? '').trim(),
           docsCell: String(record.dokumentasi ?? '').trim(),
@@ -2372,7 +2397,7 @@ const clipboardIcon = iconSvg('clipboard')
         const items = await pondsFromFile(file)
 
         if (items.length === 0) {
-          throw new Error('File tidak berisi data kolam. Kolom yang dikenali: Area, Nama Kolam, Status, Manual, Tanggal Catatan, Catatan.')
+          throw new Error('File tidak berisi data kolam. Kolom yang dikenali: Area, Nama Kolam, Status, Qty Kanban, Tanggal Catatan, Catatan.')
         }
 
         // pass 1: check everything, write nothing
