@@ -20,8 +20,8 @@ function pondKanbanBoot() {
 
   var style = document.createElement('style')
   style.textContent =
-    '.pk-board{display:flex;gap:.75rem;overflow-x:auto;padding:.25rem .1rem .75rem;align-items:flex-start;-webkit-overflow-scrolling:touch;overscroll-behavior-x:contain}' +
-    '.pk-card{flex:0 0 17rem;max-width:85%;will-change:transform;border:1px solid var(--tblr-border-color,#dee2e6);border-radius:.5rem;background:var(--tblr-bg-surface,#fff);padding:.6rem;display:flex;flex-direction:column;gap:.45rem}' +
+    '.pk-board{display:flex;flex-direction:column;gap:.75rem;padding:.25rem 0 .5rem}' +
+    '.pk-card{flex:0 0 auto;width:100%;border:1px solid var(--tblr-border-color,#dee2e6);border-radius:.5rem;background:var(--tblr-bg-surface,#fff);padding:.6rem;display:flex;flex-direction:column;gap:.45rem}' +
     '.pk-card.pk-dragging{box-shadow:0 10px 28px rgba(0,0,0,.35);outline:2px solid var(--tblr-primary,#206bc4);cursor:grabbing;position:relative}' +
     '.pk-card[data-has-color]{border:1px solid var(--pk-color);border-top:4px solid var(--pk-color);background:color-mix(in srgb,var(--pk-color) 10%,var(--tblr-bg-surface,#fff))}' +
     '.pk-colorbtn{flex:0 0 auto;width:1.6rem;height:1.6rem;border-radius:50%;border:2px solid var(--tblr-border-color,#adb5bd);background:var(--pk-color,transparent);padding:0;cursor:pointer}' +
@@ -92,7 +92,7 @@ function pondKanbanBoot() {
     return '' +
       '<div class="pk-card" data-kanban-card="' + item.id + '"' + (item.color ? ' data-has-color style="--pk-color:' + esc(item.color) + '"' : '') + '>' +
         '<div class="pk-head">' +
-          '<span class="pk-grip" data-kanban-grip title="Tahan dan geser untuk memindah urutan" aria-label="Geser kanban">&#8942;&#8942;</span>' +
+          '<span class="pk-grip" data-kanban-grip title="Tahan dan geser ke atas/bawah untuk memindah urutan" aria-label="Geser kanban">&#8942;&#8942;</span>' +
           '<input class="form-control form-control-sm pk-title" data-k-title maxlength="255" placeholder="Judul kanban" aria-label="Judul kanban" data-role-disable-unless="farm-operate" value="' + esc(item.title) + '" />' +
           '<button class="pk-colorbtn" type="button" data-k-color-toggle data-role-required="farm-operate" title="Warna kartu" aria-label="Warna kartu"></button>' +
           '<button class="btn btn-sm btn-outline-danger" type="button" data-k-delete data-role-required="farm-operate" title="Hapus kanban (masuk History Catatan)" aria-label="Hapus kanban">&times;</button>' +
@@ -479,9 +479,11 @@ function pondKanbanBoot() {
         changed = true
         return reload()
       }).then(function () {
-        board.scrollLeft = board.scrollWidth
         var last = board.querySelector('[data-kanban-card]:last-child [data-k-title]')
-        if (last) last.focus()
+        if (last) {
+          last.scrollIntoView({ block: 'center', behavior: 'smooth' })
+          last.focus({ preventScroll: true })
+        }
       }).catch(function (error) { say(error.message || 'Kanban gagal ditambah.', true) }).then(function () { addButton.disabled = false })
     })
   }
@@ -506,11 +508,20 @@ function pondKanbanBoot() {
   }
 
   // ---- dragging a card by its handle (mouse and touch) ---------------------------------------------------------------------------------------------
-  // The card sticks to the finger/mouse (a translateX), the other cards slide aside smoothly to make room, and the board scrolls by
-  // itself near its edges. The order is saved once, when the card is let go.
+  // The cards stand one under the other. The card sticks to the finger/mouse (a translateY), the other cards slide aside smoothly to make
+  // room, and the page scrolls by itself near the top and bottom of the screen. The order is saved once, when the card is let go.
   var drag = null
   function cardEls() { return Array.prototype.slice.call(board.querySelectorAll('[data-kanban-card]')) }
   function orderOf() { return cardEls().map(function (el) { return el.getAttribute('data-kanban-card') }) }
+  function scrollParentOf(el) {
+    var node = el.parentElement
+    while (node && node !== document.body) {
+      var overflow = getComputedStyle(node).overflowY
+      if ((overflow === 'auto' || overflow === 'scroll') && node.scrollHeight > node.clientHeight) return node
+      node = node.parentElement
+    }
+    return document.scrollingElement || document.documentElement
+  }
 
   board.addEventListener('pointerdown', function (event) {
     var grip = event.target.closest('[data-kanban-grip]')
@@ -518,61 +529,58 @@ function pondKanbanBoot() {
     var cardEl = grip.closest('[data-kanban-card]')
     if (!cardEl || cardEls().length < 2) return
     event.preventDefault()
+    var scroller = scrollParentOf(board)
     var rect = cardEl.getBoundingClientRect()
-    drag = { card: cardEl, grip: grip, pointerId: event.pointerId, before: orderOf(), startX: event.clientX, startLeft: rect.left, startScroll: board.scrollLeft, x: event.clientX, shift: 0, raf: 0 }
+    drag = { card: cardEl, grip: grip, pointerId: event.pointerId, before: orderOf(), startY: event.clientY, startTop: rect.top, scroller: scroller, startScroll: scroller.scrollTop, y: event.clientY, shift: 0, raf: 0 }
     try { grip.setPointerCapture(event.pointerId) } catch (e) { /* the move events still reach the board */ }
     cardEl.classList.add('pk-dragging')
     cardEl.style.transition = 'none'
     cardEl.style.zIndex = '5'
-    board.style.scrollSnapType = 'none'
     drag.raf = requestAnimationFrame(tick)
   })
 
   board.addEventListener('pointermove', function (event) {
-    if (drag && event.pointerId === drag.pointerId) drag.x = event.clientX
+    if (drag && event.pointerId === drag.pointerId) drag.y = event.clientY
   })
 
-  // one frame: scroll near the edges, put the card under the pointer, and let the others make room
+  // one frame: scroll near the top/bottom of the screen, put the card under the pointer, and let the others make room
   function tick() {
     if (!drag) return
-    var rect = board.getBoundingClientRect()
-    var edge = 56
-    if (drag.x < rect.left + edge) board.scrollLeft -= Math.min(26, (rect.left + edge - drag.x) / 2 + 4)
-    else if (drag.x > rect.right - edge) board.scrollLeft += Math.min(26, (drag.x - (rect.right - edge)) / 2 + 4)
+    var edge = 70
+    if (drag.y < edge) drag.scroller.scrollTop -= Math.min(28, (edge - drag.y) / 2 + 4)
+    else if (drag.y > window.innerHeight - edge) drag.scroller.scrollTop += Math.min(28, (drag.y - (window.innerHeight - edge)) / 2 + 4)
 
     var card = drag.card
-    // where the card would stand with no transform, in the screen's coordinates
-    var layoutLeft = card.getBoundingClientRect().left - drag.shift
-    // the pointer moved by (x - startX) and the board scrolled by (scrollLeft - startScroll) since the grab
-    var wanted = drag.startLeft + (drag.x - drag.startX) + (drag.startScroll - board.scrollLeft)
-    var width = card.getBoundingClientRect().width
-    var center = wanted + width / 2
+    var layoutTop = card.getBoundingClientRect().top - drag.shift
+    // the pointer moved by (y - startY) and the page scrolled by (scrollTop - startScroll) since the grab
+    var wanted = drag.startTop + (drag.y - drag.startY) - (drag.scroller.scrollTop - drag.startScroll)
+    var height = card.getBoundingClientRect().height
+    var center = wanted + height / 2
 
-    // the slot: the number of other cards whose middle is left of the dragged card's middle
+    // the slot: the number of other cards whose middle is above the dragged card's middle
     var others = cardEls().filter(function (el) { return el !== card })
     var slot = 0
     others.forEach(function (el) {
       var r = el.getBoundingClientRect()
-      if (r.left + r.width / 2 < center) slot++
+      if (r.top + r.height / 2 < center) slot++
     })
     if (cardEls().indexOf(card) !== slot) {
-      var firsts = others.map(function (el) { return el.getBoundingClientRect().left })
-      var anchor = others[slot] || null
-      board.insertBefore(card, anchor)
+      var firsts = others.map(function (el) { return el.getBoundingClientRect().top })
+      board.insertBefore(card, others[slot] || null)
       // the others slide from where they were to where they are now (FLIP)
       others.forEach(function (el, index) {
-        var delta = firsts[index] - el.getBoundingClientRect().left
+        var delta = firsts[index] - el.getBoundingClientRect().top
         if (!delta) return
         el.style.transition = 'none'
-        el.style.transform = 'translateX(' + delta + 'px)'
+        el.style.transform = 'translateY(' + delta + 'px)'
         el.getBoundingClientRect()
         el.style.transition = 'transform .18s ease'
         el.style.transform = ''
       })
-      layoutLeft = card.getBoundingClientRect().left - drag.shift
+      layoutTop = card.getBoundingClientRect().top - drag.shift
     }
-    drag.shift = wanted - layoutLeft
-    card.style.transform = 'translateX(' + drag.shift + 'px)'
+    drag.shift = wanted - layoutTop
+    card.style.transform = 'translateY(' + drag.shift + 'px)'
     drag.raf = requestAnimationFrame(tick)
   }
 
@@ -589,7 +597,6 @@ function pondKanbanBoot() {
       card.classList.remove('pk-dragging')
       card.style.transition = ''
       card.style.zIndex = ''
-      board.style.scrollSnapType = ''
       cardEls().forEach(function (el) { el.style.transition = ''; el.style.transform = '' })
     }, 190)
     var now = orderOf()
