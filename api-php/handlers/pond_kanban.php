@@ -10,6 +10,21 @@ function pond_kanban_actor(array $session): string {
     return mb_substr(trim((string)($session['name'] ?? '')) ?: (string)($session['username'] ?? ''), 0, 100);
 }
 
+// The colours a card can get (random from this list at first); a card with '' as colour follows the theme.
+const POND_KANBAN_COLORS = ['#4263eb', '#1098ad', '#37b24d', '#f59f00', '#f76707', '#e03131', '#d6336c', '#ae3ec9', '#7048e8', '#868e96'];
+
+function pond_kanban_random_color(): string {
+    return POND_KANBAN_COLORS[random_int(0, count(POND_KANBAN_COLORS) - 1)];
+}
+
+// '' (theme) or #rrggbb
+function pond_kanban_clean_color($value): string {
+    $text = strtolower(trim((string)$value));
+    if ($text === '') return '';
+    if (!preg_match('/^#[0-9a-f]{6}$/', $text)) send_error(422, 'Warna tidak valid');
+    return $text;
+}
+
 // The text of the active cards, one block per card: "Title (date)" and the note below it.
 function pond_kanban_notes_text(int $pondId): array {
     $rows = query('SELECT title, body, note_date FROM pond_kanban WHERE pond_id = ? AND deleted_at IS NULL ORDER BY sort_order, id', [$pondId]);
@@ -60,8 +75,8 @@ function pond_kanban_backfill(int $pondId): void {
     $pond = query_one('SELECT notes, notes_date FROM ponds WHERE id = ?', [$pondId]);
     if (!$pond || trim((string)$pond['notes']) === '') return;
     execute(
-        "INSERT INTO pond_kanban (pond_id, title, body, note_date, sort_order, created_by) VALUES (?, 'Catatan', ?, ?, 0, 'Sistem')",
-        [$pondId, $pond['notes'], $pond['notes_date']]
+        "INSERT INTO pond_kanban (pond_id, title, body, note_date, sort_order, color, created_by) VALUES (?, 'Catatan', ?, ?, 0, ?, 'Sistem')",
+        [$pondId, $pond['notes'], $pond['notes_date'], pond_kanban_random_color()]
     );
 }
 
@@ -75,7 +90,7 @@ function pond_kanban_apply_plain_notes(int $pondId, string $notes, ?string $date
         execute('UPDATE pond_kanban SET body = ?, note_date = COALESCE(?, note_date) WHERE id = ?', [$notes, $date, $card['id']]);
     } elseif (trim($notes) !== '') {
         $next = (int)(query_one('SELECT COALESCE(MAX(sort_order), -1) + 1 AS n FROM pond_kanban WHERE pond_id = ?', [$pondId])['n'] ?? 0);
-        execute("INSERT INTO pond_kanban (pond_id, title, body, note_date, sort_order, created_by) VALUES (?, 'Catatan', ?, ?, ?, 'Sistem')", [$pondId, $notes, $date, $next]);
+        execute("INSERT INTO pond_kanban (pond_id, title, body, note_date, sort_order, color, created_by) VALUES (?, 'Catatan', ?, ?, ?, ?, 'Sistem')", [$pondId, $notes, $date, $next, pond_kanban_random_color()]);
     }
     pond_kanban_sync_notes($pondId);
 }
@@ -90,7 +105,10 @@ route_pattern('GET', '#^/ponds/(\d+)/kanban$#', function (array $m) {
     $pondId = (int)$m[1];
     if (!query_one('SELECT id FROM ponds WHERE id = ?', [$pondId])) send_error(404, 'Kolam tidak ditemukan');
     pond_kanban_backfill($pondId);
-    $cols = 'id, pond_id, title, body, note_date, qty, sort_order, created_by, deleted_at, deleted_by, created_at, updated_at';
+    foreach (query('SELECT id FROM pond_kanban WHERE pond_id = ? AND color IS NULL', [$pondId]) as $row) {
+        execute('UPDATE pond_kanban SET color = ? WHERE id = ?', [pond_kanban_random_color(), $row['id']]);
+    }
+    $cols = 'id, pond_id, title, body, note_date, qty, sort_order, color, created_by, deleted_at, deleted_by, created_at, updated_at';
     send_json(200, [
         'items' => query("SELECT $cols FROM pond_kanban WHERE pond_id = ? AND deleted_at IS NULL ORDER BY sort_order, id", [$pondId]),
         'deleted' => query("SELECT $cols FROM pond_kanban WHERE pond_id = ? AND deleted_at IS NOT NULL ORDER BY deleted_at DESC, id DESC", [$pondId]),
@@ -106,8 +124,8 @@ route_pattern('POST', '#^/ponds/(\d+)/kanban$#', function (array $m) {
     $next = (int)(query_one('SELECT COALESCE(MAX(sort_order), -1) + 1 AS n FROM pond_kanban WHERE pond_id = ? AND deleted_at IS NULL', [$pondId])['n'] ?? 0);
     $date = array_key_exists('note_date', $body) ? koi_clean_partial_date($body['note_date'], 'Tanggal pencatatan') : date('Y-m-d');
     execute(
-        'INSERT INTO pond_kanban (pond_id, title, body, note_date, sort_order, created_by) VALUES (?, ?, ?, ?, ?, ?)',
-        [$pondId, mb_substr(trim((string)($body['title'] ?? '')), 0, 255), (string)($body['body'] ?? ''), $date, $next, pond_kanban_actor($session)]
+        'INSERT INTO pond_kanban (pond_id, title, body, note_date, sort_order, color, created_by) VALUES (?, ?, ?, ?, ?, ?, ?)',
+        [$pondId, mb_substr(trim((string)($body['title'] ?? '')), 0, 255), (string)($body['body'] ?? ''), $date, $next, array_key_exists('color', $body) ? pond_kanban_clean_color($body['color']) : pond_kanban_random_color(), pond_kanban_actor($session)]
     );
     $id = (int)db()->lastInsertId();
     pond_kanban_sync_notes($pondId);
@@ -134,6 +152,7 @@ route_pattern('PATCH', '#^/ponds/kanban/(\d+)$#', function (array $m) {
     if (array_key_exists('title', $body)) { $fields[] = 'title = ?'; $params[] = mb_substr(trim((string)$body['title']), 0, 255); }
     if (array_key_exists('body', $body)) { $fields[] = 'body = ?'; $params[] = (string)$body['body']; }
     if (array_key_exists('note_date', $body)) { $fields[] = 'note_date = ?'; $params[] = koi_clean_partial_date($body['note_date'], 'Tanggal pencatatan'); }
+    if (array_key_exists('color', $body)) { $fields[] = 'color = ?'; $params[] = pond_kanban_clean_color($body['color']); }
     if (!$fields) send_error(400, 'Tidak ada field untuk diupdate');
     $params[] = $card['id'];
     execute('UPDATE pond_kanban SET ' . implode(', ', $fields) . ' WHERE id = ?', $params);
@@ -280,8 +299,8 @@ route_pattern('POST', '#^/ponds/kanban/(\d+)/split$#', function (array $m) {
         $left = (int)$fresh['qty'] - $amount;
         execute('UPDATE pond_kanban SET qty = ? WHERE id = ?', [$left, $card['id']]);
         execute(
-            'INSERT INTO pond_kanban (pond_id, title, body, note_date, qty, sort_order, created_by) VALUES (?, ?, ?, ?, ?, ?, ?)',
-            [$target, $title, $card['body'], $card['note_date'], $amount, pond_kanban_next_order($target), $actor]
+            'INSERT INTO pond_kanban (pond_id, title, body, note_date, qty, sort_order, color, created_by) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
+            [$target, $title, $card['body'], $card['note_date'], $amount, pond_kanban_next_order($target), $card['color'] ?? pond_kanban_random_color(), $actor]
         );
         $newId = (int)$pdo->lastInsertId();
         pond_kanban_log_line((int)$card['id'], -$amount, $left, 'Dipecah ke kartu "' . $title . '"' . $where, $actor);

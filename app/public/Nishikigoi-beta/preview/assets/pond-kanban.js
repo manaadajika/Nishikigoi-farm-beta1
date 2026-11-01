@@ -23,6 +23,13 @@ function pondKanbanBoot() {
     '.pk-board{display:flex;gap:.75rem;overflow-x:auto;padding:.25rem .1rem .75rem;align-items:flex-start;-webkit-overflow-scrolling:touch;overscroll-behavior-x:contain}' +
     '.pk-card{flex:0 0 17rem;max-width:85%;will-change:transform;border:1px solid var(--tblr-border-color,#dee2e6);border-radius:.5rem;background:var(--tblr-bg-surface,#fff);padding:.6rem;display:flex;flex-direction:column;gap:.45rem}' +
     '.pk-card.pk-dragging{box-shadow:0 10px 28px rgba(0,0,0,.35);outline:2px solid var(--tblr-primary,#206bc4);cursor:grabbing;position:relative}' +
+    '.pk-card[data-has-color]{border:1px solid var(--pk-color);border-top:4px solid var(--pk-color);background:color-mix(in srgb,var(--pk-color) 10%,var(--tblr-bg-surface,#fff))}' +
+    '.pk-colorbtn{flex:0 0 auto;width:1.6rem;height:1.6rem;border-radius:50%;border:2px solid var(--tblr-border-color,#adb5bd);background:var(--pk-color,transparent);padding:0;cursor:pointer}' +
+    '.pk-palette{display:flex;flex-wrap:wrap;gap:.35rem;align-items:center}' +
+    '.pk-palette[hidden]{display:none}' +
+    '.pk-swatch{width:1.5rem;height:1.5rem;border-radius:50%;border:2px solid rgba(255,255,255,.55);padding:0;cursor:pointer;flex:0 0 auto}' +
+    '.pk-swatch-custom{background:conic-gradient(red,yellow,lime,aqua,blue,magenta,red);position:relative;overflow:hidden;display:inline-block}' +
+    '.pk-swatch-custom input{position:absolute;inset:0;opacity:0;width:100%;height:100%;cursor:pointer;border:0;padding:0}' +
     '.pk-head{display:flex;gap:.35rem;align-items:center}' +
     '.pk-grip{flex:0 0 auto;cursor:grab;touch-action:none;user-select:none;padding:.45rem .6rem;margin:-.2rem -.15rem;border-radius:.3rem;color:var(--tblr-secondary,#6c7a91);font-size:1.1rem;line-height:1}' +
     '.pk-grip:hover{background:rgba(127,127,127,.15)}' +
@@ -79,13 +86,21 @@ function pondKanbanBoot() {
   }
   function api(path) { return '/api' + path }
 
+  var PALETTE = ['#4263eb', '#1098ad', '#37b24d', '#f59f00', '#f76707', '#e03131', '#d6336c', '#ae3ec9', '#7048e8', '#868e96']
+
   function cardHtml(item) {
     return '' +
-      '<div class="pk-card" data-kanban-card="' + item.id + '">' +
+      '<div class="pk-card" data-kanban-card="' + item.id + '"' + (item.color ? ' data-has-color style="--pk-color:' + esc(item.color) + '"' : '') + '>' +
         '<div class="pk-head">' +
           '<span class="pk-grip" data-kanban-grip title="Tahan dan geser untuk memindah urutan" aria-label="Geser kanban">&#8942;&#8942;</span>' +
           '<input class="form-control form-control-sm pk-title" data-k-title maxlength="255" placeholder="Judul kanban" aria-label="Judul kanban" data-role-disable-unless="farm-operate" value="' + esc(item.title) + '" />' +
+          '<button class="pk-colorbtn" type="button" data-k-color-toggle data-role-required="farm-operate" title="Warna kartu" aria-label="Warna kartu"></button>' +
           '<button class="btn btn-sm btn-outline-danger" type="button" data-k-delete data-role-required="farm-operate" title="Hapus kanban (masuk History Catatan)" aria-label="Hapus kanban">&times;</button>' +
+        '</div>' +
+        '<div class="pk-palette" data-k-palette hidden>' +
+          PALETTE.map(function (color) { return '<button class="pk-swatch" type="button" data-k-color="' + color + '" style="background:' + color + '" title="' + color + '" aria-label="Warna ' + color + '"></button>' }).join('') +
+          '<label class="pk-swatch pk-swatch-custom" title="Warna khusus"><input type="color" data-k-color-custom value="' + esc(item.color || '#4263eb') + '" /></label>' +
+          '<button class="btn btn-sm" type="button" data-k-color-theme title="Warna kartu mengikuti tema program">Sesuaikan tema</button>' +
         '</div>' +
         '<div>' +
           '<div class="pk-qty-label">Tanggal pencatatan</div>' +
@@ -273,6 +288,29 @@ function pondKanbanBoot() {
     })
   }
 
+  // ---- colour of a card: random at first, a chosen one, or "Sesuaikan tema" (no colour, follows the theme) -------------------------------------------------
+  function setColor(cardEl, color, save) {
+    var id = cardEl.getAttribute('data-kanban-card')
+    if (color) {
+      cardEl.style.setProperty('--pk-color', color)
+      cardEl.setAttribute('data-has-color', '')
+    } else {
+      cardEl.style.removeProperty('--pk-color')
+      cardEl.removeAttribute('data-has-color')
+    }
+    cards[id] = Object.assign(cards[id] || {}, { color: color })
+    if (!save) return
+    request('PATCH', api('/ponds/kanban/' + id), { color: color }).then(function () { changed = true; say('') }).catch(function (error) { say(error.message || 'Warna gagal disimpan.', true) })
+  }
+  board.addEventListener('input', function (event) {
+    var custom = event.target.closest('[data-k-color-custom]')
+    if (custom) setColor(custom.closest('[data-kanban-card]'), custom.value, false)
+  })
+  board.addEventListener('change', function (event) {
+    var custom = event.target.closest('[data-k-color-custom]')
+    if (custom) setColor(custom.closest('[data-kanban-card]'), custom.value, true)
+  })
+
   // - / + open a small form (amount, day, note); a number typed in the box sets the quantity to that number. The history keeps the day and who did it.
   function setQty(cardEl, change, done) {
     var id = cardEl.getAttribute('data-kanban-card')
@@ -343,6 +381,21 @@ function pondKanbanBoot() {
         btn.disabled = false
         if (ok) f.hidden = true
       })
+      return
+    }
+    if (event.target.closest('[data-k-color-toggle]')) {
+      var palette = cardEl.querySelector('[data-k-palette]')
+      palette.hidden = !palette.hidden
+      return
+    }
+    var swatch = event.target.closest('[data-k-color]')
+    if (swatch) {
+      setColor(cardEl, swatch.getAttribute('data-k-color'), true)
+      return
+    }
+    if (event.target.closest('[data-k-color-theme]')) {
+      setColor(cardEl, '', true)
+      cardEl.querySelector('[data-k-palette]').hidden = true
       return
     }
     var moveOpen = event.target.closest('[data-k-move-open]')
