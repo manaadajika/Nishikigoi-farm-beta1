@@ -28,9 +28,12 @@ function pondKanbanBoot() {
     '.pk-grip:hover{background:rgba(127,127,127,.15)}' +
     '.pk-title{font-weight:600}' +
     '.pk-body{resize:vertical;min-height:6rem}' +
-    '.pk-qty{display:flex;align-items:center;gap:.4rem;flex-wrap:wrap}' +
-    '.pk-qty-input{width:4.5rem;text-align:center;font-weight:700}' +
-    '.pk-qty-label{font-size:.78rem;color:var(--tblr-secondary,#6c7a91)}' +
+    '.pk-qty{display:flex;align-items:center;gap:.5rem}' +
+    '.pk-actions{display:flex;align-items:center;gap:.3rem;flex-wrap:nowrap}' +
+    '.pk-actions .btn{padding:.2rem .45rem;font-size:.78rem;white-space:nowrap}' +
+    '.pk-actions .btn-icon{min-width:1.9rem;font-weight:700}' +
+    '.pk-qty-input{flex:1 1 auto;min-width:0;text-align:center;font-weight:700}' +
+    '.pk-qty-label{font-size:.78rem;color:var(--tblr-secondary,#6c7a91);white-space:nowrap}' +
     '.pk-qtyform{display:flex;flex-direction:column;gap:.35rem;padding:.5rem;border-radius:.4rem;background:rgba(127,127,127,.1)}' +
     '.pk-qtyform[hidden]{display:none}' +
     '.pk-log{font-size:.8rem;max-height:9rem;overflow:auto;border-top:1px solid var(--tblr-border-color,#dee2e6);padding-top:.35rem}' +
@@ -91,9 +94,13 @@ function pondKanbanBoot() {
         '<textarea class="form-control pk-body" data-k-body rows="5" placeholder="Catatan" data-role-disable-unless="farm-operate">' + esc(item.body) + '</textarea>' +
         '<div class="pk-qty">' +
           '<span class="pk-qty-label">Qty Kanban</span>' +
-          '<button class="btn btn-sm btn-icon" type="button" data-k-qty-open="-1" data-role-required="farm-operate" title="Kurangi ikan" aria-label="Kurangi ikan">&minus;</button>' +
           '<input type="number" class="form-control form-control-sm pk-qty-input" min="0" step="1" inputmode="numeric" data-k-qty-input data-no-clear data-role-disable-unless="farm-operate" aria-label="Qty Kanban" value="' + Number(item.qty || 0) + '" />' +
+        '</div>' +
+        '<div class="pk-actions">' +
+          '<button class="btn btn-sm btn-icon" type="button" data-k-qty-open="-1" data-role-required="farm-operate" title="Kurangi ikan" aria-label="Kurangi ikan">&minus;</button>' +
           '<button class="btn btn-sm btn-icon" type="button" data-k-qty-open="1" data-role-required="farm-operate" title="Tambah ikan" aria-label="Tambah ikan">+</button>' +
+          '<button class="btn btn-sm" type="button" data-k-move-open data-role-required="farm-operate" title="Pindahkan kartu ini ke kolam lain">Pindah</button>' +
+          '<button class="btn btn-sm" type="button" data-k-split-open data-role-required="farm-operate" title="Pecah sebagian ikan ke kartu baru">Pecah</button>' +
           '<button class="btn btn-sm ms-auto" type="button" data-k-log-toggle>Riwayat</button>' +
         '</div>' +
         '<div class="pk-qtyform" data-k-qtyform hidden>' +
@@ -103,10 +110,6 @@ function pondKanbanBoot() {
           '<input type="text" class="form-control form-control-sm" maxlength="500" data-k-lognote placeholder="Keterangan (boleh kosong)" />' +
           '<div class="d-flex gap-2"><button class="btn btn-sm btn-primary" type="button" data-k-qty-save>Catat</button><button class="btn btn-sm" type="button" data-k-qty-cancel>Batal</button></div>' +
         '</div>' +
-        '<div class="d-flex gap-2">' +
-          '<button class="btn btn-sm" type="button" data-k-move-open data-role-required="farm-operate" title="Pindahkan kartu ini ke kolam lain">Pindah</button>' +
-          '<button class="btn btn-sm" type="button" data-k-split-open data-role-required="farm-operate" title="Pecah sebagian ikan ke kartu baru">Pecah</button>' +
-        '</div>' +
         '<div class="pk-qtyform" data-k-moveform hidden>' +
           '<strong>Pindahkan kartu ke kolam</strong>' +
           '<select class="form-select form-select-sm" data-k-move-target></select>' +
@@ -115,7 +118,7 @@ function pondKanbanBoot() {
         '<div class="pk-qtyform" data-k-splitform hidden>' +
           '<strong>Pecah kanban</strong>' +
           '<input type="number" class="form-control form-control-sm" min="1" step="1" inputmode="numeric" data-k-split-qty />' +
-          '<input type="text" class="form-control form-control-sm" maxlength="255" data-k-split-title placeholder="Judul kartu baru" />' +
+          '<input type="text" class="form-control form-control-sm" maxlength="255" data-k-split-title placeholder="Judul kartu baru (boleh kosong)" />' +
           '<select class="form-select form-select-sm" data-k-split-target></select>' +
           '<div class="pk-qty-label">Catatan dan tanggal disalin ke kartu baru.</div>' +
           '<div class="d-flex gap-2"><button class="btn btn-sm btn-primary" type="button" data-k-split-save>Pecah</button><button class="btn btn-sm" type="button" data-k-form-cancel>Batal</button></div>' +
@@ -357,7 +360,7 @@ function pondKanbanBoot() {
           var qtyBox = sf.querySelector('[data-k-split-qty]')
           qtyBox.value = ''
           qtyBox.placeholder = 'Jumlah ikan dipisah (maks ' + qtyNow + ')'
-          sf.querySelector('[data-k-split-title]').value = (cardEl.querySelector('[data-k-title]').value.trim() + ' (pecahan)').trim()
+          sf.querySelector('[data-k-split-title]').value = ''
           sf.querySelector('[data-k-split-target]').innerHTML = optionsHtml(list, 'Kolam ini')
           sf.hidden = false
           qtyBox.focus()

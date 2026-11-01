@@ -265,7 +265,7 @@ route_pattern('POST', '#^/ponds/kanban/(\d+)/split$#', function (array $m) {
     $target = (int)($body['pond_id'] ?? 0) ?: (int)$card['pond_id'];
     if (!query_one('SELECT id FROM ponds WHERE id = ?', [$target])) send_error(422, 'Kolam tujuan tidak ditemukan.');
     $title = mb_substr(trim((string)($body['title'] ?? '')), 0, 255);
-    if ($title === '') $title = trim((string)$card['title'] . ' (pecahan)');
+    if ($title === '') $title = trim((string)$card['title']);
     $actor = pond_kanban_actor($session);
     $from = (int)$card['pond_id'];
     $where = $target === $from ? '' : ' (kolam ' . pond_kanban_pond_name($target) . ')';
