@@ -41,22 +41,33 @@ function pond_kanban_notes_text(int $pondId): array {
     return [implode("\n\n", $blocks), $latest];
 }
 
-// Qty Kanban of a card is its own count; the pond's "Qty Manual" (Formulir Kolam) stays a separate number.
+// "Qty Manual" of a pond is the total of the Qty Kanban of its active cards.
 function pond_kanban_total_qty(int $pondId): int {
     return (int)(query_one('SELECT COALESCE(SUM(qty), 0) AS total FROM pond_kanban WHERE pond_id = ? AND deleted_at IS NULL', [$pondId])['total'] ?? 0);
 }
 
 function pond_kanban_sync_notes(int $pondId): void {
     [$text, $latest] = pond_kanban_notes_text($pondId);
-    execute('UPDATE ponds SET notes = ?, notes_date = ? WHERE id = ?', [$text, $latest, $pondId]);
+    execute('UPDATE ponds SET notes = ?, notes_date = ?, unphotographed_fish_qty = ? WHERE id = ?', [$text, $latest, pond_kanban_total_qty($pondId), $pondId]);
 }
 
 function pond_kanban_has_cards(int $pondId): bool {
     return (bool)query_one('SELECT id FROM pond_kanban WHERE pond_id = ? LIMIT 1', [$pondId]);
 }
 
-// Once: an earlier version moved each pond's Qty Manual into its first card ("Qty Manual sebelum kanban"); that is undone here.
-// The cards give the quantity back (the Qty Manual of the pond was never changed by it) and the opening line leaves the history.
+// The quantity a card starts with when it takes over the pond's old Qty Manual; the history shows where it came from.
+function pond_kanban_opening_qty(int $cardId, int $qty): void {
+    if ($qty <= 0) return;
+    execute('UPDATE pond_kanban SET qty = qty + ? WHERE id = ?', [$qty, $cardId]);
+    $after = (int)(query_one('SELECT qty FROM pond_kanban WHERE id = ?', [$cardId])['qty'] ?? $qty);
+    execute(
+        "INSERT INTO pond_kanban_qty_log (kanban_id, delta, qty_after, log_date, notes, actor) VALUES (?, ?, ?, CURDATE(), 'Qty Manual sebelum kanban', 'Sistem')",
+        [$cardId, $qty, $after]
+    );
+}
+
+// An earlier version of the program took the Qty Manual into the cards, then undid it for a while: that undo ran once on its own and is
+// kept here only for devices that still hold such cards. Once the undo has run (or when there is nothing to undo) the adoption below runs.
 function pond_kanban_undo_adoption_once(): void {
     static $done = false;
     if ($done) return;
@@ -69,15 +80,38 @@ function pond_kanban_undo_adoption_once(): void {
     execute("INSERT INTO app_settings (`key`, value) VALUES ('pond_kanban_qty_undo_v1', ?) ON DUPLICATE KEY UPDATE value = VALUES(value)", [date('Y-m-d H:i:s')]);
 }
 
+// Once: every pond whose Qty Manual is not yet carried by a card gets it on its first card (Qty Manual is the total of the cards from now on).
+function pond_kanban_adopt_all_once(): void {
+    static $done = false;
+    if ($done) return;
+    $done = true;
+    if (query_one("SELECT `key` FROM app_settings WHERE `key` = 'pond_kanban_qty_v2'")) return;
+    foreach (query('SELECT id FROM ponds WHERE unphotographed_fish_qty > 0') as $row) {
+        $pondId = (int)$row['id'];
+        if (!pond_kanban_has_cards($pondId)) {
+            pond_kanban_backfill($pondId);
+        } elseif (pond_kanban_total_qty($pondId) === 0) {
+            $first = query_one('SELECT id FROM pond_kanban WHERE pond_id = ? AND deleted_at IS NULL ORDER BY sort_order, id LIMIT 1', [$pondId]);
+            $manual = (int)(query_one('SELECT unphotographed_fish_qty AS q FROM ponds WHERE id = ?', [$pondId])['q'] ?? 0);
+            if ($first) {
+                pond_kanban_opening_qty((int)$first['id'], $manual);
+                pond_kanban_sync_notes($pondId);
+            }
+        }
+    }
+    execute("INSERT INTO app_settings (`key`, value) VALUES ('pond_kanban_qty_v2', ?) ON DUPLICATE KEY UPDATE value = VALUES(value)", [date('Y-m-d H:i:s')]);
+}
+
 // A pond that has notes from before the kanban existed (or from a restored older backup) and no card at all gets one card with them.
 function pond_kanban_backfill(int $pondId): void {
     if (pond_kanban_has_cards($pondId)) return;
-    $pond = query_one('SELECT notes, notes_date FROM ponds WHERE id = ?', [$pondId]);
-    if (!$pond || trim((string)$pond['notes']) === '') return;
+    $pond = query_one('SELECT notes, notes_date, unphotographed_fish_qty FROM ponds WHERE id = ?', [$pondId]);
+    if (!$pond || (trim((string)$pond['notes']) === '' && (int)$pond['unphotographed_fish_qty'] <= 0)) return;
     execute(
         "INSERT INTO pond_kanban (pond_id, title, body, note_date, sort_order, color, created_by) VALUES (?, 'Catatan', ?, ?, 0, ?, 'Sistem')",
         [$pondId, $pond['notes'], $pond['notes_date'], pond_kanban_random_color()]
     );
+    pond_kanban_opening_qty((int)db()->lastInsertId(), (int)$pond['unphotographed_fish_qty']);
 }
 
 // Notes that arrive the old way (PATCH /ponds/{id} with "notes": Excel import, older pages) go into the card called "Catatan".
@@ -198,7 +232,7 @@ route_pattern('POST', '#^/ponds/kanban/(\d+)/qty$#', function (array $m) {
     if ($setTo !== null) {
         if ($setTo < 0) send_error(422, 'Jumlah tidak boleh kurang dari 0.');
         $delta = $setTo - (int)$card['qty'];
-        if ($delta === 0) send_json(200, ['kanban' => $card]);
+        if ($delta === 0) send_json(200, ['kanban' => $card, 'pond_qty' => pond_kanban_total_qty((int)$card['pond_id'])]);
     }
     if ($delta === 0) send_error(422, 'Isi jumlah yang ditambah atau dikurangi.');
     $date = trim((string)($body['log_date'] ?? '')) ?: date('Y-m-d');
@@ -222,7 +256,8 @@ route_pattern('POST', '#^/ponds/kanban/(\d+)/qty$#', function (array $m) {
         if ($pdo->inTransaction()) $pdo->rollBack();
         throw $e;
     }
-    send_json(200, ['kanban' => query_one('SELECT * FROM pond_kanban WHERE id = ?', [$card['id']])]);
+    pond_kanban_sync_notes((int)$card['pond_id']);
+    send_json(200, ['kanban' => query_one('SELECT * FROM pond_kanban WHERE id = ?', [$card['id']]), 'pond_qty' => pond_kanban_total_qty((int)$card['pond_id'])]);
 });
 
 route_pattern('GET', '#^/ponds/kanban/(\d+)/qty-log$#', function (array $m) {
