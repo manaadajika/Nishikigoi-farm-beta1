@@ -259,7 +259,7 @@ function pondKanbanBoot() {
   function updateTotal() {
     var total = 0
     Object.keys(cards).forEach(function (id) { total += Number(cards[id].qty || 0) })
-    if (totalBox) totalBox.textContent = Object.keys(cards).length ? 'Total Qty Kanban: ' + total : ''
+    if (totalBox) totalBox.textContent = ''
     var manual = document.getElementById('pond-detail-unphotographed')
     if (manual) manual.value = total
   }
