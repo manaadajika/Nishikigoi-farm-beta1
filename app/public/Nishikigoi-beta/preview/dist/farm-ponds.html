@@ -137,6 +137,7 @@
     <script src="./assets/theme-sync.js?v=20261014b"></script>
     <script src="./assets/print-kit.js?v=20261024a"></script>
     <script src="./assets/pond-areas.js?v=20261026a"></script>
+    <script src="./assets/pond-kanban.js?v=20261101b"></script>
     <script src="./assets/action-dock.js?v=20261029b"></script>
     <!-- END APP AUTH SCRIPT -->
 
@@ -1330,7 +1331,16 @@
                               </div>
                             </div>
                           </div>
-                          <div class="col-md-8">
+                          <div class="col-12" data-pond-kanban>
+                            <div class="d-flex flex-wrap align-items-center gap-2 mb-2">
+                              <label class="form-label mb-0">Kanban Catatan</label>
+                              <span class="text-secondary small" data-kanban-total></span>
+                              <div class="form-hint mb-0" data-kanban-message></div>
+                              <button class="btn btn-primary ms-auto" type="button" data-kanban-add data-role-required="farm-operate">Tambah Kanban</button>
+                            </div>
+                            <div class="pk-board" data-kanban-board></div>
+                          </div>
+                          <div class="col-md-8" hidden>
                             <div class="d-flex flex-wrap align-items-center gap-2 mb-2">
                               <label class="form-label mb-0" for="pond-detail-notes">Catatan Formulir</label>
                               <div data-pond-notes-date style="display:flex;flex-wrap:wrap;gap:.35rem;width:100%">
@@ -1505,6 +1515,7 @@
                       <div class="card-header">
                         <h3 class="card-title">History Catatan</h3>
                       </div>
+                      <div class="list-group list-group-flush" data-kanban-deleted></div>
                       <div
                         class="list-group list-group-flush"
                         data-pond-note-history
@@ -1630,7 +1641,7 @@
     <script src="/assets/zip-kit.js?v=20261009g"></script>
     <script
               type="module"
-              src="/_astro/farm-ponds.astro_astro_type_script_index_0_lang.d1031a.js"
+              src="/_astro/farm-ponds.astro_astro_type_script_index_0_lang.d1101a.js"
             ></script>
           </div>
         </main>

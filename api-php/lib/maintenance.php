@@ -11,7 +11,7 @@ require_once __DIR__ . '/koi_query.php';
 require_once __DIR__ . '/thumbnail.php';
 
 const MAINTENANCE_TABLES = [
-    'ponds', 'koi', 'koi_growth_logs', 'pond_note_history', 'pond_documentation',
+    'ponds', 'koi', 'koi_growth_logs', 'pond_note_history', 'pond_documentation', 'pond_kanban', 'pond_kanban_qty_log',
     'farm_reports', 'breeding_batches', 'accounts', 'media_assets', 'media_references',
     'app_settings', 'system_notifications', 'system_jobs', 'account_sessions',
     'gallery_collections', 'gallery_images', 'sell_items', 'invoices', 'inventory_items', 'inventory_movements',
@@ -30,6 +30,8 @@ const MAINTENANCE_TABLE_COLUMNS = [
     ],
     'koi_growth_logs' => ['id', 'koi_id', 'measured_at', 'length_cm', 'weight_g', 'image_url', 'notes', 'sort_order', 'created_at'],
     'pond_note_history' => ['id', 'pond_id', 'previous_notes', 'new_notes', 'created_at'],
+    'pond_kanban' => ['id', 'pond_id', 'title', 'body', 'note_date', 'qty', 'sort_order', 'created_by', 'deleted_at', 'deleted_by', 'created_at', 'updated_at'],
+    'pond_kanban_qty_log' => ['id', 'kanban_id', 'delta', 'qty_after', 'log_date', 'notes', 'actor', 'created_at'],
     'pond_documentation' => [
         'id', 'pond_id', 'image_url', 'media_type', 'thumbnail_url', 'display_name', 'status', 'notes',
         'moved_to_gallery_at', 'created_at',
@@ -102,7 +104,7 @@ function maintenance_account_setting_where(): string {
 }
 
 const SYSTEM_BACKUP_TABLES = [
-    'ponds', 'koi', 'koi_growth_logs', 'pond_note_history', 'pond_documentation',
+    'ponds', 'koi', 'koi_growth_logs', 'pond_note_history', 'pond_documentation', 'pond_kanban', 'pond_kanban_qty_log',
     'gallery_collections', 'gallery_images', 'breeding_batches', 'farm_reports',
     'media_assets', 'media_references', 'app_settings', 'sell_items', 'invoices', 'inventory_items', 'inventory_movements',
 ];

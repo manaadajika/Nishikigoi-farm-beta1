@@ -5,7 +5,7 @@ require_once __DIR__ . '/cache.php';
 
 require_once __DIR__ . '/koi_link.php';
 
-const KOI_SCHEMA_REV = 20261102;
+const KOI_SCHEMA_REV = 20261103;
 
 // PHP 8.5 renamed the MySQL driver constants (Pdo\Mysql::ATTR_*); older versions only know PDO::MYSQL_ATTR_*.
 function koi_pdo_init_command(): int {
@@ -120,6 +120,47 @@ function ensure_all_schemas(PDO $pdo): void {
     ensure_accounts_cover_schema($pdo);
     ensure_breeding_officer_schema($pdo);
     ensure_koi_session_link_backfill($pdo);
+    ensure_pond_kanban_schema($pdo);
+}
+
+// Kanban catatan of a pond (handlers/pond_kanban.php): the cards and the history of their own quantity.
+function ensure_pond_kanban_schema(PDO $pdo): void {
+    try {
+        $pdo->exec(
+            "CREATE TABLE IF NOT EXISTS pond_kanban (
+              id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+              pond_id INT UNSIGNED NOT NULL,
+              title VARCHAR(255) NOT NULL DEFAULT '',
+              body TEXT NULL,
+              note_date DATE NULL,
+              qty INT NOT NULL DEFAULT 0,
+              sort_order INT NOT NULL DEFAULT 0,
+              created_by VARCHAR(100) NULL,
+              deleted_at DATETIME NULL,
+              deleted_by VARCHAR(100) NULL,
+              created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+              updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+              INDEX idx_pond_kanban_pond (pond_id, deleted_at, sort_order),
+              FOREIGN KEY (pond_id) REFERENCES ponds(id) ON DELETE CASCADE
+            ) ENGINE=InnoDB"
+        );
+        $pdo->exec(
+            "CREATE TABLE IF NOT EXISTS pond_kanban_qty_log (
+              id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+              kanban_id INT UNSIGNED NOT NULL,
+              delta INT NOT NULL,
+              qty_after INT NOT NULL,
+              log_date DATE NOT NULL,
+              notes VARCHAR(500) NULL,
+              actor VARCHAR(100) NULL,
+              created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+              INDEX idx_pond_kanban_log (kanban_id, log_date),
+              FOREIGN KEY (kanban_id) REFERENCES pond_kanban(id) ON DELETE CASCADE
+            ) ENGINE=InnoDB"
+        );
+    } catch (Throwable $e) {
+        // Another request may be creating the tables at the same moment.
+    }
 }
 
 // Login history/lockout and the per-IP request counter (see lib/security.php).

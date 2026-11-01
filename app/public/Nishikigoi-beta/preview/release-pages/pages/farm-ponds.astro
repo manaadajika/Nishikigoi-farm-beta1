@@ -544,7 +544,16 @@ const clipboardIcon = iconSvg('clipboard')
                     </div>
                   </div>
                 </div>
-                <div class="col-md-8">
+                <div class="col-12" data-pond-kanban>
+                  <div class="d-flex flex-wrap align-items-center gap-2 mb-2">
+                    <label class="form-label mb-0">Kanban Catatan</label>
+                    <span class="text-secondary small" data-kanban-total></span>
+                    <div class="form-hint mb-0" data-kanban-message></div>
+                    <button class="btn btn-primary ms-auto" type="button" data-kanban-add data-role-required="farm-operate">Tambah Kanban</button>
+                  </div>
+                  <div class="pk-board" data-kanban-board></div>
+                </div>
+                <div class="col-md-8" hidden>
                   <div class="d-flex flex-wrap align-items-center gap-2 mb-2">
                     <label class="form-label mb-0" for="pond-detail-notes">Catatan Formulir</label>
                     <div data-pond-notes-date style="display:flex;flex-wrap:wrap;gap:.35rem;width:100%">
@@ -621,6 +630,7 @@ const clipboardIcon = iconSvg('clipboard')
             <div class="card-header">
               <h3 class="card-title">History Catatan</h3>
             </div>
+            <div class="list-group list-group-flush" data-kanban-deleted></div>
             <div class="list-group list-group-flush" data-pond-note-history>
               <div class="list-group-item text-secondary">Pilih kolam untuk melihat history.</div>
             </div>
@@ -1937,6 +1947,7 @@ const clipboardIcon = iconSvg('clipboard')
       openModal(detailModalElement)
       loadNoteHistory(pond.id)
       loadDocumentation(pond.id)
+      window.dispatchEvent(new CustomEvent('pond-detail-open', { detail: { id: pond.id } }))
     }
 
     // Title, summary and the fish table of the pond form. Also used after fish are moved, so the
@@ -3114,6 +3125,8 @@ const clipboardIcon = iconSvg('clipboard')
     })
 
     detailForm.addEventListener('submit', (event) => event.preventDefault())
+    // the kanban (assets/pond-kanban.js) changed notes of the open pond: the list shows the new notes
+    window.addEventListener('pond-kanban-changed', () => keepScroll(loadPonds))
 
     noteHistory.addEventListener('click', async (event) => {
       const button = event.target.closest('[data-delete-note-history]')
@@ -3203,5 +3216,6 @@ const clipboardIcon = iconSvg('clipboard')
     window.KoiAuth?.registerRealtimeRefresh(() => keepScroll(() => loadPonds(true)), { intervalMs: 25000 })
   </script>
   <script is:inline src="/assets/pond-areas.js?v=20261026a"></script>
+  <script is:inline src="/assets/pond-kanban.js?v=20261101b"></script>
 </DefaultLayout>
 

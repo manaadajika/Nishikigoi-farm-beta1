@@ -1,0 +1,183 @@
+<?php
+// api-php/handlers/pond_kanban.php — Kanban catatan of a pond (Data Kolam > Formulir Kolam).
+//
+// A pond has any number of kanban cards side by side. Every card has a title, a note, a recording date, its own quantity ("Qty Kanban",
+// separate from the pond's "Qty Manual") and a history of the additions/subtractions of that quantity. A deleted card is kept (deleted_at)
+// and listed in "History Catatan", where it can be restored or removed for good.
+// ponds.notes / ponds.notes_date stay in step with the active cards, so the pond list, the print and the Excel export keep working.
+
+function pond_kanban_actor(array $session): string {
+    return mb_substr(trim((string)($session['name'] ?? '')) ?: (string)($session['username'] ?? ''), 0, 100);
+}
+
+// The text of the active cards, one block per card: "Title (date)" and the note below it.
+function pond_kanban_notes_text(int $pondId): array {
+    $rows = query('SELECT title, body, note_date FROM pond_kanban WHERE pond_id = ? AND deleted_at IS NULL ORDER BY sort_order, id', [$pondId]);
+    $blocks = [];
+    $latest = null;
+    foreach ($rows as $row) {
+        $title = trim((string)$row['title']);
+        $body = trim((string)$row['body']);
+        $head = $title;
+        if ($body === '' && $head === '') continue;
+        $blocks[] = $head !== '' && $body !== '' ? $head . "\n" . $body : ($head !== '' ? $head : $body);
+        if ($row['note_date'] && ($latest === null || $row['note_date'] > $latest)) $latest = $row['note_date'];
+    }
+    return [implode("\n\n", $blocks), $latest];
+}
+
+function pond_kanban_sync_notes(int $pondId): void {
+    [$text, $latest] = pond_kanban_notes_text($pondId);
+    execute('UPDATE ponds SET notes = ?, notes_date = ? WHERE id = ?', [$text, $latest, $pondId]);
+}
+
+// A pond that has notes from before the kanban existed (or from a restored older backup) and no card at all gets one card with them.
+function pond_kanban_backfill(int $pondId): void {
+    if (query_one('SELECT id FROM pond_kanban WHERE pond_id = ? LIMIT 1', [$pondId])) return;
+    $pond = query_one('SELECT notes, notes_date FROM ponds WHERE id = ?', [$pondId]);
+    if (!$pond || trim((string)$pond['notes']) === '') return;
+    execute(
+        "INSERT INTO pond_kanban (pond_id, title, body, note_date, sort_order, created_by) VALUES (?, 'Catatan', ?, ?, 0, 'Sistem')",
+        [$pondId, $pond['notes'], $pond['notes_date']]
+    );
+}
+
+// Notes that arrive the old way (PATCH /ponds/{id} with "notes": Excel import, older pages) go into the card called "Catatan".
+function pond_kanban_apply_plain_notes(int $pondId, string $notes, ?string $date): void {
+    pond_kanban_backfill($pondId);
+    [$current] = pond_kanban_notes_text($pondId);
+    if (trim($notes) === trim($current)) return;
+    $card = query_one("SELECT id FROM pond_kanban WHERE pond_id = ? AND deleted_at IS NULL AND title = 'Catatan' ORDER BY sort_order, id LIMIT 1", [$pondId]);
+    if ($card) {
+        execute('UPDATE pond_kanban SET body = ?, note_date = COALESCE(?, note_date) WHERE id = ?', [$notes, $date, $card['id']]);
+    } elseif (trim($notes) !== '') {
+        $next = (int)(query_one('SELECT COALESCE(MAX(sort_order), -1) + 1 AS n FROM pond_kanban WHERE pond_id = ?', [$pondId])['n'] ?? 0);
+        execute("INSERT INTO pond_kanban (pond_id, title, body, note_date, sort_order, created_by) VALUES (?, 'Catatan', ?, ?, ?, 'Sistem')", [$pondId, $notes, $date, $next]);
+    }
+    pond_kanban_sync_notes($pondId);
+}
+
+function pond_kanban_find(string $id): array {
+    $card = query_one('SELECT * FROM pond_kanban WHERE id = ?', [$id]);
+    if (!$card) send_error(404, 'Kanban tidak ditemukan');
+    return $card;
+}
+
+route_pattern('GET', '#^/ponds/(\d+)/kanban$#', function (array $m) {
+    $pondId = (int)$m[1];
+    if (!query_one('SELECT id FROM ponds WHERE id = ?', [$pondId])) send_error(404, 'Kolam tidak ditemukan');
+    pond_kanban_backfill($pondId);
+    $cols = 'id, pond_id, title, body, note_date, qty, sort_order, created_by, deleted_at, deleted_by, created_at, updated_at';
+    send_json(200, [
+        'items' => query("SELECT $cols FROM pond_kanban WHERE pond_id = ? AND deleted_at IS NULL ORDER BY sort_order, id", [$pondId]),
+        'deleted' => query("SELECT $cols FROM pond_kanban WHERE pond_id = ? AND deleted_at IS NOT NULL ORDER BY deleted_at DESC, id DESC", [$pondId]),
+    ]);
+});
+
+route_pattern('POST', '#^/ponds/(\d+)/kanban$#', function (array $m) {
+    $session = require_account();
+    $pondId = (int)$m[1];
+    if (!query_one('SELECT id FROM ponds WHERE id = ?', [$pondId])) send_error(404, 'Kolam tidak ditemukan');
+    $body = read_json_body();
+    pond_kanban_backfill($pondId);
+    $next = (int)(query_one('SELECT COALESCE(MAX(sort_order), -1) + 1 AS n FROM pond_kanban WHERE pond_id = ? AND deleted_at IS NULL', [$pondId])['n'] ?? 0);
+    $date = array_key_exists('note_date', $body) ? koi_clean_partial_date($body['note_date'], 'Tanggal pencatatan') : date('Y-m-d');
+    execute(
+        'INSERT INTO pond_kanban (pond_id, title, body, note_date, sort_order, created_by) VALUES (?, ?, ?, ?, ?, ?)',
+        [$pondId, mb_substr(trim((string)($body['title'] ?? '')), 0, 255), (string)($body['body'] ?? ''), $date, $next, pond_kanban_actor($session)]
+    );
+    $id = (int)db()->lastInsertId();
+    pond_kanban_sync_notes($pondId);
+    send_json(201, query_one('SELECT * FROM pond_kanban WHERE id = ?', [$id]));
+});
+
+route_pattern('POST', '#^/ponds/(\d+)/kanban/order$#', function (array $m) {
+    require_account();
+    $pondId = (int)$m[1];
+    $body = read_json_body();
+    $ids = array_values(array_filter(array_map('intval', (array)($body['ids'] ?? [])), fn($id) => $id > 0));
+    $stmt = db()->prepare('UPDATE pond_kanban SET sort_order = ? WHERE id = ? AND pond_id = ? AND deleted_at IS NULL');
+    foreach ($ids as $index => $id) $stmt->execute([$index, $id, $pondId]);
+    pond_kanban_sync_notes($pondId);
+    send_json(200, ['ok' => true]);
+});
+
+route_pattern('PATCH', '#^/ponds/kanban/(\d+)$#', function (array $m) {
+    require_account();
+    $card = pond_kanban_find($m[1]);
+    $body = read_json_body();
+    $fields = [];
+    $params = [];
+    if (array_key_exists('title', $body)) { $fields[] = 'title = ?'; $params[] = mb_substr(trim((string)$body['title']), 0, 255); }
+    if (array_key_exists('body', $body)) { $fields[] = 'body = ?'; $params[] = (string)$body['body']; }
+    if (array_key_exists('note_date', $body)) { $fields[] = 'note_date = ?'; $params[] = koi_clean_partial_date($body['note_date'], 'Tanggal pencatatan'); }
+    if (!$fields) send_error(400, 'Tidak ada field untuk diupdate');
+    $params[] = $card['id'];
+    execute('UPDATE pond_kanban SET ' . implode(', ', $fields) . ' WHERE id = ?', $params);
+    if (!$card['deleted_at']) pond_kanban_sync_notes((int)$card['pond_id']);
+    send_json(200, query_one('SELECT * FROM pond_kanban WHERE id = ?', [$card['id']]));
+});
+
+// Deleting puts the card in History Catatan; ?permanent=1 (only for a card that is already there) removes it for good.
+route_pattern('DELETE', '#^/ponds/kanban/(\d+)$#', function (array $m) {
+    $session = require_account();
+    $card = pond_kanban_find($m[1]);
+    if (($_GET['permanent'] ?? '') === '1') {
+        if (!$card['deleted_at']) send_error(409, 'Hapus kanban dulu, baru bisa dihapus permanen dari History Catatan.');
+        execute('DELETE FROM pond_kanban WHERE id = ?', [$card['id']]);
+        send_json(200, ['ok' => true, 'permanent' => true]);
+    }
+    if (!$card['deleted_at']) {
+        execute('UPDATE pond_kanban SET deleted_at = NOW(), deleted_by = ? WHERE id = ?', [pond_kanban_actor($session), $card['id']]);
+        pond_kanban_sync_notes((int)$card['pond_id']);
+    }
+    send_json(200, ['ok' => true]);
+});
+
+route_pattern('POST', '#^/ponds/kanban/(\d+)/restore$#', function (array $m) {
+    require_account();
+    $card = pond_kanban_find($m[1]);
+    if ($card['deleted_at']) {
+        $next = (int)(query_one('SELECT COALESCE(MAX(sort_order), -1) + 1 AS n FROM pond_kanban WHERE pond_id = ? AND deleted_at IS NULL', [$card['pond_id']])['n'] ?? 0);
+        execute('UPDATE pond_kanban SET deleted_at = NULL, deleted_by = NULL, sort_order = ? WHERE id = ?', [$next, $card['id']]);
+        pond_kanban_sync_notes((int)$card['pond_id']);
+    }
+    send_json(200, query_one('SELECT * FROM pond_kanban WHERE id = ?', [$card['id']]));
+});
+
+// Qty Kanban: "delta" is the amount to add (positive) or subtract (negative); the history keeps the date, the amount and who did it.
+route_pattern('POST', '#^/ponds/kanban/(\d+)/qty$#', function (array $m) {
+    $session = require_account();
+    $card = pond_kanban_find($m[1]);
+    if ($card['deleted_at']) send_error(409, 'Kanban ini sudah dihapus.');
+    $body = read_json_body();
+    $delta = (int)($body['delta'] ?? 0);
+    if ($delta === 0) send_error(422, 'Isi jumlah yang ditambah atau dikurangi.');
+    $date = trim((string)($body['log_date'] ?? '')) ?: date('Y-m-d');
+    if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $date) || !checkdate((int)substr($date, 5, 2), (int)substr($date, 8, 2), (int)substr($date, 0, 4))) send_error(422, 'Tanggal tidak valid');
+    $pdo = db();
+    $pdo->beginTransaction();
+    try {
+        $fresh = query_one('SELECT qty FROM pond_kanban WHERE id = ? FOR UPDATE', [$card['id']]);
+        $after = (int)$fresh['qty'] + $delta;
+        if ($after < 0) {
+            $pdo->rollBack();
+            send_error(422, 'Jumlah tidak boleh kurang dari 0 (sekarang ' . (int)$fresh['qty'] . ').');
+        }
+        execute('UPDATE pond_kanban SET qty = ? WHERE id = ?', [$after, $card['id']]);
+        execute(
+            'INSERT INTO pond_kanban_qty_log (kanban_id, delta, qty_after, log_date, notes, actor) VALUES (?, ?, ?, ?, ?, ?)',
+            [$card['id'], $delta, $after, $date, mb_substr(trim((string)($body['notes'] ?? '')), 0, 500) ?: null, pond_kanban_actor($session)]
+        );
+        $pdo->commit();
+    } catch (Throwable $e) {
+        if ($pdo->inTransaction()) $pdo->rollBack();
+        throw $e;
+    }
+    send_json(200, ['kanban' => query_one('SELECT * FROM pond_kanban WHERE id = ?', [$card['id']])]);
+});
+
+route_pattern('GET', '#^/ponds/kanban/(\d+)/qty-log$#', function (array $m) {
+    pond_kanban_find($m[1]);
+    send_json(200, query('SELECT id, kanban_id, delta, qty_after, log_date, notes, actor, created_at FROM pond_kanban_qty_log WHERE kanban_id = ? ORDER BY log_date DESC, id DESC', [$m[1]]));
+});

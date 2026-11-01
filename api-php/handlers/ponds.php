@@ -141,6 +141,12 @@ route_pattern('PATCH', '#^/ponds/(\d+)$#', function (array $m) {
         }
     }
 
+    // plain notes (Excel import, older pages) are kept as the kanban card "Catatan"; the pond's notes then follow the cards
+    if ($notesProvided) {
+        require_once __DIR__ . '/pond_kanban.php';
+        pond_kanban_apply_plain_notes((int)$m[1], (string)($body['notes'] ?? ''), array_key_exists('notes_date', $body) && trim((string)$body['notes_date']) !== '' ? trim((string)$body['notes_date']) : null);
+    }
+
     $pond = query_one('SELECT * FROM ponds WHERE id = ?', [$m[1]]);
     if (!$pond) send_error(404, 'Kolam tidak ditemukan');
     if (array_key_exists('name', $body) && query_one("SELECT id FROM gallery_collections WHERE source_type = 'pond' AND source_id = ? LIMIT 1", [$m[1]])) sync_pond_gallery((int)$m[1]);
