@@ -103,6 +103,23 @@ function pondKanbanBoot() {
           '<input type="text" class="form-control form-control-sm" maxlength="500" data-k-lognote placeholder="Keterangan (boleh kosong)" />' +
           '<div class="d-flex gap-2"><button class="btn btn-sm btn-primary" type="button" data-k-qty-save>Catat</button><button class="btn btn-sm" type="button" data-k-qty-cancel>Batal</button></div>' +
         '</div>' +
+        '<div class="d-flex gap-2">' +
+          '<button class="btn btn-sm" type="button" data-k-move-open data-role-required="farm-operate" title="Pindahkan kartu ini ke kolam lain">Pindah</button>' +
+          '<button class="btn btn-sm" type="button" data-k-split-open data-role-required="farm-operate" title="Pecah sebagian ikan ke kartu baru">Pecah</button>' +
+        '</div>' +
+        '<div class="pk-qtyform" data-k-moveform hidden>' +
+          '<strong>Pindahkan kartu ke kolam</strong>' +
+          '<select class="form-select form-select-sm" data-k-move-target></select>' +
+          '<div class="d-flex gap-2"><button class="btn btn-sm btn-primary" type="button" data-k-move-save>Pindahkan</button><button class="btn btn-sm" type="button" data-k-form-cancel>Batal</button></div>' +
+        '</div>' +
+        '<div class="pk-qtyform" data-k-splitform hidden>' +
+          '<strong>Pecah kanban</strong>' +
+          '<input type="number" class="form-control form-control-sm" min="1" step="1" inputmode="numeric" data-k-split-qty />' +
+          '<input type="text" class="form-control form-control-sm" maxlength="255" data-k-split-title placeholder="Judul kartu baru" />' +
+          '<select class="form-select form-select-sm" data-k-split-target></select>' +
+          '<div class="pk-qty-label">Catatan dan tanggal disalin ke kartu baru.</div>' +
+          '<div class="d-flex gap-2"><button class="btn btn-sm btn-primary" type="button" data-k-split-save>Pecah</button><button class="btn btn-sm" type="button" data-k-form-cancel>Batal</button></div>' +
+        '</div>' +
         '<div class="pk-log" data-k-log hidden></div>' +
         '<div class="pk-foot" data-k-foot>' + footText(item) + '</div>' +
       '</div>'
@@ -216,14 +233,40 @@ function pondKanbanBoot() {
     var box = cardEl.querySelector('[data-k-log]')
     box.innerHTML = rows.length ? rows.map(function (row) {
       var up = Number(row.delta) > 0
+      var moved = Number(row.delta) === 0
       return '<div><span>' + esc(dateText(row.log_date)) + (row.notes ? ' &middot; ' + esc(row.notes) : '') + '<br><span class="text-secondary">' + esc(row.actor || '-') + '</span></span>' +
-        '<span class="' + (up ? 'pk-up' : 'pk-down') + '">' + (up ? '+' : '') + Number(row.delta) + ' &rarr; ' + Number(row.qty_after) + '</span></div>'
+        (moved ? '<span class="text-secondary">qty ' + Number(row.qty_after) + '</span>' : '<span class="' + (up ? 'pk-up' : 'pk-down') + '">' + (up ? '+' : '') + Number(row.delta) + ' &rarr; ' + Number(row.qty_after) + '</span>') + '</div>'
     }).join('') : '<div class="text-secondary">Belum ada riwayat jumlah.</div>'
   }
   function loadLog(cardEl) {
     var id = cardEl.getAttribute('data-kanban-card')
     return request('GET', api('/ponds/kanban/' + id + '/qty-log')).then(function (rows) { renderLog(cardEl, rows) }).catch(function () {
       cardEl.querySelector('[data-k-log]').textContent = 'Riwayat gagal dimuat.'
+    })
+  }
+
+  // ---- Pindah / Pecah: the ponds a card can go to --------------------------------------------------------------------------------------------
+  var pondList = null
+  function withPondOptions(done) {
+    if (pondList) return done(pondList)
+    request('GET', api('/ponds/options')).then(function (list) { pondList = list; done(list) }).catch(function (error) { say(error.message || 'Daftar kolam gagal dimuat.', true) })
+  }
+  function optionsHtml(list, firstLabel) {
+    var groups = {}
+    var order = []
+    list.forEach(function (pond) {
+      if (String(pond.id) === String(pondId)) return
+      if (!groups[pond.location]) { groups[pond.location] = []; order.push(pond.location) }
+      groups[pond.location].push(pond)
+    })
+    return '<option value="">' + esc(firstLabel) + '</option>' + order.map(function (area) {
+      return '<optgroup label="' + esc(area) + '">' + groups[area].map(function (pond) { return '<option value="' + pond.id + '">' + esc(pond.name) + '</option>' }).join('') + '</optgroup>'
+    }).join('')
+  }
+  function closeForms(cardEl) {
+    ;['[data-k-qtyform]', '[data-k-moveform]', '[data-k-splitform]'].forEach(function (selector) {
+      var form = cardEl.querySelector(selector)
+      if (form) form.hidden = true
     })
   }
 
@@ -297,6 +340,62 @@ function pondKanbanBoot() {
         btn.disabled = false
         if (ok) f.hidden = true
       })
+      return
+    }
+    var moveOpen = event.target.closest('[data-k-move-open]')
+    var splitOpen = event.target.closest('[data-k-split-open]')
+    if (moveOpen || splitOpen) {
+      closeForms(cardEl)
+      withPondOptions(function (list) {
+        if (moveOpen) {
+          var mf = cardEl.querySelector('[data-k-moveform]')
+          mf.querySelector('[data-k-move-target]').innerHTML = optionsHtml(list, 'Pilih kolam tujuan...')
+          mf.hidden = false
+        } else {
+          var sf = cardEl.querySelector('[data-k-splitform]')
+          var qtyNow = Number((cards[id] || {}).qty || 0)
+          var qtyBox = sf.querySelector('[data-k-split-qty]')
+          qtyBox.value = ''
+          qtyBox.placeholder = 'Jumlah ikan dipisah (maks ' + qtyNow + ')'
+          sf.querySelector('[data-k-split-title]').value = (cardEl.querySelector('[data-k-title]').value.trim() + ' (pecahan)').trim()
+          sf.querySelector('[data-k-split-target]').innerHTML = optionsHtml(list, 'Kolam ini')
+          sf.hidden = false
+          qtyBox.focus()
+        }
+      })
+      return
+    }
+    if (event.target.closest('[data-k-form-cancel]')) {
+      closeForms(cardEl)
+      return
+    }
+    if (event.target.closest('[data-k-move-save]')) {
+      var target = cardEl.querySelector('[data-k-move-target]').value
+      if (!target) { say('Pilih kolam tujuan.', true); return }
+      var moveBtn = event.target.closest('[data-k-move-save]')
+      moveBtn.disabled = true
+      flush()
+      request('POST', api('/ponds/kanban/' + id + '/move'), { pond_id: Number(target) }).then(function () {
+        changed = true
+        return reload().then(function () { say('Kanban dipindahkan ke kolam tujuan.') })
+      }).catch(function (error) { moveBtn.disabled = false; say(error.message || 'Kanban gagal dipindahkan.', true) })
+      return
+    }
+    if (event.target.closest('[data-k-split-save]')) {
+      var sform = cardEl.querySelector('[data-k-splitform]')
+      var amountSplit = parseInt(sform.querySelector('[data-k-split-qty]').value, 10)
+      if (!amountSplit || amountSplit < 1) { say('Isi jumlah ikan yang dipisah (angka 1 atau lebih).', true); return }
+      var splitBtn = event.target.closest('[data-k-split-save]')
+      splitBtn.disabled = true
+      flush()
+      request('POST', api('/ponds/kanban/' + id + '/split'), {
+        qty: amountSplit,
+        title: sform.querySelector('[data-k-split-title]').value,
+        pond_id: Number(sform.querySelector('[data-k-split-target]').value) || undefined,
+      }).then(function () {
+        changed = true
+        return reload().then(function () { say('Kanban dipecah: kartu baru dibuat.') })
+      }).catch(function (error) { splitBtn.disabled = false; say(error.message || 'Kanban gagal dipecah.', true) })
       return
     }
     if (event.target.closest('[data-k-log-toggle]')) {
@@ -449,7 +548,7 @@ function pondKanbanBoot() {
   board.addEventListener('lostpointercapture', endDrag)
 
   // ---- page hooks ----------------------------------------------------------------------------------------------------------------------------
-  window.addEventListener('pond-detail-open', function (event) { changed = false; load(event.detail.id) })
+  window.addEventListener('pond-detail-open', function (event) { changed = false; pondList = null; load(event.detail.id) })
   if (detailModal) {
     detailModal.addEventListener('hide.bs.modal', flush)
     detailModal.addEventListener('hidden.bs.modal', function () {

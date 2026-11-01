@@ -210,3 +210,88 @@ route_pattern('GET', '#^/ponds/kanban/(\d+)/qty-log$#', function (array $m) {
     pond_kanban_find($m[1]);
     send_json(200, query('SELECT id, kanban_id, delta, qty_after, log_date, notes, actor, created_at FROM pond_kanban_qty_log WHERE kanban_id = ? ORDER BY log_date DESC, id DESC', [$m[1]]));
 });
+
+// Light list of the ponds (id, name, area) for the "Pindah" / "Pecah" choices of a card.
+route('GET', '/ponds/options', function () {
+    send_json(200, query("SELECT id, name, COALESCE(NULLIF(location, ''), 'Tanpa Area') AS location FROM ponds ORDER BY location, name"));
+});
+
+function pond_kanban_pond_name(int $pondId): string {
+    return (string)(query_one('SELECT name FROM ponds WHERE id = ?', [$pondId])['name'] ?? ('#' . $pondId));
+}
+
+function pond_kanban_log_line(int $cardId, int $delta, int $after, string $note, string $actor): void {
+    execute('INSERT INTO pond_kanban_qty_log (kanban_id, delta, qty_after, log_date, notes, actor) VALUES (?, ?, ?, CURDATE(), ?, ?)', [$cardId, $delta, $after, mb_substr($note, 0, 500), $actor]);
+}
+
+function pond_kanban_next_order(int $pondId): int {
+    return (int)(query_one('SELECT COALESCE(MAX(sort_order), -1) + 1 AS n FROM pond_kanban WHERE pond_id = ? AND deleted_at IS NULL', [$pondId])['n'] ?? 0);
+}
+
+// Pindah: the whole card (title, note, date, Qty Kanban and its history) moves to another pond, at the end of its cards.
+route_pattern('POST', '#^/ponds/kanban/(\d+)/move$#', function (array $m) {
+    $session = require_account();
+    $card = pond_kanban_find($m[1]);
+    if ($card['deleted_at']) send_error(409, 'Kanban ini sudah dihapus.');
+    $body = read_json_body();
+    $target = (int)($body['pond_id'] ?? 0);
+    if ($target <= 0 || !query_one('SELECT id FROM ponds WHERE id = ?', [$target])) send_error(422, 'Pilih kolam tujuan.');
+    if ($target === (int)$card['pond_id']) send_error(422, 'Kanban sudah ada di kolam ini.');
+    $from = (int)$card['pond_id'];
+    $pdo = db();
+    $pdo->beginTransaction();
+    try {
+        execute('UPDATE pond_kanban SET pond_id = ?, sort_order = ? WHERE id = ?', [$target, pond_kanban_next_order($target), $card['id']]);
+        pond_kanban_log_line((int)$card['id'], 0, (int)$card['qty'], 'Dipindah dari kolam ' . pond_kanban_pond_name($from) . ' ke kolam ' . pond_kanban_pond_name($target), pond_kanban_actor($session));
+        pond_kanban_sync_notes($from);
+        pond_kanban_sync_notes($target);
+        $pdo->commit();
+    } catch (Throwable $e) {
+        if ($pdo->inTransaction()) $pdo->rollBack();
+        throw $e;
+    }
+    send_json(200, ['kanban' => query_one('SELECT * FROM pond_kanban WHERE id = ?', [$card['id']])]);
+});
+
+// Pecah: part of the Qty Kanban goes to a new card (same pond or another one) that gets a copy of the note and the date.
+route_pattern('POST', '#^/ponds/kanban/(\d+)/split$#', function (array $m) {
+    $session = require_account();
+    $card = pond_kanban_find($m[1]);
+    if ($card['deleted_at']) send_error(409, 'Kanban ini sudah dihapus.');
+    $body = read_json_body();
+    $amount = (int)($body['qty'] ?? 0);
+    if ($amount < 1) send_error(422, 'Isi jumlah ikan yang dipisah (1 atau lebih).');
+    if ($amount > (int)$card['qty']) send_error(422, 'Jumlah melebihi Qty kartu (sekarang ' . (int)$card['qty'] . ').');
+    $target = (int)($body['pond_id'] ?? 0) ?: (int)$card['pond_id'];
+    if (!query_one('SELECT id FROM ponds WHERE id = ?', [$target])) send_error(422, 'Kolam tujuan tidak ditemukan.');
+    $title = mb_substr(trim((string)($body['title'] ?? '')), 0, 255);
+    if ($title === '') $title = trim((string)$card['title'] . ' (pecahan)');
+    $actor = pond_kanban_actor($session);
+    $from = (int)$card['pond_id'];
+    $where = $target === $from ? '' : ' (kolam ' . pond_kanban_pond_name($target) . ')';
+    $pdo = db();
+    $pdo->beginTransaction();
+    try {
+        $fresh = query_one('SELECT qty FROM pond_kanban WHERE id = ? FOR UPDATE', [$card['id']]);
+        if ((int)$fresh['qty'] < $amount) {
+            $pdo->rollBack();
+            send_error(422, 'Jumlah melebihi Qty kartu (sekarang ' . (int)$fresh['qty'] . ').');
+        }
+        $left = (int)$fresh['qty'] - $amount;
+        execute('UPDATE pond_kanban SET qty = ? WHERE id = ?', [$left, $card['id']]);
+        execute(
+            'INSERT INTO pond_kanban (pond_id, title, body, note_date, qty, sort_order, created_by) VALUES (?, ?, ?, ?, ?, ?, ?)',
+            [$target, $title, $card['body'], $card['note_date'], $amount, pond_kanban_next_order($target), $actor]
+        );
+        $newId = (int)$pdo->lastInsertId();
+        pond_kanban_log_line((int)$card['id'], -$amount, $left, 'Dipecah ke kartu "' . $title . '"' . $where, $actor);
+        pond_kanban_log_line($newId, $amount, $amount, 'Dipecah dari kartu "' . trim((string)$card['title']) . '"' . ($target === $from ? '' : ' (kolam ' . pond_kanban_pond_name($from) . ')'), $actor);
+        pond_kanban_sync_notes($from);
+        if ($target !== $from) pond_kanban_sync_notes($target);
+        $pdo->commit();
+    } catch (Throwable $e) {
+        if ($pdo->inTransaction()) $pdo->rollBack();
+        throw $e;
+    }
+    send_json(200, ['kanban' => query_one('SELECT * FROM pond_kanban WHERE id = ?', [$card['id']]), 'created' => query_one('SELECT * FROM pond_kanban WHERE id = ?', [$newId])]);
+});
