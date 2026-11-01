@@ -328,6 +328,7 @@
   }
 
   window.KoiPicker = {
+    thumbUrl: thumbUrl,
     open: open,
     lookup: lookup,
     byIds: byIds,

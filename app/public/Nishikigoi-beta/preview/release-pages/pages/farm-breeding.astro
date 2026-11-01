@@ -632,7 +632,7 @@ const saveIcon = iconSvg('device-floppy')
 
   <script src="/assets/vendor/xlsx/xlsx.core.min.js" is:inline></script>
   <script src="/assets/zip-kit.js?v=20261009g" is:inline></script>
-  <script src="/assets/koi-picker.js?v=20261020b" is:inline></script>
+  <script src="/assets/koi-picker.js?v=20261101a" is:inline></script>
 
   <script define:vars={{ editIcon, printIcon, trashIcon, saveIcon }}>
     const apiUrl = '/api'
@@ -702,6 +702,7 @@ const saveIcon = iconSvg('device-floppy')
     }
     const activeStatuses = new Set(['planning', 'proses'])
     const text = (value) => value || '-'
+    const pickThumb = (url) => (window.KoiPicker && window.KoiPicker.thumbUrl ? window.KoiPicker.thumbUrl(url, 240) : url)
     const escapeHtml = (value) =>
       String(value ?? '').replace(
         /[&<>'"]/g,
@@ -1010,7 +1011,7 @@ const saveIcon = iconSvg('device-floppy')
 
     const maleThumbHtml = (male, extraClass = '') => `
       <button class="breeding-male-thumb ${extraClass}" type="button" data-zoom-image="${escapeHtml(male.image_url)}" title="${escapeHtml(male.code)}" aria-label="Preview ${escapeHtml(male.code)}">
-        ${male.image_url ? `<img src="${escapeHtml(male.image_url)}" alt="${escapeHtml(male.code)}" loading="lazy" decoding="async" />` : `<span class="breeding-male-code">${escapeHtml(male.code)}</span>`}
+        ${male.image_url ? `<img src="${escapeHtml(pickThumb(male.image_url))}" alt="${escapeHtml(male.code)}" loading="lazy" decoding="async" />` : `<span class="breeding-male-code">${escapeHtml(male.code)}</span>`}
       </button>`
 
     // Up to 4 small previews; with more than 4 the 4th tile becomes "+N" and opens the full list.
@@ -1021,7 +1022,7 @@ const saveIcon = iconSvg('device-floppy')
       const fourth = males[3]
       return `<div class="breeding-male-thumbs">${males.slice(0, 3).map((male) => maleThumbHtml(male)).join('')}
         <button class="breeding-male-thumb breeding-male-more" type="button" data-show-males="${escapeHtml(item.id)}" aria-label="Lihat semua ${males.length} indukan male" title="Lihat semua indukan jantan">
-          ${fourth.image_url ? `<img src="${escapeHtml(fourth.image_url)}" alt="" loading="lazy" decoding="async" />` : ''}
+          ${fourth.image_url ? `<img src="${escapeHtml(pickThumb(fourth.image_url))}" alt="" loading="lazy" decoding="async" />` : ''}
           <span class="breeding-male-more-count">+${males.length - 3}</span>
         </button></div>`
     }
@@ -1094,7 +1095,7 @@ const saveIcon = iconSvg('device-floppy')
               <div class="small breeding-card-cell mt-2"><span class="text-secondary">Awal Pijah</span><div>${formatBreedingDate(item.spawning_started_at || item.breeding_date)}</div></div>
             </div>
             <div class="breeding-card-photo" data-dock-select title="Klik untuk memilih">
-              ${female.image_url ? `<img src="${escapeHtml(female.image_url)}" alt="${escapeHtml(text(female.code))}" loading="lazy" decoding="async" fetchpriority="low" />` : '<div class="breeding-parent-placeholder d-flex align-items-center justify-content-center">No foto</div>'}
+              ${female.image_url ? `<img src="${escapeHtml(pickThumb(female.image_url))}" alt="${escapeHtml(text(female.code))}" loading="lazy" decoding="async" fetchpriority="low" />` : '<div class="breeding-parent-placeholder d-flex align-items-center justify-content-center">No foto</div>'}
               ${female.image_url ? `<button class="btn btn-icon btn-sm breeding-zoom-btn" type="button" data-zoom-image="${escapeHtml(female.image_url)}" aria-label="Zoom foto indukan female" title="Zoom foto">${window.KoiDock.icon('zoom-in')}</button>` : ''}
             </div>
             <div class="card-body" role="button" tabindex="0" data-breeding-id="${escapeHtml(item.id)}">
@@ -1671,7 +1672,7 @@ const saveIcon = iconSvg('device-floppy')
         ? `
       <div class="breeding-parent-preview d-flex flex-column gap-1 align-items-center text-center" data-parent-preview>
         <button class="breeding-parent-photo breeding-parent-photo-button d-flex align-items-center justify-content-center" type="button" data-zoom-image="${escapeHtml(item.image_url || '')}">
-          ${item.image_url ? `<img src="${escapeHtml(item.image_url)}" alt="${escapeHtml(koiLabel(item))}" loading="lazy" decoding="async" fetchpriority="low" />` : `<div class="breeding-parent-placeholder d-flex align-items-center justify-content-center">Belum ada foto</div>`}
+          ${item.image_url ? `<img src="${escapeHtml(pickThumb(item.image_url))}" alt="${escapeHtml(koiLabel(item))}" loading="lazy" decoding="async" fetchpriority="low" />` : `<div class="breeding-parent-placeholder d-flex align-items-center justify-content-center">Belum ada foto</div>`}
         </button>
       </div>
     `
@@ -1742,7 +1743,7 @@ const saveIcon = iconSvg('device-floppy')
       <button class="breeding-parent-suggestion p-2" type="button" data-parent-suggestion="${escapeHtml(item.id)}">
         <div class="d-flex gap-2 align-items-center">
           <div class="breeding-parent-photo d-flex align-items-center justify-content-center">
-            ${item.image_url ? `<img src="${escapeHtml(item.image_url)}" alt="${escapeHtml(koiLabel(item))}" loading="lazy" decoding="async" fetchpriority="low" />` : `<div class="breeding-parent-placeholder d-flex align-items-center justify-content-center">No foto</div>`}
+            ${item.image_url ? `<img src="${escapeHtml(pickThumb(item.image_url))}" alt="${escapeHtml(koiLabel(item))}" loading="lazy" decoding="async" fetchpriority="low" />` : `<div class="breeding-parent-placeholder d-flex align-items-center justify-content-center">No foto</div>`}
           </div>
           <div class="min-w-0">
             <div class="fw-medium text-truncate">${escapeHtml(koiLabel(item))}</div>

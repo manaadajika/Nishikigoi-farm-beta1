@@ -196,9 +196,11 @@ import DefaultLayout from '@shared/layouts/DefaultLayout.astro'
     })
 
     const mediaAssetUrl = (url) => window.KoiAuth?.apiUrl ? window.KoiAuth.apiUrl(url || '') : (url || '')
+    // tiles show a small copy of an uploaded picture (made by the server: /api/thumb/480/...), not the full photo
     const mediaBackground = (url) => {
       const source = mediaAssetUrl(url)
-      return source ? `background-image: url('${escapeHtml(source)}')` : ''
+      const small = /^\/api\/uploads\/(.+\.(?:jpe?g|png|webp))$/i.exec(String(source || ''))
+      return source ? `background-image: url('${escapeHtml(small ? '/api/thumb/480/' + small[1] : source)}')` : ''
     }
 
     const mediaPreview = (media) => {
