@@ -137,7 +137,7 @@
     <script src="./assets/theme-sync.js?v=20261014b"></script>
     <script src="./assets/print-kit.js?v=20261024a"></script>
     <script src="./assets/pond-areas.js?v=20261026a"></script>
-    <script src="./assets/pond-kanban.js?v=20261101t"></script>
+    <script src="./assets/pond-kanban.js?v=20261101u"></script>
     <script src="./assets/action-dock.js?v=20261029b"></script>
     <!-- END APP AUTH SCRIPT -->
 
@@ -1244,12 +1244,12 @@
                           <div class="col-md-4">
                             <label
                               class="form-label"
-                              for="pond-detail-unphotographed"
+                              for="pond-detail-unphotographed" hidden
                               >Qty Kanban</label
                             >
                             <input
                               class="form-control"
-                              id="pond-detail-unphotographed"
+                              id="pond-detail-unphotographed" hidden
                               name="unphotographed_fish_qty"
                               type="number"
                               min="0"
@@ -1257,7 +1257,7 @@
                               readonly
                               title="Otomatis: total Qty Kanban"
                             />
-                            <div class="form-hint">Total Qty semua kartu kanban.</div>
+                            <div hidden class="form-hint">Total Qty semua kartu kanban.</div>
                             <div class="row g-3 mt-0">
                               <div class="col-sm-6">
                                 <label class="form-label">Dokumentasi</label>
