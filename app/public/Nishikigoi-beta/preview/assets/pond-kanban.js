@@ -20,11 +20,11 @@ function pondKanbanBoot() {
 
   var style = document.createElement('style')
   style.textContent =
-    '.pk-board{display:flex;gap:.75rem;overflow-x:auto;padding:.25rem .1rem .75rem;align-items:flex-start;scroll-snap-type:x proximity}' +
-    '.pk-card{flex:0 0 17rem;max-width:85%;scroll-snap-align:start;border:1px solid var(--tblr-border-color,#dee2e6);border-radius:.5rem;background:var(--tblr-bg-surface,#fff);padding:.6rem;display:flex;flex-direction:column;gap:.45rem}' +
-    '.pk-card.pk-dragging{opacity:.5;outline:2px dashed var(--tblr-primary,#206bc4)}' +
+    '.pk-board{display:flex;gap:.75rem;overflow-x:auto;padding:.25rem .1rem .75rem;align-items:flex-start;-webkit-overflow-scrolling:touch;overscroll-behavior-x:contain}' +
+    '.pk-card{flex:0 0 17rem;max-width:85%;will-change:transform;border:1px solid var(--tblr-border-color,#dee2e6);border-radius:.5rem;background:var(--tblr-bg-surface,#fff);padding:.6rem;display:flex;flex-direction:column;gap:.45rem}' +
+    '.pk-card.pk-dragging{box-shadow:0 10px 28px rgba(0,0,0,.35);outline:2px solid var(--tblr-primary,#206bc4);cursor:grabbing;position:relative}' +
     '.pk-head{display:flex;gap:.35rem;align-items:center}' +
-    '.pk-grip{flex:0 0 auto;cursor:grab;touch-action:none;user-select:none;padding:.15rem .35rem;border-radius:.3rem;color:var(--tblr-secondary,#6c7a91);font-size:1.1rem;line-height:1}' +
+    '.pk-grip{flex:0 0 auto;cursor:grab;touch-action:none;user-select:none;padding:.45rem .6rem;margin:-.2rem -.15rem;border-radius:.3rem;color:var(--tblr-secondary,#6c7a91);font-size:1.1rem;line-height:1}' +
     '.pk-grip:hover{background:rgba(127,127,127,.15)}' +
     '.pk-title{font-weight:600}' +
     '.pk-body{resize:vertical;min-height:6rem}' +
@@ -316,45 +316,92 @@ function pondKanbanBoot() {
   }
 
   // ---- dragging a card by its handle (mouse and touch) ---------------------------------------------------------------------------------------------
+  // The card sticks to the finger/mouse (a translateX), the other cards slide aside smoothly to make room, and the board scrolls by
+  // itself near its edges. The order is saved once, when the card is let go.
   var drag = null
+  function cardEls() { return Array.prototype.slice.call(board.querySelectorAll('[data-kanban-card]')) }
+  function orderOf() { return cardEls().map(function (el) { return el.getAttribute('data-kanban-card') }) }
+
   board.addEventListener('pointerdown', function (event) {
     var grip = event.target.closest('[data-kanban-grip]')
-    if (!grip || (event.pointerType === 'mouse' && event.button !== 0)) return
+    if (!grip || drag || (event.pointerType === 'mouse' && event.button !== 0)) return
     var cardEl = grip.closest('[data-kanban-card]')
-    if (!cardEl || board.querySelectorAll('[data-kanban-card]').length < 2) return
+    if (!cardEl || cardEls().length < 2) return
     event.preventDefault()
-    drag = { card: cardEl, grip: grip, before: orderOf() }
-    try { grip.setPointerCapture(event.pointerId) } catch (e) { /* the move events still reach the document */ }
+    var rect = cardEl.getBoundingClientRect()
+    drag = { card: cardEl, grip: grip, pointerId: event.pointerId, before: orderOf(), startX: event.clientX, startLeft: rect.left, startScroll: board.scrollLeft, x: event.clientX, shift: 0, raf: 0 }
+    try { grip.setPointerCapture(event.pointerId) } catch (e) { /* the move events still reach the board */ }
     cardEl.classList.add('pk-dragging')
+    cardEl.style.transition = 'none'
+    cardEl.style.zIndex = '5'
+    board.style.scrollSnapType = 'none'
+    drag.raf = requestAnimationFrame(tick)
   })
-  function orderOf() {
-    return Array.prototype.map.call(board.querySelectorAll('[data-kanban-card]'), function (el) { return el.getAttribute('data-kanban-card') })
-  }
+
   board.addEventListener('pointermove', function (event) {
+    if (drag && event.pointerId === drag.pointerId) drag.x = event.clientX
+  })
+
+  // one frame: scroll near the edges, put the card under the pointer, and let the others make room
+  function tick() {
     if (!drag) return
     var rect = board.getBoundingClientRect()
-    if (event.clientX < rect.left + 40) board.scrollLeft -= 18
-    else if (event.clientX > rect.right - 40) board.scrollLeft += 18
-    var target = null
-    Array.prototype.forEach.call(board.querySelectorAll('[data-kanban-card]'), function (el) {
-      if (el === drag.card) return
+    var edge = 56
+    if (drag.x < rect.left + edge) board.scrollLeft -= Math.min(26, (rect.left + edge - drag.x) / 2 + 4)
+    else if (drag.x > rect.right - edge) board.scrollLeft += Math.min(26, (drag.x - (rect.right - edge)) / 2 + 4)
+
+    var card = drag.card
+    // where the card would stand with no transform, in the screen's coordinates
+    var layoutLeft = card.getBoundingClientRect().left - drag.shift
+    // the pointer moved by (x - startX) and the board scrolled by (scrollLeft - startScroll) since the grab
+    var wanted = drag.startLeft + (drag.x - drag.startX) + (drag.startScroll - board.scrollLeft)
+    var width = card.getBoundingClientRect().width
+    var center = wanted + width / 2
+
+    // the slot: the number of other cards whose middle is left of the dragged card's middle
+    var others = cardEls().filter(function (el) { return el !== card })
+    var slot = 0
+    others.forEach(function (el) {
       var r = el.getBoundingClientRect()
-      if (event.clientX >= r.left && event.clientX <= r.right) target = el
+      if (r.left + r.width / 2 < center) slot++
     })
-    if (!target) return
-    var r2 = target.getBoundingClientRect()
-    var after = event.clientX > r2.left + r2.width / 2
-    var siblings = Array.prototype.slice.call(board.children)
-    var draggedIndex = siblings.indexOf(drag.card)
-    var targetIndex = siblings.indexOf(target)
-    if (draggedIndex < targetIndex && after) board.insertBefore(drag.card, target.nextSibling)
-    else if (draggedIndex > targetIndex && !after) board.insertBefore(drag.card, target)
-  })
+    if (cardEls().indexOf(card) !== slot) {
+      var firsts = others.map(function (el) { return el.getBoundingClientRect().left })
+      var anchor = others[slot] || null
+      board.insertBefore(card, anchor)
+      // the others slide from where they were to where they are now (FLIP)
+      others.forEach(function (el, index) {
+        var delta = firsts[index] - el.getBoundingClientRect().left
+        if (!delta) return
+        el.style.transition = 'none'
+        el.style.transform = 'translateX(' + delta + 'px)'
+        el.getBoundingClientRect()
+        el.style.transition = 'transform .18s ease'
+        el.style.transform = ''
+      })
+      layoutLeft = card.getBoundingClientRect().left - drag.shift
+    }
+    drag.shift = wanted - layoutLeft
+    card.style.transform = 'translateX(' + drag.shift + 'px)'
+    drag.raf = requestAnimationFrame(tick)
+  }
+
   function endDrag() {
     if (!drag) return
     var current = drag
     drag = null
-    current.card.classList.remove('pk-dragging')
+    cancelAnimationFrame(current.raf)
+    var card = current.card
+    // settle into the slot
+    card.style.transition = 'transform .16s ease'
+    card.style.transform = ''
+    setTimeout(function () {
+      card.classList.remove('pk-dragging')
+      card.style.transition = ''
+      card.style.zIndex = ''
+      board.style.scrollSnapType = ''
+      cardEls().forEach(function (el) { el.style.transition = ''; el.style.transform = '' })
+    }, 190)
     var now = orderOf()
     if (now.join(',') === current.before.join(',')) return
     request('POST', api('/ponds/' + pondId + '/kanban/order'), { ids: now.map(Number) }).then(function () { changed = true }).catch(function (error) {
@@ -364,6 +411,7 @@ function pondKanbanBoot() {
   }
   board.addEventListener('pointerup', endDrag)
   board.addEventListener('pointercancel', endDrag)
+  board.addEventListener('lostpointercapture', endDrag)
 
   // ---- page hooks ----------------------------------------------------------------------------------------------------------------------------
   window.addEventListener('pond-detail-open', function (event) { changed = false; load(event.detail.id) })
