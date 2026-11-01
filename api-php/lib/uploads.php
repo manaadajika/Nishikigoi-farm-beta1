@@ -21,7 +21,7 @@ const DANGEROUS_UPLOAD_EXTENSIONS = ['php', 'php3', 'php4', 'php5', 'php7', 'pht
 // media_assets is not a reliable register here (koi photos are not recorded in it), so the data
 // itself is scanned, like the original Node server's cleanup did.
 function referenced_upload_urls(): array {
-    $tables = ['ponds', 'koi', 'koi_growth_logs', 'pond_note_history', 'pond_documentation',
+    $tables = ['ponds', 'koi', 'koi_growth_logs', 'pond_note_history', 'pond_documentation', 'pond_kanban',
         'farm_reports', 'breeding_batches', 'accounts', 'app_settings', 'system_notifications',
         'gallery_collections', 'gallery_images', 'form_drafts', 'sell_items', 'invoices', 'inventory_items', 'inventory_movements', 'post_images'];
     $used = [];

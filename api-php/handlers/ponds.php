@@ -162,6 +162,7 @@ route_pattern('DELETE', '#^/ponds/(\d+)$#', function (array $m) {
     require_once __DIR__ . '/../lib/uploads.php';
     $urls = array_merge(
         upload_urls_in_rows(query('SELECT * FROM pond_documentation WHERE pond_id = ?', [$m[1]])),
+        upload_urls_in_rows(query('SELECT images FROM pond_kanban WHERE pond_id = ?', [$m[1]])),
         gallery_upload_urls_for_source('pond', (int)$m[1])
     );
     execute("DELETE FROM gallery_collections WHERE source_type = 'pond' AND source_id = ?", [$m[1]]);

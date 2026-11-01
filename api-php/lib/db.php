@@ -5,7 +5,7 @@ require_once __DIR__ . '/cache.php';
 
 require_once __DIR__ . '/koi_link.php';
 
-const KOI_SCHEMA_REV = 20261104;
+const KOI_SCHEMA_REV = 20261105;
 
 // PHP 8.5 renamed the MySQL driver constants (Pdo\Mysql::ATTR_*); older versions only know PDO::MYSQL_ATTR_*.
 function koi_pdo_init_command(): int {
@@ -161,6 +161,10 @@ function ensure_pond_kanban_schema(PDO $pdo): void {
         // card colour: NULL = not given yet (a random one is given when the card is first listed), '' = follows the theme
         if (!$pdo->query("SHOW COLUMNS FROM pond_kanban LIKE 'color'")->fetch()) {
             $pdo->exec('ALTER TABLE pond_kanban ADD COLUMN color VARCHAR(20) NULL');
+        }
+        // attached pictures: a JSON list of /api/uploads/... addresses
+        if (!$pdo->query("SHOW COLUMNS FROM pond_kanban LIKE 'images'")->fetch()) {
+            $pdo->exec('ALTER TABLE pond_kanban ADD COLUMN images MEDIUMTEXT NULL');
         }
     } catch (Throwable $e) {
         // Another request may be creating the tables at the same moment.

@@ -32,6 +32,16 @@ function pondKanbanBoot() {
     '.pk-swatch-custom input{position:absolute;inset:0;width:100%;height:100%;opacity:0;cursor:pointer;border:0;padding:0;border-radius:50%;-webkit-appearance:none;appearance:none}' +
     '.pk-swatch-custom input::-webkit-color-swatch-wrapper{padding:0}' +
     '.pk-swatch-custom input::-webkit-color-swatch{border:0;border-radius:50%}' +
+    '.pk-images-head{display:flex;align-items:center;gap:.5rem}' +
+    '.pk-images{display:flex;flex-wrap:wrap;gap:.35rem}' +
+    '.pk-thumb{position:relative;flex:0 0 auto;width:3.4rem;aspect-ratio:2/3;border-radius:.35rem;overflow:hidden;border:1px solid var(--tblr-border-color,#dee2e6);background:rgba(127,127,127,.12);cursor:zoom-in}' +
+    '.pk-thumb img{display:block;width:100%;height:100%;object-fit:cover}' +
+    '.pk-thumb-x{position:absolute;top:2px;right:2px;width:1.15rem;height:1.15rem;padding:0;border:0;border-radius:50%;background:rgba(0,0,0,.62);color:#fff;font-size:.8rem;line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center}' +
+    '.pk-thumb-x:hover{background:#d63939}' +
+    '.pk-thumb-add{display:flex;align-items:center;justify-content:center;border-style:dashed;color:var(--tblr-secondary,#6c7a91);font-size:1.4rem;cursor:pointer;margin:0}' +
+    '.pk-thumb-add:hover{border-color:var(--tblr-primary,#206bc4);color:var(--tblr-primary,#206bc4)}' +
+    '.pk-thumb-add input{display:none}' +
+    '.pk-card.pk-drop{outline:2px dashed var(--tblr-primary,#206bc4)}' +
     '.pk-head{display:flex;gap:.35rem;align-items:center}' +
     '.pk-grip{flex:0 0 auto;cursor:grab;touch-action:none;user-select:none;padding:.45rem .6rem;margin:-.2rem -.15rem;border-radius:.3rem;color:var(--tblr-secondary,#6c7a91);font-size:1.1rem;line-height:1}' +
     '.pk-grip:hover{background:rgba(127,127,127,.15)}' +
@@ -88,6 +98,102 @@ function pondKanbanBoot() {
   }
   function api(path) { return '/api' + path }
 
+  // ---- pictures of a card: small 2:3 thumbnails from left to right, a "+" tile to add, x to remove, click to zoom ----------------------------------
+  function imagesOf(item) {
+    var list = item && item.images
+    if (typeof list === 'string') { try { list = JSON.parse(list) } catch (e) { list = [] } }
+    return Array.isArray(list) ? list.filter(Boolean) : []
+  }
+  function thumbSrc(url) {
+    var match = /^\/api\/uploads\/(.+)$/.exec(String(url || ''))
+    return match ? '/api/thumb/240/' + match[1] : url
+  }
+  function imagesHtml(item) {
+    return imagesOf(item).map(function (url, index) {
+      return '<div class="pk-thumb" data-k-thumb="' + index + '" title="Klik untuk memperbesar"><img src="' + esc(thumbSrc(url)) + '" alt="" loading="lazy" decoding="async" />' +
+        '<button class="pk-thumb-x" type="button" data-k-img-del="' + index + '" data-role-required="farm-operate" title="Hapus gambar" aria-label="Hapus gambar">&times;</button></div>'
+    }).join('') +
+      '<label class="pk-thumb pk-thumb-add" data-role-required="farm-operate" title="Lampirkan gambar (boleh banyak, atau tempel dengan Ctrl+V)">+<input type="file" accept="image/*" multiple data-k-img-input /></label>'
+  }
+  function refreshImages(cardEl) {
+    var id = cardEl.getAttribute('data-kanban-card')
+    var item = cards[id] || {}
+    cardEl.querySelector('[data-k-images]').innerHTML = imagesHtml(item)
+    var count = imagesOf(item).length
+    cardEl.querySelector('[data-k-img-count]').textContent = count ? 'Gambar (' + count + ')' : ''
+    cardEl.querySelector('[data-k-img-gallery]').hidden = count === 0
+  }
+  // shrink a picture before it is sent (like the pond documentation does): at most 1600 px on the long side, JPEG
+  function readAsDataUrl(file) {
+    return new Promise(function (resolve, reject) {
+      var reader = new FileReader()
+      reader.onload = function () { resolve(reader.result) }
+      reader.onerror = function () { reject(new Error('Gambar gagal dibaca.')) }
+      reader.readAsDataURL(file)
+    })
+  }
+  function shrinkImage(file) {
+    return readAsDataUrl(file).then(function (dataUrl) {
+      if (file.type === 'image/gif') return dataUrl
+      return new Promise(function (resolve) {
+        var image = new Image()
+        image.onload = function () {
+          var scale = Math.min(1, 1600 / Math.max(image.naturalWidth, image.naturalHeight))
+          var canvas = document.createElement('canvas')
+          canvas.width = Math.max(1, Math.round(image.naturalWidth * scale))
+          canvas.height = Math.max(1, Math.round(image.naturalHeight * scale))
+          canvas.getContext('2d').drawImage(image, 0, 0, canvas.width, canvas.height)
+          resolve(canvas.toDataURL('image/jpeg', 0.76))
+        }
+        image.onerror = function () { resolve(dataUrl) }
+        image.src = dataUrl
+      })
+    })
+  }
+  function attachImages(cardEl, files) {
+    files = Array.prototype.filter.call(files || [], function (file) { return /^image\//.test(file.type) })
+    if (!files.length) return
+    var id = cardEl.getAttribute('data-kanban-card')
+    var foot = cardEl.querySelector('[data-k-foot]')
+    var done = 0
+    say('Mengunggah ' + files.length + ' gambar...')
+    // a few at a time, so one request never grows too big
+    var batches = []
+    for (var i = 0; i < files.length; i += 3) batches.push(files.slice(i, i + 3))
+    batches.reduce(function (chain, batch) {
+      return chain.then(function () {
+        return Promise.all(batch.map(shrinkImage)).then(function (urls) {
+          return request('POST', api('/ponds/kanban/' + id + '/images'), { images: urls })
+        }).then(function (item) {
+          changed = true
+          cards[id] = Object.assign(cards[id] || {}, item)
+          done += batch.length
+          refreshImages(cardEl)
+          say('Mengunggah gambar: ' + done + ' dari ' + files.length)
+        })
+      })
+    }, Promise.resolve()).then(function () {
+      say('')
+      foot.classList.remove('text-danger')
+    }).catch(function (error) {
+      say(error.message || 'Gambar gagal diunggah.', true)
+      refreshImages(cardEl)
+    })
+  }
+  function zoomImage(cardEl, index) {
+    var id = cardEl.getAttribute('data-kanban-card')
+    var list = imagesOf(cards[id])
+    if (!list.length) return
+    index = (index + list.length) % list.length
+    var title = cardEl.querySelector('[data-k-title]').value.trim() || 'Kanban'
+    var nav = list.length > 1 ? {
+      prev: function () { zoomImage(cardEl, index - 1) },
+      next: function () { zoomImage(cardEl, index + 1) },
+    } : undefined
+    if (window.KoiAuth && window.KoiAuth.zoomPhoto) window.KoiAuth.zoomPhoto(list[index], title, ['Gambar ' + (index + 1) + ' dari ' + list.length], nav)
+    else window.open(list[index], '_blank')
+  }
+
   var PALETTE = ['#4263eb', '#1098ad', '#37b24d', '#f59f00', '#f76707', '#e03131', '#d6336c', '#ae3ec9', '#7048e8', '#868e96']
 
   function cardHtml(item) {
@@ -109,6 +215,8 @@ function pondKanbanBoot() {
           '<input type="text" class="form-control form-control-sm" data-date-parts data-k-date data-role-disable-unless="farm-operate" value="' + esc(item.note_date ? String(item.note_date).slice(0, 10) : '') + '" />' +
         '</div>' +
         '<textarea class="form-control pk-body" data-k-body rows="5" placeholder="Catatan" data-role-disable-unless="farm-operate">' + esc(item.body) + '</textarea>' +
+        '<div class="pk-images-head"><span class="pk-qty-label" data-k-img-count></span><button class="btn btn-sm ms-auto" type="button" data-k-img-gallery data-role-required="database-write" title="Simpan semua gambar kartu ini ke Galeri" hidden>Simpan ke Galeri</button></div>' +
+        '<div class="pk-images" data-k-images>' + imagesHtml(item) + '</div>' +
         '<div class="pk-qty">' +
           '<span class="pk-qty-label">Qty Kanban</span>' +
           '<input type="number" class="form-control form-control-sm pk-qty-input" min="0" step="1" inputmode="numeric" data-k-qty-input data-no-clear data-role-disable-unless="farm-operate" aria-label="Qty Kanban" value="' + Number(item.qty || 0) + '" />' +
@@ -161,6 +269,7 @@ function pondKanbanBoot() {
     items.forEach(function (item) { cards[item.id] = item })
     board.innerHTML = items.length ? items.map(cardHtml).join('') : '<div class="pk-empty">Belum ada kanban. Tekan "Tambah Kanban" untuk mulai mencatat.</div>'
     updateTotal()
+    cardEls().forEach(refreshImages)
   }
 
   function renderDeleted(items) {
@@ -315,6 +424,42 @@ function pondKanbanBoot() {
     if (custom) setColor(custom.closest('[data-kanban-card]'), custom.value, true)
   })
 
+  board.addEventListener('change', function (event) {
+    var input = event.target.closest('[data-k-img-input]')
+    if (!input) return
+    attachImages(input.closest('[data-kanban-card]'), input.files)
+    input.value = ''
+  })
+  // a picture copied to the clipboard is pasted into the card with Ctrl+V
+  board.addEventListener('paste', function (event) {
+    var cardEl = event.target.closest('[data-kanban-card]')
+    var files = event.clipboardData && event.clipboardData.files
+    if (!cardEl || !files || !files.length) return
+    var images = Array.prototype.filter.call(files, function (file) { return /^image\//.test(file.type) })
+    if (!images.length) return
+    event.preventDefault()
+    attachImages(cardEl, images)
+  })
+  // pictures can also be dropped on a card
+  board.addEventListener('dragover', function (event) {
+    var cardEl = event.target.closest('[data-kanban-card]')
+    if (!cardEl || !event.dataTransfer || Array.prototype.indexOf.call(event.dataTransfer.types || [], 'Files') < 0) return
+    event.preventDefault()
+    cardEl.classList.add('pk-drop')
+  })
+  board.addEventListener('dragleave', function (event) {
+    var cardEl = event.target.closest('[data-kanban-card]')
+    if (cardEl && !cardEl.contains(event.relatedTarget)) cardEl.classList.remove('pk-drop')
+  })
+  board.addEventListener('drop', function (event) {
+    var cardEl = event.target.closest('[data-kanban-card]')
+    if (!cardEl) return
+    cardEl.classList.remove('pk-drop')
+    if (!event.dataTransfer || !event.dataTransfer.files || !event.dataTransfer.files.length) return
+    event.preventDefault()
+    attachImages(cardEl, event.dataTransfer.files)
+  })
+
   // - / + open a small form (amount, day, note); a number typed in the box sets the quantity to that number. The history keeps the day and who did it.
   function setQty(cardEl, change, done) {
     var id = cardEl.getAttribute('data-kanban-card')
@@ -385,6 +530,44 @@ function pondKanbanBoot() {
         btn.disabled = false
         if (ok) f.hidden = true
       })
+      return
+    }
+    var imgDel = event.target.closest('[data-k-img-del]')
+    if (imgDel) {
+      event.stopPropagation()
+      var delIndex = Number(imgDel.getAttribute('data-k-img-del'))
+      var delUrl = imagesOf(cards[id])[delIndex]
+      if (!delUrl) return
+      Promise.resolve(window.KoiDialog ? window.KoiDialog.confirm('Hapus gambar ini dari kanban?') : window.confirm('Hapus gambar ini dari kanban?')).then(function (ok) {
+        if (!ok) return
+        return request('POST', api('/ponds/kanban/' + id + '/images/remove'), { url: delUrl }).then(function (item) {
+          changed = true
+          cards[id] = Object.assign(cards[id] || {}, item)
+          refreshImages(cardEl)
+        }).catch(function (error) { say(error.message || 'Gambar gagal dihapus.', true) })
+      })
+      return
+    }
+    var thumb = event.target.closest('[data-k-thumb]')
+    if (thumb) {
+      zoomImage(cardEl, Number(thumb.getAttribute('data-k-thumb')))
+      return
+    }
+    var toGallery = event.target.closest('[data-k-img-gallery]')
+    if (toGallery) {
+      var galleryList = imagesOf(cards[id])
+      if (!galleryList.length) return
+      toGallery.disabled = true
+      var now = new Date()
+      var titleText = cardEl.querySelector('[data-k-title]').value.trim() || 'Kanban'
+      request('POST', api('/gallery'), {
+        pond_id: pondId,
+        title: 'Kanban ' + titleText,
+        gallery_date: now.getFullYear() + '-' + ('0' + (now.getMonth() + 1)).slice(-2) + '-' + ('0' + now.getDate()).slice(-2),
+        images: galleryList.map(function (url) { return { image_url: url, media_type: 'image' } }),
+      }).then(function () { say(galleryList.length + ' gambar disimpan ke Galeri: Kanban ' + titleText + '.') })
+        .catch(function (error) { say(error.message || 'Gagal menyimpan ke Galeri.', true) })
+        .then(function () { toGallery.disabled = false })
       return
     }
     if (event.target.closest('[data-k-color-toggle]')) {

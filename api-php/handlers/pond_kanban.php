@@ -10,6 +10,8 @@ function pond_kanban_actor(array $session): string {
     return mb_substr(trim((string)($session['name'] ?? '')) ?: (string)($session['username'] ?? ''), 0, 100);
 }
 
+require_once __DIR__ . '/../lib/uploads.php';
+
 // The colours a card can get (random from this list at first); a card with '' as colour follows the theme.
 const POND_KANBAN_COLORS = ['#4263eb', '#1098ad', '#37b24d', '#f59f00', '#f76707', '#e03131', '#d6336c', '#ae3ec9', '#7048e8', '#868e96'];
 
@@ -129,6 +131,12 @@ function pond_kanban_apply_plain_notes(int $pondId, string $notes, ?string $date
     pond_kanban_sync_notes($pondId);
 }
 
+// The pictures attached to a card: a JSON list of /api/uploads/... addresses.
+function pond_kanban_images_of(array $card): array {
+    $list = json_decode((string)($card['images'] ?? ''), true);
+    return is_array($list) ? array_values(array_filter(array_map('strval', $list))) : [];
+}
+
 function pond_kanban_find(string $id): array {
     $card = query_one('SELECT * FROM pond_kanban WHERE id = ?', [$id]);
     if (!$card) send_error(404, 'Kanban tidak ditemukan');
@@ -142,7 +150,7 @@ route_pattern('GET', '#^/ponds/(\d+)/kanban$#', function (array $m) {
     foreach (query('SELECT id FROM pond_kanban WHERE pond_id = ? AND color IS NULL', [$pondId]) as $row) {
         execute('UPDATE pond_kanban SET color = ? WHERE id = ?', [pond_kanban_random_color(), $row['id']]);
     }
-    $cols = 'id, pond_id, title, body, note_date, qty, sort_order, color, created_by, deleted_at, deleted_by, created_at, updated_at';
+    $cols = 'id, pond_id, title, body, note_date, qty, sort_order, color, images, created_by, deleted_at, deleted_by, created_at, updated_at';
     send_json(200, [
         'items' => query("SELECT $cols FROM pond_kanban WHERE pond_id = ? AND deleted_at IS NULL ORDER BY sort_order, id", [$pondId]),
         'deleted' => query("SELECT $cols FROM pond_kanban WHERE pond_id = ? AND deleted_at IS NOT NULL ORDER BY deleted_at DESC, id DESC", [$pondId]),
@@ -200,8 +208,10 @@ route_pattern('DELETE', '#^/ponds/kanban/(\d+)$#', function (array $m) {
     $card = pond_kanban_find($m[1]);
     if (($_GET['permanent'] ?? '') === '1') {
         if (!$card['deleted_at']) send_error(409, 'Hapus kanban dulu, baru bisa dihapus permanen dari History Catatan.');
+        $files = pond_kanban_images_of($card);
         execute('DELETE FROM pond_kanban WHERE id = ?', [$card['id']]);
-        send_json(200, ['ok' => true, 'permanent' => true]);
+        $deleted = $files ? delete_upload_files_if_unused($files) : 0;
+        send_json(200, ['ok' => true, 'permanent' => true, 'deleted_files' => $deleted]);
     }
     if (!$card['deleted_at']) {
         execute('UPDATE pond_kanban SET deleted_at = NOW(), deleted_by = ? WHERE id = ?', [pond_kanban_actor($session), $card['id']]);
@@ -348,4 +358,40 @@ route_pattern('POST', '#^/ponds/kanban/(\d+)/split$#', function (array $m) {
         throw $e;
     }
     send_json(200, ['kanban' => query_one('SELECT * FROM pond_kanban WHERE id = ?', [$card['id']]), 'created' => query_one('SELECT * FROM pond_kanban WHERE id = ?', [$newId])]);
+});
+
+// Attach pictures: each one comes as a data URL (the page shrinks it first), is stored like every other upload and added to the card's list.
+route_pattern('POST', '#^/ponds/kanban/(\d+)/images$#', function (array $m) {
+    require_account();
+    $card = pond_kanban_find($m[1]);
+    if ($card['deleted_at']) send_error(409, 'Kanban ini sudah dihapus.');
+    $body = read_json_body();
+    $incoming = array_values(array_filter((array)($body['images'] ?? []), fn($data) => is_string($data) && $data !== ''));
+    if (!$incoming) send_error(422, 'Pilih gambar yang dilampirkan.');
+    $list = pond_kanban_images_of($card);
+    foreach ($incoming as $data) {
+        try {
+            $list[] = save_image_data($data, 'pond-kanban');
+        } catch (InvalidArgumentException $e) {
+            send_error(422, 'Gambar tidak valid', $e->getMessage());
+        }
+    }
+    execute('UPDATE pond_kanban SET images = ? WHERE id = ?', [json_encode($list, JSON_UNESCAPED_SLASHES), $card['id']]);
+    send_json(200, query_one('SELECT * FROM pond_kanban WHERE id = ?', [$card['id']]));
+});
+
+// Remove one picture from a card; its file is deleted when nothing else (the Galeri, a documentation) still uses it.
+route_pattern('POST', '#^/ponds/kanban/(\d+)/images/remove$#', function (array $m) {
+    require_account();
+    $card = pond_kanban_find($m[1]);
+    $body = read_json_body();
+    $url = trim((string)($body['url'] ?? ''));
+    $list = pond_kanban_images_of($card);
+    $left = array_values(array_filter($list, fn($item) => $item !== $url));
+    if (count($left) === count($list)) send_error(404, 'Gambar tidak ditemukan di kanban ini.');
+    execute('UPDATE pond_kanban SET images = ? WHERE id = ?', [$left ? json_encode($left, JSON_UNESCAPED_SLASHES) : null, $card['id']]);
+    $deleted = delete_upload_files_if_unused([$url]);
+    $row = query_one('SELECT * FROM pond_kanban WHERE id = ?', [$card['id']]);
+    $row['deleted_files'] = $deleted;
+    send_json(200, $row);
 });
