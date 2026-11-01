@@ -31,6 +31,8 @@ function pondKanbanBoot() {
     '.pk-qty{display:flex;align-items:center;gap:.4rem;flex-wrap:wrap}' +
     '.pk-qty-input{width:4.5rem;text-align:center;font-weight:700}' +
     '.pk-qty-label{font-size:.78rem;color:var(--tblr-secondary,#6c7a91)}' +
+    '.pk-qtyform{display:flex;flex-direction:column;gap:.35rem;padding:.5rem;border-radius:.4rem;background:rgba(127,127,127,.1)}' +
+    '.pk-qtyform[hidden]{display:none}' +
     '.pk-log{font-size:.8rem;max-height:9rem;overflow:auto;border-top:1px solid var(--tblr-border-color,#dee2e6);padding-top:.35rem}' +
     '.pk-log div{display:flex;justify-content:space-between;gap:.5rem;padding:.1rem 0}' +
     '.pk-up{color:#2fb344}.pk-down{color:#d63939}' +
@@ -89,10 +91,17 @@ function pondKanbanBoot() {
         '<textarea class="form-control pk-body" data-k-body rows="5" placeholder="Catatan" data-role-disable-unless="farm-operate">' + esc(item.body) + '</textarea>' +
         '<div class="pk-qty">' +
           '<span class="pk-qty-label">Qty Kanban</span>' +
-          '<button class="btn btn-sm btn-icon" type="button" data-k-step="-1" data-role-required="farm-operate" title="Kurangi 1" aria-label="Kurangi 1">&minus;</button>' +
+          '<button class="btn btn-sm btn-icon" type="button" data-k-qty-open="-1" data-role-required="farm-operate" title="Kurangi ikan" aria-label="Kurangi ikan">&minus;</button>' +
           '<input type="number" class="form-control form-control-sm pk-qty-input" min="0" step="1" inputmode="numeric" data-k-qty-input data-no-clear data-role-disable-unless="farm-operate" aria-label="Qty Kanban" value="' + Number(item.qty || 0) + '" />' +
-          '<button class="btn btn-sm btn-icon" type="button" data-k-step="1" data-role-required="farm-operate" title="Tambah 1" aria-label="Tambah 1">+</button>' +
+          '<button class="btn btn-sm btn-icon" type="button" data-k-qty-open="1" data-role-required="farm-operate" title="Tambah ikan" aria-label="Tambah ikan">+</button>' +
           '<button class="btn btn-sm ms-auto" type="button" data-k-log-toggle>Riwayat</button>' +
+        '</div>' +
+        '<div class="pk-qtyform" data-k-qtyform hidden>' +
+          '<strong data-k-qtymode></strong>' +
+          '<input type="number" class="form-control form-control-sm" min="1" step="1" inputmode="numeric" data-k-delta placeholder="Jumlah ikan" />' +
+          '<input type="text" class="form-control form-control-sm" data-date-parts data-k-logdate value="' + today() + '" />' +
+          '<input type="text" class="form-control form-control-sm" maxlength="500" data-k-lognote placeholder="Keterangan (boleh kosong)" />' +
+          '<div class="d-flex gap-2"><button class="btn btn-sm btn-primary" type="button" data-k-qty-save>Catat</button><button class="btn btn-sm" type="button" data-k-qty-cancel>Batal</button></div>' +
         '</div>' +
         '<div class="pk-log" data-k-log hidden></div>' +
         '<div class="pk-foot" data-k-foot>' + footText(item) + '</div>' +
@@ -218,8 +227,8 @@ function pondKanbanBoot() {
     })
   }
 
-  // - / + change the quantity by 1 at once; a number typed in the box sets it to that number. Either way the history keeps the day and who did it.
-  function setQty(cardEl, change) {
+  // - / + open a small form (amount, day, note); a number typed in the box sets the quantity to that number. The history keeps the day and who did it.
+  function setQty(cardEl, change, done) {
     var id = cardEl.getAttribute('data-kanban-card')
     var input = cardEl.querySelector('[data-k-qty-input]')
     input.disabled = true
@@ -230,9 +239,11 @@ function pondKanbanBoot() {
       updateTotal()
       say('')
       if (!cardEl.querySelector('[data-k-log]').hidden) loadLog(cardEl)
+      if (done) done(true)
     }).catch(function (error) {
       input.value = Number((cards[id] || {}).qty || 0)
       say(error.message || 'Jumlah gagal disimpan.', true)
+      if (done) done(false)
     }).then(function () { input.disabled = false })
   }
   board.addEventListener('change', function (event) {
@@ -255,9 +266,37 @@ function pondKanbanBoot() {
     if (!cardEl) return
     var id = cardEl.getAttribute('data-kanban-card')
 
-    var step = event.target.closest('[data-k-step]')
-    if (step) {
-      setQty(cardEl, { delta: Number(step.getAttribute('data-k-step')) })
+    var open = event.target.closest('[data-k-qty-open]')
+    if (open) {
+      var form = cardEl.querySelector('[data-k-qtyform]')
+      var sign = Number(open.getAttribute('data-k-qty-open'))
+      form.setAttribute('data-sign', sign)
+      form.querySelector('[data-k-qtymode]').textContent = sign > 0 ? 'Tambah ikan' : 'Kurangi ikan'
+      form.querySelector('[data-k-delta]').value = ''
+      form.querySelector('[data-k-lognote]').value = ''
+      form.querySelector('[data-k-logdate]').value = today()
+      form.hidden = false
+      form.querySelector('[data-k-delta]').focus()
+      return
+    }
+    if (event.target.closest('[data-k-qty-cancel]')) {
+      cardEl.querySelector('[data-k-qtyform]').hidden = true
+      return
+    }
+    if (event.target.closest('[data-k-qty-save]')) {
+      var f = cardEl.querySelector('[data-k-qtyform]')
+      var amount = parseInt(f.querySelector('[data-k-delta]').value, 10)
+      if (!amount || amount < 1) { say('Isi jumlah ikan (angka 1 atau lebih).', true); return }
+      var btn = event.target.closest('[data-k-qty-save]')
+      btn.disabled = true
+      setQty(cardEl, {
+        delta: amount * Number(f.getAttribute('data-sign') || 1),
+        log_date: f.querySelector('[data-k-logdate]').value,
+        notes: f.querySelector('[data-k-lognote]').value,
+      }, function (ok) {
+        btn.disabled = false
+        if (ok) f.hidden = true
+      })
       return
     }
     if (event.target.closest('[data-k-log-toggle]')) {
