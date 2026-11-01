@@ -529,11 +529,22 @@ const clipboardIcon = iconSvg('clipboard')
           <form class="card mb-3" data-pond-detail-form>
             <div class="card-body">
               <div class="row g-3">
-                <div class="col-md-4">
+                <div class="col-md-4" hidden>
                   <label hidden class="form-label" for="pond-detail-unphotographed">Qty Kanban</label>
                   <input hidden class="form-control" id="pond-detail-unphotographed" name="unphotographed_fish_qty" type="number" min="0" step="1" readonly title="Otomatis: total Qty Kanban" />
                   <div hidden class="form-hint">Total Qty semua kartu kanban.</div>
-                  <div class="row g-3 mt-0">
+
+                </div>
+                <div class="col-12" data-pond-kanban>
+                  <div class="d-flex flex-wrap align-items-center gap-2 mb-2">
+                    <label class="form-label mb-0">Kanban Catatan</label>
+                    <div class="form-hint mb-0" data-kanban-message></div>
+                    <button class="btn btn-primary ms-auto" type="button" data-kanban-add data-role-required="farm-operate">Tambah Kanban</button>
+                  </div>
+                  <div class="pk-board" data-kanban-board></div>
+                </div>
+<div class="col-12" data-pond-documentation-tools>
+<div class="row g-3 mt-0">
                     <div class="col-sm-6">
                       <label class="form-label">Dokumentasi</label>
                       <input class="d-none" id="pond-documentation-input" type="file" accept="image/*,video/mp4,video/webm" multiple data-pond-documentation-input />
@@ -544,15 +555,7 @@ const clipboardIcon = iconSvg('clipboard')
                       </div>
                     </div>
                   </div>
-                </div>
-                <div class="col-12" data-pond-kanban>
-                  <div class="d-flex flex-wrap align-items-center gap-2 mb-2">
-                    <label class="form-label mb-0">Kanban Catatan</label>
-                    <div class="form-hint mb-0" data-kanban-message></div>
-                    <button class="btn btn-primary ms-auto" type="button" data-kanban-add data-role-required="farm-operate">Tambah Kanban</button>
-                  </div>
-                  <div class="pk-board" data-kanban-board></div>
-                </div>
+</div>
                 <div class="col-md-8" hidden>
                   <div class="d-flex flex-wrap align-items-center gap-2 mb-2">
                     <label class="form-label mb-0" for="pond-detail-notes">Catatan Formulir</label>
@@ -3241,6 +3244,6 @@ const clipboardIcon = iconSvg('clipboard')
     window.KoiAuth?.registerRealtimeRefresh(() => keepScroll(() => loadPonds(true)), { intervalMs: 25000 })
   </script>
   <script is:inline src="/assets/pond-areas.js?v=20261026a"></script>
-  <script is:inline src="/assets/pond-kanban.js?v=20261101u"></script>
+  <script is:inline src="/assets/pond-kanban.js?v=20261101v"></script>
 </DefaultLayout>
 
