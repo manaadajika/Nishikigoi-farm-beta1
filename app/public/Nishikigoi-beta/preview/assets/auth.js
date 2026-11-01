@@ -1758,6 +1758,8 @@
       '.koi-native-select-value{display:block;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}',
       '.koi-native-select-menu{position:fixed;z-index:3000;display:none;max-height:min(360px,52vh);overflow:auto;padding:.35rem;background:var(--tblr-bg-surface,#151a1d);color:var(--tblr-body-color,#f4f7fb);border:1px solid var(--tblr-border-color,#2e3a4d);border-radius:var(--tblr-border-radius,.25rem);box-shadow:var(--tblr-shadow-dropdown,0 18px 45px rgba(0,0,0,.42))}',
       '.koi-native-select-menu.is-open{display:block}',
+      '.koi-native-select-option.is-group-head{font-weight:700;margin-top:.3rem}',
+      '.koi-native-select-option.is-group-item{padding-left:1.7rem}',
       '.koi-native-select.is-icon{width:auto;flex:0 0 auto}',
       '.koi-native-select-button.is-icon{width:40px;min-width:40px;height:40px;min-height:40px;padding:0;justify-content:center}',
       '.koi-native-select-button.is-icon:after{display:none}',
@@ -1869,7 +1871,8 @@
     var searchEnd = keepSearchFocus ? state.search.selectionEnd : null
     var options = Array.prototype.slice.call(select.options)
     // a multiple-choice list shows "Semua" first, then everything already chosen, then the rest (so picks stay on top, in the field too)
-    if (select.multiple) {
+    // data-grouped: the list keeps its order (groups with a head row, e.g. the areas of Data Kolam) instead of lifting the picked ones to the top
+    if (select.multiple && !select.hasAttribute('data-grouped')) {
       var rank = function (option) { return option.value === '' ? 0 : option.selected ? 1 : 2 }
       options = options.map(function (option, index) { return { option: option, index: index } })
         .sort(function (a, b) { return rank(a.option) - rank(b.option) || a.index - b.index })
@@ -1935,12 +1938,14 @@
     }
     options.forEach(function (option) {
       var label = option.textContent.trim()
-      if (query && label.toLowerCase().indexOf(query) === -1 && String(option.value).toLowerCase().indexOf(query) === -1) return
+      if (query && label.toLowerCase().indexOf(query) === -1 && String(option.value).toLowerCase().indexOf(query) === -1 && String(option.dataset.search || '').toLowerCase().indexOf(query) === -1) return
       visibleCount += 1
       var button = document.createElement('button')
       button.type = 'button'
       button.className = 'koi-native-select-option'
       button.dataset.koiSelectValue = option.value
+      if (option.hasAttribute('data-group-head')) button.classList.add('is-group-head')
+      if (option.hasAttribute('data-group-item')) button.classList.add('is-group-item')
       if (option.dataset.image !== undefined || option.dataset.detail !== undefined) {
         // rich option: photo (2:3) + name + detail, used by the Parent Male list
         button.classList.add('has-thumb')
@@ -3054,7 +3059,7 @@
   }
   function start() {
     load('/assets/global-search.js?v=20261029b')
-    load('/assets/field-suggest.js?v=20261025a')
+    load('/assets/field-suggest.js?v=20261101b')
     load('/assets/list-pager.js?v=20261021c')
     load('/assets/user-menu.js?v=20261025a')
     load('/assets/social.js?v=20261024b')

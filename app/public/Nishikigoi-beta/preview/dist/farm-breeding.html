@@ -503,7 +503,7 @@
     <!-- END GLOBAL THEME SCRIPT -->
 
     <!-- BEGIN APP AUTH SCRIPT -->
-    <script src="./assets/auth.js?v=20261101a"></script>
+    <script src="./assets/auth.js?v=20261101d"></script>
     <script src="./assets/drafts.js?v=20261029b"></script>
     <script src="./assets/theme-sync.js?v=20261014b"></script>
     <script src="./assets/print-kit.js?v=20261024a"></script>
@@ -3382,48 +3382,53 @@
                   return 5;
                 };
                 const matchingPonds = (query) => {
-                  const loweredQuery = query.trim().toLowerCase();
-                  const selectedIds = new Set(
-                    [...pondList.querySelectorAll("[data-pond-value]")]
-                      .map((input) => input.value)
-                      .filter(Boolean),
-                  );
-                  const matches = loweredQuery
-                    ? pondOptions
-                        .filter((pond) =>
-                          pondSearchText(pond).includes(loweredQuery),
-                        )
-                        .sort(
-                          (first, second) =>
-                            pondMatchRank(first, loweredQuery) -
-                              pondMatchRank(second, loweredQuery) ||
-                            pondLabel(first).localeCompare(pondLabel(second)),
-                        )
-                    : pondOptions;
+      const loweredQuery = query.trim().toLowerCase()
+      const selectedIds = new Set([...pondList.querySelectorAll('[data-pond-value]')].map((input) => input.value).filter(Boolean))
+      const terms = loweredQuery.split(/\s+/).filter(Boolean)
+      const matches = terms.length
+        ? pondOptions
+            .filter((pond) => terms.every((term) => pondSearchText(pond).includes(term)))
+            .sort((first, second) => pondMatchRank(first, loweredQuery) - pondMatchRank(second, loweredQuery) || pondLabel(first).localeCompare(pondLabel(second)))
+        : pondOptions
 
-                  return matches
-                    .filter((pond) => !selectedIds.has(String(pond.id)))
-                    .slice(0, 8);
-                };
+      return matches.filter((pond) => !selectedIds.has(String(pond.id))).slice(0, 80)
+    };
 
-                const pondSuggestionsMarkup = (ponds) =>
-                  ponds
-                    .map(
-                      (pond) => `
-      <button class="breeding-parent-suggestion p-2" type="button" data-pond-suggestion="${escapeHtml(pond.id)}">
+                // the order of the areas follows Data Kolam
+    let areaOrder = []
+    fetch(`${apiUrl}/app-settings`).then((response) => (response.ok ? response.json() : {})).then((settings) => {
+      try { areaOrder = JSON.parse(settings.pond_area_order || '[]') } catch (error) { areaOrder = [] }
+    }).catch(() => {})
+    const NO_AREA = 'Tanpa Area'
+    const areaRank = (area) => { const index = areaOrder.indexOf(area); return index < 0 ? 9999 : index }
+    const pondSuggestionsMarkup = (ponds) => {
+      const groups = new Map()
+      ponds.forEach((pond) => {
+        const area = String(pond.location || '').trim() || NO_AREA
+        if (!groups.has(area)) groups.set(area, [])
+        groups.get(area).push(pond)
+      })
+      const names = [...groups.keys()].sort((first, second) => (first === NO_AREA) - (second === NO_AREA) || areaRank(first) - areaRank(second) || first.localeCompare(second))
+
+      return names.map((area) => {
+        const head = area === NO_AREA
+          ? '<div class="px-2 pt-2 text-secondary small fw-bold">Tanpa Area</div>'
+          : `<button class="breeding-parent-suggestion p-2 fw-bold d-flex justify-content-between align-items-center" type="button" data-area-suggestion="${escapeHtml(area)}" title="Pilih seluruh area ini"><span>${escapeHtml(area)}</span><small class="text-secondary fw-normal">Area &middot; ${pondOptions.filter((pond) => String(pond.location || '').trim() === area).length} kolam</small></button>`
+
+        return head + groups.get(area).map((pond) => `
+      <button class="breeding-parent-suggestion p-2 ps-4" type="button" data-pond-suggestion="${escapeHtml(pond.id)}">
         <div class="fw-medium">${escapeHtml(pondLabel(pond))}</div>
-        <div class="text-secondary small">${escapeHtml([pond.location, pond.status].filter(Boolean).join(" / ") || "-")}</div>
-      </button>
-    `,
-                    )
-                    .join("") ||
-                  '<div class="p-2 text-secondary small">Data lokasi tidak ditemukan.</div>';
+        <div class="text-secondary small">${escapeHtml(pond.status || '-')}</div>
+      </button>`).join('')
+      }).join('') || '<div class="p-2 text-secondary small">Data lokasi tidak ditemukan.</div>'
+    }
 
                 const pondRowTemplate = (entry = {}) => `
       <div class="row g-2 align-items-start" data-pond-entry>
         <div class="col-md-6 breeding-mention-wrap">
           <input class="form-control" name="breeding_pond_search" data-pond-search placeholder="Mention nama lokasi/area" autocomplete="off" value="${escapeHtml(entry.label || "")}" />
           <input type="hidden" name="breeding_pond_id" data-pond-value value="${escapeHtml(entry.pond_id || "")}" />
+          <input type="hidden" name="breeding_pond_area" data-pond-area value="${escapeHtml(entry.pond_id ? '' : (entry.area || ''))}" />
           <div class="breeding-parent-suggestions d-none" data-pond-suggestions></div>
         </div>
         <div class="col-md-5">
@@ -3465,21 +3470,30 @@
                     ?.classList.add("d-none");
                 };
 
-                const hasEmptyPondRow = () =>
-                  [...pondList.querySelectorAll("[data-pond-entry]")].some(
-                    (row) => !row.querySelector("[data-pond-value]").value,
-                  );
+                const hasEmptyPondRow = () => [...pondList.querySelectorAll('[data-pond-entry]')].some((row) => !row.querySelector('[data-pond-value]').value && !row.querySelector('[data-pond-area]').value);
 
                 const selectPond = (row, pond) => {
-                  row.querySelector("[data-pond-value]").value = pond.id;
-                  row.querySelector("[data-pond-search]").value =
-                    pondLabel(pond);
-                  hidePondSuggestions(row);
+      row.querySelector('[data-pond-value]').value = pond.id
+      row.querySelector('[data-pond-area]').value = ''
+      row.querySelector('[data-pond-search]').value = pondLabel(pond)
+      hidePondSuggestions(row)
 
-                  if (!hasEmptyPondRow()) {
-                    addPondRow();
-                  }
-                };
+      if (!hasEmptyPondRow()) {
+        addPondRow()
+      }
+    }
+
+    // an area chosen instead of a pond: the whole area is the place (no pond id, the area name is the label)
+    const selectArea = (row, area) => {
+      row.querySelector('[data-pond-value]').value = ''
+      row.querySelector('[data-pond-area]').value = area
+      row.querySelector('[data-pond-search]').value = area
+      hidePondSuggestions(row)
+
+      if (!hasEmptyPondRow()) {
+        addPondRow()
+      }
+    };
 
                 const resetParentRows = () => {
                   maleParentList.innerHTML = "";
@@ -3516,25 +3530,21 @@
                 };
 
                 const readPondEntries = () =>
-                  [...pondList.querySelectorAll("[data-pond-entry]")]
-                    .map((row) => {
-                      const pondId =
-                        row.querySelector("[data-pond-value]").value;
-                      const pond = pondById.get(String(pondId));
+      [...pondList.querySelectorAll('[data-pond-entry]')]
+        .map((row) => {
+          const pondId = row.querySelector('[data-pond-value]').value
+          const pond = pondById.get(String(pondId))
 
-                      return {
-                        pond_id: pondId,
-                        label: pond
-                          ? pondLabel(pond)
-                          : row
-                              .querySelector("[data-pond-search]")
-                              .value.trim(),
-                        notes: row
-                          .querySelector("[data-pond-notes]")
-                          .value.trim(),
-                      };
-                    })
-                    .filter((entry) => entry.pond_id);
+          const area = pondId ? '' : row.querySelector('[data-pond-area]').value.trim()
+
+          return {
+            pond_id: pondId,
+            label: pond ? pondLabel(pond) : row.querySelector('[data-pond-search]').value.trim(),
+            area,
+            notes: row.querySelector('[data-pond-notes]').value.trim(),
+          }
+        })
+        .filter((entry) => entry.pond_id || entry.area)
 
                 const optionsNotice = document.querySelector('[data-breeding-options-notice]')
     document.querySelector('[data-breeding-options-retry]')?.addEventListener('click', () => loadOptions())
@@ -4115,6 +4125,7 @@
                     if (event.target.matches("[data-pond-search]")) {
                       const row = event.target.closest("[data-pond-entry]");
                       row.querySelector("[data-pond-value]").value = "";
+          row.querySelector("[data-pond-area]").value = "";
                       showPondSuggestions(row);
                     }
                     return;
@@ -4326,7 +4337,15 @@
                     return;
                   }
 
-                  if (pondSuggestion) {
+                  const areaSuggestion = event.target.closest('[data-area-suggestion]');
+
+      if (areaSuggestion) {
+        selectArea(areaSuggestion.closest('[data-pond-entry]'), areaSuggestion.dataset.areaSuggestion);
+
+        return;
+      }
+
+      if (pondSuggestion) {
                     const row = pondSuggestion.closest("[data-pond-entry]");
                     const pond = pondById.get(
                       String(pondSuggestion.dataset.pondSuggestion),

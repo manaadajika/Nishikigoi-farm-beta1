@@ -7,7 +7,8 @@
     bloodline: 'bloodline',
     farm_name: 'farm',
     breeder: 'breeder',
-    location: 'location', initial_location: 'location', origin_location: 'location', destination_location: 'location', archive_location: 'location',
+    // places: the areas of Data Kolam as groups, the ponds of each area under it (an area can be chosen too), then other places used before
+    location: 'place', initial_location: 'place', origin_location: 'place', destination_location: 'place', archive_location: 'place',
     category: 'category',
     unit: 'unit',
     supplier: 'supplier', initial_supplier: 'supplier',
@@ -40,6 +41,9 @@
       panels + '{background:var(--tblr-bg-surface,#fff)!important;color:var(--tblr-body-color,#1d273b);border:1px solid var(--tblr-border-color,#dce1e7)!important;border-radius:12px!important;' +
       'box-shadow:0 12px 32px rgba(0,0,0,.38)!important;padding:6px!important;max-height:17rem!important;overflow-x:hidden!important;overflow-y:auto!important;scrollbar-width:thin}' +
       '.fs-panel{position:fixed;z-index:2300}' +
+      '.fs-area{font-weight:700!important;display:flex!important;justify-content:space-between;align-items:center;gap:.5rem}' +
+      '.fs-area small{font-weight:400;color:var(--tblr-secondary,#667382)}' +
+      '.fs-sub{padding-left:1.6rem!important}' +
       '.fs-head{padding:.3rem .7rem .25rem;font-size:.68rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--tblr-secondary,#667382)}' +
       items + '{display:block;width:100%;margin:0 0 2px!important;padding:.5rem .7rem!important;border:0!important;border-radius:8px!important;background:transparent;color:var(--tblr-body-color,inherit)!important;' +
       'text-align:left;font-size:.92rem;line-height:1.3;cursor:pointer}' +
@@ -81,6 +85,79 @@
       .catch(function () { return store || {} })
       .then(function (result) { loading = null; return result })
     return loading
+  }
+
+  // ---- places: areas of Data Kolam with their ponds ------------------------------------------------------------------------------------------
+  var placeStore = null
+  var placeAt = 0
+  var placeLoading = null
+  var NO_AREA = 'Tanpa Area'
+  function refreshPlaces() {
+    if (placeLoading) return placeLoading
+    if (placeStore && Date.now() - placeAt < ttl) return Promise.resolve(placeStore)
+    placeLoading = Promise.all([
+      fetch('/api/ponds/options').then(function (r) { return r.ok ? r.json() : [] }).catch(function () { return [] }),
+      fetch('/api/app-settings').then(function (r) { return r.ok ? r.json() : {} }).catch(function () { return {} }),
+    ]).then(function (results) {
+      var ponds = Array.isArray(results[0]) ? results[0] : []
+      var order = []
+      try { order = JSON.parse((results[1] || {}).pond_area_order || '[]') } catch (e) {}
+      if (!Array.isArray(order)) order = []
+      var groups = {}
+      ponds.forEach(function (pond) {
+        var area = String(pond.location || '').trim()
+        if (!area || area === NO_AREA) area = NO_AREA
+        ;(groups[area] = groups[area] || []).push(String(pond.name || '').trim())
+      })
+      var names = order.filter(function (name) { return groups[name] }).concat(Object.keys(groups).filter(function (name) { return order.indexOf(name) < 0 && name !== NO_AREA }).sort(function (a, b) { return a.localeCompare(b) }))
+      if (groups[NO_AREA]) names.push(NO_AREA)
+      placeStore = names.map(function (name) {
+        return { name: name, real: name !== NO_AREA, ponds: groups[name].filter(Boolean).sort(function (a, b) { return a.localeCompare(b, 'id', { numeric: true }) }) }
+      })
+      placeAt = Date.now()
+      return placeStore
+    }).catch(function () { return placeStore || [] }).then(function (result) { placeLoading = null; return result })
+    return placeLoading
+  }
+  function placeMatches(text, terms) {
+    var lower = String(text).toLowerCase()
+    return terms.every(function (term) { return lower.indexOf(term) >= 0 })
+  }
+  // [{ html }, ...] and the list of values in the order of the rows
+  function placeRows(query) {
+    var terms = String(query || '').trim().toLowerCase().split(/\s+/).filter(Boolean)
+    var html = ''
+    var values = []
+    var known = {}
+    var q = terms.join(' ')
+    ;(placeStore || []).forEach(function (area) {
+      var areaHit = !terms.length || (area.real && placeMatches(area.name, terms))
+      var ponds = area.ponds.filter(function (pond) { return areaHit || placeMatches(pond, terms) || placeMatches(area.name + ' ' + pond, terms) })
+      if (!areaHit && !ponds.length) return
+      if (area.real) {
+        known[area.name.toLowerCase()] = true
+        values.push(area.name)
+        html += '<button type="button" class="fs-item fs-area" role="option" data-fs-index="' + (values.length - 1) + '" data-fs-value="' + escapeHtml(area.name) + '" title="Pilih seluruh area ini"><span>' + escapeHtml(area.name) + '</span><small>Area &middot; ' + area.ponds.length + ' kolam</small></button>'
+      } else {
+        html += '<div class="fs-head">' + NO_AREA + '</div>'
+      }
+      ponds.forEach(function (pond) {
+        known[pond.toLowerCase()] = true
+        values.push(pond)
+        html += '<button type="button" class="fs-item fs-sub" role="option" data-fs-index="' + (values.length - 1) + '" data-fs-value="' + escapeHtml(pond) + '">' + escapeHtml(pond) + '</button>'
+      })
+    })
+    ;(placeStore || []).forEach(function (area) { area.ponds.forEach(function (pond) { known[pond.toLowerCase()] = true }) })
+    // other places used before (a warehouse, a bucket, ...) that are neither an area nor a pond
+    var others = ((store && store.location) || []).filter(function (value) { return !known[String(value).toLowerCase()] && (!terms.length || placeMatches(value, terms)) }).slice(0, 8)
+    if (others.length) {
+      html += '<div class="fs-head">Lokasi lain yang pernah dipakai</div>'
+      others.forEach(function (value) {
+        values.push(value)
+        html += '<button type="button" class="fs-item" role="option" data-fs-index="' + (values.length - 1) + '" data-fs-value="' + escapeHtml(value) + '">' + escapeHtml(value) + '</button>'
+      })
+    }
+    return { html: html, values: values, query: q }
   }
 
   function keyOf(el) {
@@ -178,6 +255,17 @@
     var key = keyOf(current)
     if (!key) return hide()
     var query = current.value
+    if (key === 'place') {
+      var rows = placeRows(query)
+      shown = rows.values
+      if (!shown.length) return hide()
+      ensurePanel()
+      panel.innerHTML = rows.html
+      active = -1
+      panel.hidden = false
+      place()
+      return
+    }
     shown = valuesFor(key, query)
     if (!shown.length) return hide()
     ensurePanel()
@@ -218,7 +306,7 @@
     var value = String(el.value || '').trim()
     if (!key || key.indexOf('list:') === 0 || value.length < 2 || value.length > 120) return
     store = store || {}
-    var list = store[key] = store[key] || []
+    var list = store[key === 'place' ? 'location' : key] = store[key === 'place' ? 'location' : key] || []
     if (!list.some(function (v) { return v.toLowerCase() === value.toLowerCase() })) {
       list.unshift(value)
       writeCache()
@@ -238,6 +326,7 @@
     prepare(el)
     if (store) render()
     refresh(false).then(function () { if (current === el && document.activeElement === el) render() })
+    if (keyOf(el) === 'place') refreshPlaces().then(function () { if (current === el) render() })
   })
   document.addEventListener('input', function (event) {
     if (event.target !== current || !keyOf(current)) return

@@ -718,9 +718,18 @@ function koi_filter_sql(array $in): array {
         $column = $key === 'pond_name' ? (((string)($in['archived'] ?? '')) === '1' ? 'koi.archive_location' : 'ponds.name') : "koi.$key";
         // "__kosong__" = the fish whose field is not filled in (the "(Kosong)" choice of the dropdown), alone or together with real values
         $wantsEmpty = in_array('__kosong__', $values, true);
-        $values = array_values(array_filter($values, fn($v) => $v !== '__kosong__'));
+        $areas = [];
+        if ($key === 'pond_name' && ((string)($in['archived'] ?? '')) !== '1') {
+            // "__area__:Bangunan Pertama": every fish whose pond (or written area) is in that area
+            foreach ($values as $v) if (str_starts_with($v, '__area__:')) $areas[] = substr($v, 9);
+        }
+        $values = array_values(array_filter($values, fn($v) => $v !== '__kosong__' && !str_starts_with($v, '__area__:')));
         $parts = [];
         if ($wantsEmpty) $parts[] = "TRIM(IFNULL($column, '')) = ''";
+        if ($areas) {
+            $parts[] = "TRIM(COALESCE(NULLIF(ponds.location, ''), NULLIF(koi.area, ''))) COLLATE utf8mb4_bin IN (" . implode(',', array_fill(0, count($areas), '?')) . ')';
+            foreach ($areas as $area) $params[] = trim($area);
+        }
         if ($values) {
             $parts[] = "TRIM($column) COLLATE utf8mb4_bin IN (" . implode(',', array_fill(0, count($values), '?')) . ')';
             foreach ($values as $value) $params[] = $value;
@@ -806,7 +815,9 @@ function koi_page_result(array $in): array {
 }
 
 const KOI_FACET_COLUMNS = ['variety' => 'koi.variety', 'bloodline' => 'koi.bloodline', 'pond_name' => 'ponds.name', 'status' => 'koi.status',
-                           'breeder' => 'koi.breeder', 'name' => 'koi.name', 'farm_name' => 'koi.farm_name', 'parent_info' => 'koi.parent_info'];
+                           'breeder' => 'koi.breeder', 'name' => 'koi.name', 'farm_name' => 'koi.farm_name', 'parent_info' => 'koi.parent_info',
+                           // the area of a fish: the area of its pond, or the area written on the fish when it has no pond
+                           'pond_area' => "COALESCE(NULLIF(ponds.location, ''), NULLIF(koi.area, ''))"];
 
 function koi_facet_scope(bool $archived, bool $includeAll): string {
     return $includeAll ? 'all' : ($archived ? 'archived' : 'active');
@@ -820,7 +831,11 @@ function koi_facets(bool $archived, bool $includeAll = false, ?array $fields = n
     $out = [];
     foreach (KOI_FACET_COLUMNS as $key => $column) {
         if ($fields !== null && !in_array($key, $fields, true)) continue;
-        $join = $key === 'pond_name' ? ' LEFT JOIN ponds ON ponds.id = koi.pond_id' : '';
+        $join = in_array($key, ['pond_name', 'pond_area'], true) ? ' LEFT JOIN ponds ON ponds.id = koi.pond_id' : '';
+        if ($key === 'pond_area' && $scope === 'archived') {   // an archived fish is in no area
+            $out[$key] = [];
+            continue;
+        }
         if ($key === 'pond_name' && $scope === 'archived') {   // the Lokasi list of the archive: where the fish were
             $column = 'koi.archive_location';
             $join = '';
@@ -860,7 +875,7 @@ function koi_facet_search(string $field, string $query, int $limit, bool $archiv
     if (!isset(KOI_FACET_COLUMNS[$field])) return [];
     $column = KOI_FACET_COLUMNS[$field];
     $scope = koi_facet_scope($archived, $includeAll);
-    $join = $field === 'pond_name' ? ' LEFT JOIN ponds ON ponds.id = koi.pond_id' : '';
+    $join = in_array($field, ['pond_name', 'pond_area'], true) ? ' LEFT JOIN ponds ON ponds.id = koi.pond_id' : '';
     $params = [];
     $like = '';
     $needle = koi_norm($query);

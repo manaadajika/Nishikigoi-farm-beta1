@@ -2232,6 +2232,7 @@ const calendarIcon = iconSvg('calendar')
 
   <script src="/assets/vendor/xlsx/xlsx.core.min.js" is:inline></script>
   <script src="/assets/koi-picker.js?v=20261101a" is:inline></script>
+  <script src="/assets/koi-location-filter.js?v=20261101a" is:inline></script>
   <script define:vars={{ plusIcon, trashIcon, editIcon, eyeIcon, historyIcon, pencilIcon, saveIcon, draftIcon, uploadIcon, clipboardIcon, fileImportIcon, fileExportIcon, calendarIcon }}>
     const apiUrl = '/api'
     const text = (value) => value || '-'
@@ -3488,8 +3489,18 @@ const calendarIcon = iconSvg('calendar')
       }
 
       const isLocationInput = input.matches('[data-edit-pond-location], [data-bulk-area]')
-      const matches = input.matches('[data-bulk-area]') ? pondAreaMatches(input.value) : pondSearchMatches(input.value)
-      menu.innerHTML = `
+      // The Lokasi (pond) field of a fish form is grouped like Data Kolam: an area is a row of its own (it fills the Area field and leaves
+      // Kolam blank), the ponds of the area stand under it. The Area fields and the mass-action field keep their plain lists.
+      const grouped = !isLocationInput && input.matches('[data-pond-select], [data-edit-pond-select]')
+      const matches = input.matches('[data-bulk-area]')
+        ? pondAreaMatches(input.value)
+        : grouped
+          ? (() => {
+              const terms = String(input.value || '').trim().toLowerCase().split(/\s+/).filter(Boolean)
+              return pondsList.filter((pond) => terms.length === 0 || terms.every((term) => pondSearchText(pond).includes(term))).slice(0, 120)
+            })()
+          : pondSearchMatches(input.value)
+      const noneRow = `
         <button class="koi-pond-search-item" type="button" data-pond-search-pick="">
           <span class="koi-pond-search-main">
             <span class="koi-pond-search-copy">
@@ -3497,20 +3508,41 @@ const calendarIcon = iconSvg('calendar')
               <span class="d-block text-secondary small text-truncate">${isLocationInput ? 'Kosongkan lokasi dan area ikan' : 'Kosongkan lokasi ikan'}</span>
             </span>
           </span>
-        </button>
-        ${matches.length
-          ? matches.map((pond) => `
-            <button class="koi-pond-search-item" type="button" data-pond-search-pick="${escapeHtml(pond.id)}" data-pond-search-name="${escapeHtml(pond.name)}" data-pond-search-location="${escapeHtml(pond.location || '')}">
+        </button>`
+      const pondRow = (pond, indent) => `
+            <button class="koi-pond-search-item${indent ? ' ps-4' : ''}" type="button" data-pond-search-pick="${escapeHtml(pond.id)}" data-pond-search-name="${escapeHtml(pond.name)}" data-pond-search-location="${escapeHtml(pond.location || '')}">
               <span class="koi-pond-search-main">
                 <span class="koi-pond-search-copy">
                   <span class="d-block fw-medium text-truncate">${escapeHtml(isLocationInput ? pond.location || 'Tanpa area' : pond.name || '-')}</span>
-                  <span class="d-block text-secondary small text-truncate">${escapeHtml([pond.location, labels[pond.status] || pond.status].filter(Boolean).join(' | ') || 'Tanpa area')}</span>
+                  <span class="d-block text-secondary small text-truncate">${escapeHtml((grouped ? [labels[pond.status] || pond.status] : [pond.location, labels[pond.status] || pond.status]).filter(Boolean).join(' | ') || (grouped ? '-' : 'Tanpa area'))}</span>
                 </span>
               </span>
-            </button>
-          `).join('')
-          : '<div class="koi-pond-search-empty">Tidak ada lokasi yang cocok</div>'}
-      `
+            </button>`
+      let body = ''
+
+      if (grouped && matches.length) {
+        let areaOrder = []
+        try { areaOrder = JSON.parse(JSON.parse(localStorage.getItem('nishikigoi-app-settings') || '{}').pond_area_order || '[]') } catch (error) { areaOrder = [] }
+        const groups = new Map()
+        matches.forEach((pond) => {
+          const area = String(pond.location || '').trim() || 'Tanpa Area'
+          if (!groups.has(area)) groups.set(area, [])
+          groups.get(area).push(pond)
+        })
+        const rank = (area) => { const index = areaOrder.indexOf(area); return index < 0 ? 9999 : index }
+        const names = [...groups.keys()].sort((first, second) => (first === 'Tanpa Area') - (second === 'Tanpa Area') || rank(first) - rank(second) || first.localeCompare(second))
+        body = names.map((area) => {
+          const head = area === 'Tanpa Area'
+            ? '<div class="px-2 pt-2 text-secondary small fw-bold">Tanpa Area</div>'
+            : `<button class="koi-pond-search-item fw-bold" type="button" data-pond-search-pick="" data-pond-search-area="${escapeHtml(area)}" title="Pilih seluruh area ini"><span class="d-flex justify-content-between align-items-center w-100"><span>${escapeHtml(area)}</span><small class="text-secondary fw-normal">Area &middot; ${pondsList.filter((pond) => String(pond.location || '').trim() === area).length} kolam</small></span></button>`
+          return head + groups.get(area).map((pond) => pondRow(pond, area !== 'Tanpa Area')).join('')
+        }).join('')
+      } else if (matches.length) {
+        body = matches.map((pond) => pondRow(pond, false)).join('')
+      } else {
+        body = '<div class="koi-pond-search-empty">Tidak ada lokasi yang cocok</div>'
+      }
+      menu.innerHTML = noneRow + body
       menu.classList.remove('d-none')
     }
     const syncPondSearchContext = (input) => {
@@ -3526,6 +3558,30 @@ const calendarIcon = iconSvg('calendar')
       const input = button.closest('.koi-pond-search')?.querySelector('[data-pond-search-input]')
 
       if (!input) {
+        return
+      }
+      // an area row of the grouped Lokasi list: Kolam stays blank and the Area field gets the area
+      if (button.dataset.pondSearchArea !== undefined) {
+        const area = String(button.dataset.pondSearchArea || '').trim()
+        input.value = ''
+        if (input.matches('[data-pond-select]')) {
+          const entry = input.closest('[data-koi-entry]')
+          const areaInput = entry?.querySelector('[data-entry-area]')
+          if (areaInput) {
+            areaInput.value = area
+            areaInput.dispatchEvent(new Event('input', { bubbles: true }))
+          }
+        } else if (input.matches('[data-edit-pond-select]')) {
+          const areaInput = editForm.querySelector('[data-edit-pond-location]')
+          if (areaInput) {
+            areaInput.value = area
+            updatePondClearVisibility(areaInput.closest('.koi-pond-search'))
+          }
+          editForm.querySelector('[data-edit-pond-id]').value = ''
+        }
+        closePondSearchMenus()
+        syncPondSearchContext(input)
+        input.focus()
         return
       }
       if (input.matches('[data-bulk-area]')) {

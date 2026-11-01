@@ -123,7 +123,7 @@ const packageIcon = iconSvg('package')
                 </div>
                 <div class="col-md-3">
                   <label class="form-label">Lokasi</label>
-                  <input class="form-control" name="initial_location" maxlength="200" list="inv-location-list" placeholder="Gudang, kolam, ruang..." autocomplete="off" />
+                  <input class="form-control" name="initial_location" maxlength="200" data-suggest-key="place" placeholder="Gudang, kolam, ruang..." autocomplete="off" />
                 </div>
                 <div class="col-12">
                   <label class="form-label">Penjual / toko</label>
@@ -179,7 +179,7 @@ const packageIcon = iconSvg('package')
             </div>
             <div class="col-12" data-move-only="location">
               <label class="form-label" data-move-location-label>Lokasi</label>
-              <input class="form-control" name="location" maxlength="200" list="inv-location-list" placeholder="Gudang, kolam, ruang..." autocomplete="off" />
+              <input class="form-control" name="location" maxlength="200" data-suggest-key="place" placeholder="Gudang, kolam, ruang..." autocomplete="off" />
             </div>
             <div class="col-12" data-move-only="koi">
               <label class="form-label">Kode ikan yang dibeli (opsional)</label>
