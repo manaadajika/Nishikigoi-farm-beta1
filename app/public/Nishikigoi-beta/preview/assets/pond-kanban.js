@@ -29,9 +29,9 @@ function pondKanbanBoot() {
     '.pk-title{font-weight:600}' +
     '.pk-body{resize:vertical;min-height:6rem}' +
     '.pk-qty{display:flex;align-items:center;gap:.5rem}' +
-    '.pk-actions{display:flex;align-items:center;gap:.3rem;flex-wrap:nowrap}' +
-    '.pk-actions .btn{padding:.2rem .45rem;font-size:.78rem;white-space:nowrap}' +
-    '.pk-actions .btn-icon{min-width:1.9rem;font-weight:700}' +
+    '.pk-actions{display:flex;align-items:stretch;gap:.3rem;flex-wrap:nowrap}' +
+    '.pk-actions .btn{flex:1 1 0;min-width:0;padding:.25rem .3rem;font-size:.78rem;white-space:nowrap;display:inline-flex;align-items:center;justify-content:center;height:1.9rem}' +
+    '.pk-actions .btn-icon{flex:0 0 1.9rem;font-weight:700;font-size:1rem;line-height:1}' +
     '.pk-qty-input{flex:1 1 auto;min-width:0;text-align:center;font-weight:700}' +
     '.pk-qty-label{font-size:.78rem;color:var(--tblr-secondary,#6c7a91);white-space:nowrap}' +
     '.pk-qtyform{display:flex;flex-direction:column;gap:.35rem;padding:.5rem;border-radius:.4rem;background:rgba(127,127,127,.1)}' +
@@ -101,7 +101,7 @@ function pondKanbanBoot() {
           '<button class="btn btn-sm btn-icon" type="button" data-k-qty-open="1" data-role-required="farm-operate" title="Tambah ikan" aria-label="Tambah ikan">+</button>' +
           '<button class="btn btn-sm" type="button" data-k-move-open data-role-required="farm-operate" title="Pindahkan kartu ini ke kolam lain">Pindah</button>' +
           '<button class="btn btn-sm" type="button" data-k-split-open data-role-required="farm-operate" title="Pecah sebagian ikan ke kartu baru">Pecah</button>' +
-          '<button class="btn btn-sm ms-auto" type="button" data-k-log-toggle>Riwayat</button>' +
+          '<button class="btn btn-sm" type="button" data-k-log-toggle>Riwayat</button>' +
         '</div>' +
         '<div class="pk-qtyform" data-k-qtyform hidden>' +
           '<strong data-k-qtymode></strong>' +
