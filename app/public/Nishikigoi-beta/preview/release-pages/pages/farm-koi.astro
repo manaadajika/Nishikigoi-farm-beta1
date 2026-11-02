@@ -1795,13 +1795,13 @@ const calendarIcon = iconSvg('calendar')
         <button class="btn btn-outline-secondary btn-icon d-none" type="button" data-selected-action data-print-selected-koi data-dock-group aria-label="Cetak" title="Cetak">
           <Icon name="printer" />
         </button>
-        <button class="btn btn-outline-success btn-icon" type="button" data-export-selected-spreadsheet aria-label="Unduh Excel data ikan" title="Unduh Excel data ikan (yang dipilih, atau semua hasil pencarian dan filter)">
+        <button class="btn btn-outline-success btn-icon" type="button" data-export-selected-spreadsheet data-dock-group aria-label="Unduh Excel data ikan" title="Unduh Excel data ikan (yang dipilih, atau semua hasil pencarian dan filter)">
           <Icon name="file-spreadsheet" />
         </button>
-        <button class="btn btn-outline-success btn-icon" type="button" data-download-selected-images aria-label="Unduh ZIP (xlsx + foto) data ikan" title="Unduh ZIP xlsx + foto data ikan (yang dipilih, atau semua hasil pencarian dan filter)">
+        <button class="btn btn-outline-success btn-icon" type="button" data-download-selected-images data-dock-group aria-label="Unduh ZIP (xlsx + foto) data ikan" title="Unduh ZIP xlsx + foto data ikan (yang dipilih, atau semua hasil pencarian dan filter)">
           <Icon name="download" />
         </button>
-        <button class="btn btn-outline-success btn-icon" type="button" data-koi-macro-open data-role-required="database-write" aria-label="Edit masal dari Excel atau ZIP" title="Edit masal dari Excel atau ZIP"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon" aria-hidden="true"><path d="M14 3v4a1 1 0 0 0 1 1h4"/><path d="M5 12v-7a2 2 0 0 1 2 -2h7l5 5v4"/><path d="M5 18h1.5a1.5 1.5 0 0 0 0 -3h-1.5v6"/><path d="M17 18l2 -3l2 3"/><path d="M11.5 15h2.5"/></svg></button>
+        <button class="btn btn-outline-success btn-icon" type="button" data-koi-macro-open data-dock-group data-role-required="database-write" aria-label="Edit masal dari Excel atau ZIP" title="Edit masal dari Excel atau ZIP"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon" aria-hidden="true"><path d="M14 3v4a1 1 0 0 0 1 1h4"/><path d="M5 12v-7a2 2 0 0 1 2 -2h7l5 5v4"/><path d="M5 18h1.5a1.5 1.5 0 0 0 0 -3h-1.5v6"/><path d="M17 18l2 -3l2 3"/><path d="M11.5 15h2.5"/></svg></button>
         <button class="btn btn-outline-primary btn-icon koi-sort-toggle" type="button" data-koi-sequence-toggle aria-pressed="true" aria-label="Urutan Z ke A" title="Urutan Z ke A">Z/A</button>
         <button class="btn btn-primary btn-icon" type="button" data-open-add-koi data-role-required="database-write" data-bs-toggle="modal" data-bs-target="#add-koi-modal" aria-label="Tambah ikan" title="Tambah ikan">
           <Icon name="plus" />
@@ -1812,7 +1812,7 @@ const calendarIcon = iconSvg('calendar')
         <button class="btn btn-outline-orange btn-icon d-none" type="button" data-selected-action data-clear-selected-koi aria-label="Batal pilih" title="Batal pilih">
           <Icon name="x" />
         </button>
-        <button class="btn btn-outline-pink btn-icon d-none" type="button" data-selected-action data-dock-group-toggle aria-pressed="false" aria-label="Aksi lainnya" title="Aksi lainnya">
+        <button class="btn btn-outline-pink btn-icon" type="button" data-dock-group-toggle aria-pressed="false" aria-label="Aksi lainnya" title="Aksi lainnya">
           <Icon name="dots" />
         </button>
         <button class="btn btn-outline-warning btn-icon koi-action-dock-hide" type="button" data-koi-action-dock-hide aria-label="Sembunyikan tombol aksi" title="Sembunyikan tombol aksi">
@@ -6083,12 +6083,7 @@ items.forEach((item) => {
     }
 
     const updateSelectedCount = () => {
-      if (selectedKoiIds.size === 0 && actionDock) {
-        actionDock.classList.remove('is-group-open')
-        dockGroupToggle?.setAttribute('aria-pressed', 'false')
-        dockGroupToggle?.setAttribute('title', 'Aksi lainnya')
-      }
-      selectedNumber.textContent = selectedKoiIds.size
+            selectedNumber.textContent = selectedKoiIds.size
       selectedCount.classList.toggle('btn-outline-primary', !showSelectedOnly)
       selectedCount.classList.toggle('btn-primary', showSelectedOnly)
       selectedCount.disabled = selectedKoiIds.size === 0

@@ -1423,7 +1423,7 @@
                   <button
                     class="btn btn-outline-success btn-icon"
                     type="button"
-                    data-export-selected-spreadsheet
+                    data-export-selected-spreadsheet data-dock-group
                     aria-label="Unduh Excel data ikan"
                     title="Unduh Excel data ikan (yang dipilih, atau semua hasil pencarian dan filter)"
                   >
@@ -1454,7 +1454,7 @@
                   <button
                     class="btn btn-outline-success btn-icon"
                     type="button"
-                    data-download-selected-images
+                    data-download-selected-images data-dock-group
                     aria-label="Unduh ZIP (xlsx + foto) data ikan"
                     title="Unduh ZIP xlsx + foto data ikan (yang dipilih, atau semua hasil pencarian dan filter)"
                   >
@@ -1478,7 +1478,7 @@
                       <path d="M12 4l0 12" />
                     </svg>
                   </button>
-                  <button class="btn btn-outline-success btn-icon" type="button" data-koi-macro-open data-role-required="database-write" aria-label="Edit masal dari Excel atau ZIP" title="Edit masal dari Excel atau ZIP"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon" aria-hidden="true"><path d="M14 3v4a1 1 0 0 0 1 1h4"/><path d="M5 12v-7a2 2 0 0 1 2 -2h7l5 5v4"/><path d="M5 18h1.5a1.5 1.5 0 0 0 0 -3h-1.5v6"/><path d="M17 18l2 -3l2 3"/><path d="M11.5 15h2.5"/></svg></button>
+                  <button class="btn btn-outline-success btn-icon" type="button" data-koi-macro-open data-dock-group data-role-required="database-write" aria-label="Edit masal dari Excel atau ZIP" title="Edit masal dari Excel atau ZIP"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon" aria-hidden="true"><path d="M14 3v4a1 1 0 0 0 1 1h4"/><path d="M5 12v-7a2 2 0 0 1 2 -2h7l5 5v4"/><path d="M5 18h1.5a1.5 1.5 0 0 0 0 -3h-1.5v6"/><path d="M17 18l2 -3l2 3"/><path d="M11.5 15h2.5"/></svg></button>
                   <button
                     class="btn btn-outline-primary btn-icon koi-sort-toggle"
                     type="button"
@@ -1576,7 +1576,7 @@
                       <path d="M6 6l12 12" />
                     </svg>
                   </button>
-                  <button class="btn btn-outline-pink btn-icon d-none" type="button" data-selected-action data-dock-group-toggle aria-pressed="false" aria-label="Aksi lainnya" title="Aksi lainnya"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false" class="icon"><path d="M4 12a1 1 0 1 0 2 0a1 1 0 1 0 -2 0" /><path d="M11 12a1 1 0 1 0 2 0a1 1 0 1 0 -2 0" /><path d="M18 12a1 1 0 1 0 2 0a1 1 0 1 0 -2 0" /></svg></button>
+                  <button class="btn btn-outline-pink btn-icon" type="button" data-dock-group-toggle aria-pressed="false" aria-label="Aksi lainnya" title="Aksi lainnya"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false" class="icon"><path d="M4 12a1 1 0 1 0 2 0a1 1 0 1 0 -2 0" /><path d="M11 12a1 1 0 1 0 2 0a1 1 0 1 0 -2 0" /><path d="M18 12a1 1 0 1 0 2 0a1 1 0 1 0 -2 0" /></svg></button>
                   <button
                     class="btn btn-outline-warning btn-icon koi-action-dock-hide"
                     type="button"
@@ -7706,12 +7706,7 @@ if (pageSizeSelect) pageSizeSelect.value = String(pageSize);
                 };
 
                 const updateSelectedCount = () => {
-      if (selectedKoiIds.size === 0 && actionDock) {
-        actionDock.classList.remove('is-group-open')
-        dockGroupToggle?.setAttribute('aria-pressed', 'false')
-        dockGroupToggle?.setAttribute('title', 'Aksi lainnya')
-      }
-                  selectedNumber.textContent = selectedKoiIds.size;
+                        selectedNumber.textContent = selectedKoiIds.size;
                   selectedCount.classList.toggle(
                     "btn-outline-primary",
                     !showSelectedOnly,
