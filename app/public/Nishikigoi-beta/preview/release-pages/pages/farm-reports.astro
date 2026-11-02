@@ -109,7 +109,8 @@ import DefaultLayout from '@shared/layouts/DefaultLayout.astro'
   <script src="/assets/xlsx-dates.js?v=20261102c" is:inline></script>
   <script src="/assets/zip-kit.js?v=20261102a" is:inline></script>
   <script src="/assets/macro-edit.js?v=20261102q" is:inline></script>
-  <script src="/assets/report-sheets.js?v=20261102d" is:inline></script>
+  <script src="/assets/report-sheets.js?v=20261102e" is:inline></script>
+  <script src="/assets/dataulang-form.js?v=20261102d" is:inline></script>
   <script src="/assets/koi-picker.js?v=20261101a" is:inline></script>
   <script>
     const apiUrl='/api'
@@ -174,7 +175,7 @@ import DefaultLayout from '@shared/layouts/DefaultLayout.astro'
     const renderAccountSearchMenu=()=>{const input=document.querySelector('[data-account-search]');const menu=document.querySelector('[data-account-search-menu]');if(!input||!menu)return;const query=String(input.value||'').toLowerCase().trim();const items=accountItems.filter((item)=>accountLabel(item).toLowerCase().includes(query)).slice(0,10);closeReportSearchMenus(menu);menu.innerHTML=items.length?items.map((item)=>`<button class="report-search-item" type="button" data-account-search-pick="${escapeHtml(item.id)}"><span class="report-search-copy"><span class="report-search-title">${escapeHtml(item.name||item.username||'-')}</span><span class="report-search-meta">${escapeHtml(item.username?`@${item.username}`:'Tanpa username')}</span></span></button>`).join(''):'<div class="report-search-item text-secondary">Tidak ada petugas cocok.</div>';menu.classList.remove('d-none')}
     const linkedEntryFromItem=(item,type)=>({id:item.id,label:type==='breeding'?breedingLabel(item):koiLabel(item),notes:'',show_on_print:true,parent_role:type==='breeding'?'both':'',image_url:linkedPreviewUrl(item),meta:linkedMeta(item,type),details:linkedDetails(item,type),parents:type==='breeding'?breedingParents(item):[]})
     const openReportPreviewZoom=(url,label='Preview')=>{const resolved=resolveMediaUrl(url);if(!resolved)return;window.KoiAuth.zoomPhoto(resolved,label)}
-    const getSpectrumSizes=()=>[...String(spectrumInput.value||'').matchAll(/\\d+(?:\\.\\d+)?/g)].map((match)=>Math.round(Number(match[0])*10)/10).filter((size)=>Number.isFinite(size)&&size>=0)
+    const getSpectrumSizes=()=>[...String(spectrumInput.value||'').matchAll(/\d+(?:\.\d+)?/g)].map((match)=>Math.round(Number(match[0])*10)/10).filter((size)=>Number.isFinite(size)&&size>=0)
     const getSpectrumSummary=()=>{const sizes=getSpectrumSizes();return Object.fromEntries(spectrumRanges.map(([key,,min,max])=>[key,sizes.filter((size)=>size>=min&&size<=max).length]))}
     const renderSpectrum=()=>{const summary=getSpectrumSummary();const visibleRanges=spectrumRanges.filter(([key])=>Number(summary[key]||0)>0);spectrumGrid.classList.toggle('is-empty',visibleRanges.length===0);spectrumGrid.innerHTML=visibleRanges.map(([key,label])=>`<div class="report-spectrum-item"><div class="report-spectrum-label">${label}</div><div class="report-spectrum-count">${summary[key]} ekor</div></div>`).join('')}
     const pondLabel=(pond)=>[pond.name,pond.location].filter(Boolean).join(' - ')
@@ -770,7 +771,7 @@ import DefaultLayout from '@shared/layouts/DefaultLayout.astro'
     document.head.insertAdjacentHTML('beforeend','<style>.report-parent-chip img{cursor:zoom-in}</style>')
     document.addEventListener('click',(event)=>{const chipPhoto=event.target.closest('.report-parent-chip img');if(chipPhoto)window.KoiAuth.zoomPhoto(chipPhoto.src,chipPhoto.alt)})
   </script>
-  <script is:inline src="/assets/activity-report.js?v=20261102c"></script>
+  <script is:inline src="/assets/activity-report.js?v=20261102d"></script>
   <script is:inline src="/assets/arrival-report.js?v=20261102f"></script>
 </DefaultLayout>
 

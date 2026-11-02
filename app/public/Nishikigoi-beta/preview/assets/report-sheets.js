@@ -15,12 +15,13 @@
   var LOCATION_COLUMNS = ['Kode Batch', 'Judul', 'Asal Lokasi', 'Pindah ke', 'Hasil (ekor)', 'Rata-rata Ukuran (cm)', 'Catatan Lokasi']
   var SORTING_COLUMNS = ['Kode Batch', 'Judul', 'Kategori', 'Lokasi Tujuan', 'Keterangan', 'Ekor']
   var CONDITION_COLUMNS = ['Kode Batch', 'Judul', 'Metrik Kondisi', 'Jumlah (ekor)']
+  var FISH_COLUMNS = ['Kode Batch', 'Judul', 'No', 'Jenis', 'Ukuran (cm)', 'Sex', 'Sesi Breeding', 'Male', 'Catatan']
   var ACTIVITY_COLUMNS = ['Tanggal', 'Kode Batch', 'Judul', 'Jenis Kegiatan', 'Jam Mulai', 'Jam Selesai', 'Kolam', 'Petugas', 'Uraian', 'Bahan', 'Suhu Air (°C)', 'pH Air', 'Status', 'Tindak Lanjut', 'Galeri', 'ID Galeri']
   var ARRIVAL_COLUMNS = ['Tanggal', 'Nama Laporan', 'Ikan Dari', 'Jenis', 'Sex', 'Ukuran (cm)', 'Ternakan', 'Bloodline', 'Owner', 'Lokasi Tujuan', 'Foto', 'Catatan', 'Kode Batch']
   var HELP_COLUMNS = ['Petunjuk']
   var HELP_ROWS = [
     ['Satu sheet untuk tiap jenis laporan: Data Ulang, Panen, Kegiatan, dan Ikan Datang (satu baris per ekor ikan).'],
-    ['Lokasi, Sortir, dan Kondisi adalah rincian laporan Data Ulang / Panen. Satu baris rincian = satu baris di bagian Lokasi, Detail Sortir, atau Kondisi / Reject pada formulir.'],
+    ['Ikan Satuan adalah tabel ikan pada formulir Data Ulang (satu baris per ekor, kolom Sesi Breeding diisi kode batch breeding, Male diisi kode ikan male dari sesi itu). Lokasi, Sortir, dan Kondisi adalah rincian laporan Panen / Data Ulang lama. Satu baris rincian = satu baris di bagian itu pada formulir.'],
     ['Rincian dihubungkan ke laporannya lewat Kode Batch. Untuk laporan BARU, tulis kode bebas (misalnya N1) di Kode Batch laporan dan di baris rinciannya; program memberi kode batch resminya sendiri.'],
     ['Laporan yang Kode Batch-nya sudah ada tidak diubah dan tidak dibuat dua kali. Untuk mengubah laporan yang sudah ada, pakai Edit Masal.'],
     ['Kegiatan: Kolam berisi nama kolam atau nama area (pisahkan dengan koma), Petugas berisi username akun (pisahkan dengan koma), Bahan ditulis "Garam ikan 2 kg; Obat 5 ml".'],
@@ -121,6 +122,17 @@
     })
     return files
   }
+  // Ikan Satuan of a Data Ulang report (the table of the form, kept in activity_data.fish)
+  function fishRows(items) {
+    var rows = []
+    items.filter(function (item) { return typeOf(item) === 'data_ulang' }).forEach(function (item) {
+      var data = parse(item.activity_data, {}) || {}
+      ;(Array.isArray(data.fish) ? data.fish : []).forEach(function (fish, index) {
+        rows.push([item.batch_code || '', item.report_title || '', index + 1, fish.jenis || '', numeric(fish.ukuran), fish.sex || 'unknown', fish.breeding_label || '', fish.male_label || '', fish.catatan || ''])
+      })
+    })
+    return rows
+  }
   function detailRows(items, field, pick) {
     var rows = []
     items.filter(function (item) { return typeOf(item) === 'data_ulang' || typeOf(item) === 'panen' }).forEach(function (item) {
@@ -137,11 +149,12 @@
       'Ikan Datang': { header: ARRIVAL_COLUMNS, rows: arrivalRows(items, zipMode), key: ARRIVAL_COLUMNS.length - 1 },
       'Lokasi': { header: LOCATION_COLUMNS, rows: detailRows(items, 'pond_entries', function (e) { return [e.pond_label || e.pond_name || '', e.location || '', numeric(e.result_qty), numeric(e.average_length_cm), e.notes || ''] }), key: -1 },
       'Sortir': { header: SORTING_COLUMNS, rows: detailRows(items, 'sorting_entries', function (e) { return [e.category || '', e.destination || '', e.description || '', numeric(e.qty)] }), key: -1 },
+      'Ikan Satuan': { header: FISH_COLUMNS, rows: fishRows(items), key: -1 },
       'Kondisi': { header: CONDITION_COLUMNS, rows: detailRows(items, 'condition_entries', function (e) { return [e.metric || '', numeric(e.qty)] }), key: -1 },
       'Petunjuk': { header: HELP_COLUMNS, rows: HELP_ROWS, key: -1 },
     }
   }
-  var SHEET_ORDER = ['Data Ulang', 'Panen', 'Kegiatan', 'Ikan Datang', 'Lokasi', 'Sortir', 'Kondisi', 'Petunjuk']
+  var SHEET_ORDER = ['Data Ulang', 'Panen', 'Kegiatan', 'Ikan Datang', 'Ikan Satuan', 'Lokasi', 'Sortir', 'Kondisi', 'Petunjuk']
 
   function chosenItems(ids) {
     return request('GET', '/api/farm-reports').then(function (all) {
@@ -213,7 +226,7 @@
         })
       }
       var named = function (name) { var found = workbook.SheetNames.filter(function (sheetName) { return norm(sheetName) === name })[0]; return found ? toRecords(workbook.Sheets[found]) : null }
-      var sheets = { data_ulang: named('data ulang'), panen: named('panen'), kegiatan: named('kegiatan'), ikan_datang: named('ikan datang'), lokasi: named('lokasi'), sortir: named('sortir'), kondisi: named('kondisi'), legacy: named('laporan') }
+      var sheets = { data_ulang: named('data ulang'), panen: named('panen'), kegiatan: named('kegiatan'), ikan_datang: named('ikan datang'), ikan_satuan: named('ikan satuan'), lokasi: named('lokasi'), sortir: named('sortir'), kondisi: named('kondisi'), legacy: named('laporan') }
       // an older file: the first sheet holds every report, the column Jenis says which kind
       var firstName = workbook.SheetNames[0]
       var firstRecords = firstName ? toRecords(workbook.Sheets[firstName]) : []
@@ -225,13 +238,13 @@
   }
 
   function loadLookups() {
-    return Promise.all([request('GET', '/api/ponds').catch(function () { return [] }), request('GET', '/api/farm-reports').catch(function () { return [] }), request('GET', '/api/accounts').catch(function () { return [] })]).then(function (results) {
+    return Promise.all([request('GET', '/api/ponds').catch(function () { return [] }), request('GET', '/api/farm-reports').catch(function () { return [] }), request('GET', '/api/accounts').catch(function () { return [] }), request('GET', '/api/breeding').catch(function () { return [] })]).then(function (results) {
       var ponds = Array.isArray(results[0]) ? results[0] : []
       var byName = {}
       var areas = {}
       ponds.forEach(function (pond) { byName[norm(pond.name)] = pond; if (text(pond.location)) areas[norm(pond.location)] = text(pond.location) })
       var accounts = (Array.isArray(results[2]) ? results[2] : []).filter(function (a) { return String(a.status || 'Active').toLowerCase() === 'active' })
-      return { ponds: ponds, pondByName: byName, areaByName: areas, accounts: accounts, reports: Array.isArray(results[1]) ? results[1] : [] }
+      return { ponds: ponds, pondByName: byName, areaByName: areas, accounts: accounts, breedings: Array.isArray(results[3]) ? results[3] : [], reports: Array.isArray(results[1]) ? results[1] : [] }
     })
   }
 
@@ -268,7 +281,19 @@
     var sorting = of(sheets.sortir).map(function (record) { return { category: record.kategori || '', destination: record['lokasi tujuan'] || '', description: record.keterangan || '', qty: record.ekor || '' } })
       .filter(function (entry) { return entry.category || entry.destination || entry.description || entry.qty })
     var conditions = of(sheets.kondisi).map(function (record) { return { metric: record['metrik kondisi'] || '', qty: record['jumlah (ekor)'] || '' } }).filter(function (entry) { return entry.metric || entry.qty })
-    return { pondEntries: pondEntries, sorting: sorting, conditions: conditions }
+    var fish = of(sheets.ikan_satuan).map(function (record) {
+      var typedSex = norm(record.sex)
+      var wanted = norm(record['sesi breeding'])
+      var session = wanted ? lookups.breedings.filter(function (b) { return norm(b.batch_code) === wanted || wanted.indexOf(norm(b.batch_code)) === 0 })[0] : null
+      var maleText = norm(record.male)
+      var maleEntry = session ? list(session.male_parent_entries).filter(function (m) { return norm(m.label || m.code) === maleText })[0] : null
+      return {
+        jenis: record.jenis || '', ukuran: record['ukuran (cm)'] || '', sex: typedSex === 'male' || typedSex === 'female' ? typedSex : 'unknown',
+        breeding_id: session ? String(session.id) : '', breeding_label: session ? (session.batch_code + (session.session_name ? ' - ' + session.session_name : '')) : (record['sesi breeding'] || ''),
+        male_id: maleEntry ? String(maleEntry.koi_id) : '', male_label: maleEntry ? (maleEntry.label || maleEntry.code) : (record.male || ''), catatan: record.catatan || '',
+      }
+    }).filter(function (entry) { return entry.jenis || entry.ukuran !== '' || entry.breeding_label || entry.catatan })
+    return { pondEntries: pondEntries, sorting: sorting, conditions: conditions, fish: fish }
   }
 
   function runImport(sheets, pkg, dryRun, progress, lookups) {
@@ -330,6 +355,7 @@
           average_length_cm: average === null ? '' : average, notes: record.catatan || '',
           pond_entries: details.pondEntries, sorting_entries: details.sorting, condition_entries: details.conditions,
           spectrum_sizes: spectrum,
+          activity_data: entry.type === 'data_ulang' ? { fish: details.fish, spectrum_from_fish: false } : undefined,
           origin_location: details.pondEntries.map(function (e) { return e.pond_label || e.pond_name }).filter(Boolean).filter(function (v, i, a) { return a.indexOf(v) === i }).join(', '),
           destination_location: details.pondEntries.map(function (e) { return e.location }).filter(Boolean).filter(function (v, i, a) { return a.indexOf(v) === i }).join(', '),
         },
@@ -393,7 +419,7 @@
     })
 
     // detail rows that belong to no report of this file
-    ;[['Lokasi', sheets.lokasi], ['Sortir', sheets.sortir], ['Kondisi', sheets.kondisi]].forEach(function (pair) {
+    ;[['Ikan Satuan', sheets.ikan_satuan], ['Lokasi', sheets.lokasi], ['Sortir', sheets.sortir], ['Kondisi', sheets.kondisi]].forEach(function (pair) {
       ;(pair[1] || []).forEach(function (record, index) {
         var code = String(record['kode batch'] || '').toUpperCase()
         if (!code) { problems.push(pair[0] + ' baris ' + (index + 2) + ': Kode Batch kosong, dilewati'); return }

@@ -239,6 +239,7 @@
     var readonly = false
     var filter = 'semua'
     try { filter = sessionStorage.getItem('nishikigoi-report-filter') || 'semua' } catch (e) {}
+    if (['semua', 'data_ulang', 'panen', 'kegiatan', 'ikan_datang'].indexOf(filter) < 0) filter = 'semua'
 
     // "Tambah Laporan" opens the one form directly. The report type is chosen in "Jenis Laporan" at the top of the form
     // (Data Ulang | Panen | Kegiatan | Ikan Datang), also inside the Kegiatan and Ikan Datang forms.
@@ -252,7 +253,7 @@
     var filterGroup = document.createElement('div')
     filterGroup.className = 'btn-group me-2'
     filterGroup.setAttribute('role', 'group')
-    filterGroup.innerHTML = [['semua', 'Semua'], ['perikanan', 'Perikanan'], ['kegiatan', 'Kegiatan'], ['ikan_datang', 'Ikan Datang']].map(function (item) {
+    filterGroup.innerHTML = [['semua', 'Semua'], ['data_ulang', 'Data Ulang'], ['panen', 'Panen'], ['kegiatan', 'Kegiatan'], ['ikan_datang', 'Ikan Datang']].map(function (item) {
       return '<button type="button" class="btn btn-sm" data-report-filter="' + item[0] + '">' + item[1] + '</button>'
     }).join('')
     openButton.parentNode.insertBefore(filterGroup, openButton)
@@ -607,7 +608,8 @@
         var isArrival = Boolean(report && report.report_type === 'ikan_datang')
         // Table rows hide themselves; a card hides its column.
         var host = row.closest('tr') || row.closest('[class*="col-"]') || row
-        host.classList.toggle('d-none', (filter === 'kegiatan' && !isActivity) || (filter === 'ikan_datang' && !isArrival) || (filter === 'perikanan' && (isActivity || isArrival)))
+        var kind = report ? (report.report_type === 'panen' || report.report_type === 'kegiatan' || report.report_type === 'ikan_datang' ? report.report_type : 'data_ulang') : 'data_ulang'
+        host.classList.toggle('d-none', filter !== 'semua' && kind !== filter)
         if (isArrival) {
           var arrivalBadge = row.closest('.report-card') && row.closest('.report-card').querySelector('.report-card-top .badge')
           var arrivalText = 'Ikan Datang'
