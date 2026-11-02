@@ -8,7 +8,7 @@ route('GET', '/farm-reports', function () {
          FROM farm_reports
          LEFT JOIN ponds ON ponds.id = farm_reports.pond_id
          LEFT JOIN koi ON koi.id = farm_reports.koi_id
-         ORDER BY farm_reports.created_at DESC LIMIT 50"
+         ORDER BY farm_reports.report_date DESC, farm_reports.created_at DESC LIMIT 50"
     ));
 });
 
