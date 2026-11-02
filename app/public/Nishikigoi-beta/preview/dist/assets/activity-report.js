@@ -341,6 +341,22 @@
       return '<button type="button" class="btn btn-sm" data-report-filter="' + item[0] + '">' + item[1] + '</button>'
     }).join('')
     openButton.parentNode.insertBefore(filterGroup, openButton)
+    // A/Z | Z/A: the order of the cards by report date (Z/A = newest first, A/Z = oldest first, the same words as Data Ikan)
+    var sortDesc = true
+    try { sortDesc = sessionStorage.getItem('nishikigoi-report-sort') !== 'asc' } catch (e) {}
+    var sortButton = document.createElement('button')
+    sortButton.type = 'button'
+    sortButton.className = 'btn btn-outline-primary btn-sm me-2'
+    sortButton.setAttribute('data-report-sort', '')
+    sortButton.style.cssText = 'height:2.5rem;min-width:3.2rem;font-weight:600'
+    function paintSort() {
+      sortButton.textContent = sortDesc ? 'Z/A' : 'A/Z'
+      sortButton.setAttribute('aria-pressed', sortDesc ? 'true' : 'false')
+      sortButton.title = sortDesc ? 'Urutan tanggal: terbaru di atas (Z ke A)' : 'Urutan tanggal: terlama di atas (A ke Z)'
+      sortButton.setAttribute('aria-label', sortButton.title)
+    }
+    paintSort()
+    openButton.parentNode.insertBefore(sortButton, openButton)
     openButton.parentNode.classList.add('d-flex', 'align-items-center', 'flex-wrap', 'gap-2')
 
     // ---- form ----
@@ -711,6 +727,21 @@
           if (badge && badge.textContent !== text) { badge.textContent = text; badge.className = 'badge bg-orange-lt' }
         }
       })
+      sortCards()
+    }
+    // cards are in the order of the server (newest report date first); Z/A keeps that, A/Z reverses it. Only moves cards when the order is wrong.
+    function sortCards() {
+      var hosts = Array.prototype.filter.call(table.children, function (el) { return el.querySelector && el.querySelector('[data-report-id]') })
+      if (hosts.length < 2) return
+      function key(el) { var r = reportsById.get(String(el.querySelector('[data-report-id]').dataset.reportId)) || {}; return [String(r.report_date || ''), String(r.created_at || ''), Number(r.id) || 0] }
+      var sorted = hosts.slice().sort(function (x, y) {
+        var a = key(x), b = key(y), n = 0
+        for (var i = 0; i < 3 && !n; i += 1) n = a[i] < b[i] ? -1 : a[i] > b[i] ? 1 : 0
+        return sortDesc ? -n : n
+      })
+      var same = sorted.every(function (el, i) { return el === hosts[i] })
+      if (same) return
+      sorted.forEach(function (el) { table.appendChild(el) })
     }
     function loadReports() {
       return request('/farm-reports').then(function (reports) {
@@ -766,6 +797,13 @@
       filter = button.dataset.reportFilter
       try { sessionStorage.setItem('nishikigoi-report-filter', filter) } catch (e) {}
       decorateRows()
+    })
+
+    sortButton.addEventListener('click', function () {
+      sortDesc = !sortDesc
+      try { sessionStorage.setItem('nishikigoi-report-sort', sortDesc ? 'desc' : 'asc') } catch (e) {}
+      paintSort()
+      sortCards()
     })
 
     activityItem.addEventListener('click', function () { openForm(null, false) })
