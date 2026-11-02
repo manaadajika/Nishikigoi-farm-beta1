@@ -31,7 +31,7 @@
   }
   function currentType() { var radio = form && form.querySelector('input[name="report_type"]:checked'); return radio ? radio.value : '' }
   function hide(element, flag) { element.style.display = flag ? 'none' : '' }
-  function isReadonly() { var title = modal && modal.querySelector('[data-report-modal-title]'); return Boolean(title && /Detail/i.test(title.textContent)) }
+  function isReadonly() { var title = modal && modal.querySelector('[data-report-modal-title]'); return Boolean(title && (title.dataset.koiKind === 'detail' || /Detail/i.test(title.textContent))) }
 
   // ---- what the page loads and saves -----------------------------------------------------------------------------------------------
   var originalFetch = window.fetch
@@ -288,6 +288,21 @@
     var conditionSection = conditionList.closest('.report-form-section')
     hide(pondSection, isData && !pondList.children.length)
     hide(conditionSection, isData && !conditionList.children.length)
+    // the form of an existing report is titled like the others ("Laporan Panen PAN-26-11-01") and does not offer another type
+    var typeSection = form.querySelector('input[name="report_type"]').closest('.report-form-section')
+    var heading = modal.querySelector('[data-report-modal-title]')
+    if (heading) {
+      if (!existing) { heading.dataset.koiKind = ''; hide(typeSection, false) }
+      else {
+        var shownText = heading.textContent
+        if (/^Detail/i.test(shownText)) heading.dataset.koiKind = 'detail'
+        else if (/Edit/i.test(shownText) && !/^Edit Laporan /.test(shownText)) heading.dataset.koiKind = 'edit'
+        var kindLabel = existing.report_type === 'panen' ? 'Panen' : 'Data Ulang'
+        var wanted = (heading.dataset.koiKind === 'detail' ? 'Laporan ' : 'Edit Laporan ') + kindLabel + (existing.batch_code ? ' ' + existing.batch_code : '')
+        if (heading.dataset.koiKind && shownText !== wanted) heading.textContent = wanted
+        hide(typeSection, true)
+      }
+    }
     // the form of an existing report shows its own Kode Batch (the page fills in the next free code instead)
     var title = modal.querySelector('[data-report-modal-title]')
     var opened = currentId && title && !/Tambah/i.test(title.textContent) ? reportsById[currentId] : null

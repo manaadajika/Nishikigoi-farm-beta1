@@ -101,6 +101,9 @@
     '.koi-type-box{padding:0;margin-bottom:1rem}' +
     '.koi-type-box>.form-label{margin-bottom:.35rem}' +
     '.input-group:has(>[data-activity-other].d-none){display:none!important}' +
+    'body.koi-switching .modal-backdrop,body.koi-switching .modal-backdrop.fade,body.koi-switching .modal-backdrop.show{transition:none!important;opacity:0!important}' +
+    'body.koi-switched .modal-backdrop{transition:none!important}' +
+    '.koi-switch-shade{position:fixed;inset:0;z-index:1049;pointer-events:none;background:var(--tblr-backdrop-bg,#182433);opacity:var(--tblr-backdrop-opacity,.32);backdrop-filter:blur(4px)}' +
     '.koi-type-grid{display:grid!important;grid-template-columns:repeat(4,minmax(0,1fr));gap:0;margin:0!important;border:1px solid var(--tblr-border-color);border-radius:8px;overflow:hidden;background:var(--tblr-bg-surface)}' +
     '.koi-type-grid .form-selectgroup-item{margin:0!important;flex:none!important;min-width:0}' +
     '.koi-type-grid .form-selectgroup-item+.form-selectgroup-item{border-left:1px solid var(--tblr-border-color)}' +
@@ -157,6 +160,18 @@
   function switchType(fromModal, hide, type) {
     var fromFamily = fromModal.hasAttribute('data-activity-modal') ? 'kegiatan' : fromModal.hasAttribute('data-arrival-modal') ? 'ikan_datang' : 'perikanan'
     var carried = readShared(fromFamily)
+    // while the forms swap, the dark layer behind them neither fades out nor fades in again (that was the flash)
+    // the real backdrop is hidden for a moment and an identical layer stands in for it, so the page never lights up between the two forms
+    var shade = document.createElement('div')
+    shade.className = 'koi-switch-shade'
+    document.body.appendChild(shade)
+    document.body.classList.add('koi-switching')
+    setTimeout(function () {
+      document.body.classList.add('koi-switched')
+      document.body.classList.remove('koi-switching')
+      shade.remove()
+      setTimeout(function () { document.body.classList.remove('koi-switched') }, 400)
+    }, 900)
     var toFamily = typeFamily(type)
     var toModal = null
     try { toModal = modalOfFamily(toFamily) } catch (e) {}
