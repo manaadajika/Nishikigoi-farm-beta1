@@ -3,7 +3,7 @@
 // The first two parts are written here (raise the date on every release); the last part is the commit this folder is on, read from .git
 // (no git process needed), so a program taken from GitHub always shows exactly which version of GitHub it is.
 
-const APP_VERSION_LABEL = 'V2-261024';
+const APP_VERSION_LABEL = 'V2-261102';
 
 function app_commit(): string {
     $git = dirname(__DIR__, 2) . '/.git';
