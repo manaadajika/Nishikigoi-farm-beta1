@@ -395,3 +395,11 @@ route_pattern('POST', '#^/ponds/kanban/(\d+)/images/remove$#', function (array $
     $row['deleted_files'] = $deleted;
     send_json(200, $row);
 });
+
+// Every active card of every pond (with the pond's name): the "Kanban" sheet of the Edit Masal file of Data Kolam.
+route('GET', '/ponds/kanban-all', function () {
+    send_json(200, ['items' => query(
+        "SELECT k.id, k.pond_id, p.name AS pond_name, k.title, k.body, k.note_date, k.qty, k.color
+         FROM pond_kanban k JOIN ponds p ON p.id = k.pond_id WHERE k.deleted_at IS NULL ORDER BY p.name, k.sort_order, k.id"
+    )]);
+});

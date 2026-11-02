@@ -120,13 +120,13 @@ route('POST', '/koi/macro-apply', function () {
 route('GET', '/koi/macro-batches', function () {
     require_account();
     execute('DELETE FROM koi_macro_batches WHERE created_at < (NOW() - INTERVAL 30 DAY)');
-    $rows = query('SELECT id, created_at, actor, source, row_count, undone_at FROM koi_macro_batches ORDER BY id DESC LIMIT 30');
+    $rows = query("SELECT id, created_at, actor, source, row_count, undone_at FROM koi_macro_batches WHERE entity = 'koi' ORDER BY id DESC LIMIT 30");
     send_json(200, ['items' => $rows]);
 });
 
 route_pattern('POST', '#^/koi/macro-batches/(\d+)/undo$#', function (array $m) {
     $session = require_account();
-    $batch = query_one('SELECT * FROM koi_macro_batches WHERE id = ?', [$m[1]]);
+    $batch = query_one("SELECT * FROM koi_macro_batches WHERE id = ? AND entity = 'koi'", [$m[1]]);
     if (!$batch) send_error(404, 'Edit masal tidak ditemukan.');
     if ($batch['undone_at']) send_error(409, 'Edit masal ini sudah dibatalkan.');
     $changes = json_decode((string)$batch['changes'], true);

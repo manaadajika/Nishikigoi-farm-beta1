@@ -5,7 +5,7 @@ require_once __DIR__ . '/cache.php';
 
 require_once __DIR__ . '/koi_link.php';
 
-const KOI_SCHEMA_REV = 20261106;
+const KOI_SCHEMA_REV = 20261107;
 
 // PHP 8.5 renamed the MySQL driver constants (Pdo\Mysql::ATTR_*); older versions only know PDO::MYSQL_ATTR_*.
 function koi_pdo_init_command(): int {
@@ -138,6 +138,10 @@ function ensure_koi_macro_schema(PDO $pdo): void {
               undone_at DATETIME NULL
             ) ENGINE=InnoDB"
         );
+        // the same table keeps the edits of Breeding, Laporan and Data Kolam too (handlers/macro.php)
+        if (!$pdo->query("SHOW COLUMNS FROM koi_macro_batches LIKE 'entity'")->fetch()) {
+            $pdo->exec("ALTER TABLE koi_macro_batches ADD COLUMN entity VARCHAR(20) NOT NULL DEFAULT 'koi'");
+        }
     } catch (Throwable $e) {
         // Another request may be creating the table at the same moment.
     }
