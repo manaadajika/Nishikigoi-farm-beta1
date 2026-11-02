@@ -312,14 +312,17 @@
     var mediaStatus = modal.querySelector('[data-arrival-media-status]')
 
     function showModal() {
+      if (modal.__koiHost) { modal.classList.add('show'); return }
       var api = kit.modalApi()
       if (api) api.getOrCreateInstance(modal).show()
       else { modal.classList.add('show'); modal.style.display = 'block' }
     }
     function hideModal() {
+      if (!kit.guestClose(modal)) {
       var api = kit.modalApi()
       if (api) { var instance = api.getInstance(modal); if (instance) instance.hide() }
       else { modal.classList.remove('show'); modal.style.display = 'none' }
+      }
       // lets the page reload its list (Laporan refreshes on window focus)
       setTimeout(function () { window.dispatchEvent(new Event('focus')); loadReports() }, 400)
     }

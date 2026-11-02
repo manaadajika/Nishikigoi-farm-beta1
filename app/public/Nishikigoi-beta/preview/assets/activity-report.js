@@ -167,11 +167,68 @@
   }
   function modalOfFamily(family) { return document.querySelector(sharedFields[family].root + '').closest('.modal') }
 
+  // ONE window for every kind of report: the dialog that is open stays open (same backdrop, same frame) and only its content is swapped:
+  // the dialog of the next kind moves into it and the old one is hidden. When the window closes everything goes back to its own place.
+  // The next kind's own modal element is placed INSIDE the open one (so everything that form looks up in its own modal keeps working, and
+  // clicks, typing and Escape still reach the open window) and shown by hand; the open window's own dialog is only hidden meanwhile.
+  function guestRelease(host) {
+    var guest = host.__guest
+    if (guest) {
+      guest.modal.style.display = 'none'
+      guest.modal.classList.remove('show')
+      guest.modal.setAttribute('aria-hidden', 'true')
+      guest.modal.__koiHost = null
+      if (guest.parent) guest.parent.insertBefore(guest.modal, guest.next || null)
+    }
+    host.__guest = null
+    if (host.__own) host.__own.style.display = ''
+  }
+  function guestSwap(host, toModal) {
+    if (!host.__own) {
+      host.__own = host.querySelector(':scope > .modal-dialog')
+      host.addEventListener('hidden.bs.modal', function () { guestRelease(host) })
+    }
+    guestRelease(host)
+    if (toModal === host) return
+    var parent = toModal.parentNode
+    var next = toModal.nextSibling
+    host.appendChild(toModal)
+    toModal.style.transition = 'none'
+    toModal.style.display = 'block'
+    toModal.classList.add('show')
+    toModal.removeAttribute('aria-hidden')
+    host.__own.style.display = 'none'
+    host.__guest = { modal: toModal, parent: parent, next: next }
+    toModal.__koiHost = host
+  }
+  // the form that lives as a guest closes the window it is in
+  function guestClose(modal) {
+    var host = modal.__koiHost
+    if (!host) return false
+    // the window fades out with the guest still in it; everything goes back to its place once it is closed (hidden.bs.modal)
+    var api = modalApi()
+    var instance = api && api.getInstance(host)
+    if (instance) instance.hide()
+    return true
+  }
+
   // Changes the report type without the dialog flashing: the next form opens in the same moment the old one closes
   // (no fade, no gap), and the date, title and text typed so far move along.
   function switchType(fromModal, hide, type) {
     var fromFamily = fromModal.hasAttribute('data-activity-modal') ? 'kegiatan' : fromModal.hasAttribute('data-arrival-modal') ? 'ikan_datang' : 'perikanan'
     var carried = readShared(fromFamily)
+    // the usual way: one window, its content swapped (no closing, no opening)
+    var hostModal = fromModal.__koiHost || fromModal
+    var mainModal = document.querySelector('[data-report-modal]')
+    var toFamily = typeFamily(type)
+    var target = null
+    try { target = modalOfFamily(toFamily) } catch (e) {}
+    if (target && hostModal.classList.contains('show') && (target !== mainModal || hostModal === mainModal)) {
+      guestSwap(hostModal, target)
+      openType(type)
+      ;[60, 400, 1000].forEach(function (delay) { setTimeout(function () { applyShared(toFamily, carried, delay > 60) }, delay) })
+      return
+    }
     // while the forms swap, the dark layer behind them neither fades out nor fades in again (that was the flash)
     // the real backdrop is hidden for a moment and an identical layer stands in for it, so the page never lights up between the two forms
     var shade = document.createElement('div')
@@ -248,7 +305,7 @@
   }
 
   window.KoiReportKit = {
-    typeChooserHtml: typeChooserHtml, openType: openType, switchType: switchType,
+    typeChooserHtml: typeChooserHtml, openType: openType, switchType: switchType, guestClose: guestClose,
     escapeHtml: escapeHtml, parse: parse, formatDate: formatDate, today: today, canWrite: canWrite, modalApi: modalApi,
     request: request, compressImage: compressImage, readDataUrl: readDataUrl, videoThumbnail: videoThumbnail,
   }
@@ -400,14 +457,17 @@
     })
 
     function showModal() {
+      if (modal.__koiHost) { modal.classList.add('show'); return }
       var api = modalApi()
       if (api) api.getOrCreateInstance(modal).show()
       else { modal.classList.add('show'); modal.style.display = 'block' }
     }
     function hideModal() {
+      if (!guestClose(modal)) {
       var api = modalApi()
       if (api) { var instance = api.getInstance(modal); if (instance) instance.hide() }
       else { modal.classList.remove('show'); modal.style.display = 'none' }
+      }
       // lets the page reload its list (Laporan refreshes on window focus)
       setTimeout(function () { window.dispatchEvent(new Event('focus')); loadReports() }, 400)
     }
