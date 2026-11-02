@@ -8,6 +8,7 @@
   'use strict'
 
   var CLEAR = /^\[kosong\]$/i
+  var pageActions = []
   function text(value) { return String(value == null ? '' : value).trim() }
   function esc(value) { return String(value == null ? '' : value).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c] }) }
   function day(value) { return text(value).slice(0, 10) }
@@ -108,6 +109,7 @@
     var originalCreate = window.KoiDock.create
     window.KoiDock.create = function (options) {
       options = options || {}
+      pageActions = options.actions || []
       options.actions = (options.actions || []).concat([{
         key: 'macro-edit', icon: 'file-edit-masal', title: 'Edit masal dari Excel atau ZIP', variant: 'success', role: 'database-write',
         always: true, show: function () { return true }, onClick: function () { open() },
@@ -130,11 +132,13 @@
         '<div class="modal-body">' +
           '<div class="mb-3"><div class="fw-semibold mb-1">1. Unduh data</div>' +
             '<div class="text-secondary small mb-2">Mengunduh Excel berisi semua data yang bisa diedit. Kolom pertama, <strong>' + esc(keyLabels) + '</strong>, adalah ID barisnya.</div>' +
-            '<button class="btn btn-outline-success" type="button" data-macro-download>Unduh Excel untuk diedit</button></div>' +
+            '<div class="d-flex flex-wrap gap-2"><button class="btn btn-outline-success" type="button" data-macro-download>Unduh Excel untuk diedit</button>' +
+            '<button class="btn btn-outline-success" type="button" data-macro-zip>Unduh ZIP (Excel + dokumentasi)</button>' +
+            '<button class="btn btn-outline-success" type="button" data-macro-blank title="Excel berisi judul kolom saja, untuk mengisi data baru lalu memasukkannya lewat tombol Impor">Unduh template kosong (entry baru)</button></div></div>' +
           '<div class="mb-3"><div class="fw-semibold mb-1">2. Ubah file, lalu unggah</div>' +
             '<ul class="text-secondary small mb-2 ps-3"><li>Hapus kolom yang tidak ingin diubah. Yang wajib hanya kolom ID.</li>' +
             '<li>Sel kosong berarti tidak diubah. Untuk mengosongkan isian, tulis <code>[kosong]</code>.</li>' +
-            '<li>ID yang tidak ada dilewati. Data yang tidak ada di file tidak berubah dan tidak dihapus. Tidak ada data baru yang dibuat.</li>' +
+            '<li>ID yang tidak ada dilewati. Data yang tidak ada di file tidak berubah dan tidak dihapus. Edit masal tidak membuat data baru; untuk data baru pakai template kosong lalu tombol Impor.</li>' +
             '<li>File ZIP dari unduhan halaman ini juga bisa diunggah (yang dibaca hanya Excel-nya).</li></ul>' +
             '<input class="form-control" type="file" accept=".xlsx,.xls,.zip" data-macro-file /></div>' +
           '<div data-macro-status class="small text-secondary mb-2"></div><div data-macro-preview></div>' +
@@ -151,6 +155,8 @@
     })
     modalEl.addEventListener('click', function (event) {
       if (event.target.closest('[data-macro-download]')) { download(event.target.closest('[data-macro-download]')); return }
+      if (event.target.closest('[data-macro-zip]')) { pageAction('zip'); return }
+      if (event.target.closest('[data-macro-blank]')) { blankTemplate(); return }
       if (event.target.closest('[data-macro-apply]')) { apply(); return }
       var undo = event.target.closest('[data-macro-undo]')
       if (undo) undoBatch(undo.getAttribute('data-macro-undo'), undo)
@@ -172,6 +178,30 @@
     loadHistory()
     var Modal = modalApi()
     if (Modal) Modal.getOrCreateInstance(modalEl).show()
+  }
+
+  // The ZIP of the page itself (Excel + photos and documentation), the same as the dock's ZIP button, for everything the page shows.
+  function pageAction(key) {
+    var action = pageActions.filter(function (a) { return a.key === key })[0]
+    if (!action) { status('Fitur ini belum tersedia di halaman ini.', true); return false }
+    action.onClick([])
+    return true
+  }
+  // The empty frame for new entries: the page's own Excel export with only its title row (so the columns are exactly the ones its Impor reads).
+  function blankTemplate() {
+    var sheetUtils = window.XLSX && window.XLSX.utils
+    if (!sheetUtils) { status('Pustaka Excel belum termuat. Muat ulang halaman.', true); return }
+    var originalSheet = sheetUtils.aoa_to_sheet
+    var originalClick = HTMLAnchorElement.prototype.click
+    var name = 'template-kosong-' + pageKey.replace('farm-', '') + '.xlsx'
+    sheetUtils.aoa_to_sheet = function (rows, opts) { return originalSheet.call(this, (rows || []).slice(0, 1), opts) }
+    HTMLAnchorElement.prototype.click = function () { if (this.download) this.download = name; return originalClick.apply(this, arguments) }
+    try {
+      if (pageAction('export')) status('Template kosong diunduh. Isi baris di bawah judul kolom, lalu masukkan lewat tombol Impor di dock.')
+    } finally {
+      sheetUtils.aoa_to_sheet = originalSheet
+      HTMLAnchorElement.prototype.click = originalClick
+    }
   }
 
   // ---- download ---------------------------------------------------------------------------------------------------------------------------------

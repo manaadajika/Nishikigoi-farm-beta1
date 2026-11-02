@@ -52,11 +52,12 @@ function koiMacroBoot() {
         '<div class="modal-body">' +
           '<div class="mb-3"><div class="fw-semibold mb-1">1. Unduh data</div>' +
             '<div class="text-secondary small mb-2">Pilih ikan di daftar (atau biarkan kosong untuk semua hasil pencarian dan filter), lalu unduh. Kolom pertama, <strong>Kode Koi</strong>, adalah ID ikan.</div>' +
-            '<div class="d-flex gap-2 flex-wrap"><button class="btn btn-outline-success" type="button" data-macro-download="xlsx">Unduh Excel</button><button class="btn btn-outline-success" type="button" data-macro-download="zip">Unduh ZIP (Excel + foto)</button></div></div>' +
+            '<div class="d-flex gap-2 flex-wrap"><button class="btn btn-outline-success" type="button" data-macro-download="xlsx">Unduh Excel</button><button class="btn btn-outline-success" type="button" data-macro-download="zip">Unduh ZIP (Excel + foto)</button>' +
+            '<button class="btn btn-outline-success" type="button" data-macro-blank="xlsx" title="Excel berisi judul kolom saja, untuk ikan baru">Template kosong Excel (entry baru)</button><button class="btn btn-outline-success" type="button" data-macro-blank="zip" title="Contoh ZIP: Excel kosong dan folder foto, untuk ikan baru">Template kosong ZIP (entry baru)</button></div></div>' +
           '<div class="mb-3"><div class="fw-semibold mb-1">2. Ubah file, lalu unggah</div>' +
             '<ul class="text-secondary small mb-2 ps-3"><li>Hapus kolom yang tidak ingin diubah. Yang wajib hanya <strong>Kode Koi</strong>.</li>' +
             '<li>Sel kosong berarti tidak diubah. Untuk mengosongkan isian, tulis <code>[kosong]</code>.</li>' +
-            '<li>Kode Koi yang tidak ada di Data Ikan dilewati. Ikan yang tidak ada di file tidak berubah dan tidak dihapus.</li>' +
+            '<li>Kode Koi yang tidak ada di Data Ikan dilewati (ikan baru: pakai template kosong lalu tombol Impor). Ikan yang tidak ada di file tidak berubah dan tidak dihapus.</li>' +
             '<li>Di ZIP, foto bernama sama dengan Kode Koi (atau kolom Nama Foto) masuk ke History Progress Foto.</li></ul>' +
             '<input class="form-control" type="file" accept=".xlsx,.xls,.zip" data-macro-file /></div>' +
           '<div data-macro-status class="small text-secondary mb-2"></div>' +
@@ -80,6 +81,12 @@ function koiMacroBoot() {
         var selector = download.getAttribute('data-macro-download') === 'xlsx' ? '[data-export-selected-spreadsheet]' : '[data-download-selected-images]'
         var button = document.querySelector(selector)
         if (button) button.click()
+        return
+      }
+      var blank = event.target.closest('[data-macro-blank]')
+      if (blank) {
+        var tpl = document.querySelector(blank.getAttribute('data-macro-blank') === 'xlsx' ? '[data-export-koi-excel-template]' : '[data-export-koi-zip-template]')
+        if (tpl) tpl.click()
         return
       }
       if (event.target.closest('[data-macro-apply]')) { apply(); return }
