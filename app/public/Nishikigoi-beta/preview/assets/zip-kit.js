@@ -316,9 +316,12 @@
     sheet['!cols'] = options.header.concat(['Dokumentasi']).map(function (column) { return { wch: Math.max(14, String(column).length + 2) } })
     XLSX.utils.book_append_sheet(workbook, sheet, options.sheetName)
     ;(options.extraSheets || []).forEach(function (extra) {
-      var extraRows = extra.rows.map(function (row) { return row.concat([folderOf(row[extra.keyColumn])]) })
-      var extraSheet = XLSX.utils.aoa_to_sheet([extra.header.concat(['Dokumentasi'])].concat(extraRows))
-      extraSheet['!cols'] = extra.header.concat(['Dokumentasi']).map(function (column) { return { wch: Math.max(14, String(column).length + 2) } })
+      // keyColumn -1: a sheet without documentation (details, instructions) gets no "Dokumentasi" column
+      var withDocs = extra.keyColumn >= 0
+      var extraRows = withDocs ? extra.rows.map(function (row) { return row.concat([folderOf(row[extra.keyColumn])]) }) : extra.rows
+      var extraHeader = withDocs ? extra.header.concat(['Dokumentasi']) : extra.header
+      var extraSheet = XLSX.utils.aoa_to_sheet([extraHeader].concat(extraRows))
+      extraSheet['!cols'] = extraHeader.map(function (column) { return { wch: Math.max(14, String(column).length + 2) } })
       XLSX.utils.book_append_sheet(workbook, extraSheet, extra.name)
     })
     var xlsx = XLSX.write(workbook, { type: 'array', bookType: 'xlsx' })

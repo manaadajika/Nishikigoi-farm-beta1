@@ -59,16 +59,22 @@
       title: 'Edit Masal Laporan',
       sheetName: 'Laporan',
       targets: [{
-        entity: 'reports', keyHeaders: ['kode batch', 'kode'], keyLabel: 'Kode Batch', upper: false,
+        entity: 'reports', keyHeaders: ['kode batch', 'kode'], keyLabel: 'Kode Batch', upper: false, multi: true,
+        // the sheets of the page's own Excel / ZIP that are not a list of reports (details, instructions, one row per fish) are not read
+        skip: function (headers, sheetName) { return ['lokasi', 'sortir', 'kondisi', 'petunjuk'].indexOf(norm(sheetName)) >= 0 || headers.indexOf('ikan dari') >= 0 },
+        // one sheet for each kind of report, like the page's own Excel
+        split: {
+          by: function (item) { return item.report_type === 'panen' ? 'Panen' : item.report_type === 'kegiatan' ? 'Kegiatan' : item.report_type === 'ikan_datang' ? 'Ikan Datang' : 'Data Ulang' },
+          order: ['Data Ulang', 'Panen', 'Kegiatan', 'Ikan Datang'],
+          columns: { 'Data Ulang': ['Tanggal', 'Judul', 'Varietas Dominan', 'Rata-rata Ukuran (cm)', 'Catatan'], 'Panen': ['Tanggal', 'Judul', 'Varietas Dominan', 'Rata-rata Ukuran (cm)', 'Catatan'], 'Kegiatan': ['Tanggal', 'Judul', 'Catatan'], 'Ikan Datang': ['Tanggal', 'Judul', 'Catatan'] },
+        },
         load: function () { return getJson('/api/farm-reports').then(function (list) { return list.map(function (item) { return { key: item.batch_code, item: item } }) }) },
         columns: [
           { header: 'Tanggal', aliases: ['tanggal laporan'], field: 'report_date', type: 'date', get: function (i) { return day(i.report_date) } },
-          { header: 'Judul', aliases: ['judul laporan'], field: 'report_title', type: 'text', get: function (i) { return i.report_title } },
+          { header: 'Judul', aliases: ['judul laporan', 'nama laporan'], field: 'report_title', type: 'text', get: function (i) { return i.report_title } },
           { header: 'Varietas Dominan', aliases: [], field: 'dominant_variety', type: 'text', get: function (i) { return i.dominant_variety } },
-          { header: 'Lokasi Asal', aliases: [], field: 'origin_location', type: 'text', get: function (i) { return i.origin_location } },
-          { header: 'Lokasi Tujuan', aliases: [], field: 'destination_location', type: 'text', get: function (i) { return i.destination_location } },
           { header: 'Rata-rata Ukuran (cm)', aliases: ['rata-rata ukuran'], field: 'average_length_cm', type: 'decimal', get: function (i) { return i.average_length_cm } },
-          { header: 'Catatan', aliases: [], field: 'notes', type: 'text', get: function (i) { return i.notes } },
+          { header: 'Catatan', aliases: ['uraian'], field: 'notes', type: 'text', get: function (i) { return i.notes } },
         ],
       }],
     },
@@ -206,7 +212,7 @@
       sheetUtils.aoa_to_sheet = originalSheet
       HTMLAnchorElement.prototype.click = originalClick
     }
-    sheetUtils.aoa_to_sheet = function (rows, opts) { return originalSheet.call(this, (rows || []).slice(0, 1), opts) }
+    sheetUtils.aoa_to_sheet = function (rows, opts) { var keep = rows && rows[0] && rows[0][0] === 'Petunjuk' ? rows : (rows || []).slice(0, 1); return originalSheet.call(this, keep, opts) }
     HTMLAnchorElement.prototype.click = function () {
       if (this.download) this.download = name
       var result = originalClick.apply(this, arguments)
@@ -232,11 +238,21 @@
       var workbook = XLSX.utils.book_new()
       config.targets.forEach(function (target, index) {
         var extra = target.extraExportColumns || []
-        var header = [target.keyLabel].concat(extra.map(function (c) { return c[0] })).concat(target.columns.map(function (c) { return c.header }))
-        var rows = loaded[index].map(function (entry) {
-          return [entry.key].concat(extra.map(function (c) { return c[1](entry.item) })).concat(target.columns.map(function (c) { var v = c.get(entry.item); if (v == null) return ''; return (c.type === 'int' || c.type === 'decimal') && /^-?\d+(\.\d+)?$/.test(String(v).trim()) ? Number(v) : v }))
-        })
-        XLSX.utils.book_append_sheet(workbook, XLSX.utils.aoa_to_sheet([header].concat(rows)), target.sheet || config.sheetName)
+        var makeSheet = function (entries, columns) {
+          var header = [target.keyLabel].concat(extra.map(function (c) { return c[0] })).concat(columns.map(function (c) { return c.header }))
+          var rows = entries.map(function (entry) {
+            return [entry.key].concat(extra.map(function (c) { return c[1](entry.item) })).concat(columns.map(function (c) { var v = c.get(entry.item); if (v == null) return ''; return (c.type === 'int' || c.type === 'decimal') && /^-?\d+(\.\d+)?$/.test(String(v).trim()) ? Number(v) : v }))
+          })
+          return XLSX.utils.aoa_to_sheet([header].concat(rows))
+        }
+        if (target.split) {
+          target.split.order.forEach(function (sheetName) {
+            var wanted = target.split.columns[sheetName]
+            XLSX.utils.book_append_sheet(workbook, makeSheet(loaded[index].filter(function (entry) { return target.split.by(entry.item) === sheetName }), target.columns.filter(function (c) { return wanted.indexOf(c.header) >= 0 })), sheetName)
+          })
+        } else {
+          XLSX.utils.book_append_sheet(workbook, makeSheet(loaded[index], target.columns), target.sheet || config.sheetName)
+        }
       })
       var buffer = XLSX.write(workbook, { type: 'array', bookType: 'xlsx' })
       var blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' })
@@ -277,7 +293,7 @@
       var rows = XLSX.utils.sheet_to_json(workbook.Sheets[sheetName], { defval: '', raw: false })
       if (!rows.length) return
       var headers = Object.keys(rows[0]).map(norm)
-      var target = config.targets.filter(function (t) { return !used[t.entity] && t.keyHeaders.some(function (h) { return headers.indexOf(h) >= 0 }) })
+      var target = config.targets.filter(function (t) { return (t.multi || !used[t.entity]) && !(t.skip && t.skip(headers, sheetName)) && t.keyHeaders.some(function (h) { return headers.indexOf(h) >= 0 }) })
       // a sheet named like a target wins when several fit
       var named = target.filter(function (t) { return t.sheet && norm(t.sheet) === norm(sheetName) })[0]
       var chosen = named || target[0]
@@ -371,7 +387,7 @@
     plan.sections.forEach(function (section) {
       var cells = section.changes.reduce(function (sum, change) { return sum + change.diffs.length }, 0)
       totalChanges += section.changes.length
-      html += '<div class="fw-semibold mt-2">' + esc(section.target.entity === 'kanban' ? 'Kanban kolam' : section.target.keyLabel === 'Nama Kolam' ? 'Data Kolam' : config.title.replace('Edit Masal ', '')) + (plan.sections.length > 1 ? ' (sheet ' + esc(section.sheet) + ')' : '') + '</div>' +
+      html += '<div class="fw-semibold mt-2">' + esc(section.target.entity === 'kanban' ? 'Kanban kolam' : section.target.keyLabel === 'Nama Kolam' ? 'Data Kolam' : section.target.multi ? 'Sheet ' + section.sheet : config.title.replace('Edit Masal ', '')) + (!section.target.multi && plan.sections.length > 1 ? ' (sheet ' + esc(section.sheet) + ')' : '') + '</div>' +
         '<div class="d-flex flex-wrap gap-2 mb-2"><span class="badge bg-green-lt">Berubah: ' + section.changes.length + ' baris (' + cells + ' isian)</span>' +
         '<span class="badge bg-secondary-lt">Tanpa perubahan: ' + section.unchanged + '</span>' +
         '<span class="badge bg-orange-lt">ID tidak ditemukan (dilewati): ' + section.missing.length + '</span>' +
