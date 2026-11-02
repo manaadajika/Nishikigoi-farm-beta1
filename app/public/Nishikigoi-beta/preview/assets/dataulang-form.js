@@ -255,6 +255,46 @@
     specCheck.disabled = locked
   }
 
+  // ---- print: the Ikan Satuan table of a Data Ulang and the per-place details of a Panen are added to the program's print ---------------------------------------
+  function printExtra(report) {
+    var data = parse(report.activity_data, {}) || {}
+    var html = ''
+    var cell = function (value) { return esc(value == null || value === '' ? '-' : value) }
+    if (report.report_type === 'data_ulang' && Array.isArray(data.fish) && data.fish.length) {
+      html += '<section class="kp-section"><h2>Ikan Satuan</h2><table class="kp-table"><thead><tr><th class="kp-center" style="width:28px">No</th><th class="kp-center" style="width:44px">Foto</th><th>Jenis</th><th class="kp-num">Ukuran (cm)</th><th>Sex</th><th>Sesi Breeding</th><th>Male</th><th>Catatan</th></tr></thead><tbody>' +
+        data.fish.map(function (fish, index) {
+          var photo = fish.foto ? '<img src="' + esc(thumbOf(fish.foto)) + '" alt="" style="width:26px;height:39px;object-fit:cover;border:1px solid #bbb">' : '-'
+          return '<tr><td class="kp-center">' + (index + 1) + '</td><td class="kp-center">' + photo + '</td><td>' + cell(fish.jenis) + '</td><td class="kp-num">' + cell(fish.ukuran) + '</td><td>' + cell(fish.sex) + '</td><td>' + cell(fish.breeding_label) + '</td><td>' + cell(fish.male_label) + '</td><td>' + cell(fish.catatan) + '</td></tr>'
+        }).join('') + '</tbody></table></section>'
+    }
+    if (report.report_type === 'panen') {
+      var places = parse(report.pond_entries, []).filter(function (place) { return place.variety || place.breeding_label || (place.reject && place.reject.length) || (place.sortir && place.sortir.length) })
+      if (places.length) {
+        html += '<section class="kp-section"><h2>Rincian per Lokasi</h2><table class="kp-table"><thead><tr><th class="kp-center" style="width:28px">No</th><th>Lokasi</th><th>Varietas Dominan</th><th>Sesi Breeding</th><th>Reject</th><th>Sortir</th></tr></thead><tbody>' +
+          places.map(function (place, index) {
+            var reject = (place.reject || []).map(function (r) { return esc(r.metric || '-') + ' (' + esc(r.qty || 0) + ')' }).join('<br>') || '-'
+            var sortir = (place.sortir || []).map(function (r) { return esc(r.category || '-') + (r.destination ? ' &rarr; ' + esc(r.destination) : '') + ' (' + esc(r.qty || 0) + ')' }).join('<br>') || '-'
+            return '<tr><td class="kp-center">' + (index + 1) + '</td><td>' + cell(place.pond_label || place.pond_name) + '</td><td>' + cell(place.variety) + '</td><td>' + cell(place.breeding_label) + '</td><td>' + reject + '</td><td>' + sortir + '</td></tr>'
+          }).join('') + '</tbody></table></section>'
+      }
+    }
+    return html
+  }
+  ;(function wrapPrint() {
+    if (!window.KoiPrint || !window.KoiPrint.print) { setTimeout(wrapPrint, 400); return }
+    if (window.KoiPrint.__koiReportExtra) return
+    var original = window.KoiPrint.print
+    window.KoiPrint.print = function (options) {
+      try {
+        var report = options && options.key === 'report-detail' && currentId ? reportsById[currentId] : null
+        var extra = report ? printExtra(report) : ''
+        if (extra) options = Object.assign({}, options, { body: String(options.body || '') + extra })
+      } catch (error) { /* the plain print */ }
+      return original.call(this, options)
+    }
+    window.KoiPrint.__koiReportExtra = true
+  })()
+
   // ---- build and keep in step ------------------------------------------------------------------------------------------------------
   function build() {
     modal = document.querySelector('[data-report-modal]')
