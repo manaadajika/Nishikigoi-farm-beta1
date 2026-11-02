@@ -1478,6 +1478,7 @@
                       <path d="M12 4l0 12" />
                     </svg>
                   </button>
+                  <button class="btn btn-outline-success btn-icon" type="button" data-koi-macro-open data-role-required="database-write" aria-label="Edit masal dari Excel atau ZIP" title="Edit masal dari Excel atau ZIP"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon" aria-hidden="true"><path d="M14 3v4a1 1 0 0 0 1 1h4"/><path d="M5 12v-7a2 2 0 0 1 2 -2h7l5 5v4"/><path d="M5 18h1.5a1.5 1.5 0 0 0 0 -3h-1.5v6"/><path d="M17 18l2 -3l2 3"/><path d="M11.5 15h2.5"/></svg></button>
                   <button
                     class="btn btn-outline-primary btn-icon koi-sort-toggle"
                     type="button"
@@ -2801,6 +2802,7 @@
     <script src="/assets/vendor/xlsx/xlsx.core.min.js"></script>
   <script src="/assets/koi-picker.js?v=20261101a"></script>
   <script src="/assets/koi-location-filter.js?v=20261101a"></script>
+  <script src="/assets/koi-macro-edit.js?v=20261102a"></script>
             <script>
               (function () {
                 const plusIcon =
@@ -10102,6 +10104,8 @@ Ketik HAPUS untuk melanjutkan.`)) !== 'HAPUS' : !(await window.KoiDialog.confirm
                   dockGroupToggle.setAttribute("title", open ? "Kembali ke tombol utama" : "Aksi lainnya")
                   dockGroupToggle.setAttribute("aria-label", open ? "Kembali ke tombol utama" : "Aksi lainnya")
                 })
+                    // handed to assets/koi-macro-edit.js (Edit Masal dari Excel / ZIP): the reading and the normalising of a file are the import's own
+                    window.KoiImportApi = { parseXlsxRows, findHeaderRowIndex, parseKoiZip, normalizeImportedKoiItem, normalizeZipCode, normalizePhotoName, excelHeaderMap, zipHeaderMap, pondsList: () => pondsList }
                 window.KoiDock?.attachNav(document.querySelector("[data-dock-nav]"), actionDock);
                 actionDockHide?.addEventListener("click", () => {
                   actionDockHidden = true;

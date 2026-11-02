@@ -5,7 +5,7 @@ require_once __DIR__ . '/cache.php';
 
 require_once __DIR__ . '/koi_link.php';
 
-const KOI_SCHEMA_REV = 20261105;
+const KOI_SCHEMA_REV = 20261106;
 
 // PHP 8.5 renamed the MySQL driver constants (Pdo\Mysql::ATTR_*); older versions only know PDO::MYSQL_ATTR_*.
 function koi_pdo_init_command(): int {
@@ -121,6 +121,26 @@ function ensure_all_schemas(PDO $pdo): void {
     ensure_breeding_officer_schema($pdo);
     ensure_koi_session_link_backfill($pdo);
     ensure_pond_kanban_schema($pdo);
+    ensure_koi_macro_schema($pdo);
+}
+
+// Edit Masal Data Ikan from a file (handlers/koi_macro.php): one row per edit with the old and new values, kept 30 days so it can be undone.
+function ensure_koi_macro_schema(PDO $pdo): void {
+    try {
+        $pdo->exec(
+            "CREATE TABLE IF NOT EXISTS koi_macro_batches (
+              id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+              created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+              actor VARCHAR(100) NULL,
+              source VARCHAR(120) NULL,
+              row_count INT NOT NULL DEFAULT 0,
+              changes MEDIUMTEXT NULL,
+              undone_at DATETIME NULL
+            ) ENGINE=InnoDB"
+        );
+    } catch (Throwable $e) {
+        // Another request may be creating the table at the same moment.
+    }
 }
 
 // Kanban catatan of a pond (handlers/pond_kanban.php): the cards and the history of their own quantity.

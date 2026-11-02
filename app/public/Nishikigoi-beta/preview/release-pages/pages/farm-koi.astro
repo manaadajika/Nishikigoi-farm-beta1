@@ -1801,6 +1801,7 @@ const calendarIcon = iconSvg('calendar')
         <button class="btn btn-outline-success btn-icon" type="button" data-download-selected-images aria-label="Unduh ZIP (xlsx + foto) data ikan" title="Unduh ZIP xlsx + foto data ikan (yang dipilih, atau semua hasil pencarian dan filter)">
           <Icon name="download" />
         </button>
+        <button class="btn btn-outline-success btn-icon" type="button" data-koi-macro-open data-role-required="database-write" aria-label="Edit masal dari Excel atau ZIP" title="Edit masal dari Excel atau ZIP"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon" aria-hidden="true"><path d="M14 3v4a1 1 0 0 0 1 1h4"/><path d="M5 12v-7a2 2 0 0 1 2 -2h7l5 5v4"/><path d="M5 18h1.5a1.5 1.5 0 0 0 0 -3h-1.5v6"/><path d="M17 18l2 -3l2 3"/><path d="M11.5 15h2.5"/></svg></button>
         <button class="btn btn-outline-primary btn-icon koi-sort-toggle" type="button" data-koi-sequence-toggle aria-pressed="true" aria-label="Urutan Z ke A" title="Urutan Z ke A">Z/A</button>
         <button class="btn btn-primary btn-icon" type="button" data-open-add-koi data-role-required="database-write" data-bs-toggle="modal" data-bs-target="#add-koi-modal" aria-label="Tambah ikan" title="Tambah ikan">
           <Icon name="plus" />
@@ -2233,6 +2234,7 @@ const calendarIcon = iconSvg('calendar')
   <script src="/assets/vendor/xlsx/xlsx.core.min.js" is:inline></script>
   <script src="/assets/koi-picker.js?v=20261101a" is:inline></script>
   <script src="/assets/koi-location-filter.js?v=20261101a" is:inline></script>
+  <script src="/assets/koi-macro-edit.js?v=20261102a" is:inline></script>
   <script define:vars={{ plusIcon, trashIcon, editIcon, eyeIcon, historyIcon, pencilIcon, saveIcon, draftIcon, uploadIcon, clipboardIcon, fileImportIcon, fileExportIcon, calendarIcon }}>
     const apiUrl = '/api'
     const text = (value) => value || '-'
@@ -8032,6 +8034,9 @@ Ketik HAPUS untuk melanjutkan.`)) !== 'HAPUS' : !(await window.KoiDialog.confirm
       dockGroupToggle.setAttribute('aria-label', open ? 'Kembali ke tombol utama' : 'Aksi lainnya')
     })
     // "Pindah menu" drop-up above the dock (shared with Breeding, Data Kolam and Laporan).
+
+    // handed to assets/koi-macro-edit.js (Edit Masal dari Excel / ZIP): the reading and the normalising of a file are the import's own
+    window.KoiImportApi = { parseXlsxRows, findHeaderRowIndex, parseKoiZip, normalizeImportedKoiItem, normalizeZipCode, normalizePhotoName, excelHeaderMap, zipHeaderMap, pondsList: () => pondsList }
     window.KoiDock?.attachNav(document.querySelector('[data-dock-nav]'), actionDock)
     actionDockHide?.addEventListener('click', () => {
       actionDockHidden = true

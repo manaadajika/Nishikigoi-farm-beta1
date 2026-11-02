@@ -1294,12 +1294,15 @@ const saveIcon = iconSvg('device-floppy')
           }
         }
         if (record['lokasi breeding'] || record.lokasi || record.kolam) {
-          const ponds = splitList(record['lokasi breeding'] || record.lokasi || record.kolam).map((name) => ({ name, pond: pondByName.get(name.toLowerCase()) }))
-          const missing = ponds.filter((item) => !item.pond).map((item) => item.name)
+          // a name is a pond of Data Kolam, or an area of Data Kolam (the whole area is then the place)
+          const areaNames = new Map()
+          pondByName.forEach((pond) => { const area = String(pond.location || '').trim(); if (area) areaNames.set(area.toLowerCase(), area) })
+          const ponds = splitList(record['lokasi breeding'] || record.lokasi || record.kolam).map((name) => ({ name, pond: pondByName.get(name.toLowerCase()), area: areaNames.get(name.toLowerCase()) }))
+          const missing = ponds.filter((item) => !item.pond && !item.area).map((item) => item.name)
           if (missing.length) bad.push(`Lokasi Breeding ${missing.join(', ')} tidak ditemukan`)
           else {
-            fields.pond_id = ponds[0].pond.id
-            fields.pond_entries = ponds.map((item) => ({ pond_id: String(item.pond.id), label: item.pond.name, notes: '' }))
+            fields.pond_id = ponds[0].pond ? ponds[0].pond.id : ''
+            fields.pond_entries = ponds.map((item) => (item.pond ? { pond_id: String(item.pond.id), label: item.pond.name, notes: '' } : { pond_id: '', label: item.area, area: item.area, notes: '' }))
           }
         }
 
