@@ -127,7 +127,7 @@
       var pond = null
       if (pondName) {
         pond = options.pondByName ? options.pondByName.get(pondName.toLowerCase()) : null
-        if (!pond) bad.push('Lokasi tujuan "' + pondName + '" tidak ditemukan')
+        if (!pond && !pondsCache.some(function (item) { return String(item.location || '').trim().toLowerCase() === pondName.toLowerCase() })) bad.push('Lokasi tujuan "' + pondName + '" tidak ditemukan (kolam atau area Data Kolam)')
       }
       if (bad.length) { problems.push('Baris ' + line + ': ' + bad.join('; ')); return }
       if (code && knownCodes.has(code)) { problems.push('Baris ' + line + ' (' + code + '): laporan dengan kode ini sudah ada, dilewati'); return }
@@ -141,7 +141,7 @@
       group.lines.push({
         qty: qty === null ? 1 : Math.round(qty), variety: variety, gender: genderFrom(record.sex || record.kelamin || record.gender), size_cm: size === null ? '' : size,
         farm: String(record.ternakan || record.farm || '').trim(), bloodline: String(record.bloodline || '').trim(), owner: String(record.owner || '').trim(),
-        pond_id: pond ? String(pond.id) : '', pond_name: pond ? pond.name : '',
+        pond_id: pond ? String(pond.id) : '', pond_name: pond ? pond.name : pondName,
         image_url: '', image_ref: String(record.foto || '').trim(),
       })
     })
@@ -173,10 +173,11 @@
     var pondEntries = []
     var seenPonds = {}
     group.lines.forEach(function (line) {
-      if (!line.pond_id || seenPonds[line.pond_id]) return
-      seenPonds[line.pond_id] = true
+      var seenKey = line.pond_id ? 'p' + line.pond_id : 'n' + String(line.pond_name || '').toLowerCase()
+      if ((!line.pond_id && !line.pond_name) || seenPonds[seenKey]) return
+      seenPonds[seenKey] = true
       var pond = pondsCache.find(function (item) { return String(item.id) === String(line.pond_id) }) || {}
-      pondEntries.push({ pond_id: Number(line.pond_id), pond_name: line.pond_name || pond.name || '', location: pond.location || '' })
+      pondEntries.push({ pond_id: line.pond_id ? Number(line.pond_id) : '', pond_name: line.pond_name || pond.name || '', location: pond.location || '' })
     })
     return Object.assign({
       pond_entries: pondEntries,
@@ -284,7 +285,7 @@
       kit.typeChooserHtml('ikan_datang') +
       '<div class="alert alert-danger d-none" data-arrival-error style="white-space:pre-line"></div>' +
       '<div class="row g-3">' +
-      '<div class="col-md-6"><label class="form-label">Nama laporan <span class="text-secondary small">(opsional)</span></label><input class="form-control" name="judul" placeholder="Contoh: Kedatangan Showa dari Dainichi" autocomplete="off"></div>' +
+      '<div class="col-md-6"><label class="form-label">Judul Laporan <span class="text-secondary small">(opsional)</span></label><input class="form-control" name="judul" placeholder="Contoh: Kedatangan Showa dari Dainichi" autocomplete="off"></div>' +
       '<div class="col-md-3"><label class="form-label required">Tanggal datang</label><input class="form-control" type="text" data-date-parts name="tanggal"></div>' +
       '<div class="col-md-3"><label class="form-label">Ikan dari mana <span class="text-secondary small">(opsional)</span></label><input class="form-control" name="asal" list="arrival-origins" placeholder="Farm / kota / pemasok" autocomplete="off"><datalist id="arrival-origins"></datalist></div>' +
       '<div class="col-12"><div class="d-flex align-items-center justify-content-between"><label class="form-label mb-0">Ikan yang datang <span class="text-secondary small">(opsional, satu kotak = satu ekor)</span></label>' +
@@ -328,16 +329,16 @@
       totalBox.textContent = total.toLocaleString('id-ID')
     }
     var lineSeq = 0
-    function pondOptionsHtml(selected) {
-      return '<option value="">- belum ditentukan -</option>' + ponds.map(function (pond) {
-        return '<option value="' + escapeHtml(pond.id) + '"' + (String(pond.id) === String(selected || '') ? ' selected' : '') + '>' + escapeHtml(pond.name + (pond.location ? ' (' + pond.location + ')' : '')) + '</option>'
-      }).join('')
+    // the destination of a fish is typed or picked as text: a pond of Data Kolam, an area of Data Kolam, or any other place
+    function lineDestination(line) {
+      if (line.pond_name) return line.pond_name
+      var pond = ponds.find(function (item) { return String(item.id) === String(line.pond_id || '') })
+      return pond ? pond.name : ''
     }
-    function refreshPondSelects() {
-      Array.prototype.forEach.call(linesBox.querySelectorAll('[data-line-pond]'), function (select) {
-        var current = select.value
-        select.innerHTML = pondOptionsHtml(current)
-      })
+    function destinationOf(text) {
+      var name = String(text || '').trim()
+      var pond = name ? ponds.find(function (item) { return String(item.name || '').trim().toLowerCase() === name.toLowerCase() }) : null
+      return pond ? { pond_id: String(pond.id), pond_name: pond.name } : { pond_id: '', pond_name: name }
     }
     function genderGroup(name, selected) {
       return '<div class="form-selectgroup flex-nowrap" role="radiogroup" aria-label="Sex">' + ['unknown', 'male', 'female'].map(function (key) {
@@ -368,7 +369,7 @@
         field('col-6 col-md-2', 'Bloodline', '<input class="form-control" list="arrival-bloodlines" data-line-bloodline placeholder="Bloodline" value="' + escapeHtml(line.bloodline || '') + '">') +
         field('col-12 col-md-2', 'Owner', '<input class="form-control" list="arrival-owners" data-line-owner placeholder="Owner" value="' + escapeHtml(line.owner || '') + '">') +
         '</div>' +
-        '<div class="row g-2 mt-1 align-items-end"><div class="col-12 col-md-4"><label class="form-label small mb-0">Lokasi tujuan</label><select class="form-select" data-line-pond>' + pondOptionsHtml(line.pond_id) + '</select></div>' +
+        '<div class="row g-2 mt-1 align-items-end"><div class="col-12 col-md-4"><label class="form-label small mb-0">Lokasi tujuan</label><input class="form-control" data-suggest-key="place" data-line-pond placeholder="Pilih kolam atau area" autocomplete="off" value="' + escapeHtml(lineDestination(line)) + '"></div>' +
         '<div class="col-12 col-md-8 d-flex align-items-center flex-wrap gap-2">' +
         '<img class="rounded border d-none" alt="Foto ikan" data-line-photo-thumb style="width:44px;height:44px;object-fit:cover">' +
         '<button type="button" class="btn btn-sm btn-outline-primary" data-line-photo-pick>Unggah foto</button>' +
@@ -400,11 +401,8 @@
           bloodline: row.querySelector('[data-line-bloodline]').value.trim(),
           owner: row.querySelector('[data-line-owner]').value.trim(),
           image_url: row.dataset.imageUrl || '',
-          pond_id: row.querySelector('[data-line-pond]').value || '',
-          pond_name: (function () {
-            var chosen = ponds.find(function (pond) { return String(pond.id) === String(row.querySelector('[data-line-pond]').value) })
-            return chosen ? chosen.name : ''
-          })(),
+          pond_id: destinationOf(row.querySelector('[data-line-pond]').value).pond_id,
+          pond_name: destinationOf(row.querySelector('[data-line-pond]').value).pond_name,
         }
       }).filter(function (line) { return line.variety || line.farm || line.bloodline || line.owner || line.size_cm !== '' || line.image_url })
     }
@@ -563,7 +561,6 @@
         ponds = Array.isArray(results[0]) ? results[0] : []
         koiFacets = results[1] && typeof results[1] === 'object' ? results[1] : {}
         pondsCache = ponds
-        refreshPondSelects()
         fillSuggestions()
       })
     }
