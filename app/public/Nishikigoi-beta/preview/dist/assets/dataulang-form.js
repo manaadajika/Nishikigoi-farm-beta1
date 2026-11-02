@@ -149,16 +149,16 @@
     row.dataset.photo = entry.foto || ''
     row.className = 'border-bottom py-1'
     row.setAttribute('data-fish-row', '')
-    row.style.cssText = 'display:grid;grid-template-columns:2.2rem minmax(7rem,1.1fr) 5.5rem 7.5rem minmax(12rem,1.9fr) minmax(9.5rem,1.3fr) minmax(7rem,1.2fr) 6.2rem 4.6rem;gap:.4rem;align-items:center;min-width:66rem'
+    row.style.cssText = 'display:grid;grid-template-columns:2.2rem 6.2rem minmax(7rem,1.1fr) 5.5rem 7.5rem minmax(12rem,1.9fr) minmax(9.5rem,1.3fr) minmax(7rem,1.2fr) 4.6rem;gap:.4rem;align-items:center;min-width:66rem'
     row.innerHTML =
       '<div class="fw-semibold text-secondary text-center" data-f="no"></div>' +
+      '<div class="d-flex align-items-center gap-1"><img data-f-photo alt="" style="display:none"><button type="button" class="btn btn-sm btn-outline-primary" data-f-photo-pick title="Unggah foto atau ambil dengan kamera">Foto</button><input type="file" accept="image/*" hidden data-f-photo-input></div>' +
       '<input class="form-control form-control-sm" data-no-clear data-f="jenis" list="arrival-varieties" placeholder="Contoh Showa" value="' + esc(entry.jenis) + '">' +
       '<input class="form-control form-control-sm" data-no-clear type="number" min="0" step="0.1" data-f="ukuran" placeholder="cm" value="' + esc(entry.ukuran) + '">' +
       '<select class="form-select form-select-sm" data-f="sex">' + SEX.map(function (s) { return '<option value="' + s[0] + '"' + (s[0] === (entry.sex || 'unknown') ? ' selected' : '') + '>' + s[1] + '</option>' }).join('') + '</select>' +
       '<div class="d-flex align-items-center gap-1" style="min-width:0"><select class="form-select form-select-sm" data-f="breeding">' + breedingOptions(entry.breeding_id) + '</select><img data-prev="female" alt="" style="display:none"></div>' +
       '<div class="d-flex align-items-center gap-1" style="min-width:0"><select class="form-select form-select-sm" data-f="male">' + maleOptions(entry.breeding_id, entry.male_id) + '</select><img data-prev="male" alt="" style="display:none"></div>' +
       '<input class="form-control form-control-sm" data-no-clear data-f="catatan" placeholder="Catatan" value="' + esc(entry.catatan) + '">' +
-      '<div class="d-flex align-items-center gap-1"><img data-f-photo alt="" style="display:none"><button type="button" class="btn btn-sm btn-outline-primary" data-f-photo-pick title="Unggah foto atau ambil dengan kamera">Foto</button><input type="file" accept="image/*" hidden data-f-photo-input></div>' +
       '<button type="button" class="btn btn-sm btn-outline-danger" data-f-remove>Hapus</button>'
     listBox.appendChild(row)
     renumber()
@@ -257,7 +257,7 @@
     hide(section, true)
     section.innerHTML = '<div class="d-flex align-items-center justify-content-between gap-2 mb-2"><h4 class="mb-0">Ikan Satuan</h4><button class="btn btn-sm" type="button" data-fish-add>Tambah Ikan</button></div>' +
       '<div class="form-hint mb-2">Opsional, untuk sesi foto. Satu baris = satu ekor: jenis, ukuran, sex, sesi breeding (dan male-nya), serta catatan. Boleh dikosongkan.</div>' +
-      '<div style="overflow-x:auto"><div class="fw-semibold small text-secondary border-bottom pb-1" style="display:grid;grid-template-columns:2.2rem minmax(7rem,1.1fr) 5.5rem 7.5rem minmax(12rem,1.9fr) minmax(9.5rem,1.3fr) minmax(7rem,1.2fr) 6.2rem 4.6rem;gap:.4rem;min-width:66rem"><div class="text-center">No</div><div>Jenis</div><div>Ukuran (cm)</div><div>Sex</div><div>Sesi Breeding</div><div>Male</div><div>Catatan</div><div>Foto</div><div></div></div>' +
+      '<div style="overflow-x:auto"><div class="fw-semibold small text-secondary border-bottom pb-1" style="display:grid;grid-template-columns:2.2rem 6.2rem minmax(7rem,1.1fr) 5.5rem 7.5rem minmax(12rem,1.9fr) minmax(9.5rem,1.3fr) minmax(7rem,1.2fr) 4.6rem;gap:.4rem;min-width:66rem"><div class="text-center">No</div><div>Foto</div><div>Jenis</div><div>Ukuran (cm)</div><div>Sex</div><div>Sesi Breeding</div><div>Male</div><div>Catatan</div><div></div></div>' +
       '<div data-fish-list></div></div>'
     pondSection.parentNode.insertBefore(section, pondSection)
     listBox = section.querySelector('[data-fish-list]')

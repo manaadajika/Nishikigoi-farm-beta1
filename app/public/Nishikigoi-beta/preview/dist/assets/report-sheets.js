@@ -12,15 +12,16 @@
 
   var TYPE_SHEETS = [['data_ulang', 'Data Ulang'], ['panen', 'Panen'], ['kegiatan', 'Kegiatan'], ['ikan_datang', 'Ikan Datang']]
   var MAIN_COLUMNS = ['Tanggal', 'Kode Batch', 'Judul', 'Varietas Dominan', 'Rata-rata Ukuran (cm)', 'Deret Ukuran Ikan (cm)', 'Breeding', 'Mention Ikan', 'Petugas', 'Catatan', 'Galeri', 'ID Galeri']
-  var LOCATION_COLUMNS = ['Kode Batch', 'Judul', 'Asal Lokasi', 'Pindah ke', 'Hasil (ekor)', 'Rata-rata Ukuran (cm)', 'Catatan Lokasi']
-  var SORTING_COLUMNS = ['Kode Batch', 'Judul', 'Kategori', 'Lokasi Tujuan', 'Keterangan', 'Ekor']
-  var CONDITION_COLUMNS = ['Kode Batch', 'Judul', 'Metrik Kondisi', 'Jumlah (ekor)']
+  var LOCATION_COLUMNS = ['Kode Batch', 'Judul', 'No', 'Asal Lokasi', 'Pindah ke', 'Hasil (ekor)', 'Rata-rata Ukuran (cm)', 'Varietas Dominan', 'Sesi Breeding', 'Catatan Lokasi']
+  var SORTING_COLUMNS = ['Kode Batch', 'Judul', 'Kategori', 'Lokasi Tujuan', 'Keterangan', 'Ekor', 'No Lokasi']
+  var CONDITION_COLUMNS = ['Kode Batch', 'Judul', 'Metrik Kondisi', 'Jumlah (ekor)', 'No Lokasi']
   var FISH_COLUMNS = ['Kode Batch', 'Judul', 'No', 'Jenis', 'Ukuran (cm)', 'Sex', 'Sesi Breeding', 'Male', 'Catatan', 'Foto']
   var ACTIVITY_COLUMNS = ['Tanggal', 'Kode Batch', 'Judul', 'Jenis Kegiatan', 'Jam Mulai', 'Jam Selesai', 'Kolam', 'Petugas', 'Uraian', 'Bahan', 'Suhu Air (°C)', 'pH Air', 'Status', 'Tindak Lanjut', 'Galeri', 'ID Galeri']
   var ARRIVAL_COLUMNS = ['Tanggal', 'Nama Laporan', 'Ikan Dari', 'Jenis', 'Sex', 'Ukuran (cm)', 'Ternakan', 'Bloodline', 'Owner', 'Lokasi Tujuan', 'Foto', 'Catatan', 'Kode Batch']
   var HELP_COLUMNS = ['Petunjuk']
   var HELP_ROWS = [
     ['Satu sheet untuk tiap jenis laporan: Data Ulang, Panen, Kegiatan, dan Ikan Datang (satu baris per ekor ikan).'],
+    ['Lokasi: satu baris per tempat panen (No = nomor tempat), lengkap dengan Varietas Dominan dan Sesi Breeding-nya. Sortir dan Kondisi: baris dengan No Lokasi milik tempat itu, baris tanpa No Lokasi milik seluruh laporan.'],
     ['Ikan Satuan adalah tabel ikan pada formulir Data Ulang (satu baris per ekor, kolom Sesi Breeding diisi kode batch breeding, Male diisi kode ikan male dari sesi itu). Lokasi, Sortir, dan Kondisi adalah rincian laporan Panen / Data Ulang lama. Satu baris rincian = satu baris di bagian itu pada formulir.'],
     ['Rincian dihubungkan ke laporannya lewat Kode Batch. Untuk laporan BARU, tulis kode bebas (misalnya N1) di Kode Batch laporan dan di baris rinciannya; program memberi kode batch resminya sendiri.'],
     ['Laporan yang Kode Batch-nya sudah ada tidak diubah dan tidak dibuat dua kali. Untuk mengubah laporan yang sudah ada, pakai Edit Masal.'],
@@ -133,6 +134,26 @@
     })
     return rows
   }
+  // Lokasi: one row per harvest place (its own variety and session); Sortir and Kondisi: the report-wide rows (No Lokasi empty) and the rows of a place (No Lokasi = its number)
+  function locationRows(items) {
+    var rows = []
+    items.filter(function (item) { return typeOf(item) === 'data_ulang' || typeOf(item) === 'panen' }).forEach(function (item) {
+      list(item.pond_entries).forEach(function (e, index) {
+        rows.push([item.batch_code || '', item.report_title || '', index + 1, e.pond_label || e.pond_name || '', e.location || '', numeric(e.result_qty), numeric(e.average_length_cm), e.variety || '', e.breeding_label || '', e.notes || ''])
+      })
+    })
+    return rows
+  }
+  function nestedRows(items, globalField, nestedField, pick) {
+    var rows = []
+    items.filter(function (item) { return typeOf(item) === 'data_ulang' || typeOf(item) === 'panen' }).forEach(function (item) {
+      list(item[globalField]).forEach(function (e) { rows.push([item.batch_code || '', item.report_title || ''].concat(pick(e), ['']))})
+      list(item.pond_entries).forEach(function (place, index) {
+        list(place[nestedField]).forEach(function (e) { rows.push([item.batch_code || '', item.report_title || ''].concat(pick(e), [index + 1])) })
+      })
+    })
+    return rows
+  }
   function detailRows(items, field, pick) {
     var rows = []
     items.filter(function (item) { return typeOf(item) === 'data_ulang' || typeOf(item) === 'panen' }).forEach(function (item) {
@@ -147,10 +168,10 @@
       'Panen': { header: MAIN_COLUMNS, rows: byType('panen').map(mainRow), key: 1 },
       'Kegiatan': { header: ACTIVITY_COLUMNS, rows: byType('kegiatan').map(activityRow), key: 1 },
       'Ikan Datang': { header: ARRIVAL_COLUMNS, rows: arrivalRows(items, zipMode), key: ARRIVAL_COLUMNS.length - 1 },
-      'Lokasi': { header: LOCATION_COLUMNS, rows: detailRows(items, 'pond_entries', function (e) { return [e.pond_label || e.pond_name || '', e.location || '', numeric(e.result_qty), numeric(e.average_length_cm), e.notes || ''] }), key: -1 },
-      'Sortir': { header: SORTING_COLUMNS, rows: detailRows(items, 'sorting_entries', function (e) { return [e.category || '', e.destination || '', e.description || '', numeric(e.qty)] }), key: -1 },
+      'Lokasi': { header: LOCATION_COLUMNS, rows: locationRows(items), key: -1 },
+      'Sortir': { header: SORTING_COLUMNS, rows: nestedRows(items, 'sorting_entries', 'sortir', function (e) { return [e.category || '', e.destination || '', e.description || '', numeric(e.qty)] }), key: -1 },
       'Ikan Satuan': { header: FISH_COLUMNS, rows: fishRows(items), key: -1 },
-      'Kondisi': { header: CONDITION_COLUMNS, rows: detailRows(items, 'condition_entries', function (e) { return [e.metric || '', numeric(e.qty)] }), key: -1 },
+      'Kondisi': { header: CONDITION_COLUMNS, rows: nestedRows(items, 'condition_entries', 'reject', function (e) { return [e.metric || '', numeric(e.qty)] }), key: -1 },
       'Petunjuk': { header: HELP_COLUMNS, rows: HELP_ROWS, key: -1 },
     }
   }
@@ -273,14 +294,42 @@
   function detailsFor(sheets, code, lookups, problems) {
     var key = norm(code)
     var of = function (records) { return (records || []).filter(function (record) { return key && norm(record['kode batch']) === key }) }
-    var pondEntries = of(sheets.lokasi).map(function (record) {
+    var sessionOf = function (text) {
+      var wanted = norm(text)
+      return wanted ? lookups.breedings.filter(function (b) { return norm(b.batch_code) === wanted || wanted.indexOf(norm(b.batch_code)) === 0 })[0] : null
+    }
+    var placeRecords = of(sheets.lokasi)
+    var pondEntries = []
+    var numbers = {}
+    placeRecords.forEach(function (record, index) {
       var origin = record['asal lokasi'] || ''
       var pond = lookups.pondByName[norm(origin)]
-      return { pond_id: pond ? pond.id : '', pond_name: pond ? pond.name : origin, pond_label: origin, location: record['pindah ke'] || '', result_qty: record['hasil (ekor)'] || '', average_length_cm: record['rata-rata ukuran (cm)'] || '', notes: record['catatan lokasi'] || '' }
-    }).filter(function (entry) { return entry.pond_name || entry.location || entry.result_qty || entry.notes })
-    var sorting = of(sheets.sortir).map(function (record) { return { category: record.kategori || '', destination: record['lokasi tujuan'] || '', description: record.keterangan || '', qty: record.ekor || '' } })
-      .filter(function (entry) { return entry.category || entry.destination || entry.description || entry.qty })
-    var conditions = of(sheets.kondisi).map(function (record) { return { metric: record['metrik kondisi'] || '', qty: record['jumlah (ekor)'] || '' } }).filter(function (entry) { return entry.metric || entry.qty })
+      var session = sessionOf(record['sesi breeding'])
+      var entry = {
+        pond_id: pond ? pond.id : '', pond_name: pond ? pond.name : origin, pond_label: origin, location: record['pindah ke'] || '', result_qty: record['hasil (ekor)'] || '',
+        average_length_cm: record['rata-rata ukuran (cm)'] || '', notes: record['catatan lokasi'] || '', variety: record['varietas dominan'] || '',
+        breeding_id: session ? String(session.id) : '', breeding_label: session ? (session.batch_code + (session.session_name ? ' - ' + session.session_name : '')) : (record['sesi breeding'] || ''),
+        reject: [], sortir: [],
+      }
+      numbers[String(record.no || index + 1)] = entry
+      pondEntries.push(entry)
+    })
+    pondEntries = pondEntries.filter(function (entry) { return entry.pond_name || entry.location || entry.result_qty || entry.notes || entry.variety || entry.breeding_label })
+    // a row with "No Lokasi" belongs to that place, a row without it to the whole report
+    var sorting = []
+    of(sheets.sortir).forEach(function (record) {
+      var entry = { category: record.kategori || '', destination: record['lokasi tujuan'] || '', description: record.keterangan || '', qty: record.ekor || '' }
+      if (!(entry.category || entry.destination || entry.description || entry.qty)) return
+      var place = record['no lokasi'] ? numbers[String(record['no lokasi'])] : null
+      if (place) place.sortir.push(entry); else sorting.push(entry)
+    })
+    var conditions = []
+    of(sheets.kondisi).forEach(function (record) {
+      var entry = { metric: record['metrik kondisi'] || '', qty: record['jumlah (ekor)'] || '' }
+      if (!(entry.metric || entry.qty)) return
+      var place = record['no lokasi'] ? numbers[String(record['no lokasi'])] : null
+      if (place) place.reject.push(entry); else conditions.push(entry)
+    })
     var fish = of(sheets.ikan_satuan).map(function (record) {
       var typedSex = norm(record.sex)
       var wanted = norm(record['sesi breeding'])
