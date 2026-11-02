@@ -161,7 +161,7 @@
     <script src="./assets/drafts.js?v=20261029b"></script>
     <script src="./assets/theme-sync.js?v=20261014b"></script>
     <script src="./assets/print-kit.js?v=20261024a"></script>
-    <script src="./assets/action-dock.js?v=20261029b"></script>
+    <script src="./assets/action-dock.js?v=20261102a"></script>
     <!-- END APP AUTH SCRIPT -->
 
     <div class="page">
@@ -1605,7 +1605,8 @@
         <button class="btn btn-outline-primary btn-icon" type="button" data-dock-nav aria-label="Pindah menu" title="Pindah menu"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false" class="icon"><path d="M4 6l16 0" /><path d="M4 12l16 0" /><path d="M4 18l16 0" /></svg></button>
                 </div>
               </div>
-              <style>[data-koi-action-dock]:not(.is-group-open) [data-dock-group]{display:none!important}[data-koi-action-dock].is-group-open .koi-list-actions>*:not([data-dock-group]):not([data-dock-group-toggle]):not([data-koi-action-dock-hide]):not([data-clear-selected-koi]){display:none!important}</style>
+              <style>[data-koi-action-dock]:not(.is-group-open) [data-dock-group]{display:none!important}[data-koi-action-dock].is-group-open [data-dock-scroll-top],[data-koi-action-dock].is-group-open [data-dock-scroll-bottom],[data-koi-action-dock].is-group-open [data-dock-nav]{display:none!important}
+    .koi-list-actions:has([data-open-add-koi]:not(.koi-selection-hidden):not(.d-none)) [data-open-add-koi-extra]{display:none!important}</style>
               <button
                 class="btn btn-warning btn-icon koi-action-dock-reveal"
                 type="button"

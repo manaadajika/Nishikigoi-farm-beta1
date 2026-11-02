@@ -109,7 +109,7 @@
     window.KoiDock.create = function (options) {
       options = options || {}
       options.actions = (options.actions || []).concat([{
-        key: 'macro-edit', icon: 'file-spreadsheet', title: 'Edit masal dari Excel atau ZIP', variant: 'success', role: 'database-write',
+        key: 'macro-edit', icon: 'file-edit-masal', title: 'Edit masal dari Excel atau ZIP', variant: 'success', role: 'database-write',
         always: true, show: function () { return true }, onClick: function () { open() },
       }])
       return originalCreate.call(this, options)
