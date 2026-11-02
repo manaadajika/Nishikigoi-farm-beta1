@@ -4018,6 +4018,7 @@
       setFormValue('id', '')
       ;['batch_code', 'session_name', 'fry_count', 'egg_weight_g', 'notes'].forEach((name) => setFormValue(name, data[name] ?? ''))
       setFormValue('officer_name', data.officer_name ?? '');
+      if (form.elements.show_in_gallery) form.elements.show_in_gallery.checked = Boolean(data.show_in_gallery)
       setFormValue('last_update_date', data.last_update_date ? String(data.last_update_date).slice(0, 10) : todayLocal());
       form.dataset.lastUpdateLoaded = form.elements.last_update_date.value;
       setFormValue('breeding_date', data.breeding_date ? String(data.breeding_date).slice(0, 10) : new Date().toISOString().slice(0, 10))

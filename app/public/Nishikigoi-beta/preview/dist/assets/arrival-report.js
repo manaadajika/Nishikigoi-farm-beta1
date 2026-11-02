@@ -466,7 +466,7 @@
       form.elements.tanggal.value = data.report_date ? String(data.report_date).slice(0, 10) : kit.today()
       form.elements.asal.value = data.origin_location || ''
       form.elements.catatan.value = data.notes || ''
-      form.elements.show_in_gallery.checked = data.id ? Boolean(data.gallery_id || data.show_in_gallery === true) : true
+      form.elements.show_in_gallery.checked = data.id ? Boolean(data.gallery_id || data.show_in_gallery === true) : data.show_in_gallery !== false
       linesBox.innerHTML = ''
       var lines = linesOf(data)
       if (lines.length) lines.forEach(addLine)
@@ -680,7 +680,7 @@
           item_count: payload.activity_data.lines.length || 1,
         }
       },
-      apply: function (data) { fill(data) },
+      apply: function (data) { fill(data); modal.querySelector('[data-code-box]').value = data.batch_code || '' },
       open: function () { return loadOptions().then(function () { openForm(null, false) }) },
       onError: showError,
       onInfo: function (message) { mediaStatus.textContent = message },

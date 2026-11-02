@@ -48,6 +48,7 @@
 
   // ---- what the page loads and saves -----------------------------------------------------------------------------------------------
   var pendingDraft = null
+  var draftCode = ''
   var originalFetch = window.fetch
   function pathOf(url) { try { return new URL(url, location.origin).pathname } catch (error) { return String(url || '') } }
   window.fetch = function (input, init) {
@@ -78,6 +79,8 @@
     if (method === 'GET' && /\/api\/drafts\/[^/]+$/.test(path)) {
       return promise.then(function (response) {
         return response.clone().json().then(function (draft) {
+          // a Kode Batch typed by hand is kept; the page puts the next free code there again after loading a draft
+          draftCode = draft && draft.type === 'report' && draft.data && draft.data.batch_code && !/^(DTU|PAN|ACT|NEW)-\d\d-\d\d-\d\d$/.test(draft.data.batch_code) ? String(draft.data.batch_code) : ''
           if (draft && draft.type === 'report' && draft.data && draft.data.report_type === 'data_ulang') pendingDraft = { activity_data: draft.data.activity_data }
         }).catch(function () {}).then(function () { return response })
       })
@@ -97,9 +100,9 @@
 
   // which report the form was opened for: the row that was clicked (view, edit, print); "Tambah Laporan" means a new one
   document.addEventListener('click', function (event) {
-    if (event.target.closest('[data-report-open]')) { currentId = null; return }
+    if (event.target.closest('[data-report-open]')) { currentId = null; draftCode = ''; return }
     var row = event.target.closest('[data-report-id]')
-    if (row) currentId = row.getAttribute('data-report-id')
+    if (row) { currentId = row.getAttribute('data-report-id'); draftCode = '' }
   }, true)
 
   // ---- the table -----------------------------------------------------------------------------------------------------------------------
@@ -349,6 +352,7 @@
     var titleBox = modal.querySelector('[data-report-modal-title]')
     var existing = currentId && titleBox && !/Tambah/i.test(titleBox.textContent) ? reportsById[currentId] : null
     if (existing && codeInput && existing.batch_code && codeInput.value !== existing.batch_code) codeInput.value = existing.batch_code
+    if (!existing && codeInput && draftCode && !codeTyped && codeInput.value !== draftCode && (codeInput.value === '' || /^(DTU|PAN|ACT|NEW)-\d\d-\d\d-\d\d$/.test(codeInput.value))) codeInput.value = draftCode
     // a new report starts with an empty code box (the page puts the next free code there; the server makes the real one when saving)
     if (!existing && codeInput && !codeTyped && codeInput.value && /^(DTU|PAN|ACT|NEW)-\d\d-\d\d-\d\d$/.test(codeInput.value)) codeInput.value = ''
     var isData = currentType() === 'data_ulang'

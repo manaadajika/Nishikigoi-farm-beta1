@@ -773,7 +773,7 @@
           item_count: 1,
         }
       },
-      apply: function (data) { fill(data) },
+      apply: function (data) { fill(data); modal.querySelector('[data-code-box]').value = data.batch_code || '' },
       open: function () { return loadOptions().then(function () { openForm(null, false) }) },
       onError: showError,
       onInfo: function (message) { mediaStatus.textContent = message },
