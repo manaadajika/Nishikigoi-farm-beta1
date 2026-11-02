@@ -198,13 +198,28 @@
     var originalSheet = sheetUtils.aoa_to_sheet
     var originalClick = HTMLAnchorElement.prototype.click
     var name = 'template-kosong-' + pageKey.replace('farm-', '') + '.xlsx'
-    sheetUtils.aoa_to_sheet = function (rows, opts) { return originalSheet.call(this, (rows || []).slice(0, 1), opts) }
-    HTMLAnchorElement.prototype.click = function () { if (this.download) this.download = name; return originalClick.apply(this, arguments) }
-    try {
-      if (pageAction('export')) status('Template kosong diunduh. Isi baris di bawah judul kolom, lalu masukkan lewat tombol Impor data baru di atas.')
-    } finally {
+    // some pages fetch more data before they write the file: keep the wrappers until the file is on its way (or 8 seconds have passed)
+    var restored = false
+    function restore() {
+      if (restored) return
+      restored = true
       sheetUtils.aoa_to_sheet = originalSheet
       HTMLAnchorElement.prototype.click = originalClick
+    }
+    sheetUtils.aoa_to_sheet = function (rows, opts) { return originalSheet.call(this, (rows || []).slice(0, 1), opts) }
+    HTMLAnchorElement.prototype.click = function () {
+      if (this.download) this.download = name
+      var result = originalClick.apply(this, arguments)
+      restore()
+      return result
+    }
+    setTimeout(restore, 8000)
+    try {
+      if (pageAction('export')) status('Template kosong diunduh. Isi baris di bawah judul kolom, lalu masukkan lewat tombol Impor data baru di atas.')
+      else restore()
+    } catch (error) {
+      restore()
+      throw error
     }
   }
 

@@ -310,7 +310,20 @@ const zzSize=e=>{let n=Number(e);return Number.isFinite(n)&&String(e).trim()!==`
           <td>${e.current_length_cm?`${zzSize(e.current_length_cm)} cm`:`-`}</td>
         </tr>
       `).join(``)||`<tr><td colspan="8" class="text-secondary">Belum ada ikan tercatat di Data Ikan untuk kolam ini.</td></tr>`,fsBar(n)},je=e=>{let n=P.find(t=>String(t.id)===String(e));if(!n)return;k=n.id,fsSel.clear(),dmSel.clear(),_.elements.unphotographed_fish_qty.value=Number(n.unphotographed_fish_qty||0),_.elements.status.value=n.status||`kosong`,_.elements.notes.value=n.notes||``,ndSet(n.notes_date,!0),ndTouched=!1,v.textContent=``,fsRender(n),R(g),W(n.id),K(n.id),window.dispatchEvent(new CustomEvent(`pond-detail-open`,{detail:{id:n.id}}))};ae.addEventListener(`change`,ev=>{let bx=ev.target.closest(`[data-fish-select]`),pd=fsPond();bx&&pd&&(bx.checked?fsSel.add(bx.dataset.fishSelect):fsSel.delete(bx.dataset.fishSelect),fsBar(pd))}),ae.addEventListener(`click`,ev=>{if(ev.target.closest(`[data-fish-select]`))return;let pv=ev.target.closest(`.pond-fish-preview`),ph=pv&&pv.querySelector(`img`);if(ph){{let zi=null;try{zi=JSON.parse(decodeURIComponent(ph.dataset.zoomInfo||``))}catch(zx){}window.KoiAuth.zoomPhoto(ph.src,zi?.title||ph.alt,zi?.lines||[])};return}let bx=ev.target.closest(`tr`)?.querySelector(`[data-fish-select]`);if(!bx||bx.offsetParent===null||String(window.getSelection()))return;bx.checked=!bx.checked,bx.dispatchEvent(new Event(`change`,{bubbles:!0}))}),fsAll.addEventListener(`change`,()=>{let pd=fsPond();pd&&(fsSel.clear(),fsAll.checked&&V(pd.fish).forEach(o=>fsSel.add(String(o.id))),ae.querySelectorAll(`[data-fish-select]`).forEach(bx=>{bx.checked=fsSel.has(bx.dataset.fishSelect)}),fsBar(pd))}),fsTarget.addEventListener(`change`,()=>{fsBtn.disabled=!fsSel.size||!fsTarget.value}),fsBtn.addEventListener(`click`,async()=>{let pd=fsPond(),tg=P.find(o=>String(o.id)===String(fsTarget.value)),ids=Array.from(fsSel);if(!pd||!tg||!ids.length)return;fsBtn.disabled=!0,v.textContent=`Memindahkan ${ids.length} ikan ke ${tg.name}.`;let failed=[];for(let st=0;st<ids.length;st+=5)await Promise.all(ids.slice(st,st+5).map(async id=>{try{let rs=await fetch(`/api/koi/${id}`,{method:`PATCH`,headers:{"content-type":`application/json`},body:JSON.stringify({pond_id:tg.id})});if(!rs.ok)throw Error(`gagal`)}catch{failed.push(id)}}));fsSel.clear(),failed.forEach(id=>fsSel.add(id)),await $(!0);let nw=fsPond();nw&&fsRender(nw),fsTarget.value=``,nw&&fsBar(nw);let mv=ids.length-failed.length;v.textContent=failed.length?`${mv} ikan dipindah ke ${tg.name}, ${failed.length} gagal (dipilih ulang).`:`${mv} ikan dipindah ke ${tg.name}.`});document.addEventListener(`click`,e=>{let t=e.target.closest(`[data-bs-toggle="modal"]`),n=e.target.closest(`[data-bs-dismiss="modal"]`);if(t){let e=document.querySelector(t.dataset.bsTarget);e&&R(e)}if(n){let e=n.closest(`.modal`);e&&z(e)}}),i.addEventListener(`click`,Te),a.forEach(e=>{e.addEventListener(`click`,Ee)}),window.addEventListener(`afterprint`,()=>{document.body.classList.remove(`printing-pond-detail`),document.body.classList.remove(`printing-pond-list`)}),(()=>{
-const pondExcelColumns = ['Area', 'Nama Kolam', 'Status', 'Qty Data Ikan', 'Qty Kanban', 'Total Qty', 'Tanggal Catatan', 'Catatan']
+const pondExcelColumns = ['Area', 'Nama Kolam', 'Status', 'Qty Data Ikan', 'Qty Kanban', 'Total Qty']
+const kanbanExcelColumns = ['Nama Kolam', 'ID Kanban', 'Judul', 'Tanggal', 'Catatan', 'Qty', 'Warna']
+// The kanban cards live on their own sheet "Kanban" (one row per card): the pond's Catatan is only the cards joined together.
+const loadKanbanAll = async () => {
+  try {
+    const response = await fetch('/api/ponds/kanban-all')
+    return response.ok ? ((await response.json()).items || []) : []
+  } catch {
+    return []
+  }
+}
+const kanbanExportRows = (cards, pondNames) => cards
+  .filter((card) => !pondNames || pondNames.has(card.pond_name))
+  .map((card) => [card.pond_name || '', card.id, card.title || '', card.note_date ? String(card.note_date).slice(0, 10) : '', card.body || '', Number(card.qty || 0), card.color || ''])
 const pondStatusFromText = (value) => {
   const typed = String(value || '').trim().toLowerCase()
   if (typed === 'aktif' || typed === 'active') return 'active'
@@ -343,11 +356,11 @@ const exportPondsZip = async (ids) => {
           Number(pond.koi_count || 0),
           Number(pond.unphotographed_fish_qty || 0),
           H(pond),
-          pond.notes_date ? String(pond.notes_date).slice(0, 10) : '',
-          pond.notes || '',
         ])
+        const kanbanCards = await loadKanbanAll()
         const result = await window.KoiZip.exportPackage({
           sheetName: 'Data Kolam',
+          extraSheets: [{ name: 'Kanban', header: kanbanExcelColumns, rows: kanbanExportRows(kanbanCards, new Set(chosen.map((pond) => pond.name))), keyColumn: -1 }],
           header: pondExcelColumns,
           rows,
           keyHeader: 'Nama Kolam',
@@ -384,13 +397,15 @@ const exportPondsZip = async (ids) => {
       Number(pond.koi_count || 0),
       Number(pond.unphotographed_fish_qty || 0),
       H(pond),
-      pond.notes_date ? String(pond.notes_date).slice(0, 10) : '',
-      pond.notes || '',
     ])
+    const kanbanCards = await loadKanbanAll()
     const sheet = XLSX.utils.aoa_to_sheet([pondExcelColumns, ...rows])
     sheet['!cols'] = pondExcelColumns.map((column) => ({ wch: Math.max(14, column.length + 2) }))
     const workbook = XLSX.utils.book_new()
     XLSX.utils.book_append_sheet(workbook, sheet, 'Data Kolam')
+    const kanbanSheet = XLSX.utils.aoa_to_sheet([kanbanExcelColumns, ...kanbanExportRows(kanbanCards)])
+    kanbanSheet['!cols'] = kanbanExcelColumns.map((column) => ({ wch: Math.max(14, column.length + 2) }))
+    XLSX.utils.book_append_sheet(workbook, kanbanSheet, 'Kanban')
     const buffer = XLSX.write(workbook, { type: 'array', bookType: 'xlsx' })
     const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' })
     const link = document.createElement('a')
@@ -428,6 +443,93 @@ u.addEventListener('change', async () => {
       // A pond whose name already exists is updated (only the columns that are filled in); a new name creates a pond.
       // Mass input works in two passes: the file is checked and shown as a preview first (nothing is written),
       // and only after "Lanjutkan" it is saved. A ZIP also adds the documentation (see zip-kit.js).
+      // Kanban sheet of the file: a row with an ID Kanban edits that card (only the filled cells), a row without one is a new card of the pond.
+      const kanbanState = { cards: [], byId: new Map(), pondIds: new Set() }
+      const kanbanFromFile = async (source) => {
+        if (/\.csv$/i.test(source.name) || !window.XLSX) return []
+        const workbook = XLSX.read(await source.arrayBuffer(), { type: 'array', cellDates: true, dateNF: 'yyyy-mm-dd' })
+        const sheetName = workbook.SheetNames.find((name) => name.trim().toLowerCase() === 'kanban')
+        if (!sheetName) return []
+        const rawRows = XLSX.utils.sheet_to_json(workbook.Sheets[sheetName], { defval: '', raw: false })
+        return rawRows.map((row, index) => {
+          const record = Object.fromEntries(Object.entries(row).map(([key, value]) => [String(key).trim().toLowerCase(), String(value ?? '').trim()]))
+          return {
+            line: index + 2,
+            pond: record['nama kolam'] || '',
+            id: record['id kanban'] || '',
+            title: record.judul ?? '',
+            date: record.tanggal ?? '',
+            body: record.catatan ?? '',
+            qty: record.qty ?? '',
+            color: record.warna ?? '',
+          }
+        }).filter((row) => row.pond || row.id || row.title || row.body)
+      }
+      const kanbanClear = /^\[kosong\]$/i
+      const runKanbanImport = async (rows, newPondNames, dryRun) => {
+        const problems = []
+        let inserted = 0
+        let updated = 0
+        let skipped = 0
+        const patches = []
+        const creations = []
+        for (const row of rows) {
+          const label = `Kanban baris ${row.line}`
+          if (row.id) {
+            const card = kanbanState.byId.get(String(row.id))
+            if (!card) { skipped += 1; problems.push(`${label}: ID Kanban ${row.id} tidak ada, dilewati`); continue }
+            const patch = {}
+            const text = (value) => (kanbanClear.test(value) ? '' : value)
+            if (row.title !== '' && text(row.title) !== String(card.title || '')) patch.title = text(row.title)
+            if (row.body !== '' && text(row.body) !== String(card.body || '')) patch.body = text(row.body)
+            if (row.color !== '' && row.color !== String(card.color || '')) patch.color = row.color
+            if (row.date !== '') {
+              const date = kanbanClear.test(row.date) ? '' : window.KoiAuth.dateFromText(row.date)
+              if (date === '' && !kanbanClear.test(row.date)) problems.push(`${label}: tanggal "${row.date}" tidak dikenali, tidak diubah`)
+              else if (date !== String(card.note_date || '').slice(0, 10)) patch.note_date = date
+            }
+            if (row.qty !== '') {
+              const qty = Number(row.qty)
+              if (!Number.isFinite(qty) || qty < 0) problems.push(`${label}: Qty harus angka 0 atau lebih, tidak diubah`)
+              else if (qty !== Number(card.qty || 0)) patch.qty = Math.round(qty)
+            }
+            if (Object.keys(patch).length) { updated += 1; patches.push({ key: String(row.id), code: row.title || String(row.id), patch }) } else skipped += 1
+            continue
+          }
+          const pond = P.find((item) => String(item.name || '').trim().toLowerCase() === row.pond.toLowerCase())
+          if (!row.pond || (!pond && !newPondNames.has(row.pond.toLowerCase()))) { skipped += 1; problems.push(`${label}: Nama Kolam "${row.pond}" tidak ada, dilewati`); continue }
+          if (!row.title && !row.body) { skipped += 1; problems.push(`${label}: kartu baru butuh Judul atau Catatan, dilewati`); continue }
+          inserted += 1
+          creations.push({ row, pondName: row.pond })
+        }
+        if (dryRun || (!patches.length && !creations.length)) return { inserted, updated, skipped, problems }
+
+        if (patches.length) {
+          const response = await fetch('/api/macro/kanban/apply', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ source: 'Impor Data Kolam', rows: patches }) })
+          if (!response.ok) {
+            const data = await response.json().catch(() => ({}))
+            updated = 0
+            problems.push(`Kanban yang sudah ada gagal diperbarui: ${data.error || response.status}`)
+          }
+        }
+        for (const { row, pondName } of creations) {
+          const pond = P.find((item) => String(item.name || '').trim().toLowerCase() === pondName.toLowerCase())
+          if (!pond) { inserted -= 1; skipped += 1; problems.push(`Kanban baris ${row.line}: kolam "${pondName}" belum ada, dilewati`); continue }
+          const body = { title: row.title, body: row.body }
+          const date = row.date ? window.KoiAuth.dateFromText(row.date) : ''
+          if (date) body.note_date = date
+          if (row.color) body.color = row.color
+          const response = await fetch(`/api/ponds/${pond.id}/kanban`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(body) })
+          if (!response.ok) { inserted -= 1; skipped += 1; problems.push(`Kanban baris ${row.line}: gagal dibuat`); continue }
+          const qty = Number(row.qty)
+          if (Number.isFinite(qty) && qty > 0) {
+            const created = await response.json().catch(() => null)
+            if (created?.id) await fetch('/api/macro/kanban/apply', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ source: 'Impor Data Kolam', rows: [{ key: String(created.id), code: row.title, patch: { qty: Math.round(qty) } }] }) })
+          }
+        }
+        return { inserted, updated, skipped, problems }
+      }
+
       const pondsFromFile = async (source) => {
         let records
         if (/\.csv$/i.test(source.name)) {
@@ -493,9 +595,12 @@ u.addEventListener('change', async () => {
           const fields = {}
           if (item.location) fields.location = item.location
           if (item.status) fields.status = item.status
-          if (item.unphotographed !== '') fields.unphotographed_fish_qty = Math.max(0, Number(item.unphotographed) || 0)
-          if (item.notes) fields.notes = item.notes
-          if (item.notesDate) fields.notes_date = item.notesDate
+          // a pond that has kanban cards keeps its notes and Qty from the cards (the Kanban sheet changes them)
+          if (!(existing && kanbanState.pondIds.has(String(existing.id)))) {
+            if (item.unphotographed !== '') fields.unphotographed_fish_qty = Math.max(0, Number(item.unphotographed) || 0)
+            if (item.notes) fields.notes = item.notes
+            if (item.notesDate) fields.notes_date = item.notesDate
+          }
           // Dokumentasi cell: folder(s) of the ZIP and/or @ID of media that is already in the Galeri
           let docs = null
           if (pkg) {
@@ -570,22 +675,29 @@ u.addEventListener('change', async () => {
           pkg = await window.KoiZip.plainPackage()
         }
         const items = await pondsFromFile(file)
+        const kanbanRows = await kanbanFromFile(file)
+        kanbanState.cards = await loadKanbanAll()
+        kanbanState.byId = new Map(kanbanState.cards.map((card) => [String(card.id), card]))
+        kanbanState.pondIds = new Set(kanbanState.cards.map((card) => String(card.pond_id)))
+        const newPondNames = new Set(items.map((item) => item.name.toLowerCase()))
 
-        if (items.length === 0) {
-          throw new Error('File tidak berisi data kolam. Kolom yang dikenali: Area, Nama Kolam, Status, Qty Kanban, Tanggal Catatan, Catatan.')
+        if (items.length === 0 && kanbanRows.length === 0) {
+          throw new Error('File tidak berisi data kolam. Kolom yang dikenali: Area, Nama Kolam, Status, dan lembar Kanban.')
         }
 
         // pass 1: check everything, write nothing
         const plan = await runPondsImport(items, pkg, true)
+        const kanbanPlan = await runKanbanImport(kanbanRows, newPondNames, true)
         progress.close()
         progress = null
-        const planProblems = [...packageProblems, ...plan.problems]
-        if (!plan.inserted && !plan.updated && !plan.docsPlanned) {
+        const planProblems = [...packageProblems, ...plan.problems, ...kanbanPlan.problems]
+        if (!plan.inserted && !plan.updated && !plan.docsPlanned && !kanbanPlan.inserted && !kanbanPlan.updated) {
           d.textContent = 'Tidak ada data kolam yang bisa diimport.'
           window.KoiDock.showResult('Impor Data Kolam', 'Tidak ada data yang bisa diimport.', planProblems)
           return
         }
         const preview = `Kolam baru: ${plan.inserted}\nKolam diperbarui: ${plan.updated}` +
+          (kanbanRows.length ? `\nKanban baru: ${kanbanPlan.inserted}\nKanban diperbarui: ${kanbanPlan.updated}` : '') +
           (pkg.isZip || plan.docsPlanned ? `\nDokumentasi: ${plan.docsPlanned} file (yang sudah ada dilewati otomatis)` : '') +
           (planProblems.length ? '\nBaris atau file bermasalah dilewati.' : '')
         const go = await window.KoiDock.showResult('Pratinjau import Data Kolam', preview, planProblems, { confirm: true, okLabel: planProblems.length ? 'Lanjutkan (lewati yang bermasalah)' : 'Lanjutkan' })
@@ -597,9 +709,14 @@ u.addEventListener('change', async () => {
         // pass 2: write
         progress = window.KoiZip.progress('Impor Data Kolam')
         const result = await runPondsImport(items, pkg, false)
-        const summary = `Impor selesai. Baru ${result.inserted}, diperbarui ${result.updated}, dilewati ${result.skipped}.${pkg.isZip || result.docsPlanned ? ` Dokumentasi ditambahkan ${result.docsAdded}, sudah ada ${result.docsSkipped}.` : ''}`
+        let kanbanResult = { inserted: 0, updated: 0, skipped: 0, problems: [] }
+        if (kanbanRows.length) {
+          await $()
+          kanbanResult = await runKanbanImport(kanbanRows, new Set(), false)
+        }
+        const summary = `Impor selesai. Baru ${result.inserted}, diperbarui ${result.updated}, dilewati ${result.skipped}.${kanbanRows.length ? ` Kanban baru ${kanbanResult.inserted}, diperbarui ${kanbanResult.updated}, dilewati ${kanbanResult.skipped}.` : ''}${pkg.isZip || result.docsPlanned ? ` Dokumentasi ditambahkan ${result.docsAdded}, sudah ada ${result.docsSkipped}.` : ''}`
         d.textContent = summary
-        window.KoiDock.showResult('Impor Data Kolam', summary, [...packageProblems, ...result.problems])
+        window.KoiDock.showResult('Impor Data Kolam', summary, [...packageProblems, ...result.problems, ...kanbanResult.problems])
         await D($)
       } catch (error) {
         d.textContent = error.message || 'Impor gagal.'
