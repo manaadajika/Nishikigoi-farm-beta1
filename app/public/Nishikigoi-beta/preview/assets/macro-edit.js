@@ -110,7 +110,8 @@
     window.KoiDock.create = function (options) {
       options = options || {}
       pageActions = options.actions || []
-      options.actions = (options.actions || []).concat([{
+      // Excel / ZIP / Impor live in the Edit Masal window now; the dock keeps only the other buttons
+      options.actions = pageActions.filter(function (a) { return ['export', 'zip', 'import'].indexOf(a.key) < 0 }).concat([{
         key: 'macro-edit', icon: 'file-edit-masal', title: 'Edit masal dari Excel atau ZIP', variant: 'success', role: 'database-write',
         always: true, show: function () { return true }, onClick: function () { open() },
       }])
@@ -134,11 +135,12 @@
             '<div class="text-secondary small mb-2">Mengunduh Excel berisi semua data yang bisa diedit. Kolom pertama, <strong>' + esc(keyLabels) + '</strong>, adalah ID barisnya.</div>' +
             '<div class="d-flex flex-wrap gap-2"><button class="btn btn-outline-success" type="button" data-macro-download>Unduh Excel untuk diedit</button>' +
             '<button class="btn btn-outline-success" type="button" data-macro-zip>Unduh ZIP (Excel + dokumentasi)</button>' +
-            '<button class="btn btn-outline-success" type="button" data-macro-blank title="Excel berisi judul kolom saja, untuk mengisi data baru lalu memasukkannya lewat tombol Impor">Unduh template kosong (entry baru)</button></div></div>' +
+            '<button class="btn btn-outline-success" type="button" data-macro-blank title="Excel berisi judul kolom saja, untuk mengisi data baru">Unduh template kosong (entry baru)</button>' +
+            '<button class="btn btn-outline-primary" type="button" data-macro-import title="Memasukkan data baru dari template yang sudah diisi (Excel atau ZIP)">Impor data baru (Excel / ZIP)</button></div></div>' +
           '<div class="mb-3"><div class="fw-semibold mb-1">2. Ubah file, lalu unggah</div>' +
             '<ul class="text-secondary small mb-2 ps-3"><li>Hapus kolom yang tidak ingin diubah. Yang wajib hanya kolom ID.</li>' +
             '<li>Sel kosong berarti tidak diubah. Untuk mengosongkan isian, tulis <code>[kosong]</code>.</li>' +
-            '<li>ID yang tidak ada dilewati. Data yang tidak ada di file tidak berubah dan tidak dihapus. Edit masal tidak membuat data baru; untuk data baru pakai template kosong lalu tombol Impor.</li>' +
+            '<li>ID yang tidak ada dilewati. Data yang tidak ada di file tidak berubah dan tidak dihapus. Edit masal tidak membuat data baru; untuk data baru pakai template kosong lalu Impor data baru.</li>' +
             '<li>File ZIP dari unduhan halaman ini juga bisa diunggah (yang dibaca hanya Excel-nya).</li></ul>' +
             '<input class="form-control" type="file" accept=".xlsx,.xls,.zip" data-macro-file /></div>' +
           '<div data-macro-status class="small text-secondary mb-2"></div><div data-macro-preview></div>' +
@@ -157,6 +159,7 @@
       if (event.target.closest('[data-macro-download]')) { download(event.target.closest('[data-macro-download]')); return }
       if (event.target.closest('[data-macro-zip]')) { pageAction('zip'); return }
       if (event.target.closest('[data-macro-blank]')) { blankTemplate(); return }
+      if (event.target.closest('[data-macro-import]')) { if (pageAction('import')) Modal_hide(); return }
       if (event.target.closest('[data-macro-apply]')) { apply(); return }
       var undo = event.target.closest('[data-macro-undo]')
       if (undo) undoBatch(undo.getAttribute('data-macro-undo'), undo)
@@ -168,6 +171,7 @@
     box.textContent = message || ''
     box.className = 'small mb-2 ' + (bad ? 'text-danger' : 'text-secondary')
   }
+  function Modal_hide() { var Modal = modalApi(); if (Modal && modalEl) Modal.getOrCreateInstance(modalEl).hide() }
   function open() {
     ensureModal()
     plan = null
@@ -197,7 +201,7 @@
     sheetUtils.aoa_to_sheet = function (rows, opts) { return originalSheet.call(this, (rows || []).slice(0, 1), opts) }
     HTMLAnchorElement.prototype.click = function () { if (this.download) this.download = name; return originalClick.apply(this, arguments) }
     try {
-      if (pageAction('export')) status('Template kosong diunduh. Isi baris di bawah judul kolom, lalu masukkan lewat tombol Impor di dock.')
+      if (pageAction('export')) status('Template kosong diunduh. Isi baris di bawah judul kolom, lalu masukkan lewat tombol Impor data baru di atas.')
     } finally {
       sheetUtils.aoa_to_sheet = originalSheet
       HTMLAnchorElement.prototype.click = originalClick
