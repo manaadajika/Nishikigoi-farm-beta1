@@ -24,7 +24,7 @@
     if (value && typeof value === 'object') return value
     try { var parsed = JSON.parse(value || ''); return parsed == null ? fallback : parsed } catch (error) { return fallback }
   }
-  function hide(element, flag) { if (element) element.style.display = flag ? 'none' : '' }
+  function hide(element, flag) { if (!element) return; var wanted = flag ? 'none' : ''; if (element.style.display !== wanted) element.style.display = wanted }
   function currentType() { var radio = form && form.querySelector('input[name="report_type"]:checked'); return radio ? radio.value : '' }
   function isReadonly() { var title = modal && modal.querySelector('[data-report-modal-title]'); return Boolean(title && (title.dataset.koiKind === 'detail' || /Detail/i.test(title.textContent))) }
 
@@ -236,13 +236,12 @@
     var breedingColumn = form.querySelector('[data-breeding-search]')
     breedingColumn = breedingColumn && breedingColumn.closest('.col-lg-6')
     var breedingList = form.querySelector('[data-breeding-entry-list]')
-    hide(conditionList.closest('.report-form-section'), panen && !conditionList.children.length)
     hide(sortingList.closest('.report-form-section'), panen && !sortingList.children.length)
     hide(breedingColumn, panen && breedingList && !breedingList.children.length)
     var readonly = isReadonly()
     Array.prototype.forEach.call(listBox.querySelectorAll('[data-panen-extra]'), function (extra) {
       hide(extra, !panen)
-      extra.querySelectorAll('input,select,button').forEach(function (field) { field.disabled = readonly })
+      extra.querySelectorAll('input,select,button').forEach(function (field) { if (field.disabled !== readonly) field.disabled = readonly })
     })
   }
   setInterval(tick, 350)

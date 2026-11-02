@@ -43,7 +43,9 @@
     document.addEventListener('keydown', onKey, true)
     document.body.appendChild(layer)
   }
-  function hide(element, flag) { element.style.display = flag ? 'none' : '' }
+  function hide(element, flag) { var wanted = flag ? 'none' : ''; if (element.style.display !== wanted) element.style.display = wanted }
+  function setDisabled(field, value) { if (field.disabled !== value) field.disabled = value }
+  function setKind(heading, value) { if ((heading.dataset.koiKind || '') !== value) heading.dataset.koiKind = value }
   function isReadonly() { var title = modal && modal.querySelector('[data-report-modal-title]'); return Boolean(title && (title.dataset.koiKind === 'detail' || /Detail/i.test(title.textContent))) }
 
   // ---- what the page loads and saves -----------------------------------------------------------------------------------------------
@@ -251,8 +253,8 @@
   function applyReadonly() {
     if (!section) return
     var locked = isReadonly()
-    section.querySelectorAll('input,select,button').forEach(function (field) { field.disabled = locked })
-    specCheck.disabled = locked
+    section.querySelectorAll('input,select,button').forEach(function (field) { setDisabled(field, locked) })
+    setDisabled(specCheck, locked)
   }
 
   // ---- print: the Ikan Satuan table of a Data Ulang and the per-place details of a Panen are added to the program's print ---------------------------------------
@@ -405,16 +407,18 @@
     var pondSection = pondList.closest('.report-form-section')
     var conditionSection = conditionList.closest('.report-form-section')
     hide(pondSection, isData && !pondList.children.length)
-    hide(conditionSection, isData && !conditionList.children.length)
+    // the Kondisi / Reject section has ONE owner (this file): it is hidden in a Data Ulang and in a Panen while it is empty (panen-form.js leaves it alone,
+    // two files setting it in turn made it blink)
+    hide(conditionSection, (isData || currentType() === 'panen') && !conditionList.children.length)
     // the form of an existing report is titled like the others ("Laporan Panen PAN-26-11-01") and does not offer another type
     var typeSection = form.querySelector('input[name="report_type"]').closest('.report-form-section')
     var heading = modal.querySelector('[data-report-modal-title]')
     if (heading) {
-      if (!existing) { heading.dataset.koiKind = ''; hide(typeSection, false) }
+      if (!existing) { setKind(heading, ''); hide(typeSection, false) }
       else {
         var shownText = heading.textContent
-        if (/^Detail/i.test(shownText)) heading.dataset.koiKind = 'detail'
-        else if (/Edit/i.test(shownText) && !/^Edit Laporan /.test(shownText)) heading.dataset.koiKind = 'edit'
+        if (/^Detail/i.test(shownText)) setKind(heading, 'detail')
+        else if (/Edit/i.test(shownText) && !/^Edit Laporan /.test(shownText)) setKind(heading, 'edit')
         var kindLabel = existing.report_type === 'panen' ? 'Panen' : 'Data Ulang'
         var wanted = (heading.dataset.koiKind === 'detail' ? 'Laporan ' : 'Edit Laporan ') + kindLabel + (existing.batch_code ? ' ' + existing.batch_code : '')
         if (heading.dataset.koiKind && shownText !== wanted) heading.textContent = wanted
