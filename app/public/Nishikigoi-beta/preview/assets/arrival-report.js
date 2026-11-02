@@ -690,3 +690,12 @@
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', start)
   else start()
 })()
+
+// The report forms are as wide as the window allows: Bootstrap keeps modal-xl at 500-800px between 768 and 1200px of window width while
+// the form columns already use the wide layout, so fields overlapped (Sex buttons on Ternakan). The width now follows the window.
+;(function () {
+  var style = document.createElement('style')
+  style.textContent = '@media (min-width:576px){[data-arrival-modal] .modal-dialog,[data-activity-modal] .modal-dialog,[data-report-modal] .modal-dialog{--tblr-modal-width:min(1140px,calc(100vw - 2rem))}}' +
+    '[data-arrival-line] [data-line-gender]+span{white-space:nowrap}[data-arrival-line] .form-selectgroup{flex-wrap:wrap!important}'
+  document.head.appendChild(style)
+})()
