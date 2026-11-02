@@ -132,8 +132,9 @@
     photoOf(Array.isArray(females) && females[0] ? females[0].koi_id : '').then(function (photo) {
       if (!photo) { image.style.display = 'none'; return }
       image.src = thumbOf(photo.url)
+      image.dataset.full = photo.url
       image.title = photo.code
-      image.style.cssText = 'display:block;flex:0 0 auto;width:1.9rem;height:2.9rem;object-fit:cover;border-radius:4px;border:1px solid var(--tblr-border-color,#ccc)'
+      image.style.cssText = 'display:block;flex:0 0 auto;width:1.9rem;height:2.9rem;object-fit:cover;border-radius:4px;border:1px solid var(--tblr-border-color,#ccc);cursor:zoom-in'
     })
   }
 
@@ -176,6 +177,8 @@
     listBox = form.querySelector('[data-pond-entry-list]')
     if (!listBox) return
     listBox.addEventListener('click', function (event) {
+      var zoom = event.target.closest('img[data-x-photo]')
+      if (zoom && zoom.dataset.full && window.KoiZoomImage) { window.KoiZoomImage(zoom.dataset.full, zoom.title || ''); return }
       var add = event.target.closest('[data-mini-add]')
       if (add) { var box = add.closest('[data-panen-extra]').querySelector('[data-x-list="' + add.getAttribute('data-mini-add') + '"]'); box.appendChild(miniRow(add.getAttribute('data-mini-add'))); return }
       var remove = event.target.closest('[data-mini-remove]')

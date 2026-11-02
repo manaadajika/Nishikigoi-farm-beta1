@@ -30,6 +30,19 @@
     try { var parsed = JSON.parse(value || ''); return parsed == null ? fallback : parsed } catch (error) { return fallback }
   }
   function currentType() { var radio = form && form.querySelector('input[name="report_type"]:checked'); return radio ? radio.value : '' }
+  // a click on a small photo shows it large (click again, or Esc, to close)
+  window.KoiZoomImage = function (url, title) {
+    if (!url) return
+    var layer = document.createElement('div')
+    layer.style.cssText = 'position:fixed;inset:0;z-index:2100;background:rgba(0,0,0,.88);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:.6rem;cursor:zoom-out;padding:1rem'
+    layer.innerHTML = '<img alt="" style="max-width:94vw;max-height:84vh;object-fit:contain;border-radius:6px"><div style="color:#fff;font-size:.9rem">' + esc(title || '') + '</div>'
+    layer.querySelector('img').src = url
+    function close() { layer.remove(); document.removeEventListener('keydown', onKey, true) }
+    function onKey(event) { if (event.key === 'Escape') { event.stopPropagation(); close() } }
+    layer.addEventListener('click', close)
+    document.addEventListener('keydown', onKey, true)
+    document.body.appendChild(layer)
+  }
   function hide(element, flag) { element.style.display = flag ? 'none' : '' }
   function isReadonly() { var title = modal && modal.querySelector('[data-report-modal-title]'); return Boolean(title && (title.dataset.koiKind === 'detail' || /Detail/i.test(title.textContent))) }
 
@@ -103,8 +116,9 @@
   function showPhoto(image, photo) {
     if (!photo || !photo.url) { image.style.display = 'none'; image.removeAttribute('src'); return }
     image.src = thumbOf(photo.url)
+    image.dataset.full = photo.url
     image.title = photo.code
-    image.style.cssText = 'display:block;flex:0 0 auto;width:1.9rem;height:2.9rem;object-fit:cover;border-radius:4px;border:1px solid var(--tblr-border-color,#ccc)'
+    image.style.cssText = 'display:block;flex:0 0 auto;width:1.9rem;height:2.9rem;object-fit:cover;border-radius:4px;border:1px solid var(--tblr-border-color,#ccc);cursor:zoom-in'
   }
   function updatePreview(row) {
     var item = breedings.filter(function (b) { return String(b.id) === String(row.dataset.b || '') })[0]
@@ -121,7 +135,8 @@
     if (!image) return
     if (url) {
       image.src = thumbOf(url)
-      image.style.cssText = 'display:block;flex:0 0 auto;width:1.9rem;height:2.9rem;object-fit:cover;border-radius:4px;border:1px solid var(--tblr-border-color,#ccc)'
+      image.dataset.full = url
+      image.style.cssText = 'display:block;flex:0 0 auto;width:1.9rem;height:2.9rem;object-fit:cover;border-radius:4px;border:1px solid var(--tblr-border-color,#ccc);cursor:zoom-in'
     } else { image.style.display = 'none'; image.removeAttribute('src') }
     pick.textContent = url ? 'Ganti' : 'Foto'
   }
@@ -270,6 +285,8 @@
     hide(specCheck.closest('label'), true)
 
     section.addEventListener('click', function (event) {
+      var zoom = event.target.closest('img[data-prev],img[data-f-photo]')
+      if (zoom && zoom.dataset.full) { window.KoiZoomImage(zoom.dataset.full, zoom.title || ''); return }
       var pickButton = event.target.closest('[data-f-photo-pick]')
       if (pickButton) { pickButton.closest('[data-fish-row]').querySelector('[data-f-photo-input]').click(); return }
       if (event.target.closest('[data-fish-add]')) { addRow(); return }
