@@ -1898,10 +1898,6 @@ const saveIcon = iconSvg('device-floppy')
       row.querySelector('[data-pond-area]').value = ''
       row.querySelector('[data-pond-search]').value = pondLabel(pond)
       hidePondSuggestions(row)
-
-      if (!hasEmptyPondRow()) {
-        addPondRow()
-      }
     }
 
     // an area chosen instead of a pond: the whole area is the place (no pond id, the area name is the label)
@@ -1910,10 +1906,6 @@ const saveIcon = iconSvg('device-floppy')
       row.querySelector('[data-pond-area]').value = area
       row.querySelector('[data-pond-search]').value = area
       hidePondSuggestions(row)
-
-      if (!hasEmptyPondRow()) {
-        addPondRow()
-      }
     }
 
     const resetParentRows = () => {
