@@ -133,10 +133,10 @@
         '<div class="modal-body">' +
           '<div class="mb-3"><div class="fw-semibold mb-1">1. Unduh data</div>' +
             '<div class="text-secondary small mb-2">Mengunduh Excel berisi semua data yang bisa diedit. Kolom pertama, <strong>' + esc(keyLabels) + '</strong>, adalah ID barisnya.</div>' +
-            '<div class="d-flex flex-wrap gap-2"><button class="btn btn-outline-success" type="button" data-macro-download>Unduh Excel untuk diedit</button>' +
-            '<button class="btn btn-outline-success" type="button" data-macro-zip>Unduh ZIP (Excel + dokumentasi)</button>' +
-            '<button class="btn btn-outline-success" type="button" data-macro-blank title="Excel berisi judul kolom saja, untuk mengisi data baru">Unduh template kosong (entry baru)</button>' +
-            '<button class="btn btn-outline-success" type="button" data-macro-import title="Memasukkan data baru dari template yang sudah diisi (Excel atau ZIP)">Impor data baru (Excel / ZIP)</button></div></div>' +
+            '<div class="d-flex flex-wrap gap-2"><button class="btn btn-outline-primary" type="button" data-macro-download>Unduh Excel untuk diedit</button>' +
+            '<button class="btn btn-outline-primary" type="button" data-macro-zip>Unduh ZIP (Excel + dokumentasi)</button>' +
+            '<button class="btn btn-outline-primary" type="button" data-macro-blank title="Excel berisi judul kolom saja, untuk mengisi data baru">Unduh template kosong (entry baru)</button>' +
+            '<button class="btn btn-outline-primary" type="button" data-macro-import title="Memasukkan data baru dari template yang sudah diisi (Excel atau ZIP)">Impor data baru (Excel / ZIP)</button></div></div>' +
           '<div class="mb-3"><div class="fw-semibold mb-1">2. Ubah file, lalu unggah</div>' +
             '<ul class="text-secondary small mb-2 ps-3"><li>Hapus kolom yang tidak ingin diubah. Yang wajib hanya kolom ID.</li>' +
             '<li>Sel kosong berarti tidak diubah. Untuk mengosongkan isian, tulis <code>[kosong]</code>.</li>' +

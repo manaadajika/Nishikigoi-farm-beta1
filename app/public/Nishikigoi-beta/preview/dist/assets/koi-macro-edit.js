@@ -52,9 +52,9 @@ function koiMacroBoot() {
         '<div class="modal-body">' +
           '<div class="mb-3"><div class="fw-semibold mb-1">1. Unduh data</div>' +
             '<div class="text-secondary small mb-2">Pilih ikan di daftar (atau biarkan kosong untuk semua hasil pencarian dan filter), lalu unduh. Kolom pertama, <strong>Kode Koi</strong>, adalah ID ikan.</div>' +
-            '<div class="d-flex gap-2 flex-wrap"><button class="btn btn-outline-success" type="button" data-macro-download="xlsx">Unduh Excel</button><button class="btn btn-outline-success" type="button" data-macro-download="zip">Unduh ZIP (Excel + foto)</button>' +
-            '<button class="btn btn-outline-success" type="button" data-macro-blank="xlsx" title="Excel berisi judul kolom saja, untuk ikan baru">Template kosong Excel (entry baru)</button><button class="btn btn-outline-success" type="button" data-macro-blank="zip" title="Contoh ZIP: Excel kosong dan folder foto, untuk ikan baru">Template kosong ZIP (entry baru)</button>' +
-            '<button class="btn btn-outline-success" type="button" data-macro-import="xlsx">Impor data baru (Excel)</button><button class="btn btn-outline-success" type="button" data-macro-import="zip">Impor data baru (ZIP)</button></div></div>' +
+            '<div class="d-flex gap-2 flex-wrap"><button class="btn btn-outline-primary" type="button" data-macro-download="xlsx">Unduh Excel</button><button class="btn btn-outline-primary" type="button" data-macro-download="zip">Unduh ZIP (Excel + foto)</button>' +
+            '<button class="btn btn-outline-primary" type="button" data-macro-blank="xlsx" title="Excel berisi judul kolom saja, untuk ikan baru">Template kosong Excel (entry baru)</button><button class="btn btn-outline-primary" type="button" data-macro-blank="zip" title="Contoh ZIP: Excel kosong dan folder foto, untuk ikan baru">Template kosong ZIP (entry baru)</button>' +
+            '<button class="btn btn-outline-primary" type="button" data-macro-import="xlsx">Impor data baru (Excel)</button><button class="btn btn-outline-primary" type="button" data-macro-import="zip">Impor data baru (ZIP)</button></div></div>' +
           '<div class="mb-3"><div class="fw-semibold mb-1">2. Ubah file, lalu unggah</div>' +
             '<ul class="text-secondary small mb-2 ps-3"><li>Hapus kolom yang tidak ingin diubah. Yang wajib hanya <strong>Kode Koi</strong>.</li>' +
             '<li>Sel kosong berarti tidak diubah. Untuk mengosongkan isian, tulis <code>[kosong]</code>.</li>' +
