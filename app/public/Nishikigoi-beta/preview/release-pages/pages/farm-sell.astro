@@ -178,7 +178,7 @@ const saveIcon = iconSvg('device-floppy')
   <input class="d-none" id="sell-search" name="sell_search" type="search" data-sell-search aria-hidden="true" tabindex="-1" autocomplete="off" />
 
   <script src="/assets/vendor/xlsx/xlsx.core.min.js" is:inline></script>
-  <script src="/assets/xlsx-dates.js?v=20261102a" is:inline></script>
+  <script src="/assets/xlsx-dates.js?v=20261102c" is:inline></script>
   <script src="/assets/zip-kit.js?v=20261102a" is:inline></script>
   <script src="/assets/koi-picker.js?v=20261101a" is:inline></script>
 
@@ -905,7 +905,7 @@ const saveIcon = iconSvg('device-floppy')
       let docsSkipped = 0
       let docsPlanned = 0
       const wantedCodes = records.flatMap((record) => (record['ikan (kode)'] ? String(record['ikan (kode)']).split(/[,;\n]+/) : [])).map((code) => code.trim()).filter(Boolean)
-      const koiByCode = new Map((await window.KoiPicker.byCodes(wantedCodes, { scope: 'active' })).map((koi) => [String(koi.code || '').trim().toUpperCase(), koi]))
+      const koiByCode = new Map((await window.KoiPicker.byCodes(wantedCodes, { scope: 'all' })).map((koi) => [String(koi.code || '').trim().toUpperCase(), koi]))
       const statusFrom = (value) => ({ tersedia: 'available', available: 'available', dipesan: 'reserved', reserved: 'reserved', terjual: 'sold', sold: 'sold' })[String(value || '').trim().toLowerCase()] || ''
       const seen = new Set()
 
@@ -919,7 +919,9 @@ const saveIcon = iconSvg('device-floppy')
         if (rowId && !existing) bad.push(`ID ${rowId} tidak ada di Katalog`)
         if (record.judul) fields.title = record.judul
         if (record.harga !== '') {
-          const price = Number(String(record.harga).replace(/rp/i, '').replace(/\./g, '').replace(',', '.').trim())
+          const priceText = String(record.harga).replace(/rp/i, '').replace(/\s/g, '')
+          // 700.000 and 700,000 are both seven hundred thousand; 700,5 is a decimal
+          const price = Number(/^\d{1,3}([.,]\d{3})+$/.test(priceText) ? priceText.replace(/[.,]/g, '') : priceText.replace(/\./g, '').replace(',', '.'))
           if (!Number.isFinite(price) || price < 0) bad.push(`Harga "${record.harga}" tidak valid`)
           else fields.price = Math.round(price)
         }

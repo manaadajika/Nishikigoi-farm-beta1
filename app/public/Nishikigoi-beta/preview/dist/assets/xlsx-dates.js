@@ -2,15 +2,19 @@
 // instead of text, and a date that Excel kept as a plain serial number (45822) is read back as the date it is.
 // It wraps XLSX.utils.aoa_to_sheet (writing) and XLSX.utils.sheet_to_json (reading), so every export and import of the program gets it:
 // a column counts as a date column when its title is Tanggal..., Tgl..., Awal Pijah, Akhir Pijah or Update Terakhir.
+// Money columns (Harga..., Total Belanja) are written as numbers in Rupiah accounting format without decimals (the server sends text like "8475000.00").
 // A date that is only partly known (2026-00-00, 2026-05-00) cannot be an Excel date: it stays text.
 ;(function () {
   'use strict'
   if (!window.XLSX || !window.XLSX.utils || window.XLSX.utils.__koiDates) return
 
   var HEADER = /^(tanggal\b.*|tgl\b.*|awal pijah|akhir pijah|update terakhir)$/
+  var MONEY = /^(harga\b.*|total belanja|total biaya)$/
+  var MONEY_FORMAT = '_("Rp"* #,##0_);_("Rp"* (#,##0);_("Rp"* "-"_);_(@_)'
   var EPOCH = Date.UTC(1899, 11, 30)
 
   function isDateHeader(value) { return typeof value === 'string' && HEADER.test(value.trim().toLowerCase()) }
+  function isMoneyHeader(value) { return typeof value === 'string' && MONEY.test(value.trim().toLowerCase()) }
 
   // 'YYYY-MM-DD' (also the other forms the program reads: 26/01/2026 ...) -> Excel serial number, or null when it is not a whole date
   function toSerial(text) {
@@ -38,10 +42,10 @@
   }
 
   // the title row is one of the first three rows (Data Ikan has a hint row above it)
-  function dateColumns(rows) {
+  function dateColumns(rows, test) {
     for (var r = 0; r < Math.min(3, rows.length); r += 1) {
       var found = []
-      ;(rows[r] || []).forEach(function (cell, c) { if (isDateHeader(cell)) found.push(c) })
+      ;(rows[r] || []).forEach(function (cell, c) { if ((test || isDateHeader)(cell)) found.push(c) })
       if (found.length) return { row: r, columns: found }
     }
     return null
@@ -54,6 +58,21 @@
   utils.aoa_to_sheet = function (rows, options) {
     var sheet = originalWrite.call(this, rows, options)
     try {
+      var money = Array.isArray(rows) ? dateColumns(rows, isMoneyHeader) : null
+      if (money) {
+        for (var m = money.row + 1; m < rows.length; m += 1) {
+          money.columns.forEach(function (c) {
+            var cell = sheet[utils.encode_cell({ r: m, c: c })]
+            if (!cell || cell.v === '' || cell.v == null) return
+            var amount = Number(String(cell.v).trim())
+            if (!Number.isFinite(amount)) return
+            cell.t = 'n'
+            cell.v = Math.round(amount)
+            cell.z = MONEY_FORMAT
+            delete cell.w
+          })
+        }
+      }
       var where = Array.isArray(rows) ? dateColumns(rows) : null
       if (where) {
         for (var r = where.row + 1; r < rows.length; r += 1) {
