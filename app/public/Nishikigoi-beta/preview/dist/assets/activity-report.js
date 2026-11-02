@@ -103,6 +103,15 @@
     '.input-group:has(>[data-activity-other].d-none){display:none!important}' +
     'body.koi-switching .modal-backdrop,body.koi-switching .modal-backdrop.fade,body.koi-switching .modal-backdrop.show{transition:none!important;opacity:0!important}' +
     'body.koi-switched .modal-backdrop{transition:none!important}' +
+    // phone: the title, the filter row (scrolls sideways when it is wider than the screen) and "Tambah Laporan" each get their own line
+    '@media (max-width:767.98px){' +
+    '.card-header:has(>.card-actions [data-report-filter]){flex-wrap:wrap;gap:.6rem}' +
+    '.card-header:has(>.card-actions [data-report-filter])>.card-title{flex:1 1 100%;margin:0}' +
+    '.card-header:has(>.card-actions [data-report-filter])>.card-actions{flex:1 1 100%;width:100%;margin:0}' +
+    '.card-actions .btn-group:has([data-report-filter]){flex:1 1 100%;overflow-x:auto;margin:0!important;flex-wrap:nowrap}' +
+    '.card-actions .btn-group [data-report-filter]{white-space:nowrap;flex:1 1 auto;padding:.3rem .45rem;font-size:.78rem}' +
+    '.card-actions [data-report-open]{flex:1 1 100%}' +
+    '}' +
     '.koi-switch-shade{position:fixed;inset:0;z-index:1049;pointer-events:none;background:var(--tblr-backdrop-bg,#182433);opacity:var(--tblr-backdrop-opacity,.32);backdrop-filter:blur(4px)}' +
     '.koi-type-grid{display:grid!important;grid-template-columns:repeat(4,minmax(0,1fr));gap:0;margin:0!important;border:1px solid var(--tblr-border-color);border-radius:8px;overflow:hidden;background:var(--tblr-bg-surface)}' +
     '.koi-type-grid .form-selectgroup-item{margin:0!important;flex:none!important;min-width:0}' +
