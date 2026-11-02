@@ -93,7 +93,7 @@
     row.dataset.m = entry.male_id || ''
     row.className = 'border-bottom py-1'
     row.setAttribute('data-fish-row', '')
-    row.style.cssText = 'display:grid;grid-template-columns:2.2rem minmax(7rem,1.2fr) 5.5rem 6.5rem minmax(9rem,1.6fr) minmax(7rem,1.2fr) minmax(7rem,1.4fr) 4.6rem;gap:.4rem;align-items:center;min-width:56rem'
+    row.style.cssText = 'display:grid;grid-template-columns:2.2rem minmax(7rem,1.2fr) 5.5rem 7.5rem minmax(9rem,1.6fr) minmax(7rem,1.2fr) minmax(7rem,1.4fr) 4.6rem;gap:.4rem;align-items:center;min-width:56rem'
     row.innerHTML =
       '<div class="fw-semibold text-secondary text-center" data-f="no"></div>' +
       '<input class="form-control form-control-sm" data-no-clear data-f="jenis" list="arrival-varieties" placeholder="Contoh Showa" value="' + esc(entry.jenis) + '">' +
@@ -175,13 +175,21 @@
       codeInput.addEventListener('input', function (event) { if (event.isTrusted) codeTyped = true })
     }
     var pondSection = pondList.closest('.report-form-section')
+    // every box of the table has the same height and the same letters (a select of the theme is taller than a text box)
+    var look = document.createElement('style')
+    look.textContent = '[data-fish-section] [data-fish-row] .form-control,[data-fish-section] [data-fish-row] .form-select{height:2.1rem;min-height:2.1rem;font-size:.85rem;line-height:1.3;padding:.25rem .55rem;box-sizing:border-box}' +
+      '[data-fish-section] [data-fish-row] .form-select{padding-right:1.8rem;background-position:right .5rem center;background-size:12px}' +
+      '[data-fish-section] [data-fish-row] .btn{height:2.1rem;padding:0 .5rem;font-size:.8rem}' +
+      '[data-fish-section] [data-fish-row] .koi-native-select-button{height:2.1rem;min-height:2.1rem;font-size:.85rem;line-height:1.3;padding:.25rem 1.8rem .25rem .55rem;box-sizing:border-box}' +
+      '[data-fish-section] [data-fish-row] .koi-native-select{display:block;min-width:0}'
+    document.head.appendChild(look)
     section = document.createElement('div')
     section.className = 'report-form-section'
     section.setAttribute('data-fish-section', '')
     hide(section, true)
     section.innerHTML = '<div class="d-flex align-items-center justify-content-between gap-2 mb-2"><h4 class="mb-0">Ikan Satuan</h4><button class="btn btn-sm" type="button" data-fish-add>Tambah Ikan</button></div>' +
       '<div class="form-hint mb-2">Opsional, untuk sesi foto. Satu baris = satu ekor: jenis, ukuran, sex, sesi breeding (dan male-nya), serta catatan. Boleh dikosongkan.</div>' +
-      '<div style="overflow-x:auto"><div class="fw-semibold small text-secondary border-bottom pb-1" style="display:grid;grid-template-columns:2.2rem minmax(7rem,1.2fr) 5.5rem 6.5rem minmax(9rem,1.6fr) minmax(7rem,1.2fr) minmax(7rem,1.4fr) 4.6rem;gap:.4rem;min-width:56rem"><div class="text-center">No</div><div>Jenis</div><div>Ukuran (cm)</div><div>Sex</div><div>Sesi Breeding</div><div>Male</div><div>Catatan</div><div></div></div>' +
+      '<div style="overflow-x:auto"><div class="fw-semibold small text-secondary border-bottom pb-1" style="display:grid;grid-template-columns:2.2rem minmax(7rem,1.2fr) 5.5rem 7.5rem minmax(9rem,1.6fr) minmax(7rem,1.2fr) minmax(7rem,1.4fr) 4.6rem;gap:.4rem;min-width:56rem"><div class="text-center">No</div><div>Jenis</div><div>Ukuran (cm)</div><div>Sex</div><div>Sesi Breeding</div><div>Male</div><div>Catatan</div><div></div></div>' +
       '<div data-fish-list></div></div>'
     pondSection.parentNode.insertBefore(section, pondSection)
     listBox = section.querySelector('[data-fish-list]')
