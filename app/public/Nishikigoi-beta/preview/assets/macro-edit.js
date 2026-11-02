@@ -9,7 +9,7 @@
 
   var CLEAR = /^\[kosong\]$/i
   var pageActions = []
-  function text(value) { return String(value == null ? '' : value).trim() }
+  function text(value) { return String(value == null ? '' : value).replace(/\r\n?/g, '\n').trim() } // a line break is the same in Excel (CRLF) and in the database (LF)
   function esc(value) { return String(value == null ? '' : value).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c] }) }
   function day(value) { return text(value).slice(0, 10) }
   function getJson(url) {
@@ -405,6 +405,7 @@
   // ---- applying ----------------------------------------------------------------------------------------------------------------------------------
   function apply() {
     if (!plan) return
+    if (plan.sections.some(function (section) { return section.changes.length > 3000 })) { status('Terlalu banyak baris berubah, maksimal 3000 sekali terapkan. Pecah file menjadi beberapa bagian.', true); return }
     var button = modalEl.querySelector('[data-macro-apply]')
     button.disabled = true
     var done = []

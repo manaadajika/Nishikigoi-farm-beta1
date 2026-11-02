@@ -32,7 +32,7 @@ function koiMacroBoot() {
       })
     })
   }
-  function text(value) { return String(value == null ? '' : value).trim() }
+  function text(value) { return String(value == null ? '' : value).replace(/\r\n?/g, '\n').trim() } // a line break is the same in Excel (CRLF) and in the database (LF)
   function sameValue(a, b) {
     a = text(a); b = text(b)
     if (a !== '' && b !== '' && !isNaN(Number(a)) && !isNaN(Number(b))) return Number(a) === Number(b)
@@ -325,6 +325,7 @@ function koiMacroBoot() {
 
   function apply() {
     if (!plan) return
+    if (plan.changes.length > 2000) { status('Terlalu banyak: ' + plan.changes.length + ' ikan berubah, maksimal 2000 sekali terapkan. Pecah file menjadi beberapa bagian.', true); return }
     var button = modalEl.querySelector('[data-macro-apply]')
     button.disabled = true
     var summary = { updated: 0, unchanged: 0, photos: 0, failedPhotos: [] }
