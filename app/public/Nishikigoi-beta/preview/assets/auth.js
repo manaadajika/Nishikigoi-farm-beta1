@@ -1389,14 +1389,23 @@
   // Every date field (input marked data-date-parts) becomes three boxes: Tahun, Bulan, Tanggal. Only the year has to be filled; a month
   // or a day that is not known is left as "-". The original input stays in the page (hidden) and keeps the value as YYYY-MM-DD with 00 for
   // what is not known, so forms, saving and the code that reads or sets input.value work as before.
+  // Wide dialogs follow the window: Bootstrap keeps modal-xl at 500-800px between 768 and 1200px of window width while the form columns
+  // already use their wide layout, which made fields overlap. Every dialog of the program gets the same rule.
+  ;(function () {
+    var fluid = document.createElement('style')
+    fluid.id = 'koi-fluid-modals'
+    fluid.textContent = '@media (min-width:576px){.modal-dialog.modal-xl{--tblr-modal-width:min(1140px,calc(100vw - 2rem))}.modal-dialog.modal-lg{--tblr-modal-width:min(800px,calc(100vw - 2rem))}}'
+    ;(document.head || document.documentElement).appendChild(fluid)
+  })()
+
   function installDateInputs() {
     var style = document.createElement('style')
     style.id = 'koi-date-inputs'
     style.textContent = '.koi-date-parts{display:flex;flex-wrap:wrap;gap:.35rem;width:100%;align-items:stretch}' +
       '.koi-date-parts>*{min-width:0}' +
-      '.koi-date-parts .koi-dp-year{flex:0 1 4.6rem}' +
-      '.koi-date-parts .koi-dp-month{flex:2 1 8.2rem}' +
-      '.koi-date-parts .koi-dp-day{flex:0 1 5rem}' +
+      '.koi-date-parts .koi-dp-year{flex:0 1 4.2rem}' +
+      '.koi-date-parts .koi-dp-month{flex:2 1 6.8rem}' +
+      '.koi-date-parts .koi-dp-day{flex:0 1 4rem}' +
       '.koi-date-parts .form-select{padding-right:1.9rem;background-position:right .5rem center}' +
       '.koi-date-parts .koi-dp-btn{flex:0 0 auto;padding-left:.6rem;padding-right:.6rem}' +
       '.koi-date-parts .koi-dp-today{margin-left:auto}'

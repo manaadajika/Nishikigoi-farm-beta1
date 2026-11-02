@@ -12,19 +12,20 @@ route('GET', '/farm-reports', function () {
     ));
 });
 
-// Mirrors the original Node app's getReportBatchCode(): format
-// "Report-{YY}-{MM}-{NN}" scoped per report month, always computed
-// server-side from report_date (the client never supplies this on
-// create). On edit, keeps the existing code if the report stayed in
-// the same year-month, regenerates only if the month changed.
-function get_report_batch_code(string $reportDate, ?int $excludeId = null, string $existingCode = ''): string {
+// Kode Batch: "{DTU|PAN|ACT|NEW}-{YY}-{MM}-{NN}", one counter per kind of report and per report month (it starts again at 01 every month):
+// DTU data ulang, PAN panen, ACT kegiatan, NEW ikan datang. Always computed server-side from report_date (the client never supplies it).
+// On edit the code stays when the report stays in the same year-month and the same kind; reports with an older code ("Report-26-10-02")
+// keep it, it is never renamed.
+const REPORT_CODE_PREFIX = ['data_ulang' => 'DTU', 'panen' => 'PAN', 'kegiatan' => 'ACT', 'ikan_datang' => 'NEW'];
+
+function get_report_batch_code(string $reportDate, ?int $excludeId = null, string $existingCode = '', string $type = 'data_ulang'): string {
     $dateValue = substr($reportDate, 0, 10);
     if (!preg_match('/^(\d{4})-(\d{2})-/', $dateValue, $m)) {
         return $existingCode;
     }
-    // Report-YY-MM-01; a report known only by its year (2025-00-00) keeps the month position as 00: Report-25-00-01
-    $prefix = 'Report-' . substr($m[1], -2) . '-' . $m[2] . '-';
-    if ($existingCode !== '' && str_starts_with($existingCode, $prefix)) {
+    // DTU-YY-MM-01; a report known only by its year (2025-00-00) keeps the month position as 00: DTU-25-00-01
+    $prefix = (REPORT_CODE_PREFIX[$type] ?? 'DTU') . '-' . substr($m[1], -2) . '-' . $m[2] . '-';
+    if ($existingCode !== '' && (str_starts_with($existingCode, $prefix) || !preg_match('/^(DTU|PAN|ACT|NEW)-/', $existingCode))) {
         return $existingCode;
     }
 
@@ -69,7 +70,7 @@ function report_gallery_choice(array $body): ?bool {
 
 route('GET', '/farm-report-next-code', function () {
     $date = $_GET['date'] ?? date('Y-m-d');
-    send_json(200, ['batch_code' => get_report_batch_code($date)]);
+    send_json(200, ['batch_code' => get_report_batch_code($date, null, '', (string)($_GET['type'] ?? 'data_ulang'))]);
 });
 
 // Numeric report columns: "", "-" and null mean "no value"; "28,5" is accepted; anything else is a clear 400
@@ -90,7 +91,7 @@ route('POST', '/farm-reports', function () {
     if ($reportType === '' || $reportDate === '') send_error(400, 'report_type dan report_date wajib diisi');
     $reportDate = koi_clean_partial_date($reportDate, 'Tanggal laporan');
 
-    $batchCode = get_report_batch_code($reportDate);
+    $batchCode = get_report_batch_code($reportDate, null, '', $reportType);
 
     $jsonCols = ['pond_entries', 'breeding_entries', 'koi_entries', 'reporter_entries', 'spectrum_sizes', 'media_entries', 'condition_entries', 'sorting_entries'];
     $encode = fn($k) => in_array($k, $jsonCols) && isset($body[$k]) ? json_encode($body[$k]) : ($body[$k] ?? null);
@@ -157,12 +158,13 @@ $farmReportUpdateHandler = function (array $m) {
     // to a different month.
     if (array_key_exists('report_date', $body)) {
         $body['report_date'] = koi_clean_partial_date($body['report_date'], 'Tanggal laporan') ?? '';
-        $existing = query_one('SELECT report_date, batch_code FROM farm_reports WHERE id = ?', [$m[1]]);
+        $existing = query_one('SELECT report_date, report_type, batch_code FROM farm_reports WHERE id = ?', [$m[1]]);
         $existingMonth = substr((string)($existing['report_date'] ?? ''), 0, 7);
         $nextMonth = substr((string)$body['report_date'], 0, 7);
-        $keepCode = $existingMonth === $nextMonth ? (string)($existing['batch_code'] ?? '') : '';
+        $nextType = (string)($body['report_type'] ?? ($existing['report_type'] ?? 'data_ulang'));
+        $keepCode = $existingMonth === $nextMonth && $nextType === (string)($existing['report_type'] ?? '') ? (string)($existing['batch_code'] ?? '') : '';
         $fields[] = 'batch_code = ?';
-        $params[] = get_report_batch_code((string)$body['report_date'], (int)$m[1], $keepCode);
+        $params[] = get_report_batch_code((string)$body['report_date'], (int)$m[1], $keepCode, $nextType);
     }
 
     if (!$fields && report_gallery_choice($body) === null) send_error(400, 'Tidak ada field untuk diupdate');

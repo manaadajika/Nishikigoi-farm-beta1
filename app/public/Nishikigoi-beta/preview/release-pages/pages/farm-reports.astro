@@ -142,7 +142,7 @@ import DefaultLayout from '@shared/layouts/DefaultLayout.astro'
     const reportMonths=['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember']
     const formatLongDate=(value)=>window.KoiAuth.formatDate(value)
     const formatDate=(value)=>value?window.KoiAuth.formatDate(String(value).slice(0,10)):'-'
-    const loadNextReportBatchCode=async()=>{if(editingReportId)return;const date=reportDate.value;if(!date){batchCodeInput.value='';return}try{const response=await fetch(`${apiUrl}/farm-report-next-code?date=${encodeURIComponent(date)}`);const data=await response.json();batchCodeInput.value=data.batch_code||''}catch{batchCodeInput.value=''}}
+    const loadNextReportBatchCode=async()=>{if(editingReportId)return;const date=reportDate.value;if(!date){batchCodeInput.value='';return}try{const response=await fetch(`${apiUrl}/farm-report-next-code?date=${encodeURIComponent(date)}&type=${encodeURIComponent(document.querySelector('[name=report_type]:checked')?.value||'data_ulang')}`);const data=await response.json();batchCodeInput.value=data.batch_code||''}catch{batchCodeInput.value=''}}
     const showForm=()=>{const api=getReportModalApi();api?api.getOrCreateInstance(reportModalElement).show():(reportModalElement.classList.add('show'),reportModalElement.style.display='block')}
     const hideForm=()=>{const api=getReportModalApi();api?api.getInstance(reportModalElement)?.hide():(reportModalElement.classList.remove('show'),reportModalElement.style.display='none')}
     const findBySearch=(items,query,labeler)=>{const value=String(query||'').toLowerCase().trim();return items.find((item)=>labeler(item).toLowerCase()===value)||items.find((item)=>labeler(item).toLowerCase().includes(value))}
@@ -771,6 +771,6 @@ import DefaultLayout from '@shared/layouts/DefaultLayout.astro'
     document.addEventListener('click',(event)=>{const chipPhoto=event.target.closest('.report-parent-chip img');if(chipPhoto)window.KoiAuth.zoomPhoto(chipPhoto.src,chipPhoto.alt)})
   </script>
   <script is:inline src="/assets/activity-report.js?v=20261102a"></script>
-  <script is:inline src="/assets/arrival-report.js?v=20261102b"></script>
+  <script is:inline src="/assets/arrival-report.js?v=20261102d"></script>
 </DefaultLayout>
 
