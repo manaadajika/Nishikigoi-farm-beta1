@@ -219,7 +219,7 @@
         var extra = target.extraExportColumns || []
         var header = [target.keyLabel].concat(extra.map(function (c) { return c[0] })).concat(target.columns.map(function (c) { return c.header }))
         var rows = loaded[index].map(function (entry) {
-          return [entry.key].concat(extra.map(function (c) { return c[1](entry.item) })).concat(target.columns.map(function (c) { var v = c.get(entry.item); return v == null ? '' : v }))
+          return [entry.key].concat(extra.map(function (c) { return c[1](entry.item) })).concat(target.columns.map(function (c) { var v = c.get(entry.item); if (v == null) return ''; return (c.type === 'int' || c.type === 'decimal') && /^-?\d+(\.\d+)?$/.test(String(v).trim()) ? Number(v) : v }))
         })
         XLSX.utils.book_append_sheet(workbook, XLSX.utils.aoa_to_sheet([header].concat(rows)), target.sheet || config.sheetName)
       })

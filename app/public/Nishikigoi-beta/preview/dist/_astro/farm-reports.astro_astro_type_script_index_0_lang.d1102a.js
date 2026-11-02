@@ -48,6 +48,7 @@ const reportDateFromText = (value) => window.KoiAuth.dateFromText(value)
       }
     }
 
+    const numericCells = (columns, rows, names) => { const at = names.map((name) => columns.indexOf(name)).filter((i) => i >= 0); return rows.map((row) => row.map((cell, i) => (at.includes(i) && typeof cell === 'string' && /^-?\d+(\.\d+)?$/.test(cell.trim()) ? Number(cell) : cell))) } // numbers can arrive as text: write them as numbers so Excel lines them up on the right
     const exportReportsExcel = (ids, zipMode = false) => {
   if (!window.XLSX) {
     window.KoiDock.showResult('Ekspor Excel', 'Pustaka Excel belum termuat. Muat ulang halaman.')
@@ -76,8 +77,8 @@ const reportDateFromText = (value) => window.KoiAuth.dateFromText(value)
     item.gallery_id ? 'Ya' : 'Tidak',
     item.gallery_id || '',
   ])
-  if (zipMode) return exportReportsZip(chosen, rows)
-      const sheet = XLSX.utils.aoa_to_sheet([reportExcelColumns, ...rows])
+  if (zipMode) return exportReportsZip(chosen, numericCells(reportExcelColumns, rows, ['Rata-rata Ukuran (cm)']))
+      const sheet = XLSX.utils.aoa_to_sheet([reportExcelColumns, ...numericCells(reportExcelColumns, rows, ['Rata-rata Ukuran (cm)'])])
   sheet['!cols'] = reportExcelColumns.map((column) => ({ wch: Math.max(14, column.length + 2) }))
   const workbook = XLSX.utils.book_new()
   XLSX.utils.book_append_sheet(workbook, sheet, 'Laporan')
