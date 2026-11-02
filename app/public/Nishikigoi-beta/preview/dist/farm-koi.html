@@ -1421,12 +1421,11 @@
                     </svg>
                   </button>
                   <button
-                    class="btn btn-outline-success btn-icon d-none"
+                    class="btn btn-outline-success btn-icon"
                     type="button"
-                    data-selected-action
-                    data-export-selected-spreadsheet data-dock-group
-                    aria-label="Ekspor spreadsheet ikan terpilih"
-                    title="Ekspor spreadsheet ikan terpilih"
+                    data-export-selected-spreadsheet
+                    aria-label="Unduh Excel data ikan"
+                    title="Unduh Excel data ikan (yang dipilih, atau semua hasil pencarian dan filter)"
                   >
                     <!-- Unduh SVG icon from http://tabler.io/icons/icon/file-spreadsheet -->
                     <svg
@@ -1453,12 +1452,11 @@
                     </svg>
                   </button>
                   <button
-                    class="btn btn-outline-success btn-icon d-none"
+                    class="btn btn-outline-success btn-icon"
                     type="button"
-                    data-selected-action
-                    data-download-selected-images data-dock-group
-                    aria-label="Unduh ZIP (xlsx + foto) ikan terpilih"
-                    title="Unduh ZIP (xlsx + foto) ikan terpilih"
+                    data-download-selected-images
+                    aria-label="Unduh ZIP (xlsx + foto) data ikan"
+                    title="Unduh ZIP xlsx + foto data ikan (yang dipilih, atau semua hasil pencarian dan filter)"
                   >
                     <!-- Unduh SVG icon from http://tabler.io/icons/icon/download -->
                     <svg
@@ -9105,8 +9103,20 @@ items.forEach((item) => {
                   }
                 };
 
-                const exportSelectedSpreadsheet = () => {
-                  const items = selectedKoiItems();
+    // The Excel / ZIP buttons of the dock: the chosen fish, or (nothing chosen) every fish of the current search and filters
+    const exportItems = async (askBeforeMany = 0) => {
+      const chosen = selectedKoiItems()
+      if (chosen.length) return chosen
+      const query = koiQuery()
+      const response = await fetch(`${apiUrl}/koi/page?` + new URLSearchParams({ ...query, f: JSON.stringify(query.f), page: '1', per_page: '5000' }).toString())
+      if (!response.ok) throw new Error('Data ikan gagal diambil.')
+      const result = await response.json()
+      const items = Array.isArray(result.items) ? result.items : []
+      if (askBeforeMany && items.length > askBeforeMany && !(await window.KoiDialog.confirm(`Tidak ada ikan yang dipilih, jadi semua ${items.length} ikan hasil pencarian dan filter akan diunduh beserta fotonya. Ukuran file bisa besar. Lanjutkan?`))) return []
+      return items
+    }
+                const exportSelectedSpreadsheet = async () => {
+                  const items = await exportItems();
 
                   if (items.length === 0) {
                     return;
@@ -9159,7 +9169,7 @@ items.forEach((item) => {
 
                   downloadBlob(
                     blob,
-                    `data-ikan-terpilih-${new Date().toISOString().slice(0, 10)}.xlsx`,
+                    `data-ikan-${selectedKoiItems().length ? 'terpilih-' : 'semua-'}${new Date().toISOString().slice(0, 10)}.xlsx`,
                   );
                 };
 
@@ -9582,7 +9592,7 @@ items.forEach((item) => {
                   return label.replace(/[\\/:*?"<>|]+/g, "-").trim();
                 };
                 const downloadSelectedImages = async () => {
-      const items = selectedKoiItems()
+      const items = await exportItems(40);
 
       if (items.length === 0) {
         return
@@ -9648,7 +9658,7 @@ items.forEach((item) => {
 
         const headerRow = zipEntryColumns.map(([header]) => header)
         const xlsxBuffer = await buildXlsxBlob(headerRow, rows, importNotesRow(zipEntryColumns), [0]).arrayBuffer()
-        downloadBlob(createZip([{ name: 'data-ikan.xlsx', buffer: xlsxBuffer }, ...files]), `zip-ikan-terpilih-${new Date().toISOString().slice(0, 10)}.zip`)
+        downloadBlob(createZip([{ name: 'data-ikan.xlsx', buffer: xlsxBuffer }, ...files]), `zip-ikan-${selectedKoiItems().length ? 'terpilih-' : 'semua-'}${new Date().toISOString().slice(0, 10)}.zip`)
       } finally {
         downloadImagesButton.disabled = false
       }
@@ -10307,10 +10317,7 @@ pageSizeButtons.forEach((button) =>
                   appendSelectedNotes().catch((error) => alert(error.message)),
                 );
                 printSelectedButton.addEventListener("click", printSelectedKoi);
-                exportSpreadsheetButton.addEventListener(
-                  "click",
-                  exportSelectedSpreadsheet,
-                );
+                exportSpreadsheetButton.addEventListener('click', () => exportSelectedSpreadsheet().catch((error) => alert(error.message)));
                 downloadImagesButton.addEventListener("click", () =>
                   downloadSelectedImages().catch((error) =>
                     alert(error.message),

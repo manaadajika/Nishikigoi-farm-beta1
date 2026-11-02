@@ -1795,10 +1795,10 @@ const calendarIcon = iconSvg('calendar')
         <button class="btn btn-outline-secondary btn-icon d-none" type="button" data-selected-action data-print-selected-koi data-dock-group aria-label="Cetak" title="Cetak">
           <Icon name="printer" />
         </button>
-        <button class="btn btn-outline-success btn-icon d-none" type="button" data-selected-action data-export-selected-spreadsheet data-dock-group aria-label="Ekspor spreadsheet ikan terpilih" title="Ekspor spreadsheet ikan terpilih">
+        <button class="btn btn-outline-success btn-icon" type="button" data-export-selected-spreadsheet aria-label="Unduh Excel data ikan" title="Unduh Excel data ikan (yang dipilih, atau semua hasil pencarian dan filter)">
           <Icon name="file-spreadsheet" />
         </button>
-        <button class="btn btn-outline-success btn-icon d-none" type="button" data-selected-action data-download-selected-images data-dock-group aria-label="Unduh ZIP (xlsx + foto) ikan terpilih" title="Unduh ZIP (xlsx + foto) ikan terpilih">
+        <button class="btn btn-outline-success btn-icon" type="button" data-download-selected-images aria-label="Unduh ZIP (xlsx + foto) data ikan" title="Unduh ZIP xlsx + foto data ikan (yang dipilih, atau semua hasil pencarian dan filter)">
           <Icon name="download" />
         </button>
         <button class="btn btn-outline-primary btn-icon koi-sort-toggle" type="button" data-koi-sequence-toggle aria-pressed="true" aria-label="Urutan Z ke A" title="Urutan Z ke A">Z/A</button>
@@ -7160,8 +7160,20 @@ items.forEach((item) => {
       }
     }
 
-    const exportSelectedSpreadsheet = () => {
-      const items = selectedKoiItems()
+    // The Excel / ZIP buttons of the dock: the chosen fish, or (nothing chosen) every fish of the current search and filters
+    const exportItems = async (askBeforeMany = 0) => {
+      const chosen = selectedKoiItems()
+      if (chosen.length) return chosen
+      const query = koiQuery()
+      const response = await fetch(`${apiUrl}/koi/page?` + new URLSearchParams({ ...query, f: JSON.stringify(query.f), page: '1', per_page: '5000' }).toString())
+      if (!response.ok) throw new Error('Data ikan gagal diambil.')
+      const result = await response.json()
+      const items = Array.isArray(result.items) ? result.items : []
+      if (askBeforeMany && items.length > askBeforeMany && !(await window.KoiDialog.confirm(`Tidak ada ikan yang dipilih, jadi semua ${items.length} ikan hasil pencarian dan filter akan diunduh beserta fotonya. Ukuran file bisa besar. Lanjutkan?`))) return []
+      return items
+    }
+    const exportSelectedSpreadsheet = async () => {
+      const items = await exportItems()
 
       if (items.length === 0) {
         return
@@ -7195,7 +7207,7 @@ items.forEach((item) => {
       const dataRows = items.map((item) => columns.map(([, getter]) => getter(item) ?? ''))
       const blob = buildXlsxBlob(headerRow, dataRows)
 
-      downloadBlob(blob, `data-ikan-terpilih-${new Date().toISOString().slice(0, 10)}.xlsx`)
+      downloadBlob(blob, `data-ikan-${selectedKoiItems().length ? 'terpilih-' : 'semua-'}${new Date().toISOString().slice(0, 10)}.xlsx`)
     }
 
     const renderBulkPondList = () => {
@@ -7547,7 +7559,7 @@ items.forEach((item) => {
       return label.replace(/[\\/:*?"<>|]+/g, '-').trim()
     }
     const downloadSelectedImages = async () => {
-      const items = selectedKoiItems()
+      const items = await exportItems(40)
 
       if (items.length === 0) {
         return
@@ -7613,7 +7625,7 @@ items.forEach((item) => {
 
         const headerRow = zipEntryColumns.map(([header]) => header)
         const xlsxBuffer = await buildXlsxBlob(headerRow, rows, importNotesRow(zipEntryColumns), [0]).arrayBuffer()
-        downloadBlob(createZip([{ name: 'data-ikan.xlsx', buffer: xlsxBuffer }, ...files]), `zip-ikan-terpilih-${new Date().toISOString().slice(0, 10)}.zip`)
+        downloadBlob(createZip([{ name: 'data-ikan.xlsx', buffer: xlsxBuffer }, ...files]), `zip-ikan-${selectedKoiItems().length ? 'terpilih-' : 'semua-'}${new Date().toISOString().slice(0, 10)}.zip`)
       } finally {
         downloadImagesButton.disabled = false
       }
@@ -8171,7 +8183,7 @@ Ketik HAPUS untuk melanjutkan.`)) !== 'HAPUS' : !(await window.KoiDialog.confirm
     })
     bulkNoteButton.addEventListener('click', () => appendSelectedNotes().catch((error) => alert(error.message)))
     printSelectedButton.addEventListener('click', printSelectedKoi)
-    exportSpreadsheetButton.addEventListener('click', exportSelectedSpreadsheet)
+    exportSpreadsheetButton.addEventListener('click', () => exportSelectedSpreadsheet().catch((error) => alert(error.message)))
     downloadImagesButton.addEventListener('click', () => downloadSelectedImages().catch((error) => alert(error.message)))
     cards.addEventListener('click', async (event) => {
       const seqSpan = event.target.closest('[data-seq-koi-id]')

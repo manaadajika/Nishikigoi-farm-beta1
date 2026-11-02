@@ -4,11 +4,11 @@ function pondAreaPrintBoot() {
   'use strict'
 
   var style = document.createElement('style')
+  // the program's own small button (like the print button of the dock), standing at the right of the area heading
   style.textContent =
     '.pond-area-heading{position:relative}' +
-    '.pond-area-print{position:absolute;right:.5rem;top:50%;transform:translateY(-50%);padding:.15rem .6rem;font-size:.78rem;line-height:1.4;border:1px solid currentColor;border-radius:.4rem;background:rgba(255,255,255,.55);color:inherit;cursor:pointer}' +
-    '.pond-area-print:hover{background:rgba(255,255,255,.85)}' +
-    '.pond-area-print[disabled]{opacity:.6;cursor:wait}'
+    '.pond-area-print{position:absolute;right:.5rem;top:50%;transform:translateY(-50%);display:inline-flex;align-items:center;gap:.35rem;background:var(--tblr-bg-surface,#fff)}' +
+    '.pond-area-print svg{width:16px;height:16px}'
   document.head.appendChild(style)
 
   function esc(value) {
@@ -118,9 +118,10 @@ function pondAreaPrintBoot() {
       heading.setAttribute('data-area-name', area)
       var button = document.createElement('button')
       button.type = 'button'
-      button.className = 'pond-area-print'
+      button.className = 'btn btn-sm btn-outline-secondary pond-area-print'
       button.title = 'Cetak semua ikan di area ini'
-      button.textContent = 'Cetak area'
+      button.setAttribute('aria-label', 'Cetak area ' + area)
+      button.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M17 17h2a2 2 0 0 0 2 -2v-4a2 2 0 0 0 -2 -2h-14a2 2 0 0 0 -2 2v4a2 2 0 0 0 2 2h2"/><path d="M17 9v-4a2 2 0 0 0 -2 -2h-6a2 2 0 0 0 -2 2v4"/><rect x="7" y="13" width="10" height="8" rx="2"/></svg><span>Cetak area</span>'
       heading.appendChild(button)
     })
   }
