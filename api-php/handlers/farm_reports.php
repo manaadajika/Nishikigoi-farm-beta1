@@ -83,6 +83,19 @@ function report_number($value, string $label) {
     return $value;
 }
 
+// A Kode Batch typed by the user ("custom"); empty or missing = the program makes the code itself. Never used by another report.
+function report_custom_code(array $body, ?int $excludeId): ?string {
+    if (!array_key_exists('batch_code', $body)) return null;
+    $code = trim((string)$body['batch_code']);
+    if ($code === '') return null;
+    if (mb_strlen($code) > 40) send_error(422, 'Kode Batch maksimal 40 karakter.');
+    $sql = 'SELECT id FROM farm_reports WHERE UPPER(batch_code) = UPPER(?)';
+    $params = [$code];
+    if ($excludeId !== null) { $sql .= ' AND id != ?'; $params[] = $excludeId; }
+    if (query_one($sql, $params)) send_error(409, 'Kode Batch "' . $code . '" sudah dipakai laporan lain.');
+    return $code;
+}
+
 route('POST', '/farm-reports', function () {
     require_account();
     $body = read_json_body();
@@ -91,7 +104,7 @@ route('POST', '/farm-reports', function () {
     if ($reportType === '' || $reportDate === '') send_error(400, 'report_type dan report_date wajib diisi');
     $reportDate = koi_clean_partial_date($reportDate, 'Tanggal laporan');
 
-    $batchCode = get_report_batch_code($reportDate, null, '', $reportType);
+    $batchCode = report_custom_code($body, null) ?? get_report_batch_code($reportDate, null, '', $reportType);
 
     $jsonCols = ['pond_entries', 'breeding_entries', 'koi_entries', 'reporter_entries', 'spectrum_sizes', 'media_entries', 'condition_entries', 'sorting_entries'];
     $encode = fn($k) => in_array($k, $jsonCols) && isset($body[$k]) ? json_encode($body[$k]) : ($body[$k] ?? null);
@@ -163,8 +176,15 @@ $farmReportUpdateHandler = function (array $m) {
         $nextMonth = substr((string)$body['report_date'], 0, 7);
         $nextType = (string)($body['report_type'] ?? ($existing['report_type'] ?? 'data_ulang'));
         $keepCode = $existingMonth === $nextMonth && $nextType === (string)($existing['report_type'] ?? '') ? (string)($existing['batch_code'] ?? '') : '';
+        // a code typed by the user wins (when it is not just the code the report already has); a code emptied on purpose is made again
+        $custom = report_custom_code($body, (int)$m[1]);
+        $emptied = array_key_exists('batch_code', $body) && trim((string)$body['batch_code']) === '';
         $fields[] = 'batch_code = ?';
-        $params[] = get_report_batch_code((string)$body['report_date'], (int)$m[1], $keepCode, $nextType);
+        if ($custom !== null && $custom !== (string)($existing['batch_code'] ?? '')) {
+            $params[] = $custom;
+        } else {
+            $params[] = get_report_batch_code((string)$body['report_date'], (int)$m[1], $emptied ? '' : $keepCode, $nextType);
+        }
     }
 
     if (!$fields && report_gallery_choice($body) === null) send_error(400, 'Tidak ada field untuk diupdate');

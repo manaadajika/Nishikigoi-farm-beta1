@@ -285,7 +285,7 @@
       kit.typeChooserHtml('ikan_datang') +
       '<div class="alert alert-danger d-none" data-arrival-error style="white-space:pre-line"></div>' +
       '<div class="row g-3">' +
-      '<div class="col-md-2"><label class="form-label">Kode Batch</label><input class="form-control" readonly data-code-box placeholder="Otomatis"></div>' +
+      '<div class="col-md-2"><label class="form-label">Kode Batch</label><input class="form-control" data-code-box placeholder="Otomatis" title="Boleh diisi sendiri. Kosongkan supaya kode dibuat otomatis." autocomplete="off" data-no-clear></div>' +
       '<div class="col-md-3"><label class="form-label">Judul Laporan <span class="text-secondary small">(opsional)</span></label><input class="form-control" name="judul" placeholder="Contoh: Kedatangan Showa dari Dainichi" autocomplete="off"></div>' +
       '<div class="col-md-4"><label class="form-label required">Tanggal datang</label><input class="form-control" type="text" data-date-parts name="tanggal"></div>' +
       '<div class="col-md-3"><label class="form-label">Ikan dari mana <span class="text-secondary small">(opsional)</span></label><input class="form-control" name="asal" list="arrival-origins" placeholder="Farm / kota / pemasok" autocomplete="off"><datalist id="arrival-origins"></datalist></div>' +
@@ -483,6 +483,7 @@
       var title = form.elements.judul.value.trim() || ('Ikan datang ' + (date ? kit.formatDate(date) : ''))
       var group = { date: date, title: title.trim(), origin: form.elements.asal.value.trim(), notes: form.elements.catatan.value.trim(), lines: lines }
       return payloadFor(group, {
+        batch_code: modal.querySelector('[data-code-box]').value.trim(),
         media_entries: collectMedia(),
         show_in_gallery: form.elements.show_in_gallery.checked,
       })

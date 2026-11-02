@@ -275,7 +275,7 @@
       '<div class="col-md-6"><label class="form-label required">Jenis kegiatan</label><select class="form-select" name="jenis">' +
       activities.map(function (a) { return '<option value="' + a[0] + '">' + a[1] + '</option>' }).join('') + '</select>' +
       '<input class="form-control mt-2 d-none" name="jenis_lain" placeholder="Tulis jenis kegiatan" data-activity-other></div>' +
-      '<div class="col-md-2"><label class="form-label">Kode Batch</label><input class="form-control" readonly data-code-box placeholder="Otomatis"></div>' +
+      '<div class="col-md-2"><label class="form-label">Kode Batch</label><input class="form-control" data-code-box placeholder="Otomatis" title="Boleh diisi sendiri. Kosongkan supaya kode dibuat otomatis." autocomplete="off" data-no-clear></div>' +
       '<div class="col-md-4"><label class="form-label">Judul <span class="text-secondary small">(opsional)</span></label><input class="form-control" name="judul" placeholder="Otomatis dari jenis dan kolam"></div>' +
       '<div class="col-md-4"><label class="form-label required">Tanggal</label><input class="form-control" type="text" data-date-parts name="tanggal"></div>' +
       '<div class="col-6 col-md-4"><label class="form-label">Jam mulai</label><input class="form-control" type="time" name="jam_mulai"></div>' +
@@ -513,6 +513,7 @@
       var toNumber = function (value) { var n = Number(String(value).replace(',', '.')); return String(value).trim() === '' || !Number.isFinite(n) ? null : n }
       return {
         report_type: TYPE,
+        batch_code: modal.querySelector('[data-code-box]').value.trim(),
         report_date: form.elements.tanggal.value,
         report_title: title,
         notes: form.elements.uraian.value.trim(),

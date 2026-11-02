@@ -22,6 +22,7 @@
   var codeInput = null
   var lastKey = null
   var wasShown = false
+  var codeTyped = false
 
   function esc(value) { return String(value == null ? '' : value).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c] }) }
   function parse(value, fallback) {
@@ -165,6 +166,14 @@
     var spectrum = form.querySelector('[data-spectrum-input]')
     if (!pondList || !spectrum) return
     codeInput = form.querySelector('[data-batch-code]')
+    if (codeInput) {
+      // Kode Batch can be typed; left empty the program makes it itself
+      codeInput.removeAttribute('readonly')
+      codeInput.setAttribute('placeholder', 'Otomatis')
+      codeInput.setAttribute('title', 'Boleh diisi sendiri. Kosongkan supaya kode dibuat otomatis.')
+      codeInput.setAttribute('autocomplete', 'off')
+      codeInput.addEventListener('input', function (event) { if (event.isTrusted) codeTyped = true })
+    }
     var pondSection = pondList.closest('.report-form-section')
     section = document.createElement('div')
     section.className = 'report-form-section'
@@ -210,6 +219,7 @@
     var shown = modal.classList.contains('show')
     if (shown && !wasShown) {
       lastKey = null
+      codeTyped = false
       loadBreedings()
     }
     wasShown = shown
@@ -217,6 +227,8 @@
     var titleBox = modal.querySelector('[data-report-modal-title]')
     var existing = currentId && titleBox && !/Tambah/i.test(titleBox.textContent) ? reportsById[currentId] : null
     if (existing && codeInput && existing.batch_code && codeInput.value !== existing.batch_code) codeInput.value = existing.batch_code
+    // a new report starts with an empty code box (the page puts the next free code there; the server makes the real one when saving)
+    if (!existing && codeInput && !codeTyped && codeInput.value && /^(DTU|PAN|ACT|NEW)-\d\d-\d\d-\d\d$/.test(codeInput.value)) codeInput.value = ''
     var isData = currentType() === 'data_ulang'
     var pondList = form.querySelector('[data-pond-entry-list]')
     var conditionList = form.querySelector('[data-condition-entry-list]')
