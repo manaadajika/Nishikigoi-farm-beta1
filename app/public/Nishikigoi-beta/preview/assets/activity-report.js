@@ -103,6 +103,9 @@
     '.input-group:has(>[data-activity-other].d-none){display:none!important}' +
     'body.koi-switching .modal-backdrop,body.koi-switching .modal-backdrop.fade,body.koi-switching .modal-backdrop.show{transition:none!important;opacity:0!important}' +
     'body.koi-switched .modal-backdrop{transition:none!important}' +
+    // the filter row has the height and the letters of the button next to it ("Tambah Laporan")
+    '.btn-group:has(>[data-report-filter]){border-radius:6px;overflow:hidden}' +
+    '.btn-group:has(>[data-report-filter])>[data-report-filter]{height:2.5rem;padding:0 1rem;font-size:.875rem;font-weight:600;border-radius:0!important}' +
     // phone: the title, the filter row (scrolls sideways when it is wider than the screen) and "Tambah Laporan" each get their own line
     '@media (max-width:767.98px){' +
     '.card-header:has(>.card-actions [data-report-filter]){flex-wrap:wrap;gap:.6rem}' +
