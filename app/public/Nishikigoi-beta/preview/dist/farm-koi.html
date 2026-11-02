@@ -8188,6 +8188,20 @@ if (pageSizeSelect) pageSizeSelect.value = String(pageSize);
         }
         range.e.r = Math.max(range.e.r, firstDataRow + 499)
       })
+      // Harga Beli / Harga Jual: real numbers in Rupiah accounting format without decimals (the server sends text like "8475000.00")
+      const moneyFormat = '_("Rp"* #,##0_);_("Rp"* \(#,##0\);_("Rp"* "-"_);_(@_)'
+      headerRow.forEach((header, column) => {
+        if (!['Harga Beli', 'Harga Jual'].includes(String(header))) return
+        for (let row = firstDataRow; row <= range.e.r; row += 1) {
+          const cell = worksheet[XLSX.utils.encode_cell({ r: row, c: column })]
+          if (!cell || cell.v === '' || cell.v == null) continue
+          const amount = Number(String(cell.v).trim())
+          if (!Number.isFinite(amount)) continue
+          cell.t = 'n'
+          cell.v = Math.round(amount)
+          cell.z = moneyFormat
+        }
+      })
       worksheet['!ref'] = XLSX.utils.encode_range(range)
       // the hint row (when there is one) and the header row stay on top while scrolling
       worksheet['!freeze'] = { rows: notesRow ? 2 : 1 }
