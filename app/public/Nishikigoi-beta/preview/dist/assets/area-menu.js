@@ -29,11 +29,12 @@
   var style = document.createElement('style')
   style.textContent =
     '.pond-area-print{display:none!important}' +
-    '.pond-area-menu-btn{position:absolute;right:.5rem;top:50%;transform:translateY(-50%);width:2.2rem;height:2.2rem;display:inline-flex;align-items:center;justify-content:center;padding:0;background:var(--tblr-bg-surface,#fff)}' +
-    '.pond-area-menu-btn svg{width:18px;height:18px}' +
+    '.pond-area-menu-btn{position:absolute;right:.4rem;top:50%;transform:translateY(-50%);width:2.2rem;height:2.2rem;display:inline-flex;align-items:center;justify-content:center;padding:0;border:0!important;border-radius:50%;background:transparent!important;color:var(--tblr-secondary,#667382);box-shadow:none!important;transition:background .15s,color .15s}' +
+    '.pond-area-menu-btn:hover,.pond-area-menu-btn:focus-visible{background:color-mix(in srgb,currentColor 14%,transparent)!important;color:var(--tblr-body-color,inherit)}' +
+    '.pond-area-menu-btn svg{width:20px;height:20px}' +
     '.pond-area-heading{padding-right:3.2rem}' +
-    '.koi-area-menu{position:fixed;z-index:1070;min-width:13rem;background:var(--tblr-bg-surface,#fff);border:1px solid var(--tblr-border-color,#ccc);border-radius:8px;box-shadow:0 8px 24px rgba(0,0,0,.25);padding:.3rem}' +
-    '.koi-area-menu button{display:block;width:100%;text-align:left;border:0;background:transparent;color:inherit;padding:.55rem .75rem;border-radius:6px;font-size:.95rem}' +
+    '.koi-area-menu{position:fixed;z-index:1070;min-width:13rem;background:var(--tblr-bg-surface,#fff);border:1px solid var(--tblr-border-color-translucent,var(--tblr-border-color,#ccc));border-radius:12px;box-shadow:0 10px 30px rgba(0,0,0,.22);padding:.35rem}' +
+    '.koi-area-menu button{display:block;width:100%;text-align:left;border:0;background:transparent;color:inherit;padding:.6rem .85rem;border-radius:8px;font-size:.92rem;transition:background .12s}' +
     '.koi-area-menu button:hover{background:var(--tblr-bg-surface-secondary,rgba(128,128,128,.15))}'
   document.head.appendChild(style)
 
@@ -128,10 +129,10 @@
       if (!area) return
       var button = document.createElement('button')
       button.type = 'button'
-      button.className = 'btn btn-sm btn-outline-secondary pond-area-menu-btn'
+      button.className = 'btn btn-sm pond-area-menu-btn'
       button.setAttribute('aria-label', 'Menu area ' + area)
       button.setAttribute('title', 'Cetak, ganti nama, ganti warna')
-      button.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="5" cy="12" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/></svg>'
+      button.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="5" r="1.2"/><circle cx="12" cy="12" r="1.2"/><circle cx="12" cy="19" r="1.2"/></svg>'
       button.addEventListener('click', function (event) { event.stopPropagation(); openMenu(button, area, heading) })
       heading.appendChild(button)
     })
