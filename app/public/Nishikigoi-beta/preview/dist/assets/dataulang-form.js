@@ -83,6 +83,36 @@
       return '<option value="' + esc(male.koi_id) + '"' + (String(male.koi_id) === String(selected || '') ? ' selected' : '') + '>' + esc(male.label || male.code || male.koi_id) + '</option>'
     }).join('')
   }
+  // the photo of the female of the chosen session and of the chosen male, next to their boxes
+  var photoCache = {}
+  function thumbOf(url) {
+    var match = /^\/api\/uploads\/(.+)$/.exec(String(url || ''))
+    return match ? '/api/thumb/240/' + match[1] : String(url || '')
+  }
+  function photoOf(id) {
+    id = String(id || '')
+    if (!id) return Promise.resolve(null)
+    if (photoCache[id] !== undefined) return Promise.resolve(photoCache[id])
+    if (!window.KoiPicker || !window.KoiPicker.byIds) return Promise.resolve(null)
+    return window.KoiPicker.byIds([id], { scope: 'all' }).then(function (rows) {
+      var fish = rows && rows[0]
+      photoCache[id] = fish ? { url: fish.image_url || fish.photo_url || '', code: fish.code || '' } : null
+      return photoCache[id]
+    }).catch(function () { return null })
+  }
+  function showPhoto(image, photo) {
+    if (!photo || !photo.url) { image.style.display = 'none'; image.removeAttribute('src'); return }
+    image.src = thumbOf(photo.url)
+    image.title = photo.code
+    image.style.cssText = 'display:block;flex:0 0 auto;width:1.9rem;height:2.9rem;object-fit:cover;border-radius:4px;border:1px solid var(--tblr-border-color,#ccc)'
+  }
+  function updatePreview(row) {
+    var item = breedings.filter(function (b) { return String(b.id) === String(row.dataset.b || '') })[0]
+    var female = item ? parse(item.female_parent_entries, []) : []
+    var femaleId = Array.isArray(female) && female[0] ? female[0].koi_id : ''
+    photoOf(femaleId).then(function (photo) { showPhoto(row.querySelector('[data-prev="female"]'), photo) })
+    photoOf(row.dataset.m).then(function (photo) { showPhoto(row.querySelector('[data-prev="male"]'), photo) })
+  }
   function renumber() {
     Array.prototype.forEach.call(listBox.children, function (row, index) { row.querySelector('[data-f="no"]').textContent = String(index + 1) })
   }
@@ -93,19 +123,20 @@
     row.dataset.m = entry.male_id || ''
     row.className = 'border-bottom py-1'
     row.setAttribute('data-fish-row', '')
-    row.style.cssText = 'display:grid;grid-template-columns:2.2rem minmax(7rem,1.2fr) 5.5rem 7.5rem minmax(9rem,1.6fr) minmax(7rem,1.2fr) minmax(7rem,1.4fr) 4.6rem;gap:.4rem;align-items:center;min-width:56rem'
+    row.style.cssText = 'display:grid;grid-template-columns:2.2rem minmax(7rem,1.1fr) 5.5rem 7.5rem minmax(12rem,1.9fr) minmax(9.5rem,1.3fr) minmax(7rem,1.2fr) 4.6rem;gap:.4rem;align-items:center;min-width:66rem'
     row.innerHTML =
       '<div class="fw-semibold text-secondary text-center" data-f="no"></div>' +
       '<input class="form-control form-control-sm" data-no-clear data-f="jenis" list="arrival-varieties" placeholder="Contoh Showa" value="' + esc(entry.jenis) + '">' +
       '<input class="form-control form-control-sm" data-no-clear type="number" min="0" step="0.1" data-f="ukuran" placeholder="cm" value="' + esc(entry.ukuran) + '">' +
       '<select class="form-select form-select-sm" data-f="sex">' + SEX.map(function (s) { return '<option value="' + s[0] + '"' + (s[0] === (entry.sex || 'unknown') ? ' selected' : '') + '>' + s[1] + '</option>' }).join('') + '</select>' +
-      '<select class="form-select form-select-sm" data-f="breeding">' + breedingOptions(entry.breeding_id) + '</select>' +
-      '<select class="form-select form-select-sm" data-f="male">' + maleOptions(entry.breeding_id, entry.male_id) + '</select>' +
+      '<div class="d-flex align-items-center gap-1" style="min-width:0"><select class="form-select form-select-sm" data-f="breeding">' + breedingOptions(entry.breeding_id) + '</select><img data-prev="female" alt="" style="display:none"></div>' +
+      '<div class="d-flex align-items-center gap-1" style="min-width:0"><select class="form-select form-select-sm" data-f="male">' + maleOptions(entry.breeding_id, entry.male_id) + '</select><img data-prev="male" alt="" style="display:none"></div>' +
       '<input class="form-control form-control-sm" data-no-clear data-f="catatan" placeholder="Catatan" value="' + esc(entry.catatan) + '">' +
       '<button type="button" class="btn btn-sm btn-outline-danger" data-f-remove>Hapus</button>'
     listBox.appendChild(row)
     renumber()
     applyReadonly()
+    updatePreview(row)
   }
   // the sessions arrive after the form was filled in: show each row's saved choice again
   function refreshChoices() {
@@ -113,6 +144,7 @@
     Array.prototype.forEach.call(listBox.children, function (row) {
       row.querySelector('[data-f="breeding"]').innerHTML = breedingOptions(row.dataset.b)
       row.querySelector('[data-f="male"]').innerHTML = maleOptions(row.dataset.b, row.dataset.m)
+      updatePreview(row)
     })
   }
   function loadBreedings() {
@@ -181,7 +213,7 @@
       '[data-fish-section] [data-fish-row] .form-select{padding-right:1.8rem;background-position:right .5rem center;background-size:12px}' +
       '[data-fish-section] [data-fish-row] .btn{height:2.1rem;padding:0 .5rem;font-size:.8rem}' +
       '[data-fish-section] [data-fish-row] .koi-native-select-button{height:2.1rem;min-height:2.1rem;font-size:.85rem;line-height:1.3;padding:.25rem 1.8rem .25rem .55rem;box-sizing:border-box}' +
-      '[data-fish-section] [data-fish-row] .koi-native-select{display:block;min-width:0}'
+      '[data-fish-section] [data-fish-row] .koi-native-select{display:block;min-width:0;flex:1 1 auto}'
     document.head.appendChild(look)
     section = document.createElement('div')
     section.className = 'report-form-section'
@@ -189,7 +221,7 @@
     hide(section, true)
     section.innerHTML = '<div class="d-flex align-items-center justify-content-between gap-2 mb-2"><h4 class="mb-0">Ikan Satuan</h4><button class="btn btn-sm" type="button" data-fish-add>Tambah Ikan</button></div>' +
       '<div class="form-hint mb-2">Opsional, untuk sesi foto. Satu baris = satu ekor: jenis, ukuran, sex, sesi breeding (dan male-nya), serta catatan. Boleh dikosongkan.</div>' +
-      '<div style="overflow-x:auto"><div class="fw-semibold small text-secondary border-bottom pb-1" style="display:grid;grid-template-columns:2.2rem minmax(7rem,1.2fr) 5.5rem 7.5rem minmax(9rem,1.6fr) minmax(7rem,1.2fr) minmax(7rem,1.4fr) 4.6rem;gap:.4rem;min-width:56rem"><div class="text-center">No</div><div>Jenis</div><div>Ukuran (cm)</div><div>Sex</div><div>Sesi Breeding</div><div>Male</div><div>Catatan</div><div></div></div>' +
+      '<div style="overflow-x:auto"><div class="fw-semibold small text-secondary border-bottom pb-1" style="display:grid;grid-template-columns:2.2rem minmax(7rem,1.1fr) 5.5rem 7.5rem minmax(12rem,1.9fr) minmax(9.5rem,1.3fr) minmax(7rem,1.2fr) 4.6rem;gap:.4rem;min-width:66rem"><div class="text-center">No</div><div>Jenis</div><div>Ukuran (cm)</div><div>Sex</div><div>Sesi Breeding</div><div>Male</div><div>Catatan</div><div></div></div>' +
       '<div data-fish-list></div></div>'
     pondSection.parentNode.insertBefore(section, pondSection)
     listBox = section.querySelector('[data-fish-list]')
@@ -214,6 +246,7 @@
         changedRow.querySelector('[data-f="male"]').innerHTML = maleOptions(event.target.value, '')
       }
       if (event.target.matches('[data-f="male"]')) changedRow.dataset.m = event.target.value
+      if (event.target.matches('[data-f="breeding"],[data-f="male"]')) updatePreview(changedRow)
       syncSpectrum()
     })
     section.addEventListener('input', function (event) { if (event.target.matches('[data-f="ukuran"]')) syncSpectrum() })
