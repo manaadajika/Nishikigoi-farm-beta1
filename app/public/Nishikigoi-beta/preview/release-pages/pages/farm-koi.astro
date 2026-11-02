@@ -7104,7 +7104,18 @@ items.forEach((item) => {
 
       const excelDataRows = rows.slice(headerIndex + 1)
       await validateImportParents(rawItems, (index) => excelDataRows[index]?.excelRow || index + headerIndex + 2)
-      const items = rawItems.map(normalizeImportedKoiItem)
+      // A Kode Koi that is already in Data Ikan edits that fish (like the ZIP import); other rows stay new entries.
+      const excelCodes = [...new Set(rawItems.map((item) => normalizeZipCode(item.code)).filter(Boolean))]
+      const existingByCode = new Map()
+      if (excelCodes.length && window.KoiPicker?.byCodes) {
+        const found = await window.KoiPicker.byCodes(excelCodes, { scope: archiveMode ? 'archived' : 'active' })
+        found.forEach((item) => existingByCode.set(normalizeZipCode(item.code), item))
+      }
+      const items = rawItems.map((rawItem) => {
+        const normalized = normalizeImportedKoiItem(rawItem)
+        const existing = existingByCode.get(normalizeZipCode(rawItem.code))
+        return existing ? mergeExistingKoiWithZipOverrides(existing, rawItem, normalized) : normalized
+      })
 
       entriesContainer.querySelectorAll('[data-koi-entry]').forEach((entry) => entry.remove())
       startBulkEntryLoad();
