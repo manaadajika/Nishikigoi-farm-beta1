@@ -285,7 +285,8 @@
       kit.typeChooserHtml('ikan_datang') +
       '<div class="alert alert-danger d-none" data-arrival-error style="white-space:pre-line"></div>' +
       '<div class="row g-3">' +
-      '<div class="col-md-5"><label class="form-label">Judul Laporan <span class="text-secondary small">(opsional)</span></label><input class="form-control" name="judul" placeholder="Contoh: Kedatangan Showa dari Dainichi" autocomplete="off"></div>' +
+      '<div class="col-md-2"><label class="form-label">Kode Batch</label><input class="form-control" readonly data-code-box placeholder="Otomatis"></div>' +
+      '<div class="col-md-3"><label class="form-label">Judul Laporan <span class="text-secondary small">(opsional)</span></label><input class="form-control" name="judul" placeholder="Contoh: Kedatangan Showa dari Dainichi" autocomplete="off"></div>' +
       '<div class="col-md-4"><label class="form-label required">Tanggal datang</label><input class="form-control" type="text" data-date-parts name="tanggal"></div>' +
       '<div class="col-md-3"><label class="form-label">Ikan dari mana <span class="text-secondary small">(opsional)</span></label><input class="form-control" name="asal" list="arrival-origins" placeholder="Farm / kota / pemasok" autocomplete="off"><datalist id="arrival-origins"></datalist></div>' +
       '<div class="col-12"><div class="d-flex align-items-center justify-content-between"><label class="form-label mb-0">Ikan yang datang <span class="text-secondary small">(opsional, satu kotak = satu ekor)</span></label>' +
@@ -503,6 +504,7 @@
         ? 'Formulir Laporan Ikan Datang'
         : (asReadonly ? 'Laporan Ikan Datang ' : 'Edit Laporan Ikan Datang ') + (report.batch_code || '')
       fill(report || {})
+      modal.querySelector('[data-code-box]').value = report && report.batch_code ? report.batch_code : ''
       // an existing report keeps its type
       modal.querySelector('[data-type-chooser]').classList.toggle('d-none', Boolean(report && report.id))
       setReadonly(Boolean(asReadonly))

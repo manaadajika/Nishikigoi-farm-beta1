@@ -100,6 +100,7 @@
   typeStyle.textContent =
     '.koi-type-box{padding:0;margin-bottom:1rem}' +
     '.koi-type-box>.form-label{margin-bottom:.35rem}' +
+    '.input-group:has(>[data-activity-other].d-none){display:none!important}' +
     '.koi-type-grid{display:grid!important;grid-template-columns:repeat(4,minmax(0,1fr));gap:0;margin:0!important;border:1px solid var(--tblr-border-color);border-radius:8px;overflow:hidden;background:var(--tblr-bg-surface)}' +
     '.koi-type-grid .form-selectgroup-item{margin:0!important;flex:none!important;min-width:0}' +
     '.koi-type-grid .form-selectgroup-item+.form-selectgroup-item{border-left:1px solid var(--tblr-border-color)}' +
@@ -273,7 +274,8 @@
       '<div class="col-md-6"><label class="form-label required">Jenis kegiatan</label><select class="form-select" name="jenis">' +
       activities.map(function (a) { return '<option value="' + a[0] + '">' + a[1] + '</option>' }).join('') + '</select>' +
       '<input class="form-control mt-2 d-none" name="jenis_lain" placeholder="Tulis jenis kegiatan" data-activity-other></div>' +
-      '<div class="col-md-6"><label class="form-label">Judul <span class="text-secondary small">(opsional)</span></label><input class="form-control" name="judul" placeholder="Otomatis dari jenis dan kolam"></div>' +
+      '<div class="col-md-2"><label class="form-label">Kode Batch</label><input class="form-control" readonly data-code-box placeholder="Otomatis"></div>' +
+      '<div class="col-md-4"><label class="form-label">Judul <span class="text-secondary small">(opsional)</span></label><input class="form-control" name="judul" placeholder="Otomatis dari jenis dan kolam"></div>' +
       '<div class="col-md-4"><label class="form-label required">Tanggal</label><input class="form-control" type="text" data-date-parts name="tanggal"></div>' +
       '<div class="col-6 col-md-4"><label class="form-label">Jam mulai</label><input class="form-control" type="time" name="jam_mulai"></div>' +
       '<div class="col-6 col-md-4"><label class="form-label">Jam selesai</label><input class="form-control" type="time" name="jam_selesai"></div>' +
@@ -547,6 +549,7 @@
         ? 'Formulir Laporan Kegiatan'
         : (asReadonly ? 'Laporan Kegiatan ' : 'Edit Laporan Kegiatan ') + (report.batch_code || '')
       fill(report || {})
+      modal.querySelector('[data-code-box]').value = report && report.batch_code ? report.batch_code : ''
       // an existing report keeps its type
       modal.querySelector('[data-type-chooser]').classList.toggle('d-none', Boolean(report && report.id))
       setReadonly(Boolean(asReadonly))
