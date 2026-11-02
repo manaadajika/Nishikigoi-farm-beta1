@@ -277,8 +277,10 @@
       '<div class="col-md-4"><label class="form-label required">Tanggal</label><input class="form-control" type="text" data-date-parts name="tanggal"></div>' +
       '<div class="col-6 col-md-4"><label class="form-label">Jam mulai</label><input class="form-control" type="time" name="jam_mulai"></div>' +
       '<div class="col-6 col-md-4"><label class="form-label">Jam selesai</label><input class="form-control" type="time" name="jam_selesai"></div>' +
-      '<div class="col-md-6"><label class="form-label">Kolam</label><select class="form-select" name="kolam" multiple data-activity-ponds></select></div>' +
-      '<div class="col-md-6"><label class="form-label">Petugas</label><select class="form-select" name="petugas" multiple data-activity-staff></select></div>' +
+      '<div class="col-md-6" data-chips-ponds><label class="form-label">Kolam <span class="text-secondary small">(kolam atau seluruh area, bisa lebih dari satu)</span></label><div class="d-flex flex-wrap gap-1 mb-1" data-chip-list></div>' +
+      '<input class="form-control" data-chip-input data-suggest-key="place" placeholder="Cari kolam atau area lalu pilih dari daftar" autocomplete="off"><div class="form-hint text-danger" data-chip-hint></div></div>' +
+      '<div class="col-md-6" data-chips-staff><label class="form-label">Petugas <span class="text-secondary small">(bisa lebih dari satu)</span></label><div class="d-flex flex-wrap gap-1 mb-1" data-chip-list></div>' +
+      '<input class="form-control" data-chip-input list="activity-staff-options" placeholder="Cari nama petugas lalu pilih dari daftar" autocomplete="off"><datalist id="activity-staff-options"></datalist><div class="form-hint text-danger" data-chip-hint></div></div>' +
       '<div class="col-12"><label class="form-label required">Uraian kegiatan dan hasil</label><textarea class="form-control" name="uraian" rows="4" placeholder="Contoh: Ganti air 30% kolam Konkret 01-03, air sudah jernih, ikan aktif makan."></textarea></div>' +
       '<div class="col-12"><div class="d-flex align-items-center justify-content-between"><label class="form-label mb-0">Bahan / obat / pakan yang dipakai <span class="text-secondary small">(opsional)</span></label>' +
       '<button type="button" class="btn btn-sm btn-outline-primary" data-activity-add-item>Tambah baris</button></div>' +
@@ -305,8 +307,67 @@
     var itemsBox = modal.querySelector('[data-activity-items]')
     var mediaBox = modal.querySelector('[data-activity-media]')
     var mediaStatus = modal.querySelector('[data-activity-media-status]')
-    var pondSelect = modal.querySelector('[data-activity-ponds]')
-    var staffSelect = modal.querySelector('[data-activity-staff]')
+    // Kolam and Petugas: chosen from the list one by one and shown as small tags (no Ctrl-click on a multiple select)
+    function makeChips(box, options) {
+      var tags = box.querySelector('[data-chip-list]')
+      var input = box.querySelector('[data-chip-input]')
+      var hint = box.querySelector('[data-chip-hint]')
+      var entries = []
+      function render() {
+        tags.innerHTML = entries.map(function (entry, index) {
+          return '<span class="badge bg-blue-lt d-inline-flex align-items-center gap-1" style="font-size:.85rem;padding:.35rem .5rem">' + escapeHtml(options.labelOf(entry)) +
+            (readonly ? '' : '<button type="button" class="btn-close" style="font-size:.55rem" data-chip-remove="' + index + '" aria-label="Hapus"></button>') + '</span>'
+        }).join('')
+      }
+      function add(text) {
+        var value = String(text || '').trim()
+        if (!value) return true
+        var entry = options.resolve(value)
+        if (!entry) { hint.textContent = '"' + value + '" tidak ada di daftar.'; return false }
+        hint.textContent = ''
+        if (!entries.some(function (item) { return options.keyOf(item) === options.keyOf(entry) })) entries.push(entry)
+        input.value = ''
+        render()
+        return true
+      }
+      input.addEventListener('keydown', function (event) { if (event.key === 'Enter') { event.preventDefault(); add(input.value) } })
+      input.addEventListener('change', function () { add(input.value) })
+      tags.addEventListener('click', function (event) {
+        var remove = event.target.closest('[data-chip-remove]')
+        if (!remove) return
+        entries.splice(Number(remove.getAttribute('data-chip-remove')), 1)
+        render()
+      })
+      return {
+        get: function () { return entries.slice() },
+        set: function (list) { entries = (list || []).slice(); hint.textContent = ''; input.value = ''; render() },
+        flush: function () { return add(input.value) },
+        refresh: render,
+      }
+    }
+    var pondChips = makeChips(modal.querySelector('[data-chips-ponds]'), {
+      resolve: function (text) {
+        var name = text.toLowerCase()
+        var pond = ponds.find(function (item) { return String(item.name || '').trim().toLowerCase() === name })
+        if (pond) return { pond_id: Number(pond.id), pond_name: pond.name, location: pond.location || '' }
+        var inArea = ponds.find(function (item) { return String(item.location || '').trim().toLowerCase() === name })
+        if (inArea) { var area = String(inArea.location).trim(); return { pond_id: '', pond_name: area, location: area, area: true } }
+        return null
+      },
+      labelOf: function (entry) { return entry.area ? entry.pond_name + ' (seluruh area)' : entry.pond_name + (entry.location ? ' (' + entry.location + ')' : '') },
+      keyOf: function (entry) { return entry.area ? 'a:' + String(entry.pond_name).toLowerCase() : 'p:' + entry.pond_id },
+    })
+    var staffChips = makeChips(modal.querySelector('[data-chips-staff]'), {
+      resolve: function (text) {
+        var name = text.toLowerCase()
+        var account = accounts.find(function (item) {
+          return ((item.name || item.username) + ' @' + item.username).toLowerCase() === name || String(item.username || '').toLowerCase() === name || String(item.name || '').trim().toLowerCase() === name
+        })
+        return account ? { account_id: Number(account.id), label: account.name || account.username || '', username: account.username || '' } : null
+      },
+      labelOf: function (entry) { return entry.label + (entry.username ? ' @' + entry.username : '') },
+      keyOf: function (entry) { return 'a' + entry.account_id },
+    })
 
     function showModal() {
       var api = modalApi()
@@ -401,6 +462,8 @@
       mediaBox.querySelectorAll('[data-media-remove]').forEach(function (b) { b.classList.toggle('d-none', value) })
       var draftControls = modal.querySelector('.koi-draft-controls')
       if (draftControls) draftControls.classList.toggle('d-none', value || Boolean(editingId))
+      pondChips.refresh()
+      staffChips.refresh()
     }
 
     function fill(data) {
@@ -420,11 +483,13 @@
       var status = form.querySelector('[name="status"][value="' + (activity.status || 'selesai') + '"]')
       if (status) status.checked = true
       form.elements.show_in_gallery.checked = data.id ? Boolean(data.gallery_id || data.show_in_gallery === true) : data.show_in_gallery !== false
-      setMultiple(pondSelect, parse(data.pond_entries, []).map(function (p) { return p.pond_id }))
+      pondChips.set(parse(data.pond_entries, []).map(function (p) {
+        return p.pond_id ? { pond_id: Number(p.pond_id), pond_name: p.pond_name || '', location: p.location || '' }
+          : { pond_id: '', pond_name: p.pond_name || p.location || '', location: p.location || p.pond_name || '', area: true }
+      }))
       var session = window.KoiAuth.getSession() || {}
       // Petugas starts empty in a new report: whoever did the work is chosen on purpose
-      var staff = parse(data.reporter_entries, []).map(function (r) { return r.account_id || r.id })
-      setMultiple(staffSelect, staff)
+      staffChips.set(parse(data.reporter_entries, []).map(function (r) { return { account_id: Number(r.account_id || r.id) || '', label: r.label || r.name || r.username || '', username: r.username || '' } }))
       itemsBox.innerHTML = ''
       ;(Array.isArray(activity.bahan) ? activity.bahan : []).forEach(addItemRow)
       media = parse(data.media_entries, []).map(function (m) { return { type: m.type || 'image', url: m.url || m.image_url, thumbnail_url: m.thumbnail_url || m.url, name: m.name || '', notes: m.notes || '' } })
@@ -436,15 +501,10 @@
     function buildPayload() {
       var jenis = form.elements.jenis.value
       var jenisText = jenis === 'lainnya' ? (form.elements.jenis_lain.value.trim() || 'Lainnya') : label(activities, jenis)
-      var pondIds = selectedValues(pondSelect)
-      var pondEntries = pondIds.map(function (id) {
-        var pond = ponds.find(function (p) { return String(p.id) === String(id) }) || {}
-        return { pond_id: Number(id), pond_name: pond.name || '', location: pond.location || '' }
-      })
-      var staffEntries = selectedValues(staffSelect).map(function (id) {
-        var account = accounts.find(function (a) { return String(a.id) === String(id) }) || {}
-        return { account_id: Number(id), label: account.name || account.username || '', username: account.username || '' }
-      })
+      pondChips.flush()
+      staffChips.flush()
+      var pondEntries = pondChips.get().map(function (entry) { return entry.area ? { pond_id: '', pond_name: entry.pond_name, location: entry.location, area: true } : { pond_id: entry.pond_id, pond_name: entry.pond_name, location: entry.location } })
+      var staffEntries = staffChips.get().map(function (entry) { return { account_id: entry.account_id, label: entry.label, username: entry.username } })
       var title = form.elements.judul.value.trim() ||
         (jenisText + (pondEntries.length ? ' - ' + pondEntries.slice(0, 3).map(function (p) { return p.pond_name }).join(', ') + (pondEntries.length > 3 ? ', ...' : '') : ''))
       var toNumber = function (value) { var n = Number(String(value).replace(',', '.')); return String(value).trim() === '' || !Number.isFinite(n) ? null : n }
@@ -501,7 +561,7 @@
       var e = kp.escapeHtml
       var activity = parse(report.activity_data, {}) || {}
       var jenisText = activity.jenis === 'lainnya' ? (activity.jenis_lain || 'Lainnya') : label(activities, activity.jenis)
-      var pondText = parse(report.pond_entries, []).map(function (p) { return [p.pond_name, p.location].filter(Boolean).join(' - ') }).join(', ')
+      var pondText = parse(report.pond_entries, []).map(function (p) { return p.pond_id ? [p.pond_name, p.location].filter(Boolean).join(' - ') : (p.pond_name || p.location) + ' (seluruh area)' }).join(', ')
       var staffText = parse(report.reporter_entries, []).map(function (r) { return r.label || r.username }).join(', ')
       var hours = [activity.jam_mulai, activity.jam_selesai].filter(Boolean).join(' - ')
       var items = Array.isArray(activity.bahan) ? activity.bahan : []
@@ -569,8 +629,7 @@
       return Promise.all([request('/ponds').catch(function () { return [] }), request('/accounts').catch(function () { return [] })]).then(function (results) {
         ponds = Array.isArray(results[0]) ? results[0] : []
         accounts = (Array.isArray(results[1]) ? results[1] : []).filter(function (a) { return String(a.status || 'Active').toLowerCase() === 'active' })
-        pondSelect.innerHTML = ponds.map(function (p) { return '<option value="' + p.id + '">' + escapeHtml(p.name + (p.location ? ' (' + p.location + ')' : '')) + '</option>' }).join('')
-        staffSelect.innerHTML = accounts.map(function (a) { return '<option value="' + a.id + '">' + escapeHtml((a.name || a.username) + ' @' + a.username) + '</option>' }).join('')
+        modal.querySelector('#activity-staff-options').innerHTML = accounts.map(function (a) { return '<option value="' + escapeHtml((a.name || a.username) + ' @' + a.username) + '"></option>' }).join('')
       })
     }
 

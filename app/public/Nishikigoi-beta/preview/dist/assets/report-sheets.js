@@ -23,7 +23,8 @@
     ['Lokasi, Sortir, dan Kondisi adalah rincian laporan Data Ulang / Panen. Satu baris rincian = satu baris di bagian Lokasi, Detail Sortir, atau Kondisi / Reject pada formulir.'],
     ['Rincian dihubungkan ke laporannya lewat Kode Batch. Untuk laporan BARU, tulis kode bebas (misalnya N1) di Kode Batch laporan dan di baris rinciannya; program memberi kode batch resminya sendiri.'],
     ['Laporan yang Kode Batch-nya sudah ada tidak diubah dan tidak dibuat dua kali. Untuk mengubah laporan yang sudah ada, pakai Edit Masal.'],
-    ['Breeding, Mention Ikan, Petugas, dan Validasi ikut diunduh tetapi tidak dibaca saat impor; isi lewat formulir.'],
+    ['Kegiatan: Kolam berisi nama kolam atau nama area (pisahkan dengan koma), Petugas berisi username akun (pisahkan dengan koma), Bahan ditulis "Garam ikan 2 kg; Obat 5 ml".'],
+    ['Breeding, Mention Ikan, dan Petugas Data Ulang / Panen ikut diunduh tetapi tidak dibaca saat impor; isi lewat formulir.'],
     ['Kolom Dokumentasi (khusus ZIP) berisi nama folder foto atau video, atau @ID media yang sudah ada di Galeri.'],
   ]
 
@@ -91,8 +92,8 @@
     if (activity.jenis === 'lainnya' && activity.jenis_lain) jenis = activity.jenis_lain
     return [
       dateText(item.report_date), item.batch_code || '', item.report_title || '', jenis, activity.jam_mulai || '', activity.jam_selesai || '',
-      list(item.pond_entries).map(function (entry) { return entry.pond_name }).filter(Boolean).join(', '),
-      list(item.reporter_entries).map(function (entry) { return entry.label || entry.name || entry.username }).filter(Boolean).join(', '),
+      list(item.pond_entries).map(function (entry) { return entry.pond_name || entry.location }).filter(Boolean).join(', '),
+      list(item.reporter_entries).map(function (entry) { return entry.username || entry.label || entry.name }).filter(Boolean).join(', '),
       item.notes || '',
       list(activity.bahan).map(function (b) { return [b.nama, b.jumlah, b.satuan].filter(function (part) { return part !== '' && part != null }).join(' ') }).filter(Boolean).join('; '),
       numeric(activity.suhu), numeric(activity.ph), labelOf(STATUSES, activity.status) || '', activity.tindak_lanjut || '',
@@ -224,11 +225,13 @@
   }
 
   function loadLookups() {
-    return Promise.all([request('GET', '/api/ponds').catch(function () { return [] }), request('GET', '/api/farm-reports').catch(function () { return [] })]).then(function (results) {
+    return Promise.all([request('GET', '/api/ponds').catch(function () { return [] }), request('GET', '/api/farm-reports').catch(function () { return [] }), request('GET', '/api/accounts').catch(function () { return [] })]).then(function (results) {
       var ponds = Array.isArray(results[0]) ? results[0] : []
       var byName = {}
-      ponds.forEach(function (pond) { byName[norm(pond.name)] = pond })
-      return { ponds: ponds, pondByName: byName, reports: Array.isArray(results[1]) ? results[1] : [] }
+      var areas = {}
+      ponds.forEach(function (pond) { byName[norm(pond.name)] = pond; if (text(pond.location)) areas[norm(pond.location)] = text(pond.location) })
+      var accounts = (Array.isArray(results[2]) ? results[2] : []).filter(function (a) { return String(a.status || 'Active').toLowerCase() === 'active' })
+      return { ponds: ponds, pondByName: byName, areaByName: areas, accounts: accounts, reports: Array.isArray(results[1]) ? results[1] : [] }
     })
   }
 
@@ -363,8 +366,17 @@
       var pondEntries = []
       splitNames(record.kolam).forEach(function (name) {
         var pond = lookups.pondByName[norm(name)]
-        if (!pond) bad.push('Kolam "' + name + '" tidak ditemukan di Data Kolam')
-        else pondEntries.push({ pond_id: Number(pond.id), pond_name: pond.name, location: pond.location || '' })
+        var area = lookups.areaByName[norm(name)]
+        if (pond) pondEntries.push({ pond_id: Number(pond.id), pond_name: pond.name, location: pond.location || '' })
+        else if (area) pondEntries.push({ pond_id: '', pond_name: area, location: area, area: true })
+        else bad.push('Kolam "' + name + '" tidak ditemukan di Data Kolam (nama kolam atau nama area)')
+      })
+      var staffEntries = []
+      splitNames(record.petugas).forEach(function (name) {
+        var wanted = norm(name).replace(/^.*@/, '')
+        var account = lookups.accounts.filter(function (a) { return norm(a.username) === wanted || norm(a.name) === norm(name) || norm((a.name || a.username) + ' @' + a.username) === norm(name) })[0]
+        if (!account) bad.push('Petugas "' + name + '" tidak ditemukan (tulis username atau nama akun)')
+        else staffEntries.push({ account_id: Number(account.id), label: account.name || account.username || '', username: account.username || '' })
       })
       if (bad.length) { problems.push(label + ': ' + bad.join('; ')); return }
       var title = record.judul || ((labelOf(ACTIVITIES, jenis) || 'Kegiatan') + (pondEntries.length ? ' - ' + pondEntries.slice(0, 3).map(function (p) { return p.pond_name }).join(', ') + (pondEntries.length > 3 ? ', ...' : '') : ''))
@@ -374,7 +386,7 @@
       queue.push({
         label: label, code: code, docsCell: record.dokumentasi, galleryCell: record.galeri, type: 'kegiatan',
         payload: {
-          report_type: 'kegiatan', report_date: date, report_title: title, notes: record.uraian, pond_entries: pondEntries, reporter_entries: [],
+          report_type: 'kegiatan', report_date: date, report_title: title, notes: record.uraian, pond_entries: pondEntries, reporter_entries: staffEntries,
           activity_data: { jenis: jenis, jenis_lain: jenis === 'lainnya' ? jenisText : '', jam_mulai: jam1 || '', jam_selesai: jam2 || '', bahan: bahanFrom(record.bahan), suhu: suhu, ph: ph, status: status, tindak_lanjut: record['tindak lanjut'] || '' },
         },
       })
