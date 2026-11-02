@@ -206,6 +206,13 @@
       codeInput.setAttribute('autocomplete', 'off')
       codeInput.addEventListener('input', function (event) { if (event.isTrusted) codeTyped = true })
     }
+    // Varietas Dominan has its own list (pick several varieties, click again to remove): the second list of "Pernah dipakai" that opened first
+    // on this box is switched off, and the own list opens as soon as the box is focused
+    var variety = form.querySelector('[data-dominant-variety-search]')
+    if (variety) {
+      variety.setAttribute('data-no-suggest', '')
+      variety.addEventListener('focus', function () { variety.dispatchEvent(new Event('input', { bubbles: true })) })
+    }
     var pondSection = pondList.closest('.report-form-section')
     // every box of the table has the same height and the same letters (a select of the theme is taller than a text box)
     var look = document.createElement('style')
