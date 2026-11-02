@@ -29,13 +29,14 @@
   function isReadonly() { var title = modal && modal.querySelector('[data-report-modal-title]'); return Boolean(title && (title.dataset.koiKind === 'detail' || /Detail/i.test(title.textContent))) }
 
   // ---- what the page loads and saves -------------------------------------------------------------------------------------------------
+  var draftEntries = null
   var originalFetch = window.fetch
   function pathOf(url) { try { return new URL(url, location.origin).pathname } catch (error) { return String(url || '') } }
   window.fetch = function (input, init) {
     var url = typeof input === 'string' ? input : (input && input.url) || ''
     var method = String((init && init.method) || (input && input.method) || 'GET').toUpperCase()
     var path = pathOf(url)
-    if ((method === 'POST' || method === 'PUT') && /\/api\/farm-reports(\/\d+)?$/.test(path) && init && typeof init.body === 'string' && ready && currentType() === 'panen') {
+    if ((method === 'POST' || method === 'PUT') && /\/api\/farm-reports(\/\d+)?$/.test(path) && init && typeof init.body === 'string' && ready && modal.classList.contains('show') && currentType() === 'panen') {
       try {
         var body = JSON.parse(init.body)
         if (body.report_type === 'panen') {
@@ -44,7 +45,25 @@
         }
       } catch (error) { /* the report is saved as the page built it */ }
     }
+    // "Simpan Draft": the blocks with their extras go into the draft as well
+    if (method === 'POST' && /\/api\/drafts\/?$/.test(path) && init && typeof init.body === 'string' && ready && modal.classList.contains('show') && currentType() === 'panen') {
+      try {
+        var draftBody = JSON.parse(init.body)
+        if (draftBody.type === 'report' && draftBody.data) {
+          draftBody.data.pond_entries = JSON.stringify(collect())
+          init = Object.assign({}, init, { body: JSON.stringify(draftBody) })
+        }
+      } catch (error) { /* the draft is saved as the page built it */ }
+    }
     var promise = originalFetch.call(this, input, init)
+    // a draft that is opened: its blocks are filled in as the rows appear
+    if (method === 'GET' && /\/api\/drafts\/[^/]+$/.test(path)) {
+      return promise.then(function (response) {
+        return response.clone().json().then(function (draft) {
+          draftEntries = draft && draft.type === 'report' && draft.data && draft.data.report_type === 'panen' ? parse(draft.data.pond_entries, []) : null
+        }).catch(function () { draftEntries = null }).then(function () { return response })
+      })
+    }
     if (method === 'GET' && /\/api\/farm-reports\/?$/.test(path)) {
       promise.then(function (response) {
         return response.clone().json().then(function (list) {
@@ -57,9 +76,9 @@
     return promise
   }
   document.addEventListener('click', function (event) {
-    if (event.target.closest('[data-report-open]')) { currentId = null; return }
+    if (event.target.closest('[data-report-open]')) { currentId = null; draftEntries = null; return }
     var row = event.target.closest('[data-report-id]')
-    if (row) currentId = row.getAttribute('data-report-id')
+    if (row) { currentId = row.getAttribute('data-report-id'); draftEntries = null }
   }, true)
 
   // ---- photo of the female of a session --------------------------------------------------------------------------------------------------
@@ -191,14 +210,16 @@
       paintFemale(card)
     })
     // every row the page adds gets its extras; rows of a saved report are filled from it (the n-th row is the n-th entry)
-    new MutationObserver(function () {
-      var opened = currentId ? reportsById[currentId] : null
-      var entries = opened ? parse(opened.pond_entries, []) : []
-      Array.prototype.forEach.call(listBox.children, function (card, index) { decorate(card, entries[index]) })
-    }).observe(listBox, { childList: true })
+    new MutationObserver(decorateAll).observe(listBox, { childList: true })
     ready = true
     originalFetch.call(window, '/api/ponds').then(function (r) { return r.ok ? r.json() : [] }).then(function (list) { ponds = Array.isArray(list) ? list : [] }).catch(function () {})
     originalFetch.call(window, '/api/breeding').then(function (r) { return r.ok ? r.json() : [] }).then(function (list) { breedings = Array.isArray(list) ? list : []; Array.prototype.forEach.call(listBox.querySelectorAll('[data-x="breeding"]'), function (select) { var card = select.closest('.card'); select.innerHTML = breedingOptions(card.dataset.breeding); paintFemale(card) }) }).catch(function () {})
+  }
+
+  function decorateAll() {
+    var opened = currentId ? reportsById[currentId] : null
+    var entries = draftEntries || (opened ? parse(opened.pond_entries, []) : [])
+    Array.prototype.forEach.call(listBox.children, function (card, index) { decorate(card, entries[index]) })
   }
 
   function tick() {
@@ -207,6 +228,8 @@
     wasShown = shown
     if (!shown) return
     var panen = currentType() === 'panen'
+    // rows that were there before this file was ready (a draft opened at once from Antrean) get their extras now
+    decorateAll()
     // report-wide boxes that a Panen replaces by the ones inside every row
     var conditionList = form.querySelector('[data-condition-entry-list]')
     var sortingList = form.querySelector('[data-sorting-entry-list]')

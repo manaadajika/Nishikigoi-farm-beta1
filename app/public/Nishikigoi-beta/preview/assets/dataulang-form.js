@@ -47,13 +47,14 @@
   function isReadonly() { var title = modal && modal.querySelector('[data-report-modal-title]'); return Boolean(title && (title.dataset.koiKind === 'detail' || /Detail/i.test(title.textContent))) }
 
   // ---- what the page loads and saves -----------------------------------------------------------------------------------------------
+  var pendingDraft = null
   var originalFetch = window.fetch
   function pathOf(url) { try { return new URL(url, location.origin).pathname } catch (error) { return String(url || '') } }
   window.fetch = function (input, init) {
     var url = typeof input === 'string' ? input : (input && input.url) || ''
     var method = String((init && init.method) || (input && input.method) || 'GET').toUpperCase()
     var path = pathOf(url)
-    if ((method === 'POST' || method === 'PUT') && /\/api\/farm-reports(\/\d+)?$/.test(path) && init && typeof init.body === 'string' && ready && currentType() === 'data_ulang') {
+    if ((method === 'POST' || method === 'PUT') && /\/api\/farm-reports(\/\d+)?$/.test(path) && init && typeof init.body === 'string' && ready && modal.classList.contains('show') && currentType() === 'data_ulang') {
       try {
         var body = JSON.parse(init.body)
         if (body.report_type === 'data_ulang') {
@@ -62,7 +63,25 @@
         }
       } catch (error) { /* the report is saved without the table */ }
     }
+    // "Simpan Draft": the table goes into the draft as well
+    if (method === 'POST' && /\/api\/drafts\/?$/.test(path) && init && typeof init.body === 'string' && ready && modal.classList.contains('show') && currentType() === 'data_ulang') {
+      try {
+        var draftBody = JSON.parse(init.body)
+        if (draftBody.type === 'report' && draftBody.data) {
+          draftBody.data.activity_data = JSON.stringify({ fish: collect(), spectrum_from_fish: Boolean(specCheck && specCheck.checked) })
+          init = Object.assign({}, init, { body: JSON.stringify(draftBody) })
+        }
+      } catch (error) { /* the draft is saved without the table */ }
+    }
     var promise = originalFetch.call(this, input, init)
+    // a draft that is opened (from the draft list or from Antrean): its table is filled in once the form has been filled
+    if (method === 'GET' && /\/api\/drafts\/[^/]+$/.test(path)) {
+      return promise.then(function (response) {
+        return response.clone().json().then(function (draft) {
+          if (draft && draft.type === 'report' && draft.data && draft.data.report_type === 'data_ulang') pendingDraft = { activity_data: draft.data.activity_data }
+        }).catch(function () {}).then(function () { return response })
+      })
+    }
     if (method === 'GET' && /\/api\/farm-reports\/?$/.test(path)) {
       promise.then(function (response) {
         return response.clone().json().then(function (list) {
@@ -363,6 +382,7 @@
     var opened = currentId && title && !/Tambah/i.test(title.textContent) ? reportsById[currentId] : null
     if (opened && codeInput && opened.batch_code && codeInput.value !== opened.batch_code) codeInput.value = opened.batch_code
     var key = opened ? 'id:' + opened.id : (codeInput ? codeInput.value : '')
+    if (isData && pendingDraft) { var fromDraft = pendingDraft; pendingDraft = null; lastKey = key; load(fromDraft); applyReadonly(); return }
     if (isData && key !== lastKey) {
       lastKey = key
       var found = opened || reportsByCode[key]
