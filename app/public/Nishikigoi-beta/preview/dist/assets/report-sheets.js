@@ -15,7 +15,7 @@
   var LOCATION_COLUMNS = ['Kode Batch', 'Judul', 'Asal Lokasi', 'Pindah ke', 'Hasil (ekor)', 'Rata-rata Ukuran (cm)', 'Catatan Lokasi']
   var SORTING_COLUMNS = ['Kode Batch', 'Judul', 'Kategori', 'Lokasi Tujuan', 'Keterangan', 'Ekor']
   var CONDITION_COLUMNS = ['Kode Batch', 'Judul', 'Metrik Kondisi', 'Jumlah (ekor)']
-  var FISH_COLUMNS = ['Kode Batch', 'Judul', 'No', 'Jenis', 'Ukuran (cm)', 'Sex', 'Sesi Breeding', 'Male', 'Catatan']
+  var FISH_COLUMNS = ['Kode Batch', 'Judul', 'No', 'Jenis', 'Ukuran (cm)', 'Sex', 'Sesi Breeding', 'Male', 'Catatan', 'Foto']
   var ACTIVITY_COLUMNS = ['Tanggal', 'Kode Batch', 'Judul', 'Jenis Kegiatan', 'Jam Mulai', 'Jam Selesai', 'Kolam', 'Petugas', 'Uraian', 'Bahan', 'Suhu Air (°C)', 'pH Air', 'Status', 'Tindak Lanjut', 'Galeri', 'ID Galeri']
   var ARRIVAL_COLUMNS = ['Tanggal', 'Nama Laporan', 'Ikan Dari', 'Jenis', 'Sex', 'Ukuran (cm)', 'Ternakan', 'Bloodline', 'Owner', 'Lokasi Tujuan', 'Foto', 'Catatan', 'Kode Batch']
   var HELP_COLUMNS = ['Petunjuk']
@@ -128,7 +128,7 @@
     items.filter(function (item) { return typeOf(item) === 'data_ulang' }).forEach(function (item) {
       var data = parse(item.activity_data, {}) || {}
       ;(Array.isArray(data.fish) ? data.fish : []).forEach(function (fish, index) {
-        rows.push([item.batch_code || '', item.report_title || '', index + 1, fish.jenis || '', numeric(fish.ukuran), fish.sex || 'unknown', fish.breeding_label || '', fish.male_label || '', fish.catatan || ''])
+        rows.push([item.batch_code || '', item.report_title || '', index + 1, fish.jenis || '', numeric(fish.ukuran), fish.sex || 'unknown', fish.breeding_label || '', fish.male_label || '', fish.catatan || '', fish.foto || ''])
       })
     })
     return rows
@@ -290,9 +290,9 @@
       return {
         jenis: record.jenis || '', ukuran: record['ukuran (cm)'] || '', sex: typedSex === 'male' || typedSex === 'female' ? typedSex : 'unknown',
         breeding_id: session ? String(session.id) : '', breeding_label: session ? (session.batch_code + (session.session_name ? ' - ' + session.session_name : '')) : (record['sesi breeding'] || ''),
-        male_id: maleEntry ? String(maleEntry.koi_id) : '', male_label: maleEntry ? (maleEntry.label || maleEntry.code) : (record.male || ''), catatan: record.catatan || '',
+        male_id: maleEntry ? String(maleEntry.koi_id) : '', male_label: maleEntry ? (maleEntry.label || maleEntry.code) : (record.male || ''), catatan: record.catatan || '', foto: record.foto || '',
       }
-    }).filter(function (entry) { return entry.jenis || entry.ukuran !== '' || entry.breeding_label || entry.catatan })
+    }).filter(function (entry) { return entry.jenis || entry.ukuran !== '' || entry.breeding_label || entry.catatan || entry.foto })
     return { pondEntries: pondEntries, sorting: sorting, conditions: conditions, fish: fish }
   }
 

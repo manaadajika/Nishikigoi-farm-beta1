@@ -113,6 +113,31 @@
     photoOf(femaleId).then(function (photo) { showPhoto(row.querySelector('[data-prev="female"]'), photo) })
     photoOf(row.dataset.m).then(function (photo) { showPhoto(row.querySelector('[data-prev="male"]'), photo) })
   }
+  // the photo of the fish itself: uploaded from the gallery, or taken with the camera (see media-capture.js), shrunk and kept like the other report photos
+  function showOwnPhoto(row) {
+    var image = row.querySelector('[data-f-photo]')
+    var pick = row.querySelector('[data-f-photo-pick]')
+    var url = row.dataset.photo || ''
+    if (!image) return
+    if (url) {
+      image.src = thumbOf(url)
+      image.style.cssText = 'display:block;flex:0 0 auto;width:1.9rem;height:2.9rem;object-fit:cover;border-radius:4px;border:1px solid var(--tblr-border-color,#ccc)'
+    } else { image.style.display = 'none'; image.removeAttribute('src') }
+    pick.textContent = url ? 'Ganti' : 'Foto'
+  }
+  function uploadOwnPhoto(row, file) {
+    var kit = window.KoiReportKit
+    var pick = row.querySelector('[data-f-photo-pick]')
+    if (!kit || !file) return
+    pick.disabled = true
+    pick.textContent = '...'
+    kit.compressImage(file).then(function (dataUrl) {
+      return kit.request('/images', { method: 'POST', body: JSON.stringify({ prefix: 'report-image', image_data: dataUrl }) })
+    }).then(function (data) { row.dataset.photo = data.image_url || '' }).catch(function (error) { window.alert(error.message || 'Foto gagal diunggah.') }).then(function () {
+      pick.disabled = false
+      showOwnPhoto(row)
+    })
+  }
   function renumber() {
     Array.prototype.forEach.call(listBox.children, function (row, index) { row.querySelector('[data-f="no"]').textContent = String(index + 1) })
   }
@@ -121,9 +146,10 @@
     var row = document.createElement('div')
     row.dataset.b = entry.breeding_id || ''
     row.dataset.m = entry.male_id || ''
+    row.dataset.photo = entry.foto || ''
     row.className = 'border-bottom py-1'
     row.setAttribute('data-fish-row', '')
-    row.style.cssText = 'display:grid;grid-template-columns:2.2rem minmax(7rem,1.1fr) 5.5rem 7.5rem minmax(12rem,1.9fr) minmax(9.5rem,1.3fr) minmax(7rem,1.2fr) 4.6rem;gap:.4rem;align-items:center;min-width:66rem'
+    row.style.cssText = 'display:grid;grid-template-columns:2.2rem minmax(7rem,1.1fr) 5.5rem 7.5rem minmax(12rem,1.9fr) minmax(9.5rem,1.3fr) minmax(7rem,1.2fr) 6.2rem 4.6rem;gap:.4rem;align-items:center;min-width:66rem'
     row.innerHTML =
       '<div class="fw-semibold text-secondary text-center" data-f="no"></div>' +
       '<input class="form-control form-control-sm" data-no-clear data-f="jenis" list="arrival-varieties" placeholder="Contoh Showa" value="' + esc(entry.jenis) + '">' +
@@ -132,11 +158,13 @@
       '<div class="d-flex align-items-center gap-1" style="min-width:0"><select class="form-select form-select-sm" data-f="breeding">' + breedingOptions(entry.breeding_id) + '</select><img data-prev="female" alt="" style="display:none"></div>' +
       '<div class="d-flex align-items-center gap-1" style="min-width:0"><select class="form-select form-select-sm" data-f="male">' + maleOptions(entry.breeding_id, entry.male_id) + '</select><img data-prev="male" alt="" style="display:none"></div>' +
       '<input class="form-control form-control-sm" data-no-clear data-f="catatan" placeholder="Catatan" value="' + esc(entry.catatan) + '">' +
+      '<div class="d-flex align-items-center gap-1"><img data-f-photo alt="" style="display:none"><button type="button" class="btn btn-sm btn-outline-primary" data-f-photo-pick title="Unggah foto atau ambil dengan kamera">Foto</button><input type="file" accept="image/*" hidden data-f-photo-input></div>' +
       '<button type="button" class="btn btn-sm btn-outline-danger" data-f-remove>Hapus</button>'
     listBox.appendChild(row)
     renumber()
     applyReadonly()
     updatePreview(row)
+    showOwnPhoto(row)
   }
   // the sessions arrive after the form was filled in: show each row's saved choice again
   function refreshChoices() {
@@ -159,12 +187,13 @@
       var breedingOption = breeding.options[breeding.selectedIndex]
       var maleOption = male.options[male.selectedIndex]
       return {
+        foto: row.dataset.photo || '',
         jenis: get('jenis').value.trim(), ukuran: get('ukuran').value, sex: get('sex').value,
         breeding_id: breeding.value, breeding_label: breeding.value ? breedingOption.textContent : '',
         male_id: male.value, male_label: male.value ? maleOption.textContent : '',
         catatan: get('catatan').value.trim(),
       }
-    }).filter(function (fish) { return fish.jenis || fish.ukuran !== '' || fish.breeding_id || fish.male_id || fish.catatan })
+    }).filter(function (fish) { return fish.jenis || fish.ukuran !== '' || fish.breeding_id || fish.male_id || fish.catatan || fish.foto })
   }
   function load(report) {
     listBox.innerHTML = ''
@@ -228,7 +257,7 @@
     hide(section, true)
     section.innerHTML = '<div class="d-flex align-items-center justify-content-between gap-2 mb-2"><h4 class="mb-0">Ikan Satuan</h4><button class="btn btn-sm" type="button" data-fish-add>Tambah Ikan</button></div>' +
       '<div class="form-hint mb-2">Opsional, untuk sesi foto. Satu baris = satu ekor: jenis, ukuran, sex, sesi breeding (dan male-nya), serta catatan. Boleh dikosongkan.</div>' +
-      '<div style="overflow-x:auto"><div class="fw-semibold small text-secondary border-bottom pb-1" style="display:grid;grid-template-columns:2.2rem minmax(7rem,1.1fr) 5.5rem 7.5rem minmax(12rem,1.9fr) minmax(9.5rem,1.3fr) minmax(7rem,1.2fr) 4.6rem;gap:.4rem;min-width:66rem"><div class="text-center">No</div><div>Jenis</div><div>Ukuran (cm)</div><div>Sex</div><div>Sesi Breeding</div><div>Male</div><div>Catatan</div><div></div></div>' +
+      '<div style="overflow-x:auto"><div class="fw-semibold small text-secondary border-bottom pb-1" style="display:grid;grid-template-columns:2.2rem minmax(7rem,1.1fr) 5.5rem 7.5rem minmax(12rem,1.9fr) minmax(9.5rem,1.3fr) minmax(7rem,1.2fr) 6.2rem 4.6rem;gap:.4rem;min-width:66rem"><div class="text-center">No</div><div>Jenis</div><div>Ukuran (cm)</div><div>Sex</div><div>Sesi Breeding</div><div>Male</div><div>Catatan</div><div>Foto</div><div></div></div>' +
       '<div data-fish-list></div></div>'
     pondSection.parentNode.insertBefore(section, pondSection)
     listBox = section.querySelector('[data-fish-list]')
@@ -241,6 +270,8 @@
     hide(specCheck.closest('label'), true)
 
     section.addEventListener('click', function (event) {
+      var pickButton = event.target.closest('[data-f-photo-pick]')
+      if (pickButton) { pickButton.closest('[data-fish-row]').querySelector('[data-f-photo-input]').click(); return }
       if (event.target.closest('[data-fish-add]')) { addRow(); return }
       var remove = event.target.closest('[data-f-remove]')
       if (remove) { remove.closest('[data-fish-row]').remove(); renumber(); syncSpectrum() }
@@ -255,6 +286,13 @@
       if (event.target.matches('[data-f="male"]')) changedRow.dataset.m = event.target.value
       if (event.target.matches('[data-f="breeding"],[data-f="male"]')) updatePreview(changedRow)
       syncSpectrum()
+    })
+    section.addEventListener('change', function (event) {
+      if (event.target.matches('[data-f-photo-input]')) {
+        var photoFile = event.target.files && event.target.files[0]
+        event.target.value = ''
+        uploadOwnPhoto(event.target.closest('[data-fish-row]'), photoFile)
+      }
     })
     section.addEventListener('input', function (event) { if (event.target.matches('[data-f="ukuran"]')) syncSpectrum() })
     specCheck.addEventListener('change', syncSpectrum)

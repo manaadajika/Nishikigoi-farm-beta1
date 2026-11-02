@@ -3076,6 +3076,7 @@
     load('/assets/messenger.js?v=20261024b')
     load('/assets/back-close.js?v=20261017b')
     load('/assets/img-skeleton.js?v=20261017a')
+    load('/assets/media-capture.js?v=20261102a')
     if (name === 'settings') load('/assets/account-extras.js?v=20261029b')
   }
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', start)
