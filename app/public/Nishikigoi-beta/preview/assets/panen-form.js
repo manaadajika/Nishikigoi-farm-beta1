@@ -77,8 +77,8 @@
   }
   document.addEventListener('click', function (event) {
     if (event.target.closest('[data-report-open]')) { currentId = null; draftEntries = null; return }
-    var row = event.target.closest('[data-report-id]')
-    if (row) { currentId = row.getAttribute('data-report-id'); draftEntries = null }
+    var row = event.target.closest('[data-report-id],[data-dock-id]')
+    if (row) { currentId = row.getAttribute('data-report-id') || row.getAttribute('data-dock-id'); draftEntries = null }
   }, true)
 
   // ---- photo of the female of a session --------------------------------------------------------------------------------------------------
@@ -144,7 +144,7 @@
     ;(Array.isArray(entry.sortir) ? entry.sortir : []).forEach(function (item) { extra.querySelector('[data-x-list="sortir"]').appendChild(miniRow('sortir', item)) })
     paintFemale(card)
     paintMales(card)
-    if (isReadonly()) extra.querySelectorAll('input,select,button').forEach(function (field) { field.disabled = true })
+    if (isReadonly()) extra.querySelectorAll('input,select,button').forEach(function (field) { if (!field.hasAttribute('data-male-toggle')) field.disabled = true })
   }
   function paintFemale(card) {
     var image = card.querySelector('[data-x-photo]')
@@ -188,11 +188,11 @@
     var locked = isReadonly()
     var html = shown.map(function (m) {
       var on = isOn(m.koi_id)
-      return '<button type="button" class="btn btn-sm ' + (on ? 'btn-primary' : 'btn-outline-secondary') + ' d-inline-flex align-items-center gap-1" data-male-toggle="' + esc(m.koi_id) + '" data-label="' + esc(m.label) + '" aria-pressed="' + (on ? 'true' : 'false') + '"' + (locked ? ' disabled' : '') + '>' +
+      return '<button type="button" class="btn btn-sm ' + (on ? 'btn-primary' : 'btn-outline-secondary') + ' d-inline-flex align-items-center gap-1" data-male-toggle="' + esc(m.koi_id) + '" data-label="' + esc(m.label) + '" aria-pressed="' + (on ? 'true' : 'false') + '"' + (locked ? ' data-locked' : '') + '>' +
         '<img data-male-photo="' + esc(m.koi_id) + '" alt="" style="display:none">' + esc(m.label) + '</button>'
     }).join('')
     var more = allMales().filter(function (m) { return !shown.some(function (x) { return x.koi_id === m.koi_id }) })
-    if (!locked && more.length) html += '<select class="form-select form-select-sm" style="width:auto;max-width:14rem" data-x="male-add"><option value="">+ Male lain</option>' + more.map(function (m) { return '<option value="' + esc(m.koi_id) + '">' + esc(m.label) + '</option>' }).join('') + '</select>'
+    if (!locked && more.length) html += '<select class="form-select form-select-sm" style="flex:0 0 auto;width:13rem;max-width:100%" data-x="male-add" title="Tambah male dari sesi breeding lain"><option value="">+ Pilih male manual</option>' + more.map(function (m) { return '<option value="' + esc(m.koi_id) + '">' + esc(m.label) + '</option>' }).join('') + '</select>'
     if (!shown.length && !html) html = '<span class="text-secondary small">Pilih sesi breeding, atau tambah male dari daftar.</span>'
     else if (!shown.length) html = '<span class="text-secondary small me-1">Sesi ini belum punya male.</span>' + html
     var wanted = html
@@ -203,7 +203,9 @@
       photoOf(image.getAttribute('data-male-photo')).then(function (photo) {
         if (!photo) return
         image.src = thumbOf(photo.url)
-        image.style.cssText = 'display:block;width:1.2rem;height:1.8rem;object-fit:cover;border-radius:3px'
+        image.dataset.full = photo.url
+        image.title = 'Klik foto untuk zoom'
+        image.style.cssText = 'display:block;width:1.6rem;height:2.4rem;object-fit:cover;border-radius:3px;cursor:zoom-in'
       })
     })
   }
@@ -250,7 +252,10 @@
     listBox.addEventListener('click', function (event) {
       var zoom = event.target.closest('img[data-x-photo]')
       if (zoom && zoom.dataset.full && window.KoiZoomImage) { window.KoiZoomImage(zoom.dataset.full, zoom.title || ''); return }
+      var maleZoom = event.target.closest('img[data-male-photo]')
+      if (maleZoom && maleZoom.dataset.full && window.KoiZoomImage) { event.preventDefault(); window.KoiZoomImage(maleZoom.dataset.full, maleZoom.closest('[data-male-toggle]').getAttribute('data-label') || ''); return }
       var toggle = event.target.closest('[data-male-toggle]')
+      if (toggle && toggle.hasAttribute('data-locked')) return
       if (toggle) {
         var maleCard = toggle.closest('.card')
         var id = toggle.getAttribute('data-male-toggle')
@@ -311,7 +316,7 @@
     var readonly = isReadonly()
     Array.prototype.forEach.call(listBox.querySelectorAll('[data-panen-extra]'), function (extra) {
       hide(extra, !panen)
-      extra.querySelectorAll('input,select,button').forEach(function (field) { if (field.disabled !== readonly) field.disabled = readonly })
+      extra.querySelectorAll('input,select,button').forEach(function (field) { if (field.hasAttribute('data-male-toggle')) return; if (field.disabled !== readonly) field.disabled = readonly })
     })
   }
   setInterval(tick, 350)

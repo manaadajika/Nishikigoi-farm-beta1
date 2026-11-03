@@ -94,6 +94,7 @@
           reportsByCode = {}
           reportsById = {}
           list.forEach(function (item) { reportsById[String(item.id)] = item; if (item.batch_code) reportsByCode[String(item.batch_code)] = item })
+          warmAllParents()
         })
       }).catch(function () {})
     }
@@ -103,8 +104,8 @@
   // which report the form was opened for: the row that was clicked (view, edit, print); "Tambah Laporan" means a new one
   document.addEventListener('click', function (event) {
     if (event.target.closest('[data-report-open]')) { currentId = null; draftCode = ''; return }
-    var row = event.target.closest('[data-report-id]')
-    if (row) { currentId = row.getAttribute('data-report-id'); draftCode = '' }
+    var row = event.target.closest('[data-report-id],[data-dock-id]')
+    if (row) { currentId = row.getAttribute('data-report-id') || row.getAttribute('data-dock-id'); draftCode = ''; setTimeout(function () { warmParents(reportsById[currentId]) }, 50) }
   }, true)
 
   // ---- the table -----------------------------------------------------------------------------------------------------------------------
@@ -215,7 +216,7 @@
     })
   }
   function loadBreedings() {
-    return originalFetch.call(window, '/api/breeding').then(function (response) { return response.ok ? response.json() : [] }).then(function (list) { breedings = Array.isArray(list) ? list : []; refreshChoices() }).catch(function () {})
+    return originalFetch.call(window, '/api/breeding').then(function (response) { return response.ok ? response.json() : [] }).then(function (list) { breedings = Array.isArray(list) ? list : []; warmAllParents(); refreshChoices() }).catch(function () {})
   }
   function collect() {
     if (!listBox) return []
@@ -257,6 +258,50 @@
     setDisabled(specCheck, locked)
   }
 
+  // the photos of the female and the chosen males of the sessions of a Panen: fetched when the report is opened, so the print (which must open its window at once) has them
+  function parentIds(report) {
+    var ids = []
+    parse(report && report.pond_entries, []).forEach(function (place) {
+      var item = breedings.filter(function (b) { return String(b.id) === String(place.breeding_id || '') })[0]
+      var females = item ? parse(item.female_parent_entries, []) : []
+      if (Array.isArray(females) && females[0] && females[0].koi_id) ids.push(String(females[0].koi_id))
+      ;(Array.isArray(place.males) ? place.males : []).forEach(function (male) { if (male && male.koi_id) ids.push(String(male.koi_id)) })
+    })
+    return ids
+  }
+  // all Panen reports at once (one request), so a print started from a card has the photos at hand
+  function warmAllParents() {
+    if (!breedings.length || !window.KoiPicker || !window.KoiPicker.byIds) return
+    var ids = []
+    Object.keys(reportsById).forEach(function (key) { if (reportsById[key].report_type === 'panen') parentIds(reportsById[key]).forEach(function (id) { if (photoCache[id] === undefined && ids.indexOf(id) < 0) ids.push(id) }) })
+    if (!ids.length) return
+    window.KoiPicker.byIds(ids, { scope: 'all' }).then(function (rows) {
+      ;(rows || []).forEach(function (fish) { photoCache[String(fish.id)] = fish && fish.image_url ? { url: fish.image_url, code: fish.code || '' } : null })
+      ids.forEach(function (id) { if (photoCache[id] === undefined) photoCache[id] = null })
+    }).catch(function () {})
+  }
+  function warmParents(report) {
+    if (!report || report.report_type !== 'panen') return
+    parentIds(report).forEach(function (id) { photoOf(id) })
+  }
+  function parentFigure(role, id, label) {
+    var photo = id && photoCache[id] ? photoCache[id] : null
+    var shown = label || (photo && photo.code) || ''
+    if (!photo && !shown) return ''
+    return '<div style="display:inline-block;text-align:center;margin:3px 6px 0 0;vertical-align:top;width:48px">' +
+      (photo ? '<img src="' + esc(thumbOf(photo.url)) + '" alt="" style="width:34px;height:51px;object-fit:cover;border:1px solid #bbb">' : '<div style="width:34px;height:51px;border:1px solid #bbb;margin:0 auto"></div>') +
+      '<div style="font-size:8px;line-height:1.15;word-break:break-all"><b>' + role + '</b><br>' + esc(shown) + '</div></div>'
+  }
+  function parentsHtml(place) {
+    var item = breedings.filter(function (b) { return String(b.id) === String(place.breeding_id || '') })[0]
+    var females = item ? parse(item.female_parent_entries, []) : []
+    var female = Array.isArray(females) && females[0] ? females[0] : null
+    var html = ''
+    if (female && female.koi_id) html += parentFigure('Female', String(female.koi_id), female.label || female.code)
+    ;(Array.isArray(place.males) ? place.males : []).forEach(function (male) { if (male && male.koi_id) html += parentFigure('Male', String(male.koi_id), male.label) })
+    return html ? '<div>' + html + '</div>' : ''
+  }
+
   // ---- print: the Ikan Satuan table of a Data Ulang and the per-place details of a Panen are added to the program's print ---------------------------------------
   function printExtra(report) {
     var data = parse(report.activity_data, {}) || {}
@@ -276,7 +321,7 @@
           places.map(function (place, index) {
             var reject = (place.reject || []).map(function (r) { return esc(r.metric || '-') + ' (' + esc(r.qty || 0) + ')' }).join('<br>') || '-'
             var sortir = (place.sortir || []).map(function (r) { return esc(r.category || '-') + (r.destination ? ' &rarr; ' + esc(r.destination) : '') + ' (' + esc(r.qty || 0) + ')' }).join('<br>') || '-'
-            return '<tr><td class="kp-center">' + (index + 1) + '</td><td>' + cell(place.pond_label || place.pond_name) + '</td><td>' + cell(place.variety) + '</td><td>' + cell((place.breeding_label || '') + (Array.isArray(place.males) && place.males.length ? ' (Male: ' + place.males.map(function (m) { return m.label || m.koi_id }).join(', ') + ')' : '')) + '</td><td>' + reject + '</td><td>' + sortir + '</td></tr>'
+            return '<tr><td class="kp-center">' + (index + 1) + '</td><td>' + cell(place.pond_label || place.pond_name) + '</td><td>' + cell(place.variety) + '</td><td>' + cell(place.breeding_label) + parentsHtml(place) + '</td><td>' + reject + '</td><td>' + sortir + '</td></tr>'
           }).join('') + '</tbody></table></section>'
       }
     }
