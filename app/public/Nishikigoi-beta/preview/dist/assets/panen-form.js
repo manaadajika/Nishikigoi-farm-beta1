@@ -98,6 +98,56 @@
     }).catch(function () { return null })
   }
 
+  // ---- Reject / Sortir text goes into one cell of the Excel: "|" and "~" separate its parts, so they cannot be typed there --------------------------------
+  var TEXT_BOXES = '[data-m="metric"],[data-m="category"],[data-m="destination"],[data-m="description"],[data-condition-entry-list] [data-metric],[data-sorting-entry-list] [data-category],[data-sorting-entry-list] [data-destination],[data-sorting-entry-list] [data-description]'
+  function stripSeparators(event) {
+    var box = event.target
+    if (!box || !box.matches || !box.matches(TEXT_BOXES)) return
+    var value = box.value
+    if (!/[|~]/.test(value)) return
+    var caret = box.selectionStart
+    var before = typeof caret === 'number' ? value.slice(0, caret).replace(/[|~]/g, '').length : null
+    box.value = value.replace(/[|~]/g, '')
+    if (before !== null) { try { box.setSelectionRange(before, before) } catch (error) { /* a box without a caret */ } }
+  }
+  document.addEventListener('input', stripSeparators, true)
+
+  // ---- counts with thousands dots (3.232): the box shows the dots, .value still answers 3232, so every part of the page that reads it keeps working -------
+  var valueBox = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value')
+  function dotted(value) { return String(value == null ? '' : value).replace(/\D/g, '').replace(/\B(?=(\d{3})+(?!\d))/g, '.') }
+  function groupDigits(box) {
+    if (box._grouped) return
+    box._grouped = true
+    var start = valueBox.get.call(box)
+    box.type = 'text'
+    box.setAttribute('inputmode', 'numeric')
+    box.removeAttribute('min')
+    box.removeAttribute('step')
+    Object.defineProperty(box, 'value', {
+      configurable: true,
+      get: function () { return String(valueBox.get.call(box)).replace(/\./g, '') },
+      set: function (next) { valueBox.set.call(box, dotted(next)) },
+    })
+    valueBox.set.call(box, dotted(start))
+    box.addEventListener('input', function () {
+      var shown = valueBox.get.call(box)
+      var caret = box.selectionStart
+      var digitsBefore = typeof caret === 'number' ? shown.slice(0, caret).replace(/\D/g, '').length : null
+      var formatted = dotted(shown)
+      if (formatted === shown) return
+      valueBox.set.call(box, formatted)
+      if (digitsBefore !== null) {
+        var at = 0, seen = 0
+        while (at < formatted.length && seen < digitsBefore) { if (/\d/.test(formatted.charAt(at))) seen += 1; at += 1 }
+        try { box.setSelectionRange(at, at) } catch (error) { /* a box without a caret */ }
+      }
+    })
+  }
+  function groupAll() {
+    if (!form) return
+    Array.prototype.forEach.call(form.querySelectorAll('[data-pond-entry-list] [data-result-qty],[data-pond-entry-list] [data-m="qty"],[data-condition-entry-list] [data-qty],[data-sorting-entry-list] [data-qty]'), groupDigits)
+  }
+
   // ---- the extras of one row ----------------------------------------------------------------------------------------------------------
   function breedingOptions(selected) {
     return '<option value="">- tanpa sesi -</option>' + breedings.map(function (item) {
@@ -305,6 +355,7 @@
     var panen = currentType() === 'panen'
     // rows that were there before this file was ready (a draft opened at once from Antrean) get their extras now
     decorateAll()
+    groupAll()
     // report-wide boxes that a Panen replaces by the ones inside every row
     var conditionList = form.querySelector('[data-condition-entry-list]')
     var sortingList = form.querySelector('[data-sorting-entry-list]')

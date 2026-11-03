@@ -1,7 +1,8 @@
 // Laporan: the Excel / ZIP of the page has one sheet for every kind of report, not one mixed sheet.
-//   Data Ulang | Panen | Kegiatan | Ikan Datang   -> one row per report (Ikan Datang: one row per fish)
-//   Lokasi | Sortir | Kondisi                       -> the detail rows of a Data Ulang / Panen report, tied to it by Kode Batch
+//   Data Ulang | Panen | Kegiatan | Ikan Datang   -> Data Ulang and Panen: one row per PLACE (Lokasi), Reject and Sortir written inside one cell; Ikan Datang: one row per fish
+//   Ikan Satuan                                     -> the fish table of a Data Ulang, tied to it by Kode Batch
 //   Petunjuk                                        -> how to fill the file
+// (Older files with the sheets Lokasi, Sortir and Kondisi are still read: flatten() turns the new rows into that shape.)
 // The same sheets are read back by Impor (new reports only: a report whose Kode Batch exists is never changed or created twice).
 // An older file with the single sheet "Laporan" (column Jenis) and the sheet "Ikan Datang" is still read.
 // This file replaces the "export", "zip" and "import" buttons of the page's dock: it wraps KoiDock.create (after macro-edit.js did) and
@@ -11,25 +12,32 @@
   if (!/farm-reports/.test(location.pathname)) return
 
   var TYPE_SHEETS = [['data_ulang', 'Data Ulang'], ['panen', 'Panen'], ['kegiatan', 'Kegiatan'], ['ikan_datang', 'Ikan Datang']]
-  var MAIN_COLUMNS = ['Tanggal', 'Kode Batch', 'Judul', 'Varietas Dominan', 'Rata-rata Ukuran (cm)', 'Deret Ukuran Ikan (cm)', 'Breeding', 'Mention Ikan', 'Petugas', 'Catatan', 'Galeri', 'ID Galeri']
-  // Panen: where the harvest was (the places of "Lokasi dan Hasil") instead of the report-wide Breeding, which a Panen form does not have (its session is chosen per place, see sheet Lokasi)
-  var PANEN_COLUMNS = ['Tanggal', 'Kode Batch', 'Judul', 'Lokasi Panen', 'Total Hasil (ekor)', 'Varietas Dominan', 'Rata-rata Ukuran (cm)', 'Deret Ukuran Ikan (cm)', 'Mention Ikan', 'Petugas', 'Catatan', 'Galeri', 'ID Galeri']
-  var LOCATION_COLUMNS = ['Kode Batch', 'Judul', 'No', 'Asal Lokasi', 'Pindah ke', 'Hasil (ekor)', 'Rata-rata Ukuran (cm)', 'Varietas Dominan', 'Sesi Breeding', 'Male', 'Catatan Lokasi']
-  var SORTING_COLUMNS = ['Kode Batch', 'Judul', 'Kategori', 'Lokasi Tujuan', 'Keterangan', 'Ekor', 'No Lokasi']
-  var CONDITION_COLUMNS = ['Kode Batch', 'Judul', 'Metrik Kondisi', 'Jumlah (ekor)', 'No Lokasi']
+  // Data Ulang and Panen: ONE ROW PER PLACE ("Lokasi dan Hasil"). A report with two places has two rows with the same Kode Batch; the columns of the report itself
+  // (Varietas Dominan ... ID Galeri) are filled on its first row only. Reject and Sortir are written inside one cell: rows separated by " | ", the columns of a Sortir row
+  // by " ~ " (Kategori ~ Lokasi Tujuan ~ Keterangan ~ Ekor), a Reject row as "Nama (jumlah)". A row without any place column holds the Reject / Sortir of the whole report.
+  var PLACE_COLUMNS = ['Asal Lokasi', 'Pindah ke', 'Hasil (ekor)', 'Rata-rata Lokasi (cm)', 'Varietas Lokasi', 'Sesi Breeding', 'Male', 'Reject', 'Sortir', 'Catatan Lokasi']
+  var REPORT_TAIL = ['Varietas Dominan', 'Rata-rata Ukuran (cm)', 'Deret Ukuran Ikan (cm)']
+  var REPORT_END = ['Mention Ikan', 'Petugas', 'Catatan', 'Galeri', 'ID Galeri']
+  var MAIN_COLUMNS = ['Tanggal', 'Kode Batch', 'Judul'].concat(PLACE_COLUMNS, REPORT_TAIL, ['Breeding'], REPORT_END)
+  var PANEN_COLUMNS = ['Tanggal', 'Kode Batch', 'Judul'].concat(PLACE_COLUMNS, REPORT_TAIL, REPORT_END)
   var FISH_COLUMNS = ['Kode Batch', 'Judul', 'No', 'Jenis', 'Ukuran (cm)', 'Sex', 'Sesi Breeding', 'Male', 'Catatan', 'Foto']
   var ACTIVITY_COLUMNS = ['Tanggal', 'Kode Batch', 'Judul', 'Jenis Kegiatan', 'Jam Mulai', 'Jam Selesai', 'Kolam', 'Petugas', 'Uraian', 'Bahan', 'Suhu Air (°C)', 'pH Air', 'Status', 'Tindak Lanjut', 'Galeri', 'ID Galeri']
   var ARRIVAL_COLUMNS = ['Tanggal', 'Nama Laporan', 'Ikan Dari', 'Jenis', 'Sex', 'Ukuran (cm)', 'Ternakan', 'Bloodline', 'Owner', 'Lokasi Tujuan', 'Foto', 'Catatan', 'Kode Batch']
   var HELP_COLUMNS = ['Petunjuk']
   var HELP_ROWS = [
     ['Satu sheet untuk tiap jenis laporan: Data Ulang, Panen, Kegiatan, dan Ikan Datang (satu baris per ekor ikan).'],
-    ['Lokasi: satu baris per tempat panen (No = nomor tempat), lengkap dengan Varietas Dominan dan Sesi Breeding-nya. Sortir dan Kondisi: baris dengan No Lokasi milik tempat itu, baris tanpa No Lokasi milik seluruh laporan.'],
-    ['Ikan Satuan adalah tabel ikan pada formulir Data Ulang (satu baris per ekor, kolom Sesi Breeding diisi kode batch breeding, Male diisi kode ikan male dari sesi itu). Lokasi, Sortir, dan Kondisi adalah rincian laporan Panen / Data Ulang lama. Satu baris rincian = satu baris di bagian itu pada formulir.'],
-    ['Rincian dihubungkan ke laporannya lewat Kode Batch. Untuk laporan BARU, tulis kode bebas (misalnya N1) di Kode Batch laporan dan di baris rinciannya; program memberi kode batch resminya sendiri.'],
+    ['Data Ulang dan Panen: SATU BARIS PER LOKASI. Laporan dengan dua lokasi memakai dua baris yang Kode Batch-nya sama. Tanggal, Kode Batch, dan Judul ditulis di setiap baris; kolom milik laporan (Varietas Dominan sampai ID Galeri) cukup di baris pertama.'],
+    ['Reject ditulis "nama (jumlah)", beberapa baris dipisah " | ". Contoh: dwdw (32) | wd (2).'],
+    ['Sortir ditulis "kategori ~ lokasi tujuan ~ keterangan ~ ekor", beberapa baris dipisah " | ". Keterangan kosong ditulis -. Contoh: Show ~ Mudpond 05 ~ ikan bagus ~ 12 | Tosai ~ Karantina ~ - ~ 8.'],
+    ['Male ditulis kode atau nama male dari sesi breeding itu, beberapa male dipisah koma. Karakter | dan ~ tidak boleh dipakai di dalam isian Reject dan Sortir (formulir menolaknya).'],
+    ['Baris yang kolom lokasinya kosong semua tetapi Reject / Sortir-nya terisi dibaca sebagai Reject / Sortir milik seluruh laporan, bukan satu lokasi.'],
+    ['Ikan Satuan adalah tabel ikan pada formulir Data Ulang (satu baris per ekor, kolom Sesi Breeding diisi kode batch breeding, Male diisi kode ikan male dari sesi itu); dihubungkan ke laporannya lewat Kode Batch.'],
+    ['Untuk laporan BARU, tulis kode bebas (misalnya N1) di Kode Batch semua barisnya; program memberi kode batch resminya sendiri. Kode Batch dikosongkan: satu baris dibaca sebagai satu laporan sendiri.'],
+    ['File lama dengan sheet Lokasi, Sortir, dan Kondisi masih bisa diimport seperti biasa.'],
     ['Laporan yang Kode Batch-nya sudah ada tidak diubah dan tidak dibuat dua kali. Untuk mengubah laporan yang sudah ada, pakai Edit Masal.'],
     ['Kegiatan: Kolam berisi nama kolam atau nama area (pisahkan dengan koma), Petugas berisi username akun (pisahkan dengan koma), Bahan ditulis "Garam ikan 2 kg; Obat 5 ml".'],
-    ['Breeding (Data Ulang), Mention Ikan, dan Petugas ikut diunduh tetapi tidak dibaca saat impor; isi lewat formulir. Pada sheet Panen, Lokasi Panen dan Total Hasil hanya ringkasan: yang dibaca saat impor adalah sheet Lokasi (per tempat panen, lengkap dengan Sesi Breeding dan Male).'],
-    ['Kolom Dokumentasi (khusus ZIP) berisi nama folder foto atau video, atau @ID media yang sudah ada di Galeri.'],
+    ['Breeding (Data Ulang), Mention Ikan, dan Petugas ikut diunduh tetapi tidak dibaca saat impor; isi lewat formulir.'],
+    ['Kolom Dokumentasi (khusus ZIP) berisi nama folder foto atau video, atau @ID media yang sudah ada di Galeri. Pada laporan yang barisnya banyak, folder ditulis di baris pertama.'],
   ]
 
   var ACTIVITIES = [['pakan', 'Pemberian pakan'], ['ganti_air', 'Ganti air / kuras'], ['pengobatan', 'Pengobatan / perawatan'], ['bersih', 'Bersih kolam / filter'],
@@ -80,33 +88,49 @@
   function showResult(title, message, problems, options) { return window.KoiDock.showResult(title, message, problems || [], options) }
 
   // ---- export: the rows of every sheet -----------------------------------------------------------------------------------------------
-  function mainRow(item) {
-    return [
-      dateText(item.report_date), item.batch_code || '', item.report_title || '', item.dominant_variety || '', numeric(item.average_length_cm),
-      list(item.spectrum_sizes).join(' '),
-      list(item.breeding_entries).map(function (entry) { return entry.label }).filter(Boolean).join(', '),
-      list(item.koi_entries).map(function (entry) { return entry.label }).filter(Boolean).join(', '),
-      list(item.reporter_entries).map(function (entry) { return entry.label || entry.name || entry.username }).filter(Boolean).join(', ') || item.reporter || '',
-      item.notes || '', item.gallery_id ? 'Ya' : 'Tidak', item.gallery_id || '',
-    ]
+  // ---- the flat rows of Data Ulang and Panen ---------------------------------------------------------------------------------------------
+  // the separators never appear in what people type (the form refuses them), an older entry that has them gets a look-alike
+  function clean(value) { return String(value == null ? '' : value).replace(/\|/g, '\u00a6').replace(/~/g, '\u223c').replace(/\s+/g, ' ').trim() }
+  function rejectCell(entries) {
+    return entries.map(function (e) { var name = clean(e.metric); var qty = text(e.qty); return qty !== '' ? (name + ' (' + qty + ')').trim() : name }).filter(Boolean).join(' | ')
   }
-  function panenRow(item) {
+  function sortirCell(entries) {
+    return entries.map(function (e) {
+      return [clean(e.category), clean(e.destination), clean(e.description) || '-', text(e.qty)].join(' ~ ')
+    }).filter(function (line) { return line !== ' ~  ~ - ~ ' }).join(' | ')
+  }
+  function flatRows(item, withBreeding) {
     var places = list(item.pond_entries)
-    var total = 0, counted = false
-    var text = places.map(function (e) {
-      var qty = Number(e.result_qty)
-      if (e.result_qty !== '' && e.result_qty != null && Number.isFinite(qty)) { total += qty; counted = true }
-      var from = e.pond_label || e.pond_name || ''
-      var line = [from, e.location].filter(Boolean).join(' -> ')
-      return line ? line + (e.result_qty !== '' && e.result_qty != null ? ' (' + e.result_qty + ' ekor)' : '') : ''
-    }).filter(Boolean).join('; ')
-    return [
-      dateText(item.report_date), item.batch_code || '', item.report_title || '', text, counted ? total : '', item.dominant_variety || '', numeric(item.average_length_cm),
-      list(item.spectrum_sizes).join(' '),
-      list(item.koi_entries).map(function (entry) { return entry.label }).filter(Boolean).join(', '),
-      list(item.reporter_entries).map(function (entry) { return entry.label || entry.name || entry.username }).filter(Boolean).join(', ') || item.reporter || '',
-      item.notes || '', item.gallery_id ? 'Ya' : 'Tidak', item.gallery_id || '',
-    ]
+    var globalSortir = list(item.sorting_entries)
+    var globalReject = list(item.condition_entries)
+    var rows = []
+    var reportCells = function () {
+      return [item.dominant_variety || '', numeric(item.average_length_cm), list(item.spectrum_sizes).join(' ')]
+        .concat(withBreeding ? [list(item.breeding_entries).map(function (entry) { return entry.label }).filter(Boolean).join(', ')] : [],
+          [list(item.koi_entries).map(function (entry) { return entry.label }).filter(Boolean).join(', '),
+            list(item.reporter_entries).map(function (entry) { return entry.label || entry.name || entry.username }).filter(Boolean).join(', ') || item.reporter || '',
+            item.notes || '', item.gallery_id ? 'Ya' : 'Tidak', item.gallery_id || ''])
+    }
+    var emptyReport = function () { return reportCells().map(function () { return '' }) }
+    var head = [dateText(item.report_date), item.batch_code || '', item.report_title || '']
+    places.forEach(function (e, index) {
+      rows.push(head.concat([
+        e.pond_label || e.pond_name || '', e.location || '', numeric(e.result_qty), numeric(e.average_length_cm), e.variety || '', e.breeding_label || '',
+        list(e.males).map(function (m) { return m.label || m.koi_id }).join(', '), rejectCell(list(e.reject)), sortirCell(list(e.sortir)), e.notes || '',
+      ], index === 0 ? reportCells() : emptyReport()))
+    })
+    if (globalSortir.length || globalReject.length || !places.length) {
+      rows.push(head.concat(['', '', '', '', '', '', '', rejectCell(globalReject), sortirCell(globalSortir), ''], places.length ? emptyReport() : reportCells()))
+    }
+    return rows
+  }
+  // rows of all reports of one kind, and which of them is the first row of its report
+  function flatSheet(items, type, withBreeding) {
+    var rows = [], first = []
+    items.filter(function (item) { return typeOf(item) === type }).forEach(function (item) {
+      flatRows(item, withBreeding).forEach(function (row, index) { rows.push(row); first.push(index === 0) })
+    })
+    return { rows: rows, first: first }
   }
   function activityRow(item) {
     var activity = parse(item.activity_data, {}) || {}
@@ -154,48 +178,20 @@
     })
     return rows
   }
-  // Lokasi: one row per harvest place (its own variety and session); Sortir and Kondisi: the report-wide rows (No Lokasi empty) and the rows of a place (No Lokasi = its number)
-  function locationRows(items) {
-    var rows = []
-    items.filter(function (item) { return typeOf(item) === 'data_ulang' || typeOf(item) === 'panen' }).forEach(function (item) {
-      list(item.pond_entries).forEach(function (e, index) {
-        rows.push([item.batch_code || '', item.report_title || '', index + 1, e.pond_label || e.pond_name || '', e.location || '', numeric(e.result_qty), numeric(e.average_length_cm), e.variety || '', e.breeding_label || '', list(e.males).map(function (m) { return m.label || m.koi_id }).join(', '), e.notes || ''])
-      })
-    })
-    return rows
-  }
-  function nestedRows(items, globalField, nestedField, pick) {
-    var rows = []
-    items.filter(function (item) { return typeOf(item) === 'data_ulang' || typeOf(item) === 'panen' }).forEach(function (item) {
-      list(item[globalField]).forEach(function (e) { rows.push([item.batch_code || '', item.report_title || ''].concat(pick(e), ['']))})
-      list(item.pond_entries).forEach(function (place, index) {
-        list(place[nestedField]).forEach(function (e) { rows.push([item.batch_code || '', item.report_title || ''].concat(pick(e), [index + 1])) })
-      })
-    })
-    return rows
-  }
-  function detailRows(items, field, pick) {
-    var rows = []
-    items.filter(function (item) { return typeOf(item) === 'data_ulang' || typeOf(item) === 'panen' }).forEach(function (item) {
-      list(item[field]).forEach(function (entry) { rows.push([item.batch_code || '', item.report_title || ''].concat(pick(entry))) })
-    })
-    return rows
-  }
   function sheetsOf(items, zipMode) {
     var byType = function (type) { return items.filter(function (item) { return typeOf(item) === type }) }
+    var data = flatSheet(items, 'data_ulang', true)
+    var panen = flatSheet(items, 'panen', false)
     return {
-      'Data Ulang': { header: MAIN_COLUMNS, rows: byType('data_ulang').map(mainRow), key: 1 },
-      'Panen': { header: PANEN_COLUMNS, rows: byType('panen').map(panenRow), key: 1 },
+      'Data Ulang': { header: MAIN_COLUMNS, rows: data.rows, first: data.first, key: 1, firstOnly: true },
+      'Panen': { header: PANEN_COLUMNS, rows: panen.rows, first: panen.first, key: 1, firstOnly: true },
       'Kegiatan': { header: ACTIVITY_COLUMNS, rows: byType('kegiatan').map(activityRow), key: 1 },
       'Ikan Datang': { header: ARRIVAL_COLUMNS, rows: arrivalRows(items, zipMode), key: ARRIVAL_COLUMNS.length - 1 },
-      'Lokasi': { header: LOCATION_COLUMNS, rows: locationRows(items), key: -1 },
-      'Sortir': { header: SORTING_COLUMNS, rows: nestedRows(items, 'sorting_entries', 'sortir', function (e) { return [e.category || '', e.destination || '', e.description || '', numeric(e.qty)] }), key: -1 },
       'Ikan Satuan': { header: FISH_COLUMNS, rows: fishRows(items), key: -1 },
-      'Kondisi': { header: CONDITION_COLUMNS, rows: nestedRows(items, 'condition_entries', 'reject', function (e) { return [e.metric || '', numeric(e.qty)] }), key: -1 },
       'Petunjuk': { header: HELP_COLUMNS, rows: HELP_ROWS, key: -1 },
     }
   }
-  var SHEET_ORDER = ['Data Ulang', 'Panen', 'Kegiatan', 'Ikan Datang', 'Ikan Satuan', 'Lokasi', 'Sortir', 'Kondisi', 'Petunjuk']
+  var SHEET_ORDER = ['Data Ulang', 'Panen', 'Kegiatan', 'Ikan Datang', 'Ikan Satuan', 'Petunjuk']
 
   function chosenItems(ids) {
     return request('GET', '/api/farm-reports').then(function (all) {
@@ -238,15 +234,18 @@
       var first = items.filter(function (item) { return typeOf(item) === 'data_ulang' })
       var others = items.filter(function (item) { return typeOf(item) !== 'data_ulang' })
       var docOf = function (item) { return { key: item.batch_code || String(item.id), media: list(item.media_entries) } }
+      // Data Ulang has one row per place: the folder of a report is written on its first row only (the other rows get an empty stand-in)
+      var rowDocs = []
+      first.forEach(function (item) { flatRows(item, true).forEach(function (row, index) { rowDocs.push(index === 0 ? docOf(item) : { key: '', media: [] }) }) })
       return window.KoiZip.exportPackage({
         sheetName: 'Data Ulang',
         header: MAIN_COLUMNS,
         rows: sheets['Data Ulang'].rows,
         keyHeader: 'Kode Batch',
         xlsxName: 'data-laporan.xlsx',
-        extraSheets: SHEET_ORDER.slice(1).map(function (name) { return { name: name, header: sheets[name].header, rows: sheets[name].rows, keyColumn: sheets[name].key } }),
+        extraSheets: SHEET_ORDER.slice(1).map(function (name) { return { name: name, header: sheets[name].header, rows: sheets[name].rows, keyColumn: sheets[name].key, firstOnly: sheets[name].firstOnly } }),
         extraFiles: arrivalPhotoFiles(items),
-        docs: first.map(docOf).concat(others.map(docOf)),
+        docs: rowDocs.concat(others.map(docOf)),
         onProgress: function (message) { progress.set(message) },
       }).then(function (result) {
         window.KoiZip.download(result.blob, 'zip-laporan-' + window.KoiZip.today() + '.zip')
@@ -274,7 +273,8 @@
       var hasTypeSheet = ['data_ulang', 'panen', 'kegiatan'].some(function (key) { return sheets[key] })
       if (!hasTypeSheet && !sheets.legacy && firstRecords.length && 'jenis' in firstRecords[0] && !('ikan dari' in firstRecords[0])) sheets.legacy = firstRecords
       if (!sheets.ikan_datang && firstRecords.length && 'ikan dari' in firstRecords[0]) sheets.ikan_datang = firstRecords
-      return sheets
+      sheets.warnings = []
+      return flatten(sheets, sheets.warnings)
     })
   }
 
@@ -310,8 +310,97 @@
     })
   }
 
+  // ---- the new sheets (one row per place) are turned into the older shape (a row per report + rows of Lokasi / Sortir / Kondisi), so the rest of the import is one ----
+  var PLACE_KEYS = ['asal lokasi', 'pindah ke', 'hasil (ekor)', 'rata-rata lokasi (cm)', 'varietas lokasi', 'sesi breeding', 'male', 'catatan lokasi']
+  // a count typed with thousands dots (3.232) is 3232
+  function thousands(value) { var raw = text(value); return /^\d{1,3}(\.\d{3})+$/.test(raw) ? raw.replace(/\./g, '') : raw }
+  function isFlat(records) { return Boolean(records && records.length && ('asal lokasi' in records[0] || 'pindah ke' in records[0])) }
+  // "dwdw (32) | wd (2)" -> [{ metric, qty }]
+  function readReject(cell, where, problems) {
+    var out = []
+    text(cell).split('|').forEach(function (part) {
+      var piece = part.trim()
+      if (!piece) return
+      var match = /^(.*?)\s*\(\s*([\d.,]*)\s*\)\s*$/.exec(piece)
+      if (!match) { out.push({ metric: piece, qty: '' }); return }
+      var qty = match[2].replace(/\./g, '').replace(',', '.')
+      if (qty !== '' && !/^\d+$/.test(qty)) { problems.push(where + ': jumlah Reject "' + match[2] + '" bukan bilangan bulat'); qty = '' }
+      out.push({ metric: match[1].trim(), qty: qty })
+    })
+    return out
+  }
+  // "kategori ~ tujuan ~ keterangan ~ 12 | ..." -> [{ category, destination, description, qty }]
+  function readSortir(cell, where, problems) {
+    var out = []
+    text(cell).split('|').forEach(function (part, index) {
+      if (!part.trim()) return
+      var cols = part.split('~').map(function (col) { return col.trim() })
+      if (cols.length !== 4) problems.push(where + ': Sortir ke-' + (index + 1) + ' harus berbentuk "kategori ~ lokasi tujuan ~ keterangan ~ ekor" (terbaca ' + cols.length + ' bagian)')
+      var qty = (cols[3] || '').replace(/\./g, '').replace(',', '.')
+      if (cols.length === 4 && qty !== '' && !/^\d+$/.test(qty)) { problems.push(where + ': jumlah Sortir ke-' + (index + 1) + ' "' + cols[3] + '" bukan bilangan bulat'); qty = '' }
+      out.push({ kategori: cols[0] || '', 'lokasi tujuan': cols[1] || '', keterangan: cols[2] === '-' ? '' : (cols[2] || ''), ekor: cols.length === 4 ? qty : '' })
+    })
+    return out
+  }
+  function flatten(sheets, problems) {
+    var lokasi = [], sortir = [], kondisi = []
+    ;[['data_ulang', 'Data Ulang'], ['panen', 'Panen']].forEach(function (pair) {
+      var records = sheets[pair[0]]
+      if (!isFlat(records)) return
+      var groups = [], byCode = {}
+      records.forEach(function (record, index) {
+        var line = index + 2
+        var code = String(record['kode batch'] || '').toUpperCase()
+        var empty = !record.tanggal && !record.judul && !code && PLACE_KEYS.every(function (key) { return !record[key] }) && !record.reject && !record.sortir
+        if (empty) return
+        var group = code ? byCode[code] : null
+        if (!group) {
+          group = { code: code || '~R' + line, rows: [], line: line, record: Object.assign({}, record) }
+          if (!code) group.record['kode batch'] = ''
+          groups.push(group)
+          if (code) byCode[code] = group
+        } else {
+          var where = pair[1] + ' baris ' + line + ' (' + code + ')'
+          var base = group.record
+          if (record.judul && norm(record.judul) !== norm(base.judul)) problems.push(where + ': Judul berbeda dari baris pertama laporan ini ("' + base.judul + '"), dipakai yang pertama')
+          if (record.tanggal && text(record.tanggal) !== text(base.tanggal)) problems.push(where + ': Tanggal berbeda dari baris pertama laporan ini (' + base.tanggal + '), dipakai yang pertama')
+          // the columns of the report are read from the first row; a later row may fill what the first one left empty
+          ;['varietas dominan', 'rata-rata ukuran (cm)', 'deret ukuran ikan (cm)', 'catatan', 'galeri', 'id galeri', 'dokumentasi'].forEach(function (key) { if (!text(base[key]) && text(record[key])) base[key] = record[key] })
+        }
+        group.rows.push({ record: record, line: line })
+      })
+      var out = []
+      groups.forEach(function (group) {
+        var code = group.code
+        var number = 0
+        group.rows.forEach(function (row) {
+          var record = row.record
+          var where = pair[1] + ' baris ' + row.line + (group.code.charAt(0) === '~' ? '' : ' (' + group.code + ')')
+          var isPlace = PLACE_KEYS.some(function (key) { return text(record[key]) !== '' })
+          var rejects = readReject(record.reject, where, problems)
+          var sorts = readSortir(record.sortir, where, problems)
+          if (isPlace) {
+            number += 1
+            lokasi.push({ 'kode batch': code, no: String(number), 'asal lokasi': record['asal lokasi'] || '', 'pindah ke': record['pindah ke'] || '', 'hasil (ekor)': thousands(record['hasil (ekor)']),
+              'rata-rata ukuran (cm)': record['rata-rata lokasi (cm)'] || '', 'varietas dominan': record['varietas lokasi'] || '', 'sesi breeding': record['sesi breeding'] || '',
+              male: record.male || '', 'catatan lokasi': record['catatan lokasi'] || '' })
+          }
+          rejects.forEach(function (entry) { kondisi.push({ 'kode batch': code, 'metrik kondisi': entry.metric, 'jumlah (ekor)': entry.qty, 'no lokasi': isPlace ? String(number) : '' }) })
+          sorts.forEach(function (entry) { sortir.push(Object.assign({ 'kode batch': code, 'no lokasi': isPlace ? String(number) : '' }, entry)) })
+        })
+        var main = Object.assign({}, group.record, { 'kode batch': group.code.charAt(0) === '~' ? '' : group.code, __line: group.line, __synthetic: group.code })
+        out.push(main)
+      })
+      sheets[pair[0]] = out
+    })
+    if (lokasi.length) sheets.lokasi = (sheets.lokasi || []).concat(lokasi)
+    if (sortir.length) sheets.sortir = (sheets.sortir || []).concat(sortir)
+    if (kondisi.length) sheets.kondisi = (sheets.kondisi || []).concat(kondisi)
+    return sheets
+  }
+
   // the rows of one new report: details by Kode Batch (the same text on the main row and on its detail rows)
-  function detailsFor(sheets, code, lookups, problems) {
+  function detailsFor(sheets, code, lookups, problems, where) {
     var key = norm(code)
     var of = function (records) { return (records || []).filter(function (record) { return key && norm(record['kode batch']) === key }) }
     var sessionOf = function (text) {
@@ -327,6 +416,7 @@
         if (!wanted) return
         var found = pool.filter(function (m) { return m && m.koi_id && (norm(m.label) === wanted || norm(m.code) === wanted) })[0]
         if (found && !out.some(function (m) { return m.koi_id === String(found.koi_id) })) out.push({ koi_id: String(found.koi_id), label: found.label || found.code || String(found.koi_id) })
+        else if (!found && problems && where) problems.push(where + ': Male "' + part.trim() + '" tidak ditemukan di sesi breeding mana pun, tidak dimasukkan')
       })
       return out
     }
@@ -379,7 +469,7 @@
   }
 
   function runImport(sheets, pkg, dryRun, progress, lookups) {
-    var problems = []
+    var problems = (sheets.warnings || []).slice()
     var created = { data_ulang: 0, panen: 0, kegiatan: 0, ikan_datang: 0 }
     var docsAdded = 0
     var docsSkipped = 0
@@ -395,7 +485,7 @@
     // ---- main sheets (Data Ulang, Panen, an older single sheet) ----
     var mains = []
     ;[['data_ulang', sheets.data_ulang], ['panen', sheets.panen]].forEach(function (pair) {
-      ;(pair[1] || []).forEach(function (record, index) { mains.push({ type: pair[0], record: record, line: index + 2, sheet: pair[0] === 'panen' ? 'Panen' : 'Data Ulang' }) })
+      ;(pair[1] || []).forEach(function (record, index) { mains.push({ type: pair[0], record: record, line: record.__line || index + 2, sheet: pair[0] === 'panen' ? 'Panen' : 'Data Ulang' }) })
     })
     ;(sheets.legacy || []).forEach(function (record, index) {
       var typed = norm(record.jenis)
@@ -407,6 +497,7 @@
       var code = String(record['kode batch'] || '').toUpperCase()
       var label = entry.sheet + ' baris ' + entry.line + (code ? ' (' + code + ')' : '')
       if (code) usedDetailCodes[code] = true
+      if (record.__synthetic) usedDetailCodes[String(record.__synthetic).toUpperCase()] = true
       if (pkg && code) pkg.markUsed(code)
       if (!record.tanggal && !record.judul && !code) return
       if (code && knownCodes[code]) { problems.push(label + ': laporan dengan kode ini sudah ada, dilewati'); return }
@@ -422,7 +513,7 @@
       var key = [entry.type, date, norm(record.judul), norm(record.catatan)].join('|')
       if (existing[key]) { problems.push(label + ': laporan "' + record.judul + '" tanggal ' + date + ' sudah ada, dilewati'); return }
       existing[key] = true
-      var details = detailsFor(sheets, code, lookups, problems)
+      var details = detailsFor(sheets, record.__synthetic || code, lookups, problems, label)
       // an older file: Lokasi Asal / Lokasi Tujuan become one Lokasi row
       if (!details.pondEntries.length && (record['lokasi asal'] || record['lokasi tujuan'])) {
         var origin = record['lokasi asal'] || ''

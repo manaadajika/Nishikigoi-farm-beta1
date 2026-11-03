@@ -318,7 +318,13 @@
     ;(options.extraSheets || []).forEach(function (extra) {
       // keyColumn -1: a sheet without documentation (details, instructions) gets no "Dokumentasi" column
       var withDocs = extra.keyColumn >= 0
-      var extraRows = withDocs ? extra.rows.map(function (row) { return row.concat([folderOf(row[extra.keyColumn])]) }) : extra.rows
+      // firstOnly: a report with several rows (one per place) names its folder on its first row only
+      var seenKeys = new Set()
+      var extraRows = withDocs ? extra.rows.map(function (row) {
+        var key = row[extra.keyColumn]
+        if (extra.firstOnly) { if (seenKeys.has(key)) return row.concat(['']); seenKeys.add(key) }
+        return row.concat([folderOf(key)])
+      }) : extra.rows
       var extraHeader = withDocs ? extra.header.concat(['Dokumentasi']) : extra.header
       var extraSheet = XLSX.utils.aoa_to_sheet([extraHeader].concat(extraRows))
       extraSheet['!cols'] = extraHeader.map(function (column) { return { wch: Math.max(14, String(column).length + 2) } })
