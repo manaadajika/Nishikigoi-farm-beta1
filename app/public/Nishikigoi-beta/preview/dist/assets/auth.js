@@ -808,7 +808,7 @@
   // after a couple of seconds, and clicks pass through it so it never covers a button. Success is short, warnings stay longer.
   function showToast(message, kind) {
     var level = kind || (/gagal|error|tidak didukung|belum|habis|ditolak/i.test(String(message)) ? 'warning' : 'success')
-    var colour = level === 'warning' ? 'var(--tblr-warning,#f59f00)' : level === 'danger' ? 'var(--tblr-danger,#d63939)' : 'var(--tblr-success,#2fb344)'
+    var colour = level === 'warning' ? 'var(--tblr-warning,#f59f00)' : level === 'danger' ? 'var(--tblr-danger,#d63939)' : 'var(--tblr-primary,#206bc4)'
     var icon = level === 'success'
       ? '<path d="M5 12l5 5l10 -10" />'
       : '<path d="M12 9v4" /><path d="M12 16v.01" /><path d="M10.363 3.591l-8.106 13.534a1.914 1.914 0 0 0 1.636 2.871h16.214a1.914 1.914 0 0 0 1.636 -2.87l-8.106 -13.536a1.914 1.914 0 0 0 -3.274 0" />'
@@ -816,7 +816,7 @@
       var style = document.createElement('style')
       style.id = 'koi-toast-style'
       style.textContent = '.koi-toast-host{position:fixed;top:70px;left:50%;transform:translateX(-50%);z-index:5000;display:flex;flex-direction:column;align-items:center;gap:6px;width:max-content;max-width:min(92vw,380px);pointer-events:none}' +
-                '.koi-toast-host .toast{display:flex;align-items:center;gap:.5rem;width:auto;max-width:100%;padding:.4rem .8rem;border:1px solid var(--tblr-border-color,rgba(128,150,172,.3));border-left-width:3px;border-radius:var(--tblr-border-radius,8px);background:var(--tblr-bg-surface,#1b2330);color:var(--tblr-body-color,#e6e8eb);font-size:.85rem;font-weight:500;line-height:1.3;box-shadow:0 4px 14px rgba(0,0,0,.28);opacity:0;transform:translateY(-6px);transition:opacity .16s ease,transform .16s ease;pointer-events:none}' +
+                '.koi-toast-host .toast{display:flex;align-items:center;gap:.5rem;width:auto;max-width:100%;padding:.4rem .8rem;border:1px solid var(--tblr-border-color,rgba(128,150,172,.3));border-bottom-width:3px;border-radius:var(--tblr-border-radius,8px);background:var(--tblr-bg-surface,#1b2330);color:var(--tblr-body-color,#e6e8eb);font-size:.85rem;font-weight:500;line-height:1.3;box-shadow:0 4px 14px rgba(0,0,0,.28);opacity:0;transform:translateY(-6px);transition:opacity .16s ease,transform .16s ease;pointer-events:none}' +
         '.koi-toast-host .toast.is-in{opacity:1;transform:translateY(0)}' +
         '.koi-toast-host .toast svg{flex:0 0 auto;width:18px;height:18px}'
       document.head.appendChild(style)
@@ -844,7 +844,7 @@
       host.appendChild(box)
     }
     box.className = 'toast show'
-    box.style.borderLeftColor = colour
+    box.style.borderBottomColor = colour
     box.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="' + colour + '" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + icon + '</svg><span class="toast-body p-0"></span>'
     box.querySelector('span').textContent = message
     window.requestAnimationFrame(function () { box.classList.add('is-in') })
