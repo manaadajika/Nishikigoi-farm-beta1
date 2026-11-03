@@ -804,7 +804,7 @@
   var toastSilent = /\/(auth|drafts|notifications|system|messages|images|koi-images|videos|maintenance|feedback|status|jobs|koi\/page|koi\/batch|print-settings|my-theme)(\/|\?|$)/
   var toastState = { timer: null, save: 0, update: 0, remove: 0 }
 
-  // Small notice in the top right corner (Tabler / Bootstrap "toast" look): one line, themed background, a coloured edge, gone
+  // Small notice at the top centre (Tabler / Bootstrap "toast" look): one line, themed background, a coloured edge, gone
   // after a couple of seconds, and clicks pass through it so it never covers a button. Success is short, warnings stay longer.
   function showToast(message, kind) {
     var level = kind || (/gagal|error|tidak didukung|belum|habis|ditolak/i.test(String(message)) ? 'warning' : 'success')
@@ -815,9 +815,8 @@
     if (!document.getElementById('koi-toast-style')) {
       var style = document.createElement('style')
       style.id = 'koi-toast-style'
-      style.textContent = '.koi-toast-host{position:fixed;top:70px;right:16px;z-index:5000;display:flex;flex-direction:column;align-items:flex-end;gap:6px;max-width:min(92vw,380px);pointer-events:none}' +
-        '@media (max-width:767.98px){.koi-toast-host{top:10px;right:10px;left:10px;align-items:center}}' +
-        '.koi-toast-host .toast{display:flex;align-items:center;gap:.5rem;width:auto;max-width:100%;padding:.4rem .8rem;border:1px solid var(--tblr-border-color,rgba(128,150,172,.3));border-left-width:3px;border-radius:var(--tblr-border-radius,8px);background:var(--tblr-bg-surface,#1b2330);color:var(--tblr-body-color,#e6e8eb);font-size:.85rem;font-weight:500;line-height:1.3;box-shadow:0 4px 14px rgba(0,0,0,.28);opacity:0;transform:translateY(-6px);transition:opacity .16s ease,transform .16s ease;pointer-events:none}' +
+      style.textContent = '.koi-toast-host{position:fixed;top:70px;left:50%;transform:translateX(-50%);z-index:5000;display:flex;flex-direction:column;align-items:center;gap:6px;width:max-content;max-width:min(92vw,380px);pointer-events:none}' +
+                '.koi-toast-host .toast{display:flex;align-items:center;gap:.5rem;width:auto;max-width:100%;padding:.4rem .8rem;border:1px solid var(--tblr-border-color,rgba(128,150,172,.3));border-left-width:3px;border-radius:var(--tblr-border-radius,8px);background:var(--tblr-bg-surface,#1b2330);color:var(--tblr-body-color,#e6e8eb);font-size:.85rem;font-weight:500;line-height:1.3;box-shadow:0 4px 14px rgba(0,0,0,.28);opacity:0;transform:translateY(-6px);transition:opacity .16s ease,transform .16s ease;pointer-events:none}' +
         '.koi-toast-host .toast.is-in{opacity:1;transform:translateY(0)}' +
         '.koi-toast-host .toast svg{flex:0 0 auto;width:18px;height:18px}'
       document.head.appendChild(style)
@@ -850,7 +849,7 @@
     box.querySelector('span').textContent = message
     window.requestAnimationFrame(function () { box.classList.add('is-in') })
     window.clearTimeout(box.koiTimer)
-    box.koiTimer = window.setTimeout(function () { box.classList.remove('is-in') }, level === 'success' ? 2500 : 4500)
+    box.koiTimer = window.setTimeout(function () { box.classList.remove('is-in') }, level === 'success' ? 1800 : 3500)
   }
   window.KoiToast = { show: showToast }
 
