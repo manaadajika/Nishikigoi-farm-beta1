@@ -288,9 +288,12 @@
     var photo = id && photoCache[id] ? photoCache[id] : null
     var shown = label || (photo && photo.code) || ''
     if (!photo && !shown) return ''
-    return '<div style="display:inline-block;text-align:center;margin:3px 6px 0 0;vertical-align:top;width:48px">' +
+    var split = String(shown).split(' - ')
+    var code = split.shift()
+    var name = split.join(' - ')
+    return '<div style="display:inline-block;text-align:center;margin:3px 6px 0 0;vertical-align:top;width:64px">' +
       (photo ? '<img src="' + esc(thumbOf(photo.url)) + '" alt="" style="width:34px;height:51px;object-fit:cover;border:1px solid #bbb">' : '<div style="width:34px;height:51px;border:1px solid #bbb;margin:0 auto"></div>') +
-      '<div style="font-size:8px;line-height:1.15;word-break:break-all"><b>' + role + '</b><br>' + esc(shown) + '</div></div>'
+      '<div style="font-size:8px;line-height:1.2;overflow-wrap:anywhere"><b>' + role + '</b><br>' + esc(code) + (name ? '<br>' + esc(name) : '') + '</div></div>'
   }
   function parentsHtml(place) {
     var item = breedings.filter(function (b) { return String(b.id) === String(place.breeding_id || '') })[0]
@@ -308,24 +311,49 @@
     var html = ''
     var cell = function (value) { return esc(value == null || value === '' ? '-' : value) }
     if (report.report_type === 'data_ulang' && Array.isArray(data.fish) && data.fish.length) {
-      html += '<section class="kp-section"><h2>Ikan Satuan</h2><table class="kp-table"><thead><tr><th class="kp-center" style="width:28px">No</th><th class="kp-center" style="width:44px">Foto</th><th>Jenis</th><th class="kp-num">Ukuran (cm)</th><th>Sex</th><th>Sesi Breeding</th><th>Male</th><th>Catatan</th></tr></thead><tbody>' +
+      // a column of Sex, Sesi Breeding or Male is printed only when at least one fish filled it in; Sex is written in words
+      var sexWord = function (value) { return value === 'male' ? 'Male' : value === 'female' ? 'Female' : '' }
+      var withSex = data.fish.some(function (fish) { return sexWord(fish.sex) })
+      var withSession = data.fish.some(function (fish) { return fish.breeding_label })
+      var withMale = data.fish.some(function (fish) { return fish.male_label })
+      html += '<section class="kp-section"><h2>Ikan Satuan</h2><table class="kp-table"><thead><tr><th class="kp-center" style="width:28px">No</th><th class="kp-center" style="width:44px">Foto</th><th>Jenis</th><th class="kp-num">Ukuran (cm)</th>' +
+        (withSex ? '<th>Sex</th>' : '') + (withSession ? '<th>Sesi Breeding</th>' : '') + (withMale ? '<th>Male</th>' : '') + '<th>Catatan</th></tr></thead><tbody>' +
         data.fish.map(function (fish, index) {
           var photo = fish.foto ? '<img src="' + esc(thumbOf(fish.foto)) + '" alt="" style="width:26px;height:39px;object-fit:cover;border:1px solid #bbb">' : '-'
-          return '<tr><td class="kp-center">' + (index + 1) + '</td><td class="kp-center">' + photo + '</td><td>' + cell(fish.jenis) + '</td><td class="kp-num">' + cell(fish.ukuran) + '</td><td>' + cell(fish.sex) + '</td><td>' + cell(fish.breeding_label) + '</td><td>' + cell(fish.male_label) + '</td><td>' + cell(fish.catatan) + '</td></tr>'
+          return '<tr><td class="kp-center">' + (index + 1) + '</td><td class="kp-center">' + photo + '</td><td>' + cell(fish.jenis) + '</td><td class="kp-num">' + cell(fish.ukuran) + '</td>' +
+            (withSex ? '<td>' + cell(sexWord(fish.sex)) + '</td>' : '') + (withSession ? '<td>' + cell(fish.breeding_label) + '</td>' : '') + (withMale ? '<td>' + cell(fish.male_label) + '</td>' : '') + '<td>' + cell(fish.catatan) + '</td></tr>'
         }).join('') + '</tbody></table></section>'
     }
-    if (report.report_type === 'panen') {
-      var places = parse(report.pond_entries, []).filter(function (place) { return place.variety || place.breeding_label || (place.males && place.males.length) || (place.reject && place.reject.length) || (place.sortir && place.sortir.length) })
-      if (places.length) {
-        html += '<section class="kp-section"><h2>Rincian per Lokasi</h2><table class="kp-table"><thead><tr><th class="kp-center" style="width:28px">No</th><th>Lokasi</th><th>Varietas Dominan</th><th>Sesi Breeding</th><th>Reject</th><th>Sortir</th></tr></thead><tbody>' +
-          places.map(function (place, index) {
-            var reject = (place.reject || []).map(function (r) { return esc(r.metric || '-') + ' (' + esc(r.qty || 0) + ')' }).join('<br>') || '-'
-            var sortir = (place.sortir || []).map(function (r) { return esc(r.category || '-') + (r.destination ? ' &rarr; ' + esc(r.destination) : '') + ' (' + esc(r.qty || 0) + ')' }).join('<br>') || '-'
-            return '<tr><td class="kp-center">' + (index + 1) + '</td><td>' + cell(place.pond_label || place.pond_name) + '</td><td>' + cell(place.variety) + '</td><td>' + cell(place.breeding_label) + parentsHtml(place) + '</td><td>' + reject + '</td><td>' + sortir + '</td></tr>'
-          }).join('') + '</tbody></table></section>'
-      }
-    }
     return html
+  }
+  // Panen: ONE table "Lokasi dan Hasil" with every place (also a place that only has a result), in place of the program's own, shorter "Lokasi" table.
+  // A column of Varietas, Sesi Breeding, Reject, Sortir or Catatan is printed only when at least one place filled it in.
+  function panenTable(report) {
+    var places = parse(report.pond_entries, [])
+    if (!Array.isArray(places) || !places.length) return ''
+    var any = function (test) { return places.some(test) }
+    var withVariety = any(function (p) { return p.variety })
+    var withSession = any(function (p) { return p.breeding_label || (p.males && p.males.length) })
+    var withReject = any(function (p) { return p.reject && p.reject.length })
+    var withSortir = any(function (p) { return p.sortir && p.sortir.length })
+    var withNotes = any(function (p) { return p.notes })
+    var cell = function (value) { return esc(value == null || value === '' ? '-' : value) }
+    var count = function (value) { var n = Number(value); return Number.isFinite(n) ? n.toLocaleString('id-ID') : String(value) }
+    var size = function (value) { return window.KoiPrint && window.KoiPrint.size ? window.KoiPrint.size(value) : value }
+    var head = '<th class="kp-center" style="width:28px">No</th><th>Lokasi</th><th class="kp-num" style="width:11%">Hasil</th><th class="kp-num" style="width:12%">Rata-rata</th>' +
+      (withVariety ? '<th>Varietas Dominan</th>' : '') + (withSession ? '<th>Sesi Breeding</th>' : '') + (withReject ? '<th>Reject</th>' : '') + (withSortir ? '<th>Sortir</th>' : '') + (withNotes ? '<th>Catatan</th>' : '')
+    var rows = places.map(function (place, index) {
+      var reject = (place.reject || []).map(function (r) { return esc(r.metric || '-') + ' (' + esc(count(r.qty || 0)) + ')' }).join('<br>') || '-'
+      var sortir = (place.sortir || []).map(function (r) {
+        return esc(r.category || '-') + (r.destination ? ' &rarr; ' + esc(r.destination) : '') + ' (' + esc(count(r.qty || 0)) + ')' + (r.description ? ' - ' + esc(r.description) : '')
+      }).join('<br>') || '-'
+      return '<tr><td class="kp-center">' + (index + 1) + '</td><td><strong>' + cell([place.pond_label || place.pond_name, place.location].filter(Boolean).join(' -> ')) + '</strong></td>' +
+        '<td class="kp-num">' + (place.result_qty ? esc(count(place.result_qty)) + ' ekor' : '-') + '</td><td class="kp-num">' + (place.average_length_cm ? esc(size(place.average_length_cm)) + ' cm' : '-') + '</td>' +
+        (withVariety ? '<td>' + cell(place.variety) + '</td>' : '') +
+        (withSession ? '<td>' + cell(place.breeding_label) + parentsHtml(place) + '</td>' : '') +
+        (withReject ? '<td>' + reject + '</td>' : '') + (withSortir ? '<td>' + sortir + '</td>' : '') + (withNotes ? '<td>' + cell(place.notes) + '</td>' : '') + '</tr>'
+    }).join('')
+    return '<section class="kp-section"><h2>Lokasi dan Hasil</h2><table class="kp-table"><thead><tr>' + head + '</tr></thead><tbody>' + rows + '</tbody></table></section>'
   }
   ;(function wrapPrint() {
     if (!window.KoiPrint || !window.KoiPrint.print) { setTimeout(wrapPrint, 400); return }
@@ -335,7 +363,13 @@
       try {
         var report = options && options.key === 'report-detail' && currentId ? reportsById[currentId] : null
         var extra = report ? printExtra(report) : ''
-        if (extra) options = Object.assign({}, options, { body: String(options.body || '') + extra })
+        var body = String(options.body || '')
+        var places = report && report.report_type === 'panen' ? panenTable(report) : ''
+        if (places) {
+          var own = /<section class="kp-section"><h2>Lokasi<\/h2>[\s\S]*?<\/section>/
+          body = own.test(body) ? body.replace(own, function () { return places }) : body + places
+        }
+        if (extra || places) options = Object.assign({}, options, { body: body + extra })
       } catch (error) { /* the plain print */ }
       return original.call(this, options)
     }
