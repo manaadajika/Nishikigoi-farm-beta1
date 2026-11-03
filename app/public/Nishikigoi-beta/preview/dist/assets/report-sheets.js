@@ -12,6 +12,8 @@
 
   var TYPE_SHEETS = [['data_ulang', 'Data Ulang'], ['panen', 'Panen'], ['kegiatan', 'Kegiatan'], ['ikan_datang', 'Ikan Datang']]
   var MAIN_COLUMNS = ['Tanggal', 'Kode Batch', 'Judul', 'Varietas Dominan', 'Rata-rata Ukuran (cm)', 'Deret Ukuran Ikan (cm)', 'Breeding', 'Mention Ikan', 'Petugas', 'Catatan', 'Galeri', 'ID Galeri']
+  // Panen: where the harvest was (the places of "Lokasi dan Hasil") instead of the report-wide Breeding, which a Panen form does not have (its session is chosen per place, see sheet Lokasi)
+  var PANEN_COLUMNS = ['Tanggal', 'Kode Batch', 'Judul', 'Lokasi Panen', 'Total Hasil (ekor)', 'Varietas Dominan', 'Rata-rata Ukuran (cm)', 'Deret Ukuran Ikan (cm)', 'Mention Ikan', 'Petugas', 'Catatan', 'Galeri', 'ID Galeri']
   var LOCATION_COLUMNS = ['Kode Batch', 'Judul', 'No', 'Asal Lokasi', 'Pindah ke', 'Hasil (ekor)', 'Rata-rata Ukuran (cm)', 'Varietas Dominan', 'Sesi Breeding', 'Male', 'Catatan Lokasi']
   var SORTING_COLUMNS = ['Kode Batch', 'Judul', 'Kategori', 'Lokasi Tujuan', 'Keterangan', 'Ekor', 'No Lokasi']
   var CONDITION_COLUMNS = ['Kode Batch', 'Judul', 'Metrik Kondisi', 'Jumlah (ekor)', 'No Lokasi']
@@ -26,7 +28,7 @@
     ['Rincian dihubungkan ke laporannya lewat Kode Batch. Untuk laporan BARU, tulis kode bebas (misalnya N1) di Kode Batch laporan dan di baris rinciannya; program memberi kode batch resminya sendiri.'],
     ['Laporan yang Kode Batch-nya sudah ada tidak diubah dan tidak dibuat dua kali. Untuk mengubah laporan yang sudah ada, pakai Edit Masal.'],
     ['Kegiatan: Kolam berisi nama kolam atau nama area (pisahkan dengan koma), Petugas berisi username akun (pisahkan dengan koma), Bahan ditulis "Garam ikan 2 kg; Obat 5 ml".'],
-    ['Breeding, Mention Ikan, dan Petugas Data Ulang / Panen ikut diunduh tetapi tidak dibaca saat impor; isi lewat formulir.'],
+    ['Breeding (Data Ulang), Mention Ikan, dan Petugas ikut diunduh tetapi tidak dibaca saat impor; isi lewat formulir. Pada sheet Panen, Lokasi Panen dan Total Hasil hanya ringkasan: yang dibaca saat impor adalah sheet Lokasi (per tempat panen, lengkap dengan Sesi Breeding dan Male).'],
     ['Kolom Dokumentasi (khusus ZIP) berisi nama folder foto atau video, atau @ID media yang sudah ada di Galeri.'],
   ]
 
@@ -83,6 +85,24 @@
       dateText(item.report_date), item.batch_code || '', item.report_title || '', item.dominant_variety || '', numeric(item.average_length_cm),
       list(item.spectrum_sizes).join(' '),
       list(item.breeding_entries).map(function (entry) { return entry.label }).filter(Boolean).join(', '),
+      list(item.koi_entries).map(function (entry) { return entry.label }).filter(Boolean).join(', '),
+      list(item.reporter_entries).map(function (entry) { return entry.label || entry.name || entry.username }).filter(Boolean).join(', ') || item.reporter || '',
+      item.notes || '', item.gallery_id ? 'Ya' : 'Tidak', item.gallery_id || '',
+    ]
+  }
+  function panenRow(item) {
+    var places = list(item.pond_entries)
+    var total = 0, counted = false
+    var text = places.map(function (e) {
+      var qty = Number(e.result_qty)
+      if (e.result_qty !== '' && e.result_qty != null && Number.isFinite(qty)) { total += qty; counted = true }
+      var from = e.pond_label || e.pond_name || ''
+      var line = [from, e.location].filter(Boolean).join(' -> ')
+      return line ? line + (e.result_qty !== '' && e.result_qty != null ? ' (' + e.result_qty + ' ekor)' : '') : ''
+    }).filter(Boolean).join('; ')
+    return [
+      dateText(item.report_date), item.batch_code || '', item.report_title || '', text, counted ? total : '', item.dominant_variety || '', numeric(item.average_length_cm),
+      list(item.spectrum_sizes).join(' '),
       list(item.koi_entries).map(function (entry) { return entry.label }).filter(Boolean).join(', '),
       list(item.reporter_entries).map(function (entry) { return entry.label || entry.name || entry.username }).filter(Boolean).join(', ') || item.reporter || '',
       item.notes || '', item.gallery_id ? 'Ya' : 'Tidak', item.gallery_id || '',
@@ -165,7 +185,7 @@
     var byType = function (type) { return items.filter(function (item) { return typeOf(item) === type }) }
     return {
       'Data Ulang': { header: MAIN_COLUMNS, rows: byType('data_ulang').map(mainRow), key: 1 },
-      'Panen': { header: MAIN_COLUMNS, rows: byType('panen').map(mainRow), key: 1 },
+      'Panen': { header: PANEN_COLUMNS, rows: byType('panen').map(panenRow), key: 1 },
       'Kegiatan': { header: ACTIVITY_COLUMNS, rows: byType('kegiatan').map(activityRow), key: 1 },
       'Ikan Datang': { header: ARRIVAL_COLUMNS, rows: arrivalRows(items, zipMode), key: ARRIVAL_COLUMNS.length - 1 },
       'Lokasi': { header: LOCATION_COLUMNS, rows: locationRows(items), key: -1 },
