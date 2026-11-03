@@ -3097,7 +3097,7 @@
   else show()
 })()
 
-// ---- "Versi baru tersedia": a slim bar for the Master Admin when GitHub has a newer version, and the "Perbarui sekarang" button ----------
+// ---- "Versi baru tersedia": the server files a bell notification for the Master Admin when GitHub has a newer version; the card in Master Akun has the "Perbarui sekarang" button ----------
 // The server answers { enabled: false } where this does not apply (Apache/Laragon, a copy that is not a git clone); every other role is
 // refused (403) and sees nothing. The update itself runs on the server (api-php/lib/update.php); the new files are used right away.
 ;(function () {
@@ -3285,8 +3285,7 @@
     ask('/system/update' + (force && !attempt ? '?refresh=1' : '')).then(function (result) {
       var info = result.data
       if (!result.ok || !info || !info.enabled) { fillCard(null); return }
-      if (info.behind > 0) showBar(info)
-      else removeBar()
+      removeBar() // the news of a new version comes as a notification (the bell), no bar on top
       fillCard(info)
       // the first look at GitHub runs in the background: ask again shortly
       if (info.checking && (attempt || 0) < 8) window.setTimeout(function () { check((attempt || 0) + 1, force) }, force ? 3000 : 5000)

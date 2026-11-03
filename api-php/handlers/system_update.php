@@ -35,6 +35,18 @@ route('GET', '/system/update', function () {
     }
 
     $behind = (int)($state['behind'] ?? 0);
+    // a newer version on GitHub: one notification (the bell) per distinct set of changes, no bar on top of the page
+    $changesNow = $state['changes'] ?? [];
+    $noticeKey = $behind . '|' . json_encode($changesNow[0] ?? null);
+    if ($behind > 0 && !$applying && ($state['update_notified'] ?? '') !== $noticeKey) {
+        $state['update_notified'] = $noticeKey;
+        update_write(update_state_file(), $state);
+        execute(
+            "INSERT INTO system_notifications (type, title, message, status, actor, role, action, target_label)
+             VALUES ('system', 'Versi baru tersedia', ?, 'unread', 'Sistem', 'Master Admin', 'update', 'Versi Program')",
+            [$behind . ' pembaruan baru tersedia di GitHub. Buka Pengaturan > Master Akun > Versi Program, lalu tekan "Lihat dan perbarui". Sebaiknya buat Backup dulu.']
+        );
+    }
     $dirty = $behind > 0 && update_is_dirty();
     send_json(200, [
         'enabled' => true,
