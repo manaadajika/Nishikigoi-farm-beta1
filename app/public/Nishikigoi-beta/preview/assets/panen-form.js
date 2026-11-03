@@ -131,6 +131,7 @@
       '<div class="row g-2">' +
         '<div class="col-md-6"><label class="form-label">Varietas Dominan</label><input class="form-control" data-no-clear data-x="variety" list="arrival-varieties" placeholder="Contoh: Kohaku, Showa" autocomplete="off" value="' + esc(entry.variety) + '"></div>' +
         '<div class="col-md-6"><label class="form-label">Hubungkan Sesi Breeding</label><div class="d-flex align-items-center gap-1"><select class="form-select" data-x="breeding">' + breedingOptions(entry.breeding_id) + '</select><img data-x-photo alt="" style="display:none"></div></div>' +
+        '<div class="col-12" data-x-males-box><label class="form-label">Male (Induk Jantan) <span class="text-secondary small">(boleh lebih dari satu: ketuk untuk memilih, atau tambah dari daftar)</span></label><div class="d-flex flex-wrap align-items-center gap-1" data-x-males></div></div>' +
         '<div class="col-12"><div class="d-flex align-items-center justify-content-between mb-1"><label class="form-label mb-0">Kondisi / Reject</label><button type="button" class="btn btn-sm" data-mini-add="reject">Tambah Kondisi</button></div><div data-x-list="reject"></div></div>' +
         '<div class="col-12"><div class="d-flex align-items-center justify-content-between mb-1"><label class="form-label mb-0">Sortir Ikan (per Kategori)</label><button type="button" class="btn btn-sm" data-mini-add="sortir">Tambah Sortir</button></div><div data-x-list="sortir"></div></div>' +
       '</div>'
@@ -138,9 +139,11 @@
     var notesCol = notes ? notes.closest('.col-12') : null
     if (notesCol) host.insertBefore(extra, notesCol); else host.appendChild(extra)
     card.dataset.breeding = entry.breeding_id || ''
+    card._males = Array.isArray(entry.males) ? entry.males.filter(function (m) { return m && m.koi_id }).map(function (m) { return { koi_id: String(m.koi_id), label: m.label || m.koi_id } }) : []
     ;(Array.isArray(entry.reject) ? entry.reject : []).forEach(function (item) { extra.querySelector('[data-x-list="reject"]').appendChild(miniRow('reject', item)) })
     ;(Array.isArray(entry.sortir) ? entry.sortir : []).forEach(function (item) { extra.querySelector('[data-x-list="sortir"]').appendChild(miniRow('sortir', item)) })
     paintFemale(card)
+    paintMales(card)
     if (isReadonly()) extra.querySelectorAll('input,select,button').forEach(function (field) { field.disabled = true })
   }
   function paintFemale(card) {
@@ -154,6 +157,54 @@
       image.dataset.full = photo.url
       image.title = photo.code
       image.style.cssText = 'display:block;flex:0 0 auto;width:1.9rem;height:2.9rem;object-fit:cover;border-radius:4px;border:1px solid var(--tblr-border-color,#ccc);cursor:zoom-in'
+    })
+  }
+
+  // ---- the males: the males of the chosen session (tap to choose, several allowed) and any other male from the list ------------------------
+  function sessionMales(card) {
+    var item = breedings.filter(function (b) { return String(b.id) === String(card.dataset.breeding || '') })[0]
+    var males = item ? parse(item.male_parent_entries, []) : []
+    return (Array.isArray(males) ? males : []).filter(function (m) { return m && m.koi_id }).map(function (m) { return { koi_id: String(m.koi_id), label: m.label || m.code || String(m.koi_id) } })
+  }
+  function allMales() {
+    var seen = {}, list = []
+    breedings.forEach(function (item) {
+      var males = parse(item.male_parent_entries, [])
+      ;(Array.isArray(males) ? males : []).forEach(function (m) {
+        if (!m || !m.koi_id || seen[m.koi_id]) return
+        seen[m.koi_id] = true
+        list.push({ koi_id: String(m.koi_id), label: m.label || m.code || String(m.koi_id) })
+      })
+    })
+    return list
+  }
+  function paintMales(card) {
+    var box = card.querySelector('[data-x-males]')
+    if (!box) return
+    var chosen = card._males || []
+    var isOn = function (id) { return chosen.some(function (m) { return m.koi_id === id }) }
+    var shown = sessionMales(card)
+    chosen.forEach(function (m) { if (!shown.some(function (x) { return x.koi_id === m.koi_id })) shown.push(m) })
+    var locked = isReadonly()
+    var html = shown.map(function (m) {
+      var on = isOn(m.koi_id)
+      return '<button type="button" class="btn btn-sm ' + (on ? 'btn-primary' : 'btn-outline-secondary') + ' d-inline-flex align-items-center gap-1" data-male-toggle="' + esc(m.koi_id) + '" data-label="' + esc(m.label) + '" aria-pressed="' + (on ? 'true' : 'false') + '"' + (locked ? ' disabled' : '') + '>' +
+        '<img data-male-photo="' + esc(m.koi_id) + '" alt="" style="display:none">' + esc(m.label) + '</button>'
+    }).join('')
+    var more = allMales().filter(function (m) { return !shown.some(function (x) { return x.koi_id === m.koi_id }) })
+    if (!locked && more.length) html += '<select class="form-select form-select-sm" style="width:auto;max-width:14rem" data-x="male-add"><option value="">+ Male lain</option>' + more.map(function (m) { return '<option value="' + esc(m.koi_id) + '">' + esc(m.label) + '</option>' }).join('') + '</select>'
+    if (!shown.length && !html) html = '<span class="text-secondary small">Pilih sesi breeding, atau tambah male dari daftar.</span>'
+    else if (!shown.length) html = '<span class="text-secondary small me-1">Sesi ini belum punya male.</span>' + html
+    var wanted = html
+    if (box.dataset.painted === wanted) return
+    box.dataset.painted = wanted
+    box.innerHTML = html
+    Array.prototype.forEach.call(box.querySelectorAll('img[data-male-photo]'), function (image) {
+      photoOf(image.getAttribute('data-male-photo')).then(function (photo) {
+        if (!photo) return
+        image.src = thumbOf(photo.url)
+        image.style.cssText = 'display:block;width:1.2rem;height:1.8rem;object-fit:cover;border-radius:3px'
+      })
     })
   }
 
@@ -181,10 +232,11 @@
         result_qty: get('[data-result-qty]'), average_length_cm: get('[data-average-length]'), notes: get('[data-notes]').trim(),
         variety: get('[data-x="variety"]').trim(),
         breeding_id: breeding ? breeding.value : '', breeding_label: breeding && breeding.value ? option.textContent : '',
+        males: (card._males || []).map(function (m) { return { koi_id: m.koi_id, label: m.label } }),
         reject: mini('reject', ['metric', 'qty']), sortir: mini('sortir', ['category', 'destination', 'description', 'qty']),
       }
     }).filter(function (entry) {
-      return entry.pond_name || entry.location || entry.result_qty || entry.average_length_cm || entry.notes || entry.variety || entry.breeding_id || entry.reject.length || entry.sortir.length
+      return entry.pond_name || entry.location || entry.result_qty || entry.average_length_cm || entry.notes || entry.variety || entry.breeding_id || entry.males.length || entry.reject.length || entry.sortir.length
     })
   }
 
@@ -198,22 +250,40 @@
     listBox.addEventListener('click', function (event) {
       var zoom = event.target.closest('img[data-x-photo]')
       if (zoom && zoom.dataset.full && window.KoiZoomImage) { window.KoiZoomImage(zoom.dataset.full, zoom.title || ''); return }
+      var toggle = event.target.closest('[data-male-toggle]')
+      if (toggle) {
+        var maleCard = toggle.closest('.card')
+        var id = toggle.getAttribute('data-male-toggle')
+        var list = maleCard._males || []
+        maleCard._males = list.some(function (m) { return m.koi_id === id }) ? list.filter(function (m) { return m.koi_id !== id }) : list.concat([{ koi_id: id, label: toggle.getAttribute('data-label') || id }])
+        paintMales(maleCard)
+        return
+      }
       var add = event.target.closest('[data-mini-add]')
       if (add) { var box = add.closest('[data-panen-extra]').querySelector('[data-x-list="' + add.getAttribute('data-mini-add') + '"]'); box.appendChild(miniRow(add.getAttribute('data-mini-add'))); return }
       var remove = event.target.closest('[data-mini-remove]')
       if (remove) remove.closest('[data-mini]').remove()
     })
     listBox.addEventListener('change', function (event) {
+      if (event.target.matches('[data-x="male-add"]')) {
+        var addCard = event.target.closest('.card')
+        var picked = allMales().filter(function (m) { return m.koi_id === event.target.value })[0]
+        if (picked && !(addCard._males || []).some(function (m) { return m.koi_id === picked.koi_id })) (addCard._males = addCard._males || []).push(picked)
+        paintMales(addCard)
+        return
+      }
       if (!event.target.matches('[data-x="breeding"]')) return
       var card = event.target.closest('.card')
       card.dataset.breeding = event.target.value
+      card._males = sessionMales(card)
       paintFemale(card)
+      paintMales(card)
     })
     // every row the page adds gets its extras; rows of a saved report are filled from it (the n-th row is the n-th entry)
     new MutationObserver(decorateAll).observe(listBox, { childList: true })
     ready = true
     originalFetch.call(window, '/api/ponds').then(function (r) { return r.ok ? r.json() : [] }).then(function (list) { ponds = Array.isArray(list) ? list : [] }).catch(function () {})
-    originalFetch.call(window, '/api/breeding').then(function (r) { return r.ok ? r.json() : [] }).then(function (list) { breedings = Array.isArray(list) ? list : []; Array.prototype.forEach.call(listBox.querySelectorAll('[data-x="breeding"]'), function (select) { var card = select.closest('.card'); select.innerHTML = breedingOptions(card.dataset.breeding); paintFemale(card) }) }).catch(function () {})
+    originalFetch.call(window, '/api/breeding').then(function (r) { return r.ok ? r.json() : [] }).then(function (list) { breedings = Array.isArray(list) ? list : []; Array.prototype.forEach.call(listBox.querySelectorAll('[data-x="breeding"]'), function (select) { var card = select.closest('.card'); select.innerHTML = breedingOptions(card.dataset.breeding); paintFemale(card); paintMales(card) }) }).catch(function () {})
   }
 
   function decorateAll() {

@@ -12,7 +12,7 @@
 
   var TYPE_SHEETS = [['data_ulang', 'Data Ulang'], ['panen', 'Panen'], ['kegiatan', 'Kegiatan'], ['ikan_datang', 'Ikan Datang']]
   var MAIN_COLUMNS = ['Tanggal', 'Kode Batch', 'Judul', 'Varietas Dominan', 'Rata-rata Ukuran (cm)', 'Deret Ukuran Ikan (cm)', 'Breeding', 'Mention Ikan', 'Petugas', 'Catatan', 'Galeri', 'ID Galeri']
-  var LOCATION_COLUMNS = ['Kode Batch', 'Judul', 'No', 'Asal Lokasi', 'Pindah ke', 'Hasil (ekor)', 'Rata-rata Ukuran (cm)', 'Varietas Dominan', 'Sesi Breeding', 'Catatan Lokasi']
+  var LOCATION_COLUMNS = ['Kode Batch', 'Judul', 'No', 'Asal Lokasi', 'Pindah ke', 'Hasil (ekor)', 'Rata-rata Ukuran (cm)', 'Varietas Dominan', 'Sesi Breeding', 'Male', 'Catatan Lokasi']
   var SORTING_COLUMNS = ['Kode Batch', 'Judul', 'Kategori', 'Lokasi Tujuan', 'Keterangan', 'Ekor', 'No Lokasi']
   var CONDITION_COLUMNS = ['Kode Batch', 'Judul', 'Metrik Kondisi', 'Jumlah (ekor)', 'No Lokasi']
   var FISH_COLUMNS = ['Kode Batch', 'Judul', 'No', 'Jenis', 'Ukuran (cm)', 'Sex', 'Sesi Breeding', 'Male', 'Catatan', 'Foto']
@@ -139,7 +139,7 @@
     var rows = []
     items.filter(function (item) { return typeOf(item) === 'data_ulang' || typeOf(item) === 'panen' }).forEach(function (item) {
       list(item.pond_entries).forEach(function (e, index) {
-        rows.push([item.batch_code || '', item.report_title || '', index + 1, e.pond_label || e.pond_name || '', e.location || '', numeric(e.result_qty), numeric(e.average_length_cm), e.variety || '', e.breeding_label || '', e.notes || ''])
+        rows.push([item.batch_code || '', item.report_title || '', index + 1, e.pond_label || e.pond_name || '', e.location || '', numeric(e.result_qty), numeric(e.average_length_cm), e.variety || '', e.breeding_label || '', list(e.males).map(function (m) { return m.label || m.koi_id }).join(', '), e.notes || ''])
       })
     })
     return rows
@@ -298,6 +298,18 @@
       var wanted = norm(text)
       return wanted ? lookups.breedings.filter(function (b) { return norm(b.batch_code) === wanted || wanted.indexOf(norm(b.batch_code)) === 0 })[0] : null
     }
+    // Male: names separated by comma or semicolon, taken from the males of the session first and then from any session
+    var malesOf = function (text, session) {
+      var pool = (session ? list(session.male_parent_entries) : []).concat([].concat.apply([], lookups.breedings.map(function (b) { return list(b.male_parent_entries) })))
+      var out = []
+      String(text || '').split(/[,;]/).forEach(function (part) {
+        var wanted = norm(part)
+        if (!wanted) return
+        var found = pool.filter(function (m) { return m && m.koi_id && (norm(m.label) === wanted || norm(m.code) === wanted) })[0]
+        if (found && !out.some(function (m) { return m.koi_id === String(found.koi_id) })) out.push({ koi_id: String(found.koi_id), label: found.label || found.code || String(found.koi_id) })
+      })
+      return out
+    }
     var placeRecords = of(sheets.lokasi)
     var pondEntries = []
     var numbers = {}
@@ -309,6 +321,7 @@
         pond_id: pond ? pond.id : '', pond_name: pond ? pond.name : origin, pond_label: origin, location: record['pindah ke'] || '', result_qty: record['hasil (ekor)'] || '',
         average_length_cm: record['rata-rata ukuran (cm)'] || '', notes: record['catatan lokasi'] || '', variety: record['varietas dominan'] || '',
         breeding_id: session ? String(session.id) : '', breeding_label: session ? (session.batch_code + (session.session_name ? ' - ' + session.session_name : '')) : (record['sesi breeding'] || ''),
+        males: malesOf(record.male, session),
         reject: [], sortir: [],
       }
       numbers[String(record.no || index + 1)] = entry

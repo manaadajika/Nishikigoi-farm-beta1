@@ -270,13 +270,13 @@
         }).join('') + '</tbody></table></section>'
     }
     if (report.report_type === 'panen') {
-      var places = parse(report.pond_entries, []).filter(function (place) { return place.variety || place.breeding_label || (place.reject && place.reject.length) || (place.sortir && place.sortir.length) })
+      var places = parse(report.pond_entries, []).filter(function (place) { return place.variety || place.breeding_label || (place.males && place.males.length) || (place.reject && place.reject.length) || (place.sortir && place.sortir.length) })
       if (places.length) {
         html += '<section class="kp-section"><h2>Rincian per Lokasi</h2><table class="kp-table"><thead><tr><th class="kp-center" style="width:28px">No</th><th>Lokasi</th><th>Varietas Dominan</th><th>Sesi Breeding</th><th>Reject</th><th>Sortir</th></tr></thead><tbody>' +
           places.map(function (place, index) {
             var reject = (place.reject || []).map(function (r) { return esc(r.metric || '-') + ' (' + esc(r.qty || 0) + ')' }).join('<br>') || '-'
             var sortir = (place.sortir || []).map(function (r) { return esc(r.category || '-') + (r.destination ? ' &rarr; ' + esc(r.destination) : '') + ' (' + esc(r.qty || 0) + ')' }).join('<br>') || '-'
-            return '<tr><td class="kp-center">' + (index + 1) + '</td><td>' + cell(place.pond_label || place.pond_name) + '</td><td>' + cell(place.variety) + '</td><td>' + cell(place.breeding_label) + '</td><td>' + reject + '</td><td>' + sortir + '</td></tr>'
+            return '<tr><td class="kp-center">' + (index + 1) + '</td><td>' + cell(place.pond_label || place.pond_name) + '</td><td>' + cell(place.variety) + '</td><td>' + cell((place.breeding_label || '') + (Array.isArray(place.males) && place.males.length ? ' (Male: ' + place.males.map(function (m) { return m.label || m.koi_id }).join(', ') + ')' : '')) + '</td><td>' + reject + '</td><td>' + sortir + '</td></tr>'
           }).join('') + '</tbody></table></section>'
       }
     }
