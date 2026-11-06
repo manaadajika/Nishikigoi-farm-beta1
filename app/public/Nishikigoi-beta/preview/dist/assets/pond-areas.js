@@ -192,7 +192,6 @@
               : '<div class="fw-medium text-truncate" title="' + escapeHtml(item.name) + '">' + escapeHtml(item.name) +
                 (item.original !== null && item.original !== item.name ? ' <span class="text-secondary small">(sebelumnya ' + escapeHtml(item.original) + ')</span>' : '') + '</div>') +
           '</div>' +
-          '<input type="color" class="form-control form-control-color area-color' + (item.color ? '' : ' is-unset') + '" value="' + (item.color || '#6c7a91') + '" data-area-color title="Warna aksen area (klik kanan untuk menghapus warna)" aria-label="Warna aksen area">' +
           '<span class="badge bg-secondary-lt">' + item.count + ' kolam</span>' +
           '<button class="btn btn-sm btn-icon" type="button" data-area-rename title="Ganti nama" aria-label="Ganti nama">' + icons.edit + '</button>' +
           '<button class="btn btn-sm btn-icon btn-outline-danger" type="button" data-area-delete ' + (inUse ? 'disabled title="Masih dipakai ' + item.count + ' kolam. Pindahkan kolamnya dulu."' : 'title="Hapus area"') + ' aria-label="Hapus area">' + icons.trash + '</button>' +

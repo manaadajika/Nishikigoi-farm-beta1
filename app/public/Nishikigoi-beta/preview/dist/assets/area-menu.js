@@ -102,9 +102,8 @@
     menu = document.createElement('div')
     menu.className = 'koi-area-menu'
     var editable = canEdit()
-    var colored = heading.classList.contains('has-color')
     menu.innerHTML = '<button type="button" data-act="print">Cetak area</button>' +
-      (editable ? '<button type="button" data-act="rename">Ganti nama area</button><button type="button" data-act="color">Ganti warna aksen</button>' + (colored ? '<button type="button" data-act="uncolor">Hapus warna aksen</button>' : '') : '')
+      (editable ? '<button type="button" data-act="rename">Ganti nama area</button>' : '')
     document.body.appendChild(menu)
     var box = button.getBoundingClientRect()
     var width = menu.offsetWidth
@@ -117,8 +116,6 @@
       closeMenu()
       if (kind === 'print') { var print = heading.querySelector('.pond-area-print'); if (print) print.click() }
       else if (kind === 'rename') rename(area)
-      else if (kind === 'color') pickColor(area)
-      else if (kind === 'uncolor') saveColor(area, '')
     })
   }
 
@@ -131,7 +128,7 @@
       button.type = 'button'
       button.className = 'btn btn-sm pond-area-menu-btn'
       button.setAttribute('aria-label', 'Menu area ' + area)
-      button.setAttribute('title', 'Cetak, ganti nama, ganti warna')
+      button.setAttribute('title', 'Cetak, ganti nama')
       button.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="5" r="1.2"/><circle cx="12" cy="12" r="1.2"/><circle cx="12" cy="19" r="1.2"/></svg>'
       button.addEventListener('click', function (event) { event.stopPropagation(); openMenu(button, area, heading) })
       heading.appendChild(button)
