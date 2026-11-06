@@ -275,6 +275,15 @@ route_pattern('GET', '#^/ponds/kanban/(\d+)/qty-log$#', function (array $m) {
     send_json(200, query('SELECT id, kanban_id, delta, qty_after, log_date, notes, actor, created_at FROM pond_kanban_qty_log WHERE kanban_id = ? ORDER BY log_date DESC, id DESC', [$m[1]]));
 });
 
+// One line of the history of a card can be removed; the quantity of the card is not touched.
+route_pattern('DELETE', '#^/ponds/kanban/qty-log/(\d+)$#', function (array $m) {
+    require_account();
+    $line = query_one('SELECT id, kanban_id FROM pond_kanban_qty_log WHERE id = ?', [$m[1]]);
+    if (!$line) send_error(404, 'Catatan riwayat tidak ditemukan.');
+    execute('DELETE FROM pond_kanban_qty_log WHERE id = ?', [$line['id']]);
+    send_json(200, ['ok' => true]);
+});
+
 // Light list of the ponds (id, name, area) for the "Pindah" / "Pecah" choices of a card.
 route('GET', '/ponds/options', function () {
     send_json(200, query("SELECT id, name, COALESCE(NULLIF(location, ''), 'Tanpa Area') AS location FROM ponds ORDER BY location, name"));

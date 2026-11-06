@@ -1088,7 +1088,7 @@ const clipboardIcon = iconSvg('clipboard')
     }
 
     const sortedPonds = () =>
-      pondsData.filter(matchesSearch).sort((a, b) => {
+      pondsData.filter(matchesSearch).filter((item) => !window.__pondArea || (String(item.location || '').trim() || 'Tanpa Area') === window.__pondArea).sort((a, b) => {
         const first = sortValue(a, sortState.key)
         const second = sortValue(b, sortState.key)
         const result = typeof first === 'number' && typeof second === 'number' ? first - second : first.localeCompare(second)

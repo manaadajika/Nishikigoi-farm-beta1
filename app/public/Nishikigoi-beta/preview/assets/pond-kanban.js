@@ -57,6 +57,7 @@ function pondKanbanBoot() {
     '.pk-qtyform[hidden]{display:none}' +
     '.pk-log{font-size:.8rem;max-height:9rem;overflow:auto;border-top:1px solid var(--tblr-border-color,#dee2e6);padding-top:.35rem}' +
     '.pk-log div{display:flex;justify-content:space-between;gap:.5rem;padding:.1rem 0}' +
+    '.pk-logdel{flex:0 0 auto;align-self:flex-start;border:0;background:transparent;color:var(--tblr-secondary,#6c7a91);font-size:1.05rem;line-height:1;padding:0 .3rem;cursor:pointer}.pk-logdel:hover{color:var(--tblr-danger,#d63939)}' +
     '.pk-up{color:#2fb344}.pk-down{color:#d63939}' +
     '.pk-foot{font-size:.74rem;color:var(--tblr-secondary,#6c7a91)}' +
     '.pk-empty{padding:1.2rem;color:var(--tblr-secondary,#6c7a91);text-align:center;width:100%}'
@@ -196,6 +197,9 @@ function pondKanbanBoot() {
 
   var PALETTE = ['#4263eb', '#1098ad', '#37b24d', '#f59f00', '#f76707', '#e03131', '#d6336c', '#ae3ec9', '#7048e8', '#868e96']
 
+  // a quantity of 0 is shown as an empty box (a new card starts empty, nothing to wipe before typing)
+  function qtyText(value) { var n = Number(value || 0); return n ? String(n) : '' }
+
   function cardHtml(item) {
     return '' +
       '<div class="pk-card" data-kanban-card="' + item.id + '"' + (item.color ? ' data-has-color style="--pk-color:' + esc(item.color) + '"' : '') + '>' +
@@ -219,7 +223,7 @@ function pondKanbanBoot() {
         '<div class="pk-images" data-k-images>' + imagesHtml(item) + '</div>' +
         '<div class="pk-qty">' +
           '<span class="pk-qty-label">Qty Kanban</span>' +
-          '<input type="number" class="form-control form-control-sm pk-qty-input" min="0" step="1" inputmode="numeric" data-k-qty-input data-no-clear data-role-disable-unless="farm-operate" aria-label="Qty Kanban" value="' + Number(item.qty || 0) + '" />' +
+          '<input type="number" class="form-control form-control-sm pk-qty-input" min="0" step="1" inputmode="numeric" data-k-qty-input data-no-clear data-role-disable-unless="farm-operate" aria-label="Qty Kanban" value="' + qtyText(item.qty) + '" />' +
         '</div>' +
         '<div class="pk-actions">' +
           '<button class="btn btn-sm btn-icon" type="button" data-k-qty-open="-1" data-role-required="farm-operate" title="Kurangi ikan" aria-label="Kurangi ikan">&minus;</button>' +
@@ -365,8 +369,9 @@ function pondKanbanBoot() {
     box.innerHTML = rows.length ? rows.map(function (row) {
       var up = Number(row.delta) > 0
       var moved = Number(row.delta) === 0
-      return '<div><span>' + esc(dateText(row.log_date)) + (row.notes ? ' &middot; ' + esc(row.notes) : '') + '<br><span class="text-secondary">' + esc(row.actor || '-') + '</span></span>' +
-        (moved ? '<span class="text-secondary">qty ' + Number(row.qty_after) + '</span>' : '<span class="' + (up ? 'pk-up' : 'pk-down') + '">' + (up ? '+' : '') + Number(row.delta) + ' &rarr; ' + Number(row.qty_after) + '</span>') + '</div>'
+      return '<div data-k-log-row="' + row.id + '"><span>' + esc(dateText(row.log_date)) + (row.notes ? ' &middot; ' + esc(row.notes) : '') + '<br><span class="text-secondary">' + esc(row.actor || '-') + '</span></span>' +
+        (moved ? '<span class="text-secondary">qty ' + Number(row.qty_after) + '</span>' : '<span class="' + (up ? 'pk-up' : 'pk-down') + '">' + (up ? '+' : '') + Number(row.delta) + ' &rarr; ' + Number(row.qty_after) + '</span>') +
+        '<button class="pk-logdel" type="button" data-k-log-del="' + row.id + '" data-role-required="farm-operate" title="Hapus catatan riwayat ini" aria-label="Hapus catatan riwayat ini">&times;</button></div>'
     }).join('') : '<div class="text-secondary">Belum ada riwayat jumlah.</div>'
   }
   function loadLog(cardEl) {
@@ -468,25 +473,34 @@ function pondKanbanBoot() {
     request('POST', api('/ponds/kanban/' + id + '/qty'), change).then(function (data) {
       changed = true
       cards[id] = Object.assign(cards[id] || {}, data.kanban)
-      input.value = Number(data.kanban.qty)
+      input.value = qtyText(data.kanban.qty)
       updateTotal()
       say('')
       if (!cardEl.querySelector('[data-k-log]').hidden) loadLog(cardEl)
       if (done) done(true)
     }).catch(function (error) {
-      input.value = Number((cards[id] || {}).qty || 0)
+      input.value = qtyText((cards[id] || {}).qty)
       say(error.message || 'Jumlah gagal disimpan.', true)
       if (done) done(false)
     }).then(function () { input.disabled = false })
   }
+  // touching the quantity box selects all of it, so a new number can be typed at once without erasing the old one
+  function selectQty(event) {
+    var input = event.target.closest && event.target.closest('[data-k-qty-input]')
+    if (!input || input.disabled) return
+    window.setTimeout(function () { try { input.select() } catch (error) { /* some inputs refuse a selection */ } }, 0)
+  }
+  board.addEventListener('focusin', selectQty)
+  board.addEventListener('click', selectQty)
   board.addEventListener('change', function (event) {
     var input = event.target.closest('[data-k-qty-input]')
     if (!input) return
     var cardEl = input.closest('[data-kanban-card]')
     var id = cardEl.getAttribute('data-kanban-card')
     var value = parseInt(input.value, 10)
+    if (input.value.trim() === '' && !Number((cards[id] || {}).qty || 0)) return // still empty: nothing to save
     if (isNaN(value) || value < 0) {
-      input.value = Number((cards[id] || {}).qty || 0)
+      input.value = qtyText((cards[id] || {}).qty)
       say('Isi jumlah ikan dengan angka 0 atau lebih.', true)
       return
     }
@@ -498,6 +512,15 @@ function pondKanbanBoot() {
     var cardEl = event.target.closest('[data-kanban-card]')
     if (!cardEl) return
     var id = cardEl.getAttribute('data-kanban-card')
+
+    var logDel = event.target.closest('[data-k-log-del]')
+    if (logDel) {
+      Promise.resolve(window.KoiDialog ? window.KoiDialog.confirm({ title: 'Hapus catatan riwayat?', message: 'Hanya catatan riwayat ini yang dihapus. Qty Kanban sekarang tidak berubah.', confirmText: 'Hapus', danger: true }) : window.confirm('Hapus catatan riwayat ini?')).then(function (yes) {
+        if (!yes) return
+        request('DELETE', api('/ponds/kanban/qty-log/' + logDel.getAttribute('data-k-log-del'))).then(function () { loadLog(cardEl) }).catch(function (error) { say(error.message || 'Riwayat gagal dihapus.', true) })
+      })
+      return
+    }
 
     var open = event.target.closest('[data-k-qty-open]')
     if (open) {
