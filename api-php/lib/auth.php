@@ -112,7 +112,7 @@ function enforce_role_access(string $method, string $path): void {
 
     // POST /koi/page and /koi/batch only read (they take their filters/ids in the body)
     $isRead = $method === 'GET' || ($method === 'POST' && in_array($path, ['/koi/page', '/koi/batch'], true));
-    $masterOnlyRead = in_array($path, ['/account-sessions', '/dashboard/account-sessions', '/login-history', '/system/update'], true);
+    $masterOnlyRead = in_array($path, ['/account-sessions', '/dashboard/account-sessions', '/login-history', '/system/update', '/maintenance/backup.zip', '/backups'], true);
     // Reads need a valid session too, except what the sign-in page and the file URLs need.
     // /app-settings returns only the brand name/icon when nobody is logged in (see its handler).
     // Uploaded files stay reachable by their long random URL, because <img> tags cannot send the session header.
