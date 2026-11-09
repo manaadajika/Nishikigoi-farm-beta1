@@ -189,11 +189,16 @@ route('GET', '/suggestions', function () {
         $counts = [];
         foreach ($columns as [$table, $column]) {
             foreach (query("SELECT TRIM($column) AS v, COUNT(*) AS n FROM $table WHERE $column IS NOT NULL AND TRIM($column) <> '' GROUP BY TRIM($column) LIMIT 400") as $row) {
-                $value = (string)$row['v'];
-                if (mb_strlen($value) > 120) continue;
-                $lower = mb_strtolower($value);
-                if (!isset($counts[$lower])) $counts[$lower] = ['v' => $value, 'n' => 0];
-                $counts[$lower]['n'] += (int)$row['n'];
+                // A Panen report keeps several ponds in one field, separated by commas ("Mudpond 03, Mudpond 02"):
+                // each place is offered on its own.
+                $parts = $key === 'location' ? explode(',', (string)$row['v']) : [(string)$row['v']];
+                foreach ($parts as $part) {
+                    $value = trim($part);
+                    if ($value === '' || mb_strlen($value) > 120) continue;
+                    $lower = mb_strtolower($value);
+                    if (!isset($counts[$lower])) $counts[$lower] = ['v' => $value, 'n' => 0];
+                    $counts[$lower]['n'] += (int)$row['n'];
+                }
             }
         }
         usort($counts, fn($a, $b) => $b['n'] <=> $a['n'] ?: strcasecmp($a['v'], $b['v']));
