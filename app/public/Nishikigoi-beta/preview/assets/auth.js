@@ -241,7 +241,7 @@
   var publicPages = ['sign-in', 'sign-up', 'forgot-password', '2-step-verification', '2-step-verification-code']
   var brandSettingsKey = 'nishikigoi-app-settings'
   var apiIndicatorTimer = null
-  var rememberSessionDurationMs = 7 * 24 * 60 * 60 * 1000
+  var rememberSessionDurationMs = 30 * 24 * 60 * 60 * 1000
   var lastSessionTouchAt = 0
 
   var apiUrl = function (path) {
@@ -339,7 +339,7 @@
   }
 
   var setSession = function (account, options) {
-    var rememberDevice = Boolean(options && options.rememberDevice)
+    var rememberDevice = true // every login is kept 30 days after the last activity
     var nextSession = sessionPayload(account, rememberDevice)
     var payload = JSON.stringify(nextSession)
     localStorage.setItem(currentAccountKey, JSON.stringify({ username: nextSession.username, at: Date.parse(nextSession.loggedInAt) }))
@@ -407,6 +407,7 @@
     var now = Date.now()
     if (now - lastSessionTouchAt < 60000) return
     lastSessionTouchAt = now
+    if (session.rememberDevice) updateStoredSession({ expiresAt: new Date(now + rememberSessionDurationMs).toISOString() })
     nativeFetch(apiUrl(apiBase + '/auth/touch'), {
       method: 'POST',
       headers: {

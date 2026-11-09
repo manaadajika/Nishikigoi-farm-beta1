@@ -7,7 +7,7 @@ function get_request_session_id(): string {
 
 function create_account_session(array $account, bool $rememberDevice): string {
     $sessionId = bin2hex(random_bytes(16));
-    $days = $rememberDevice ? 7 : 1;
+    $days = 30; // every login is kept 30 days after the last activity (touch_account_session pushes it forward)
     $expiresAt = date('Y-m-d H:i:s', time() + $days * 86400);
 
     execute(
@@ -32,7 +32,7 @@ function create_account_session(array $account, bool $rememberDevice): string {
 function touch_account_session(string $sessionId): void {
     if ($sessionId === '') return;
     execute(
-        "UPDATE account_sessions SET last_seen_at = NOW() WHERE id = ? AND status = 'active'",
+        "UPDATE account_sessions SET last_seen_at = NOW(), expires_at = DATE_ADD(NOW(), INTERVAL 30 DAY) WHERE id = ? AND status = 'active' AND (expires_at IS NULL OR expires_at > NOW())",
         [$sessionId]
     );
 }

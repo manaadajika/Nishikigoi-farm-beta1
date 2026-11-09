@@ -137,7 +137,7 @@
     <!-- END GLOBAL THEME SCRIPT -->
 
     <!-- BEGIN APP AUTH SCRIPT -->
-    <script src="./assets/auth.js?v=20261103d"></script>
+    <script src="./assets/auth.js?v=20261109a"></script>
     <script src="./assets/drafts.js?v=20261029b"></script>
     <script src="./assets/theme-sync.js?v=20261014b"></script>
     <script src="./assets/print-kit.js?v=20261024a"></script>
@@ -2391,7 +2391,7 @@
           <td>${sessionBadge(session.presence)}</td>
           <td class="text-secondary">${escapeHtml(formatDateTime(session.created_at))}</td>
           <td class="text-secondary">${escapeHtml(formatDateTime(session.last_seen_at))}</td>
-          <td>${Number(session.remember_device || 0) ? '<span class="badge bg-azure-lt">7 hari</span>' : '<span class="text-secondary">Tidak</span>'}</td>
+          <td>${Number(session.remember_device || 0) ? '<span class="badge bg-azure-lt">30 hari</span>' : '<span class="text-secondary">Tidak</span>'}</td>
           <td class="text-secondary">${escapeHtml(compactDevice(session.user_agent))}</td>
           <td class="text-end"><button type="button" class="btn btn-sm btn-outline-danger" data-action="end-session" data-session-id="${escapeHtml(session.id)}">Akhiri</button></td>
         </tr>
