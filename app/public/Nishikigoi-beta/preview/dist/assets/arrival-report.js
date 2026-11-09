@@ -375,7 +375,7 @@
         '</div>' +
         '<div class="row g-2 mt-1 align-items-end"><div class="col-12 col-md-4"><label class="form-label small mb-0">Lokasi tujuan</label><input class="form-control" data-suggest-key="place" data-line-pond placeholder="Pilih kolam atau area" autocomplete="off" value="' + escapeHtml(lineDestination(line)) + '"></div>' +
         '<div class="col-12 col-md-8 d-flex align-items-center flex-wrap gap-2">' +
-        '<img class="rounded border d-none" alt="Foto ikan" data-line-photo-thumb style="width:44px;height:44px;object-fit:cover">' +
+        '<img class="rounded border d-none" alt="Foto ikan" data-line-photo-thumb title="Klik untuk memperbesar" style="width:44px;height:44px;object-fit:cover;cursor:zoom-in">' +
         '<button type="button" class="btn btn-sm btn-outline-primary" data-line-photo-pick>Unggah foto</button>' +
         '<button type="button" class="btn btn-sm btn-outline-secondary d-none" data-line-photo-remove>Hapus foto</button>' +
         '<span class="text-secondary small" data-line-photo-status></span>' +
@@ -610,6 +610,8 @@
     modal.addEventListener('click', function (event) {
       if (event.target.closest('[data-arrival-close]')) { hideModal(); return }
       if (event.target.closest('[data-arrival-add-line]')) { addLine(); return }
+      var zoomThumb = event.target.closest('[data-line-photo-thumb]')
+      if (zoomThumb && zoomThumb.src && window.KoiAuth && window.KoiAuth.zoomPhoto) { window.KoiAuth.zoomPhoto(zoomThumb.src, 'Foto ikan'); return }
       var pickPhoto = event.target.closest('[data-line-photo-pick]')
       if (pickPhoto) { pickPhoto.closest('[data-arrival-line]').querySelector('[data-line-photo-input]').click(); return }
       var removePhoto = event.target.closest('[data-line-photo-remove]')
