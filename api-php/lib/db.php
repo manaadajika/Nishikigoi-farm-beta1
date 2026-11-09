@@ -143,6 +143,7 @@ function ensure_koi_macro_schema(PDO $pdo): void {
             $pdo->exec("ALTER TABLE koi_macro_batches ADD COLUMN entity VARCHAR(20) NOT NULL DEFAULT 'koi'");
         }
     } catch (Throwable $e) {
+        schema_step_failed($e);
         // Another request may be creating the table at the same moment.
     }
 }
@@ -191,6 +192,7 @@ function ensure_pond_kanban_schema(PDO $pdo): void {
             $pdo->exec('ALTER TABLE pond_kanban ADD COLUMN images MEDIUMTEXT NULL');
         }
     } catch (Throwable $e) {
+        schema_step_failed($e);
         // Another request may be creating the tables at the same moment.
     }
 }
@@ -220,6 +222,7 @@ function ensure_security_schema(PDO $pdo): void {
             ) ENGINE=InnoDB'
         );
     } catch (Throwable $e) {
+        schema_step_failed($e);
         // Another request may be creating the tables at the same moment.
     }
 }
@@ -235,9 +238,18 @@ function ensure_activity_updated_schema(PDO $pdo): void {
             $pdo->exec("UPDATE $table SET updated_at = created_at");
             $pdo->exec("ALTER TABLE $table MODIFY updated_at DATETIME NULL ON UPDATE CURRENT_TIMESTAMP");
         } catch (Throwable $e) {
+            schema_step_failed($e);
             // Another request may have added the column first.
         }
     }
+}
+
+// A schema step that fails because another request already did it is normal and stays quiet. Anything else
+// (permissions, a broken ALTER, a full disk) goes to the PHP error log so it can be found.
+function schema_step_failed(Throwable $e): void {
+    $message = $e->getMessage();
+    if (preg_match('/already exists|Duplicate (column|key)|1060|1061|1050/i', $message)) return;
+    error_log('[nishikigoi-api] schema step failed: ' . $message);
 }
 
 function ensure_pond_notes_date_schema(PDO $pdo): void {
@@ -245,6 +257,7 @@ function ensure_pond_notes_date_schema(PDO $pdo): void {
         if ($pdo->query("SHOW COLUMNS FROM ponds LIKE 'notes_date'")->fetch()) return;
         $pdo->exec('ALTER TABLE ponds ADD COLUMN notes_date DATE NULL');
     } catch (Throwable $e) {
+        schema_step_failed($e);
         // Another request may have added the column first.
     }
 }
@@ -261,6 +274,7 @@ function ensure_archive_schema(PDO $pdo): void {
                 ADD INDEX idx_koi_archived_at (archived_at)'
         );
     } catch (Throwable $e) {
+        schema_step_failed($e);
         // Another request may have added the columns first; anything else surfaces on the next query.
     }
 }
@@ -273,6 +287,7 @@ function ensure_koi_order_index(PDO $pdo): void {
         $pdo->exec('UPDATE koi SET created_at = NOW() WHERE created_at IS NULL');
         $pdo->exec('ALTER TABLE koi ADD INDEX idx_koi_scope_order (archived_at, created_at, id)');
     } catch (Throwable $e) {
+        schema_step_failed($e);
         // Another request may have added it first; the list still works without the index, only slower.
     }
 }
@@ -290,6 +305,7 @@ function ensure_koi_seq_schema(PDO $pdo): void {
         }
         if ($missing || $pdo->query('SELECT 1 FROM koi WHERE seq = 0 LIMIT 1')->fetch()) koi_renumber($pdo);
     } catch (Throwable $e) {
+        schema_step_failed($e);
         // Another request may be doing the same; the list falls back to seq = 0 until the next request.
     }
 }
@@ -300,6 +316,7 @@ function ensure_koi_area_schema(PDO $pdo): void {
         if ($pdo->query("SHOW COLUMNS FROM koi LIKE 'area'")->fetch()) return;
         $pdo->exec('ALTER TABLE koi ADD COLUMN area VARCHAR(255) NULL');
     } catch (Throwable $e) {
+        schema_step_failed($e);
         // Another request may have added the column first.
     }
 }
@@ -331,6 +348,7 @@ function ensure_jobs_schema(PDO $pdo): void {
         if ($pdo->query("SHOW COLUMNS FROM system_jobs LIKE 'payload'")->fetch()) return;
         $pdo->exec('ALTER TABLE system_jobs ADD COLUMN payload MEDIUMTEXT NULL, ADD COLUMN result MEDIUMTEXT NULL, ADD COLUMN heartbeat_at DATETIME NULL');
     } catch (Throwable $e) {
+        schema_step_failed($e);
         // Another request may have added them first.
     }
 }
@@ -365,6 +383,7 @@ function ensure_messages_schema(PDO $pdo): void {
             ) ENGINE=InnoDB'
         );
     } catch (Throwable $e) {
+        schema_step_failed($e);
         // Another request may be creating the tables at the same moment.
     }
 }
@@ -386,6 +405,7 @@ function ensure_message_prefs_schema(PDO $pdo): void {
             ) ENGINE=InnoDB'
         );
     } catch (Throwable $e) {
+        schema_step_failed($e);
         // Another request may be creating the table at the same moment.
     }
 }
@@ -425,6 +445,7 @@ function ensure_posts_schema(PDO $pdo): void {
             ) ENGINE=InnoDB'
         );
     } catch (Throwable $e) {
+        schema_step_failed($e);
         // Another request may be creating the tables at the same moment.
     }
 }
@@ -435,6 +456,7 @@ function ensure_activity_report_schema(PDO $pdo): void {
         if ($pdo->query("SHOW COLUMNS FROM farm_reports LIKE 'activity_data'")->fetch()) return;
         $pdo->exec('ALTER TABLE farm_reports ADD COLUMN activity_data MEDIUMTEXT NULL');
     } catch (Throwable $e) {
+        schema_step_failed($e);
         // Another request may have added the column first.
     }
 }
@@ -445,6 +467,7 @@ function ensure_gallery_archive_schema(PDO $pdo): void {
         if ($pdo->query("SHOW COLUMNS FROM gallery_collections LIKE 'archived_at'")->fetch()) return;
         $pdo->exec('ALTER TABLE gallery_collections ADD COLUMN archived_at DATETIME NULL');
     } catch (Throwable $e) {
+        schema_step_failed($e);
         // Another request may have added the column first.
     }
 }
@@ -460,6 +483,7 @@ function ensure_breeding_extra_dates_schema(PDO $pdo): void {
                 ADD COLUMN fish_separated_at DATE NULL'
         );
     } catch (Throwable $e) {
+        schema_step_failed($e);
         // Another request may have added the columns first.
     }
 }
@@ -473,6 +497,7 @@ function ensure_breeding_larva_schema(PDO $pdo): void {
         }
         $pdo->exec('UPDATE breeding_batches SET spawning_started_at = breeding_date WHERE spawning_started_at IS NULL');
     } catch (Throwable $e) {
+        schema_step_failed($e);
         // Another request may be doing the same.
     }
 }
@@ -490,6 +515,7 @@ function ensure_report_panen_schema(PDO $pdo): void {
                 ADD COLUMN sorting_entries TEXT NULL'
         );
     } catch (Throwable $e) {
+        schema_step_failed($e);
         // Another request may have added the columns first.
     }
 }
@@ -516,6 +542,7 @@ function ensure_drafts_schema(PDO $pdo): void {
             ) ENGINE=InnoDB"
         );
     } catch (Throwable $e) {
+        schema_step_failed($e);
         // Another request may be creating the table at the same moment.
     }
 }
@@ -580,6 +607,7 @@ function ensure_sell_schema(PDO $pdo): void {
             ) ENGINE=InnoDB"
         );
     } catch (Throwable $e) {
+        schema_step_failed($e);
         // Another request may be creating the table at the same moment.
     }
 }
@@ -626,6 +654,7 @@ function ensure_inventory_schema(PDO $pdo): void {
 ) ENGINE=InnoDB"
         );
     } catch (Throwable $e) {
+        schema_step_failed($e);
         // Another request may be creating the tables at the same moment.
     }
 }
@@ -681,6 +710,7 @@ function ensure_invoice_schema(PDO $pdo): void {
             ) ENGINE=InnoDB"
         );
     } catch (Throwable $e) {
+        schema_step_failed($e);
         // Another request may be creating the table at the same moment.
     }
 }
@@ -692,6 +722,7 @@ function ensure_accounts_cover_schema(PDO $pdo): void {
         if ($pdo->query("SHOW COLUMNS FROM accounts LIKE 'cover'")->fetch()) return;
         $pdo->exec('ALTER TABLE accounts ADD COLUMN cover VARCHAR(500) NULL AFTER avatar');
     } catch (Throwable $e) {
+        schema_step_failed($e);
         // Another request may be adding the column at the same moment.
     }
 }
@@ -701,6 +732,7 @@ function ensure_accounts_phone_schema(PDO $pdo): void {
         if ($pdo->query("SHOW COLUMNS FROM accounts LIKE 'phone'")->fetch()) return;
         $pdo->exec('ALTER TABLE accounts ADD COLUMN phone VARCHAR(40) NULL AFTER email');
     } catch (Throwable $e) {
+        schema_step_failed($e);
         // Another request may have added the column first.
     }
 }
@@ -716,6 +748,7 @@ function ensure_breeding_officer_schema(PDO $pdo): void {
                 ADD COLUMN last_update_date DATE NULL'
         );
     } catch (Throwable $e) {
+        schema_step_failed($e);
         // Another request may have added the columns first.
     }
 }

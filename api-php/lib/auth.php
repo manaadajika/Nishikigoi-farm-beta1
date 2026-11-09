@@ -37,13 +37,13 @@ function touch_account_session(string $sessionId): void {
     );
 }
 
-// $touch = false lets background polling read data without counting as user activity.
-function require_account(bool $touch = true): array {
+// The session of this request, read from the database once. The role gate in index.php and the handler's own
+// require_account() both need it, so the second look comes from memory instead of another query.
+function load_request_session(): ?array {
+    static $cache = [];
     $sessionId = get_request_session_id();
-    if ($sessionId === '') {
-        send_error(401, 'Sesi tidak ditemukan');
-    }
-
+    if ($sessionId === '') return null;
+    if (array_key_exists($sessionId, $cache)) return $cache[$sessionId];
     $session = query_one(
         "SELECT account_sessions.*, accounts.role AS account_role
          FROM account_sessions
@@ -53,6 +53,17 @@ function require_account(bool $touch = true): array {
            AND (account_sessions.expires_at IS NULL OR account_sessions.expires_at > NOW())",
         [$sessionId]
     );
+    return $cache[$sessionId] = $session ?: null;
+}
+
+// $touch = false lets background polling read data without counting as user activity.
+function require_account(bool $touch = true): array {
+    $sessionId = get_request_session_id();
+    if ($sessionId === '') {
+        send_error(401, 'Sesi tidak ditemukan');
+    }
+
+    $session = load_request_session();
 
     if (!$session) {
         send_error(401, 'Sesi tidak valid atau kedaluwarsa');
@@ -64,18 +75,9 @@ function require_account(bool $touch = true): array {
 
 // Role of the current session, or null when nobody valid is logged in. Never sends an error.
 function current_session_role(): ?string {
-    $sessionId = get_request_session_id();
-    if ($sessionId === '') return null;
-    $session = query_one(
-        "SELECT COALESCE(accounts.role, account_sessions.role) AS role
-         FROM account_sessions
-         LEFT JOIN accounts ON accounts.id = account_sessions.account_id
-         WHERE account_sessions.id = ?
-           AND account_sessions.status = 'active'
-           AND (account_sessions.expires_at IS NULL OR account_sessions.expires_at > NOW())",
-        [$sessionId]
-    );
-    return $session['role'] ?? null;
+    $session = load_request_session();
+    if (!$session) return null;
+    return $session['account_role'] ?? $session['role'] ?? null;
 }
 
 // Feedback notifications are for Master Admin only; everyone else must never see or change them.

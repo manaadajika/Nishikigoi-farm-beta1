@@ -20,7 +20,10 @@ route('POST', '/auth/login', function () {
         $byEmail = query('SELECT * FROM accounts WHERE LOWER(email) = LOWER(?) LIMIT 2', [$username]);
         if (count($byEmail) === 1) $account = $byEmail[0];
     }
-    if (!$account || !password_verify($password, $account['password'])) {
+    // An unknown username still pays for one password check, so the response time does not tell it apart from a wrong password.
+    $hash = $account ? $account['password'] : '$2y$10$Se8wp9XROy1rVO8wnEHY6uyUuJMq6SfRadr12olMDXcPP8E8GiN7K';
+    $passwordOk = password_verify($password, $hash);
+    if (!$account || !$passwordOk) {
         record_login_attempt($username, false);
         send_error(401, 'Username atau password salah');
     }
