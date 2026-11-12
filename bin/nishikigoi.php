@@ -20,7 +20,10 @@ if (PHP_SAPI !== 'cli') { http_response_code(404); exit; }
 $root = dirname(__DIR__);
 $isWindows = PHP_OS_FAMILY === 'Windows';
 $webRoot = $root . '/app/public/Nishikigoi-beta/preview/dist';
-$dataDir = $root . '/storage/mysql';
+// Windows installer / portable folder: the launcher (Nishikigoi.exe) sets NISHIKIGOI_HOME to the folder that holds the program folder, so the
+// farm's own data lives beside the .exe: data\ (database), uploads\ (photos, videos) and backups\. Otherwise everything stays inside this folder.
+$home = rtrim(str_replace('\\', '/', (string)getenv('NISHIKIGOI_HOME')), '/');
+$dataDir = $home !== '' ? $home . '/data' : $root . '/storage/mysql';
 $runDir = $root . '/storage/run';
 $logDir = $root . '/storage/logs';
 $dbPort = (int)(getenv('NISHIKIGOI_DB_PORT') ?: 3307);
@@ -294,6 +297,7 @@ switch ($command) {
         say('Tekan CTRL+C untuk menghentikan server web. Database tetap menyala; matikan dengan:  nishikigoi stop');
         // NISHIKIGOI_SELF_UPDATE=1 turns on "versi baru tersedia / Perbarui sekarang" in the program (api-php/lib/update.php)
         $env = array_merge(getenv(), ['NISHIKIGOI_REEXEC' => '1', 'NISHIKIGOI_SELF_UPDATE' => '1']);
+        if ($home !== '') $env = array_merge($env, ['KOI_UPLOADS_DIR' => $home . '/uploads', 'KOI_BACKUPS_DIR' => $home . '/backups']);
         if (!$isWindows) $env['PHP_CLI_SERVER_WORKERS'] = getenv('PHP_CLI_SERVER_WORKERS') ?: '4';
         $proc = proc_open($cmd, [0 => STDIN, 1 => STDOUT, 2 => STDERR], $pipes, $root, $env);
         exit(is_resource($proc) ? proc_close($proc) : 1);

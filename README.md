@@ -22,6 +22,19 @@ cd Nishikigoi-farm-beta1
 
 (atau klik dua kali `nishikigoi.bat`). Bila PHP dan MariaDB belum ada, program mengunduh versi portabelnya dari situs resmi (windows.php.net, sekitar 33 MB, dan downloads.mariadb.org, sekitar 100 MB) ke folder `runtime\` di dalam proyek: **tanpa installer dan tanpa hak administrator**. Butuh internet hanya untuk unduhan pertama ini. Jika Windows meminta, pasang juga *Microsoft Visual C++ Redistributable* (kebanyakan PC sudah punya).
 
+**Tanpa Git:** di halaman *Releases* GitHub ada `Nishikigoi-Setup.exe` (pemasang) dan `Nishikigoi-Portable.zip` (ekstrak lalu pakai). Keduanya sudah membawa PHP, MariaDB, dan Git portabel, jadi tidak butuh internet untuk memulai. Susunan foldernya:
+
+```
+Nishikigoi\
+  Nishikigoi.exe   klik untuk menjalankan (--lan: bisa dibuka dari HP, --stop: hentikan)
+  uploads\         foto dan video
+  data\            database
+  backups\         file backup
+  program\         PHP, MariaDB, dan berkas program (pembaruan dari GitHub hanya mengganti isi folder ini)
+```
+
+Untuk pindah komputer, salin seluruh folder `Nishikigoi`.
+
 ### Linux dan macOS
 
 ```bash

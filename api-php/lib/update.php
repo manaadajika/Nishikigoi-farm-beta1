@@ -45,7 +45,7 @@ function update_git(array $args, int $timeoutSeconds = 30, ?callable $onLine = n
     $outFile = $base . '.out';
     $errFile = $base . '.err';
     $nul = PHP_OS_FAMILY === 'Windows' ? 'NUL' : '/dev/null';
-    $proc = @proc_open(array_merge([$git, '-C', update_root()], $args), [0 => ['file', $nul, 'r'], 1 => ['file', $outFile, 'w'], 2 => ['file', $errFile, 'w']], $pipes, null, array_merge(getenv() ?: [], ['GIT_TERMINAL_PROMPT' => '0', 'LC_ALL' => 'C']));
+    $proc = @proc_open(array_merge([$git, '-C', update_root()], $args), [0 => ['file', $nul, 'r'], 1 => ['file', $outFile, 'w'], 2 => ['file', $errFile, 'w']], $pipes, null, array_merge(getenv() ?: [], ['GIT_TERMINAL_PROMPT' => '0', 'LC_ALL' => 'C', 'GIT_CONFIG_COUNT' => '1', 'GIT_CONFIG_KEY_0' => 'safe.directory', 'GIT_CONFIG_VALUE_0' => '*']));
     if (!is_resource($proc)) return [127, 'Git tidak bisa dijalankan'];
     $offset = 0;
     $pending = '';

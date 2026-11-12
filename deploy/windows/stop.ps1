@@ -2,8 +2,10 @@
 param([switch]$Quiet)
 $ErrorActionPreference = 'SilentlyContinue'
 $Root = (Resolve-Path (Join-Path $PSScriptRoot '..\..')).Path
-$needle = [regex]::Escape((Join-Path $Root 'bin\router.php'))
-Get-CimInstance Win32_Process -Filter "Name = 'php.exe'" | Where-Object { $_.CommandLine -match $needle } | ForEach-Object { Stop-Process -Id $_.ProcessId -Force }
+# php was started with 'ROOT/bin/router.php' (mixed slashes): compare with every slash made the same
+$sep = [IO.Path]::DirectorySeparatorChar
+$needle = [IO.Path]::Combine($Root, 'bin', 'router.php').ToLower()
+Get-CimInstance Win32_Process -Filter "Name = 'php.exe'" | Where-Object { $_.CommandLine -and $_.CommandLine.Replace([char]47, $sep).ToLower().Contains($needle) } | ForEach-Object { Stop-Process -Id $_.ProcessId -Force }
 & (Join-Path $Root 'nishikigoi.ps1') stop | Out-Null
 if ($Quiet) { exit 0 }
 Add-Type -AssemblyName System.Windows.Forms

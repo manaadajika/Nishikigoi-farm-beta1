@@ -1,6 +1,6 @@
 name: Windows installer
 
-# Builds Nishikigoi-Setup.exe. A tag that starts with "v" (for example v2.1) also publishes it as a GitHub release;
+# Builds Nishikigoi-Setup.exe and Nishikigoi-Portable.zip. A tag that starts with "v" (for example v2.1) also publishes it as a GitHub release;
 # "Run workflow" by hand only builds it and keeps the file as a downloadable build artifact for 7 days.
 on:
   push:
@@ -41,6 +41,6 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          gh release create "$env:GITHUB_REF_NAME" build/out/Nishikigoi-Setup.exe build/out/Nishikigoi-Setup.exe.sha256 `
+          gh release create "$env:GITHUB_REF_NAME" build/out/Nishikigoi-Setup.exe build/out/Nishikigoi-Setup.exe.sha256 build/out/Nishikigoi-Portable.zip build/out/Nishikigoi-Portable.zip.sha256 `
             --title "Nishikigoi $env:GITHUB_REF_NAME" `
-            --notes "Pemasang Windows. Unduh Nishikigoi-Setup.exe, jalankan, lalu buka Nishikigoi dari desktop atau Start Menu. Akun awal: admin / admin (ganti segera). Setelah terpasang, pembaruan diambil dari GitHub lewat Pengaturan > Master Akun > Versi Program."
+            --notes "Windows: unduh Nishikigoi-Setup.exe lalu jalankan (atau Nishikigoi-Portable.zip, ekstrak, lalu klik Nishikigoi.exe). Folder uploads, data, dan backups berada di samping Nishikigoi.exe. Akun awal: admin / admin (ganti segera). Setelah terpasang, pembaruan diambil dari GitHub lewat Pengaturan > Master Akun > Versi Program."

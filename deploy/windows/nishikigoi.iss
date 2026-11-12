@@ -1,5 +1,6 @@
 ; nishikigoi.iss - Inno Setup script of the Windows installer. Built by build-installer.ps1 (which fills in the three defines below).
 ; Installs for the current user only (no administrator rights), so the in-program update can write its own files later.
+; Layout in the install folder: Nishikigoi.exe, uploads\, data\, backups\ and program\ (see build-installer.ps1).
 #ifndef AppVersion
   #define AppVersion "0.0"
 #endif
@@ -19,6 +20,7 @@ DefaultDirName={localappdata}\Programs\Nishikigoi
 DefaultGroupName=Nishikigoi
 DisableProgramGroupPage=yes
 PrivilegesRequired=lowest
+PrivilegesRequiredOverridesAllowed=dialog
 OutputDir={#OutputDir}
 OutputBaseFilename=Nishikigoi-Setup
 Compression=lzma2/max
@@ -27,28 +29,35 @@ WizardStyle=modern
 ArchitecturesAllowed=x64compatible
 ArchitecturesInstallIn64BitMode=x64compatible
 UninstallDisplayName=Nishikigoi
+UninstallDisplayIcon={app}\Nishikigoi.exe
 CloseApplications=no
 
 [Tasks]
 Name: "desktopicon"; Description: "Buat ikon di desktop"; GroupDescription: "Tambahan:"
 
+[Dirs]
+Name: "{app}\uploads"
+Name: "{app}\data"
+Name: "{app}\backups"
+
 [Files]
 Source: "{#SourceDir}\*"; DestDir: "{app}"; Flags: recursesubdirs createallsubdirs ignoreversion
 
 [Icons]
-Name: "{autoprograms}\Nishikigoi\Nishikigoi"; Filename: "{sys}\wscript.exe"; Parameters: """{app}\deploy\windows\Nishikigoi.vbs"""; WorkingDir: "{app}"; IconFilename: "{app}\app\public\Nishikigoi-beta\preview\dist\favicon.ico"
-Name: "{autoprograms}\Nishikigoi\Nishikigoi (bisa dibuka dari HP)"; Filename: "{sys}\wscript.exe"; Parameters: """{app}\deploy\windows\Nishikigoi.vbs"" -Lan"; WorkingDir: "{app}"; IconFilename: "{app}\app\public\Nishikigoi-beta\preview\dist\favicon.ico"
-Name: "{autoprograms}\Nishikigoi\Hentikan Nishikigoi"; Filename: "{sys}\wscript.exe"; Parameters: """{app}\deploy\windows\Nishikigoi-Stop.vbs"""; WorkingDir: "{app}"
-Name: "{autodesktop}\Nishikigoi"; Filename: "{sys}\wscript.exe"; Parameters: """{app}\deploy\windows\Nishikigoi.vbs"""; WorkingDir: "{app}"; IconFilename: "{app}\app\public\Nishikigoi-beta\preview\dist\favicon.ico"; Tasks: desktopicon
+Name: "{autoprograms}\Nishikigoi\Nishikigoi"; Filename: "{app}\Nishikigoi.exe"; WorkingDir: "{app}"
+Name: "{autoprograms}\Nishikigoi\Nishikigoi (bisa dibuka dari HP)"; Filename: "{app}\Nishikigoi.exe"; Parameters: "--lan"; WorkingDir: "{app}"
+Name: "{autoprograms}\Nishikigoi\Hentikan Nishikigoi"; Filename: "{app}\Nishikigoi.exe"; Parameters: "--stop"; WorkingDir: "{app}"
+Name: "{autoprograms}\Nishikigoi\Folder data (uploads, data, backups)"; Filename: "{app}"
+Name: "{autodesktop}\Nishikigoi"; Filename: "{app}\Nishikigoi.exe"; WorkingDir: "{app}"; Tasks: desktopicon
 
 [Run]
-Filename: "{sys}\wscript.exe"; Parameters: """{app}\deploy\windows\Nishikigoi.vbs"""; WorkingDir: "{app}"; Description: "Jalankan Nishikigoi sekarang"; Flags: postinstall nowait skipifsilent
+Filename: "{app}\Nishikigoi.exe"; WorkingDir: "{app}"; Description: "Jalankan Nishikigoi sekarang"; Flags: postinstall nowait skipifsilent
 
 [UninstallRun]
-Filename: "{sys}\WindowsPowerShell\v1.0\powershell.exe"; Parameters: "-NoProfile -ExecutionPolicy Bypass -WindowStyle Hidden -File ""{app}\deploy\windows\stop.ps1"" -Quiet"; Flags: runhidden; RunOnceId: "StopNishikigoi"
+Filename: "{app}\Nishikigoi.exe"; Parameters: "--stop --quiet"; Flags: runhidden; RunOnceId: "StopNishikigoi"
 
 [Code]
-// Removing the program keeps the farm data unless the user says otherwise (default answer: No).
+// Removing the program keeps the farm data (uploads, data, backups) unless the user says otherwise (default answer: No).
 procedure CurUninstallStepChanged(CurUninstallStep: TUninstallStep);
 begin
   if CurUninstallStep = usPostUninstall then
