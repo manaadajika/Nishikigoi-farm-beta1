@@ -99,6 +99,33 @@ function Install-MariaDb {
     Remove-Item $zip -Force
 }
 
+function Install-MinGit {
+    # MinGit = the small Git for Windows (about 30 MB). The in-program update ("Perbarui sekarang") uses it when no Git is installed.
+    Write-Host 'Mengunduh MinGit (Git portabel, sekitar 30 MB)...'
+    New-Item -ItemType Directory -Force -Path $Runtime | Out-Null
+    $release = Invoke-RestMethod -Uri 'https://api.github.com/repos/git-for-windows/git/releases/latest' -UseBasicParsing -Headers @{ 'User-Agent' = 'nishikigoi-setup' }
+    $asset = $release.assets | Where-Object { $_.name -match '^MinGit-[\d.]+-64-bit\.zip$' } | Select-Object -First 1
+    if (-not $asset) { throw 'Tidak menemukan MinGit 64-bit di git-for-windows/git.' }
+    $zip = Join-Path $Runtime 'mingit.zip'
+    Get-Download $asset.browser_download_url $zip
+    $digest = [string]$asset.digest
+    if ($digest -like 'sha256:*') { Test-Hash $zip $digest.Substring(7) }
+    $dest = Join-Path $Runtime 'git'
+    if (Test-Path $dest) { Remove-Item $dest -Recurse -Force }
+    Expand-Archive -Path $zip -DestinationPath $dest -Force
+    Remove-Item $zip -Force
+}
+
+# "fetch-runtime": only downloads what the Windows installer carries (PHP, MariaDB, MinGit) into runtime\ and stops.
+# Used by deploy\windows\build-installer.ps1; handy as well to prepare a folder that must run without internet.
+if ($Command -eq 'fetch-runtime') {
+    if (-not (Test-Path (Join-Path $Runtime 'php\php.exe'))) { Install-Php | Out-Null }
+    if (-not (Test-Path (Join-Path $Runtime 'mariadb\bin\mariadbd.exe'))) { Install-MariaDb }
+    if (-not (Test-Path (Join-Path $Runtime 'git\cmd\git.exe'))) { Install-MinGit }
+    Write-Host 'Runtime siap di folder runtime\.'
+    exit 0
+}
+
 $php = Find-Php
 if (-not $php -and ($Command -in @('run', 'setup', 'start'))) { $php = Install-Php }
 if (-not $php) { Write-Host 'PHP tidak ditemukan. Jalankan .\nishikigoi.ps1 setup dulu.' -ForegroundColor Yellow; exit 1 }

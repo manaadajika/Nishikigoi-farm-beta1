@@ -27,3 +27,6 @@ storage/mysql/
 storage/run/
 storage/logs/
 runtime/
+
+# Output of deploy/windows/build-installer.ps1
+build/

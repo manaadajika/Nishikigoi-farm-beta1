@@ -18,7 +18,8 @@ function update_git_binary(): ?string {
     if ($found !== false) return $found;
     $names = PHP_OS_FAMILY === 'Windows' ? ['git.exe', 'git.cmd'] : ['git'];
     $dirs = explode(PATH_SEPARATOR, (string)getenv('PATH'));
-    if (PHP_OS_FAMILY === 'Windows') $dirs = array_merge($dirs, ['C:\\Program Files\\Git\\cmd', 'C:\\Program Files (x86)\\Git\\cmd']);
+    // runtime/git is the portable Git that comes with the Windows installer (see deploy/windows)
+    if (PHP_OS_FAMILY === 'Windows') $dirs = array_merge([update_root() . '\\runtime\\git\\cmd'], $dirs, ['C:\\Program Files\\Git\\cmd', 'C:\\Program Files (x86)\\Git\\cmd']);
     foreach ($dirs as $dir) {
         foreach ($names as $name) {
             $file = rtrim($dir, '/\\') . DIRECTORY_SEPARATOR . $name;

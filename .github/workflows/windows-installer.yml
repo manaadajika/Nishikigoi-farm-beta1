@@ -1,0 +1,46 @@
+name: Windows installer
+
+# Builds Nishikigoi-Setup.exe. A tag that starts with "v" (for example v2.1) also publishes it as a GitHub release;
+# "Run workflow" by hand only builds it and keeps the file as a downloadable build artifact for 7 days.
+on:
+  push:
+    tags: ['v*']
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - name: Install Inno Setup
+        shell: pwsh
+        run: choco install innosetup --no-progress -y
+
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: Build installer
+        shell: pwsh
+        run: |
+          # the installed copy follows branch main (that is what the in-program update pulls), whatever tag started the build
+          $branch = 'main'
+          ./deploy/windows/build-installer.ps1 -Repo "https://github.com/$env:GITHUB_REPOSITORY.git" -Branch $branch
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Nishikigoi-Setup
+          path: build/out/*
+          retention-days: 7
+
+      - name: Publish release
+        if: startsWith(github.ref, 'refs/tags/v')
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "$env:GITHUB_REF_NAME" build/out/Nishikigoi-Setup.exe build/out/Nishikigoi-Setup.exe.sha256 `
+            --title "Nishikigoi $env:GITHUB_REF_NAME" `
+            --notes "Pemasang Windows. Unduh Nishikigoi-Setup.exe, jalankan, lalu buka Nishikigoi dari desktop atau Start Menu. Akun awal: admin / admin (ganti segera). Setelah terpasang, pembaruan diambil dari GitHub lewat Pengaturan > Master Akun > Versi Program."
